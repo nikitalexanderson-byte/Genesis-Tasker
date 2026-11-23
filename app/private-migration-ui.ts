@@ -6,6 +6,11 @@ let state:PrivateMigrationUi|null=null,listening=false;
 const creations=new Map<string,{resolve:(value:Record<string,unknown>)=>void;reject:(reason:Error)=>void}>();
 const listeners=new Set<()=>void>();
 export const privateMigrationUi=()=>state;
+/** Scheduling fence only, never cryptographic authority. Ordinary product
+ * jobs must not change account-wide retained custody while migration owns it. */
+export function requirePrivateProductMutation(ownerId:string){
+ if(state?.ownerId===ownerId)throw new Error('E2EE_MIGRATION_BUSY');
+}
 export const subscribePrivateMigrationUi=(listener:()=>void)=>{listeners.add(listener);return()=>{listeners.delete(listener);};};
 const notify=()=>{for(const listener of listeners)listener();};
 /** Opening this UI grants no key or migration permission. The explicit submit

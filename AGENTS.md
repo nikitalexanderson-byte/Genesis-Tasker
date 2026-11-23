@@ -1,5 +1,14 @@
 # Genesis Tasker: действующие правила
 
+- 23 ноября механизм PIN/отпечатка принят отдельным реальным component run на
+  owned API34: RecoveryCredentialActivity + auth-required Android Keystore,
+  4/4 (PIN, fingerprint37, отмена, фон). Это ещё не полная приёмка аккаунта или
+  выпуск. Доказательство — output/qa/security336-native150-unlock-component-api34-04/.
+  Исходный synthetic PIN сохранён. Гонки background generation и encrypted
+  job custody исправляются отдельным блоком с обязательным повтором product
+  migration; guard-отказы не ослаблять. Во время текущей build14 не менять
+  app/android/contracts/public inputs до результата.
+
 - 23 ноября владелец дополнительно поручил экран блокировки приложения с
   отпечатком и PIN, если он ещё не реализован. Существующий fullscreen vault
   gate и системный PIN сохраняются; к тому же одноразовому owner-bound входу

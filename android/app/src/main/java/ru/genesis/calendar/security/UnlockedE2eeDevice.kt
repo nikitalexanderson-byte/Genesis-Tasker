@@ -67,7 +67,15 @@ class UnlockedE2eeDevice private constructor(override val ownerId:String,private
             val directory=E2eeDirectory.verify(scopeOwner,scopeId,retainedPin,retainedEvents,checkpoint,onVerified)
             val bytes=JSONObject().put("ownerId",scopeOwner).put("pin",retainedPin).put("events",retainedEvents)
                 .put("checkpoint",JSONObject().put("revision",directory.checkpoint.revision).put("hash",directory.checkpoint.hash)).toString().toByteArray()
-            try{vault.write(listOf(UnlockedE2eeVault.Write("key-check",id,bytes,previous?.serial)))}finally{bytes.fill(0)}
+            try{
+                if(previous!=null&&previous.bytes.contentEquals(bytes)){
+                    // Keep identical history stable for other scopes' custody
+                    // snapshots, while refusing a concurrent writer.
+                    val actual=vault.read("key-check",id);requireOpen()
+                    try{check(actual!=null&&actual.serial==previous.serial&&actual.bytes.contentEquals(previous.bytes)){"E2EE_LOCAL_CONFLICT"}}
+                    finally{actual?.bytes?.fill(0)}
+                }else vault.write(listOf(UnlockedE2eeVault.Write("key-check",id,bytes,previous?.serial)))
+            }finally{bytes.fill(0)}
             return directory
         }finally{previous?.bytes?.fill(0)}
     }

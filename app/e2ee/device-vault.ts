@@ -149,7 +149,15 @@ export class UnlockedWebDevice {
         if(old.ownerId!==ownerId||old.pin.signingKey!==pin.signingKey||old.pin.receivingKey!==pin.receivingKey)throw new Error('E2EE_AUTHORITY_CHANGED');checkpoint=old.checkpoint;}
       const directory=await verifyDeviceDirectory(ownerId,scopeId,pin,events,checkpoint,onVerified);
       const encoded=encoder.encode(JSON.stringify({ownerId,pin,checkpoint:directory.checkpoint,events}));
-      try{await this.vault.write([{domain:'key-check',objectId:id,value:encoded,expected:previous?.serial??null}]);}finally{encoded.fill(0);}
+      try{
+        if(previous&&previous.value.length===encoded.length&&previous.value.every((byte,index)=>byte===encoded[index])){
+          // Keep identical history stable. Recheck after signature work so
+          // concurrent replacement still refuses at this read's linearization.
+          const actual=await this.vault.read('key-check',id);this.requireOpen();
+          try{if(!actual||actual.serial!==previous.serial||actual.value.length!==previous.value.length||actual.value.some((byte,index)=>byte!==previous.value[index]))throw new Error('E2EE_LOCAL_CONFLICT');}
+          finally{actual?.value.fill(0);}
+        }else await this.vault.write([{domain:'key-check',objectId:id,value:encoded,expected:previous?.serial??null}]);
+      }finally{encoded.fill(0);}
       return directory;
     }finally{previous?.value.fill(0);}
   }

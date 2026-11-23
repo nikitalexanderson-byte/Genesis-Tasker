@@ -27,6 +27,8 @@ import java.io.ByteArrayInputStream
 import java.security.KeyStore
 import java.security.cert.CertificateFactory
 import java.util.Base64
+import java.io.File
+import java.util.regex.Pattern
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
@@ -70,7 +72,14 @@ class NativePrivateVaultUnlockUiTest {
         requireNotNull(device.findObject(By.text(copy.getString("unlock")))).click()
         assertTrue("Real fingerprint prompt with screen-lock alternative must appear",device.wait(Until.hasObject(By.text(copy.getString("pin"))),20000))
     }
-    private fun signal(mode:String){instrumentation.sendStatus(2,Bundle().apply{putString("stream","GENESIS_UNLOCK_UI_WAIT:$mode\n")})}
+    private fun signal(mode:String){
+        if(mode=="pin"){
+            device.wait(Until.findObject(By.res("com.android.systemui:id/button_use_credential")),5000)?.click()
+            assertTrue(device.wait(Until.hasObject(By.pkg(Pattern.compile("com\\.android\\.(settings|systemui)")).clazz(Pattern.compile(".*(EditText|PasswordTextView)"))),20000))
+        }
+        device.dumpWindowHierarchy(File(app.getExternalFilesDir(null),"genesis-owned-unlock-prompt.xml"))
+        instrumentation.sendStatus(2,Bundle().apply{putString("stream","GENESIS_UNLOCK_UI_WAIT:$mode\n")})
+    }
     private fun retainedContentAndBackgroundLock(){
         waitFor{NativePrivateProducts.isOpen(app.workspaceScope)}
         runBlocking{withTimeout(60000){WorkspaceStructureRepository(app).workspace.first{row->row.projects.any{it.title.startsWith("EDITED NATIVE PRIVATE ")}}}}

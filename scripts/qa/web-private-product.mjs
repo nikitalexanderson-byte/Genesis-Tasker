@@ -1,7 +1,8 @@
 // Mounted product migration against the real loopback PHP/SQLite API.
 // Only identity/provider delivery is supplied by the isolated QA fixture.
 import assert from 'node:assert/strict';
-import {mkdirSync, readFileSync, writeFileSync} from 'node:fs';
+import {mkdirSync, readFileSync, writeFileSync,readdirSync} from 'node:fs';
+import path from 'node:path';
 import {chromium} from 'playwright';
 
 const baseURL=process.env.GENESIS_QA_WEB_ORIGIN;
@@ -10,7 +11,7 @@ const output=process.env.GENESIS_QA_WEB_OUTPUT;
 assert(output);mkdirSync(output,{recursive:true});
 const migration=JSON.parse(readFileSync('contracts/e2ee/migration-copy-v1.json','utf8')).ru;
 const vault=JSON.parse(readFileSync('contracts/e2ee/vault-copy-v1.json','utf8')).ru;
-const report={synthetic:true,scope:'mounted web product + real PHP/SQLite',status:'RUNNING',checks:[],apiErrors:[],pageErrors:[],caughtCodes:[],caughtFrames:[],storageFailures:[]};
+const report={synthetic:true,scope:'mounted web product + real PHP/SQLite',status:'RUNNING',checks:[],apiErrors:[],pageErrors:[],caughtCodes:[],caughtFrames:[],storageFailures:[],migrationRefusals:[],historyGuards:[]};
 const browser=await chromium.launch({headless:true});report.browser=browser.version();
 let page,secret,kit;
 const diagnostics=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='diagnostics';
@@ -50,6 +51,35 @@ const recoveryInput=async(dialog,wrong=false)=>{
 try{
  await login(context);page=await context.newPage();page.setDefaultTimeout(20000);
  const debug=await context.newCDPSession(page);await debug.send('Debugger.enable');
+ if(process.env.GENESIS_QA_DIAGNOSTIC_BUNDLE){
+  // A false conditional logpoint observes only public refusal codes without
+  // pausing the event loop inside live IndexedDB transactions.
+  const assets=path.join(process.env.GENESIS_QA_DIAGNOSTIC_BUNDLE,'assets');
+  const pattern=/\b(?:let|const|var)\s+([\w$]+)=([\w$]+)=>\{(?:let|const|var)\s+([\w$]+)=\2 instanceof Error\?\2.message:(?:``|"");return \3===`E2EE_REAUTH_REQUIRED`/;
+  const candidates=readdirSync(assets).filter(name=>/^private-security-ui-[\w-]+\.js$/.test(name)).map(file=>{const source=readFileSync(path.join(assets,file),'utf8');return{file,source,found:pattern.exec(source)};}).filter(row=>row.found);
+  assert(candidates.length>0,'Compiled diagnostic refusal mapper');
+  // Immutable bundles retain older chunks for offline clients. Register inert
+  // logpoints on each matching URL; only an actually loaded chunk can emit.
+  for(const {file,source,found} of candidates){
+   const at=source.indexOf('return '+found[3]+'===`E2EE_REAUTH_REQUIRED`',found.index);
+   const before=source.slice(0,at),lineNumber=before.split('\n').length-1,columnNumber=at-before.lastIndexOf('\n')-1;
+   const condition=`(()=>{const message=${found[2]} instanceof Error?${found[2]}.message:'';console.info('GENESIS_QA_MIGRATION_REFUSAL '+(/^E2EE_[A-Z_]+$/.test(message)?message:'NON_TECHNICAL_ERROR'));return false;})()`;
+   await debug.send('Debugger.setBreakpointByUrl',{url:baseURL+'/assets/'+file,lineNumber,columnNumber,condition});
+  }
+  for(const artifact of readdirSync(assets).filter(name=>/^private-security-ui-[\w-]+\.js$/.test(name))){
+   const content=readFileSync(path.join(assets,artifact),'utf8');let offset=-1,ordinal=0;
+   while((offset=content.indexOf('E2EE_SOURCE_HISTORY_CHANGED',offset+1))!==-1){
+    ordinal++;const statement=content.lastIndexOf('throw Error(',offset);if(statement<0||offset-statement>25)continue;
+    const previous=content.slice(0,statement),lineNumber=previous.split('\n').length-1,columnNumber=statement-previous.lastIndexOf('\n')-1;
+    let details='';
+    if(content.slice(Math.max(0,statement-110),statement).includes('t.value.length!==e.bytes'))details=",domain:e.domain,family:e.id.split(':')[0],missing:!t,sameSerial:t?.serial===e.serial,sameSize:t?.value.length===e.bytes";
+    const metadata=`artifact:${JSON.stringify(artifact)},ordinal:${ordinal}`;
+    const condition=`(()=>{try{console.info('GENESIS_QA_HISTORY_GUARD '+JSON.stringify({${metadata}${details}}));}catch{console.info('GENESIS_QA_HISTORY_GUARD '+JSON.stringify({${metadata}}));}return false;})()`;
+    await debug.send('Debugger.setBreakpointByUrl',{url:baseURL+'/assets/'+artifact,lineNumber,columnNumber,condition});
+   }
+  }
+  report.diagnosticLogpoint={artifacts:candidates.map(row=>row.file),pauses:false};
+ }
  debug.on('Debugger.paused',event=>{
   const code=event.data?.description?.match(/E2EE_[A-Z_]+/)?.[0];
   if(code&&!report.caughtCodes.includes(code)){report.caughtCodes.push(code);report.caughtFrames.push({code,functions:event.callFrames.slice(0,8).map(frame=>frame.functionName)});console.log('DIAGNOSTIC '+code);}
@@ -57,7 +87,7 @@ try{
   void debug.send('Debugger.resume').catch(()=>{});
  });
  page.on('pageerror',error=>report.pageErrors.push(error.message));
- page.on('console',message=>{const prefix='GENESIS_QA_IDB_FAILURE ';if(message.text().startsWith(prefix)){report.storageFailures.push(JSON.parse(message.text().slice(prefix.length)));save();}});
+ page.on('console',message=>{const prefix='GENESIS_QA_IDB_FAILURE ',refusal='GENESIS_QA_MIGRATION_REFUSAL ',history='GENESIS_QA_HISTORY_GUARD ';if(message.text().startsWith(prefix)){report.storageFailures.push(JSON.parse(message.text().slice(prefix.length)));save();}else if(message.text().startsWith(refusal)){report.migrationRefusals.push(message.text().slice(refusal.length));console.log(message.text());save();}else if(message.text().startsWith(history)){report.historyGuards.push(JSON.parse(message.text().slice(history.length)));console.log(message.text());save();}});
  page.on('response',async response=>{
   if(response.url()===baseURL+'/api/bootstrap'){const body=await response.json().catch(()=>null);console.log('BOOTSTRAP '+JSON.stringify({status:response.status(),keyMode:body?.workspace?.keyMode,keyPresent:!!body?.workspace?.key}));}
   if(response.url().startsWith(baseURL+'/api/e2ee/v1/')){

@@ -30,6 +30,7 @@ class E2eeKeyAuditDeviceTest {
             .put("operationId",UUID.randomUUID().toString()).put("payload",payload)
         payload.put("selfProof",E2eeCommands.sign(command,device.keys().signing.private).get("signature"))
         val events=JSONArray().put(E2eeCommands.sign(command,recovery.keys.signing.private))
+        val originalEvents=JSONArray(events.toString())
         val expectedPin=pin.getString("signingKey")
         val verified=device.rememberDirectory(scope,pin,events,owner){frame->
             pin.put("signingKey","invalid");events.getJSONObject(0).put("signature","invalid")
@@ -37,6 +38,20 @@ class E2eeKeyAuditDeviceTest {
             frame.recoveryCapsule.put("ciphertext","invalid");frame.devices.values.forEach{it.capsule.put("ciphertext","invalid")}
         }
         try{
+            val directoryId=device.vault.listLocal("key-check","directory-").single()
+            val before=requireNotNull(device.vault.read("key-check",directoryId))
+            try{
+                device.rememberDirectory(scope,verified.recoveryKit.getJSONObject("authority"),originalEvents,owner)
+                val after=requireNotNull(device.vault.read("key-check",directoryId))
+                try{assertEquals("Unchanged verification must retain serial",before.serial,after.serial);assertArrayEquals(before.bytes,after.bytes)}finally{after.bytes.fill(0)}
+                var replaced=false
+                try{
+                    device.rememberDirectory(scope,verified.recoveryKit.getJSONObject("authority"),originalEvents,owner){
+                        if(!replaced){replaced=true;device.vault.write(listOf(UnlockedE2eeVault.Write("key-check",directoryId,before.bytes,before.serial)))}
+                    }
+                    fail("A concurrent directory record replacement must refuse")
+                }catch(error:IllegalStateException){assertEquals("E2EE_LOCAL_CONFLICT",error.message)}
+            }finally{before.bytes.fill(0)}
             assertEquals(expectedPin,verified.recoveryKit.getJSONObject("authority").getString("signingKey"))
             val opened=E2eeKeys.openRoot(requireNotNull(verified.devices[device.deviceId]).capsule,device.keys().receiving,
                 E2eeKeys.RootRecipient(owner,scope,1,keyId,device.deviceId))

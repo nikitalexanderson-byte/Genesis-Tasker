@@ -6,6 +6,7 @@ import {parseLegacyMigrationJson} from './legacy-json.ts';
 import type {E2eeScopeClient} from './scope-client.ts';
 import type {LocalWrite,UnlockedE2eeVault} from './storage.ts';
 import type {UnlockedWebDevice} from './device-vault.ts';
+import {requirePrivateProductMutation} from '../private-migration-ui.ts';
 
 type Metadata={filename:string;mediaType:string};
 type Draft={id:string;size:number;parts:number;metadata:Metadata};
@@ -50,8 +51,9 @@ export class E2eeEditorQueue {
     }finally{row.value.fill(0);}
   }
   async #save(state:EditorState,serial:number|null,changes:LocalWrite[]=[]){
+    const current=()=>{this.#vault.assertUnlocked();requirePrivateProductMutation(this.#vault.localIdentity().ownerId);};current();
     const bytes=encoder.encode(JSON.stringify(state));
-    try{await this.#vault.write([...changes,{domain:'draft',objectId:await this.#stateId,value:bytes,expected:serial}]);}
+    try{await this.#vault.write([...changes,{domain:'draft',objectId:await this.#stateId,value:bytes,expected:serial}],current);}
     finally{bytes.fill(0);}return(serial??0)+1;
   }
   async #bytes(draft:Draft){

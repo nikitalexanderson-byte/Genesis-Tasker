@@ -69,6 +69,40 @@ test('directory persistence stores exactly the verified pin and history despite 
   reopened.lock();secret.fill(0);
 });
 
+test('repeated verification of the same signed directory preserves the retained encrypted record and serial',async()=>{
+  const owner=fixture.rootContext.ownerId,scope=fixture.rootContext.scopeId,secret=Uint8Array.from(Buffer.from(fixture.secret,'base64url'));
+  const records=new RecordStore(),device=await UnlockedWebDevice.provision(owner,secret,fixture.recoveryKit,records,new KeyStore());
+  try{
+    const first=await device.rememberDirectory(scope,fixture.recoveryKit.authority,fixture.directory.events,owner);
+    const retained=JSON.stringify([...records.rows]);
+    const again=await device.rememberDirectory(scope,fixture.recoveryKit.authority,fixture.directory.events,owner);
+    assert.deepEqual(again.checkpoint,first.checkpoint);
+    assert(JSON.stringify([...records.rows])===retained,'an unchanged signed directory must not invalidate another scope’s retained-history snapshot');
+  }finally{device.lock();secret.fill(0);}
+});
+
+test('unchanged-directory verification still refuses a concurrent encrypted record replacement',async()=>{
+  const owner=fixture.rootContext.ownerId,scope=fixture.rootContext.scopeId,secret=Uint8Array.from(Buffer.from(fixture.secret,'base64url'));
+  const records=new RecordStore(),device=await UnlockedWebDevice.provision(owner,secret,fixture.recoveryKit,records,new KeyStore());
+  try{
+    await device.rememberDirectory(scope,fixture.recoveryKit.authority,fixture.directory.events,owner);
+    const [key,row]=[...records.rows].find(([key])=>key.includes('key-check'));
+    const saved=await device.vault.read('key-check',row.envelope.context.objectId);
+    let replace=false;const get=records.get.bind(records),commit=records.commit.bind(records);
+    const replaceOnce=async()=>{
+      if(replace){
+        replace=false;
+        await device.vault.write([{domain:'key-check',objectId:row.envelope.context.objectId,value:saved.value,expected:saved.serial}]);
+      }
+    };
+    records.get=async coordinate=>{if(coordinate===key)await replaceOnce();return get(coordinate);};
+    records.commit=async changes=>{if(changes.some(change=>change.key===key))await replaceOnce();return commit(changes);};
+    await assert.rejects(device.rememberDirectory(scope,fixture.recoveryKit.authority,fixture.directory.events,owner,()=>{replace=true;}));
+    assert.equal(records.rows.get(key).serial,2,'the concurrent writer is retained');
+    saved.value.fill(0);
+  }finally{device.lock();secret.fill(0);}
+});
+
 test('durable-key acknowledgement refuses changed bundle identity headers without discarding encrypted rows',async()=>{
   const owner='durable-headers',recovery=await createRecoveryKit(owner),keys=new KeyStore(),records=new RecordStore();
   const device=await UnlockedWebDevice.provision(owner,recovery.secret,recovery.kit,records,keys),original=structuredClone(keys.rows.get(owner));

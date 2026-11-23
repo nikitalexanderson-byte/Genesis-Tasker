@@ -1,6 +1,7 @@
 package ru.genesis.calendar.auth
 
 import android.content.Context
+import android.os.Bundle
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -83,9 +84,37 @@ class NativePrivateProductHttpsTest {
             val material=E2eeKeys.createRecoveryKit(owner);recovery=material
             NativeMigrationUiState.show(owner,"en",false)
             val intent=requireNotNull(NativeMigrationUiState.state.value)
+            assertFalse("A periodic worker must defer before changing the migration's authentication generation",auth.synchronizeInBackground())
+            // Read-only diagnostics distinguish the refusing predicate without
+            // printing account IDs, session material or any private content.
+            val diagnosticClient=AuthController::class.java.getDeclaredField("client").apply{isAccessible=true}.get(auth) as AuthSessionClient
+            val diagnosticLifecycle=AuthController::class.java.getDeclaredField("privateVaultLifecycle").apply{isAccessible=true}.get(auth) as java.util.concurrent.atomic.AtomicLong
+            val diagnosticGeneration=diagnosticClient.currentGeneration()
+            val diagnosticEpoch=app.workspaceEpoch
+            val diagnosticBackup=NativeBackupEpoch.current()
+            val diagnosticLife=diagnosticLifecycle.get()
+            fun diagnose(phase:String){
+                val value=JSONObject().put("phase",phase)
+                    .put("sameGeneration",diagnosticClient.currentGeneration()==diagnosticGeneration)
+                    .put("currentTransport",diagnosticClient.isCurrent(diagnosticGeneration))
+                    .put("sameBackupEpoch",NativeBackupEpoch.current()==diagnosticBackup)
+                    .put("sameWorkspaceEpoch",app.workspaceEpoch==diagnosticEpoch)
+                    .put("sameLifecycle",diagnosticLifecycle.get()==diagnosticLife)
+                    .put("foreground",diagnosticClient.isTrialForeground())
+                    .put("sameOwner",auth.state.value.user?.uid==owner)
+                    .put("requiresSignIn",auth.state.value.requiresSignIn)
+                    .put("sameScope",app.workspaceScope==accountScope)
+                InstrumentationRegistry.getInstrumentation().sendStatus(2,Bundle().apply{putString("stream","GENESIS_MIGRATION_GUARD:$value\n")})
+                android.util.Log.i("Genesis336QaGuard",value.toString())
+            }
+            fun progress(phase:String){
+                check(phase in setOf("snapshot","sources","reconciliation","uploading","active"))
+                android.util.Log.i("Genesis336QaPhase",phase)
+            }
             val guard={check(NativeMigrationUiState.state.value?.id==intent.id){"E2EE_SOURCE_CAPTURE_CHANGED"};auth.privateUiOwnerGuard(owner).invoke()}
+            diagnose("before-personal")
             val migration=auth.preparePrivateMigration(material.secret,material.kit,guard)
-            try{withTimeout(1200000){migration.run(material.secret,material.kit)}}finally{auth.closePrivateMigration(migration)}
+            try{withTimeout(1200000){migration.run(material.secret,material.kit,::progress)}}catch(error:Throwable){diagnose("personal-refusal");throw error}finally{auth.closePrivateMigration(migration)}
             assertEquals("E2EE_UPGRADE_REQUIRED",request("/api/bootstrap",expected=409).getString("error"))
             NativeMigrationUiState.close(intent.id);auth.checkSession()
             withTimeout(120000){auth.state.first{it.user?.uid==owner&&it.user?.privateVault==true&&it.ready&&!it.busy}}
@@ -104,7 +133,7 @@ class NativePrivateProductHttpsTest {
                 NativeMigrationUiState.show(owner,"en",true,target);val transfer=requireNotNull(NativeMigrationUiState.state.value)
                 val bound={check(NativeMigrationUiState.state.value?.id==transfer.id){"E2EE_SOURCE_CAPTURE_CHANGED"};auth.privateUiOwnerGuard(owner).invoke()}
                 val shared=auth.prepareSharedPrivateMigration(target,material.secret,material.kit,bound)
-                try{withTimeout(1200000){shared.run(material.secret,material.kit)}}finally{auth.closePrivateMigration(shared)}
+                try{withTimeout(1200000){shared.run(material.secret,material.kit,::progress)}}finally{auth.closePrivateMigration(shared)}
                 auth.finishSharedPrivateMigration(target);NativeMigrationUiState.close(transfer.id)
             }
             val statusResponse=auth.privateMigrationStatus().getJSONArray("scopes")

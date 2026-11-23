@@ -3172,6 +3172,10 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     /** Uses the same guarded session, CAS merge and outbox path as the foreground UI. */
     internal suspend fun synchronizeInBackground(): Boolean = withContext(Dispatchers.Main.immediate + NativeActivityVisit.requestContext(true)) {
         if (!app.workspaceScope.startsWith("account-")) return@withContext true
+        // A periodic refresh must not begin another authentication generation
+        // underneath a foreground migration. Retain work for later retry.
+        val migratingOwner=ru.genesis.calendar.security.NativeMigrationUiState.state.value?.owner
+        if(privateMigration.get()!=null||(migratingOwner!=null&&migratingOwner==mutableState.value.user?.uid))return@withContext false
         // Workers never borrow an open foreground vault or initialize a new
         // identity. Private queues resume with their original bytes on unlock.
         if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope)||mutableState.value.user?.privateVault==true)return@withContext true

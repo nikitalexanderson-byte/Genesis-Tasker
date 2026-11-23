@@ -1,5 +1,101 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября, после 09:18 UTC: PIN/отпечаток принят, исправлены гонки
+
+Actual component PASS4/4,0skipped на owned API34: output/qa/
+security336-native150-unlock-component-api34-04/results.json. Production
+RecoveryCredentialActivity + настоящий E2eeDeviceVault с auth-required key;
+системный PIN, fingerprint37, cancel и background проверены. System PIN/fingerprint
+screenshots в той же папке. PIN и fingerprint не эмулировались callback-ом: driver
+ввёл прежний synthetic PIN в наблюдённое system password field и послал hardware
+touch37 в наблюдённый prompt. Android14 сначала предлагает ещё один системный
+Use PIN (button_use_credential), PIN field находится в SystemUI, не только Settings.
+XML пишет единственный UiAutomation внутри instrumentation; driver его только
+читает. Исходный PIN не менялся, personal devices/Play не тронуты. Это component
+acceptance, НЕ integrated account/release PASS. Build13 main APK тот же3214F082…,
+test F2A41B396427494AFD803EE0EFDA9124E6BB8B910C54FA2B128412AAC6F1064F,
+source24E1865B6B94C28CBCA5F3585A472E0215A9792AC6199655FB789090A5EE404C.
+
+Native controller guard02 FAILED ровно через15min: sameGeneration=false и
+currentTransport=false; все owner/foreground/lifecycle/workspace/backup predicates
+остались true. Реальный periodic worker начинал новую сессию под миграцией.
+Прямой forced owned job2 использован отдельно как diagnostic injection и сохранён
+в worker-interference-diagnostic.json; сам он не закрыл тест. В AuthController
+background sync теперь defer/retry до закрытия active migration/owner UI intent;
+null owner не блокирует cold session. В native controller test добавлен реальный
+background refusal до prepare и безопасные phase/predicate logcat tags.
+
+Web30 FAILED точно в catalogue row guard: outbox/job, sameSerial=false,
+sameSize=false. Обычный encrypted upload менял account-wide custody под shared
+migration. Теперь owner-bound UI scheduling fence проверяется перед и внутри
+commit обычных scope-client jobs и editor queue publications; late receipt
+оставляет исходный immutable pending packet для последующего retry. Migration
+storage/guards не ослаблены. Web/native rememberDirectory стали идемпотентны с
+повторным чтением serial/bytes после signature work: concurrent replacement всё
+ещё отказывает. Новые regressions сначала воспроизвели дефекты; после исправлений
+device-vault/scope-client36/36 PASS (runtime/migration-race-corrections-unit02.log).
+
+Сейчас build14/session72672: full JVM + debug/test APK + lintDebug,
+runtime/native150-race-corrections-build14.log. Web21/session49106: scoped lint
+и full typecheck PASS, build/immutable copy pending, runtime/web-private-build21.log.
+App/android/contracts/public inputs с начала14 не менять. Затем actual web shared
+journey на build21 (без повторения112 visual captures), owned native key audit,
+controller + integrated unlock. Старые FAIL не переписывать. Native comparator/
+background code ещё требует runtime acceptance. Части AuthController содержат
+существующие CRLF; git diff --check нужно различать CR-at-EOL и реальные пробелы.
+
+PR47 уже merged; main push checks45140708340 всё ещё выполняется (Android SUCCESS,
+web ongoing). Не запускать check duplicate. После SUCCESS штатный Deploy main
+4cc6750315ce115074f129239598d6673ae73cc6 от живого incumbent и live verify flag/APK149.
+Security изменения пока не опубликованы; main base надо включить в security
+без отката. Coverage9/20, floors/cutover off, deployAndroid=false. Goal active.
+
+## 23 ноября, после 08:49 UTC: активная диагностика
+
+Build9 SUCCESS: JVM1419 PASS,0FAIL,8 opt-in skipped (не1427PASS), debug/test APK
+собраны. Main APK3214F08276BE26A05F2729DCD16544C3094F0074C0E5CA502A82B57316EE6FB9.
+Build10 также SUCCESS2m24s: только новые androidTest inputs; тот же main APK,
+test APK925BD255EE196141AC5E1FBC6A220D3D3DECD8DC394C4C9D29D6C32EF0E1C3EB,
+sourceD6851312E5D2B6CB4644A958200D5746784DDB61700881351CFA123DBAE6527C.
+
+Настоящий NativePrivateProductHttpsTest в controller-unlock-api34-01 FAILED:
+E2EE_ACCOUNT_CHANGED при savePlanningCell/retained history. До integrated UI
+не дошёл; owned fixture cleanup PASS. В androidTest добавлена read-only диагностика
+предикатов (booleans only, без IDs/cookies/keys). Сейчас повтор с ней:
+session56282, runtime/native150-controller-guard-api34-02.log и
+output/qa/security336-native150-controller-guard-api34-02-platform/.
+Не менять app/android/contracts/public до результата этого run.
+
+Новый NativeDeviceAuthenticationUiTest независимо монтирует настоящий
+RecoveryCredentialActivity и открывает auth-required E2eeDeviceVault synthetic
+record. Первая component попытка FAIL:4 сценария не увидели prompt. Тест после
+изменения Compose request не ждал нового кадра; добавить compose.waitForIdle()
+перед UiDevice wait, вывести безопасную причину finished при неудаче. Driver
+нуждается также в -r для raw instrumentation и не должен запускать второй
+uiautomator dump во время instrumentation: Android допускает только один
+UiAutomationService. XML с наблюдённым fingerprint prompt должен писать сам тест,
+driver только читает его через adb. Никаких PIN/fingerprint PASS ещё нет.
+
+Web29 завершён FAIL: personal migration/edit/reload/offline/wrong-secret/recovery
+прошли; actual Google re-confirm action достиг synthetic provider, повторный
+project bootstrap200. Затем точный E2EE_SOURCE_HISTORY_CHANGED, storageFailures[].
+Web30/session72194 использует тот же immutable build20 и новые неприостанавливающие
+logpoints на каждом history guard, без раскрытия содержимого; log
+runtime/consolidated-private-shared30.log, output/playwright/
+security336-private-shared-30-1123/. Не повышать budgets и не снимать guards.
+Замечен отдельный реальный дефект: rememberDirectory web/native всегда пишет
+key-check даже для тех же verified bytes, увеличивая serial. После диагностики
+исправить идемпотентность с повторным чтением/проверкой прежней serial и bytes,
+сохраняя refusal при concurrent change и все проверки signed history.
+
+PR47 merged штатным squash после SUCCESS обоих required jobs старого rerun.
+Новый main4cc6750315ce115074f129239598d6673ae73cc6, push Source checks45140708340
+RUNNING. Не dispatch-ить дубликат checks; после SUCCESS штатный Deploy по exact
+main и живому incumbent, затем live verification флага/APK149. Production пока
+4c209a00, safety3.3.6 не выложена. Native test/QA script изменения ещё dirty,
+HEAD07e455d0 не pushed. Original prompt не менялся, demo-output не читать/stage.
+Signed149→150, полная матрица, exact-candidate CI и внутреннее review остаются.
+
 ## 23 ноября, после 07:58 UTC: текущая точка
 
 Native build8 честно FAILED: SDK37 больше не содержит typed FingerprintManager.

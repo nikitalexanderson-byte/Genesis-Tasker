@@ -10,6 +10,7 @@ import {validatePrivateProjectSelection,validatePrivateProjectTopology,type Priv
 import {productMutation,type ProductMutation} from './product-contract.ts';
 import {membershipAtomicStagingPayload,type MembershipAtomicStagingAction} from './membership-atomic-contract.ts';
 import {membershipAtomicApplyPayload,type MembershipAtomicApplyAction} from './membership-atomic-receipts.ts';
+import {requirePrivateProductMutation} from '../private-migration-ui.ts';
 
 export interface ScopeTransport {
   directory(scopeId:string):Promise<{events:SignedE2eeCommand[]}>;
@@ -137,7 +138,8 @@ export class E2eeScopeClient {
     }finally{record.value.fill(0);}
   }
   async #saveJob(id:string,job:UploadJob,serial:number|null,changes:LocalWrite[]=[]) {
-    const bytes=encoder.encode(JSON.stringify(job));try{await this.#device.vault.write([...changes,{domain:'outbox',objectId:`job:${id}`,value:bytes,expected:serial}]);}
+    const current=()=>{this.#device.requireOpen();requirePrivateProductMutation(this.#device.ownerId);};current();
+    const bytes=encoder.encode(JSON.stringify(job));try{await this.#device.vault.write([...changes,{domain:'outbox',objectId:`job:${id}`,value:bytes,expected:serial}],current);}
     finally{bytes.fill(0);}return(serial??0)+1;
   }
   async localJob(domain:E2eeContext['domain'],objectId:string):Promise<{originId:string|null;expectedRevision:number;complete:boolean}|null> {
