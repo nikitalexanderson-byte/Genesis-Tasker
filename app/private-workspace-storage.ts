@@ -6,6 +6,7 @@ const bridges=new Map<string,Bridge>(),protectedOwners=new Set<string>();
 // The legacy workspace key is supplied by the product rather than duplicated
 // here. A public owner marker never grants decryption or server authority.
 const keys=new Map<string,string>();
+export function privateWorkspaceProtected(ownerId:string){return protectedOwners.has(ownerId);}
 export function protectPrivateWorkspaceOwner(ownerId:string,key:string){protectedOwners.add(ownerId);keys.set(key,ownerId);}
 export function installPrivateWorkspaceStorage(ownerId:string,key:string,bridge:Bridge){protectPrivateWorkspaceOwner(ownerId,key);bridges.set(ownerId,bridge);return()=>{if(bridges.get(ownerId)===bridge)bridges.delete(ownerId);};}
 export function privateWorkspaceBridge(key:string):Bridge|null{

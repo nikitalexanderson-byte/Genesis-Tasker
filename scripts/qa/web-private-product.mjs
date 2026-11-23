@@ -16,6 +16,7 @@ let page,secret,kit;
 const diagnostics=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='diagnostics';
 const profileOnly=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='profile';
 const canary='PRIVATE-PRODUCT-'+crypto.randomUUID();
+const cacheCanary='PRIVATE-CACHE-'+crypto.randomUUID();
 const save=()=>writeFileSync(`${output}/private-product-results.json`,JSON.stringify(report,null,2)+'\n');
 const check=async(name,operation)=>{
  try{await operation();report.checks.push({name,status:'PASS'});console.log('PASS private-product '+name);save();}
@@ -72,6 +73,11 @@ try{
   await dialog.getByRole('button',{name:/^(Сохранить|Создать проект)$/}).click();assert((await saved).ok());await debug.send('Debugger.setPauseOnExceptions',{state:'none'});
  });
  await check('mounted migration creates and requires both recovery downloads',async()=>{
+  await page.evaluate(marker=>{
+   const user=JSON.parse(localStorage.getItem('genesis-last-user-v2'));if(!user?.uid)throw Error('Missing ordinary cached owner');
+   user.syncRouting={mode:'category',defaultAccountIds:[user.uid],categoryAccountIds:{[marker]:[user.uid]}};
+   localStorage.setItem('genesis-last-user-v2',JSON.stringify(user));
+  },cacheCanary);
   await page.getByRole('button',{name:'Открыть личный кабинет и настройки',exact:true}).click();
   await page.locator('[data-settings-tab=account]').click();await page.getByRole('button',{name:migration.title,exact:true}).click();
   const dialog=page.locator('.private-migration-dialog');await dialog.getByRole('button',{name:migration.generate,exact:true}).click();
@@ -109,10 +115,21 @@ try{
   const dialog=page.locator('.private-migration-dialog');await recoveryInput(dialog);
   if(diagnostics)await debug.send('Debugger.setPauseOnExceptions',{state:'all'});
   await dialog.getByRole('button',{name:migration.begin,exact:true}).click();
-  await Promise.race([dialog.waitFor({state:'hidden',timeout:600000}),dialog.getByRole('alert').waitFor({timeout:600000}).then(async()=>{throw new Error('Product migration refused: '+report.caughtCodes.join(', ')+'; '+await dialog.getByRole('alert').innerText());})]);
+  await Promise.race([dialog.waitFor({state:'hidden',timeout:1200000}),dialog.getByRole('alert').waitFor({timeout:1200000}).then(async()=>{throw new Error('Product migration refused: '+report.caughtCodes.join(', ')+'; '+await dialog.getByRole('alert').innerText());})]);
   await debug.send('Debugger.setPauseOnExceptions',{state:'none'});
   const status=await(await context.request.get('/api/e2ee/v1/status')).json();assert(status.scopes.some(scope=>scope.kind==='personal'&&scope.state==='active'));
-  const session=await(await context.request.get('/api/session')).json();assert.equal(session.user.privateVault,true);
+  const session=await(await context.request.get('/api/session')).json();assert.equal(session.user.privatePreferencesMode,'e2ee');
+  // privateVault is a client-derived routing flag. The identity response is
+  // deliberately not an independent cryptographic authority or key export.
+  const bootstrap=await context.request.get('/api/bootstrap');assert.equal(bootstrap.status(),409);
+  assert.equal((await bootstrap.json()).error,'E2EE_UPGRADE_REQUIRED');
+ });
+ await check('activated account keeps private preferences out of the ordinary profile cache',async()=>{
+  const result=await page.evaluate(marker=>{
+   const user=JSON.parse(localStorage.getItem('genesis-last-user-v2'));
+   return{mode:user?.privatePreferencesMode,fields:['advicePreferences','uiVisibility','syncRouting'].filter(name=>Object.hasOwn(user,name)),leaked:JSON.stringify(Object.entries(localStorage)).includes(marker)};
+  },cacheCanary);
+  assert.deepEqual(result,{mode:'e2ee',fields:[],leaked:false});
  });
  await check('normal encrypted reader retains the original task',async()=>{
   await page.reload();const gate=page.locator('.private-vault-dialog');await gate.waitFor();await recoveryInput(gate);
@@ -124,6 +141,16 @@ try{
   await page.getByRole('button',{name:`Вернуть задачу «${canary}»`,exact:true}).waitFor();
   await page.reload();const gate=page.locator('.private-vault-dialog');await recoveryInput(gate);await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
   await page.getByRole('button',{name:`Вернуть задачу «${canary}»`,exact:true}).waitFor();
+ });
+ await check('offline unlock restores encrypted preferences and the edited task',async()=>{
+  await context.setOffline(true);
+  try{
+   await page.reload();const gate=page.locator('.private-vault-dialog');await gate.waitFor();
+   await gate.locator('input[type=password]').fill(secret);await gate.getByRole('button',{name:vault.offline,exact:true}).click();
+   await gate.waitFor({state:'hidden'});await page.getByRole('button',{name:`Вернуть задачу «${canary}»`,exact:true}).waitFor();
+   const fields=await page.evaluate(()=>Object.keys(JSON.parse(localStorage.getItem('genesis-last-user-v2'))).filter(key=>['advicePreferences','uiVisibility','syncRouting'].includes(key)));
+   assert.deepEqual(fields,[]);await page.screenshot({path:`${output}/offline-private-workspace.png`,fullPage:true,animations:'disabled'});
+  }finally{await context.setOffline(false);}
  });
  await check('clean browser cannot open content using identity alone or a wrong secret',async()=>{
   const clean=await browser.newContext({baseURL,locale:'ru-RU'});

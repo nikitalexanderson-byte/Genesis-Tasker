@@ -6,6 +6,7 @@ import type {PrivateScopeKind} from './private-paths.ts';
 import {capturePrivateLocalValues} from './local-work-values.ts';
 import {captureMountedBackupMigrationSources} from '../backup-sources.ts';
 import {materializePersonalMigrationSources} from '../personal-migration-memory.ts';
+import {LAST_USER_CACHE_KEY,userCachePreferenceOriginal} from '../last-user-cache.ts';
 
 export type PrivatePathLocalEntry={store:string;key:string;raw:string;content:unknown;spaceId:string|null;projectId:string|null};
 export type PrivatePathLocalInventory={platform:'web'|'android';entries:PrivatePathLocalEntry[];editors:unknown[];inventoryVersion:1};
@@ -19,8 +20,8 @@ export async function captureWebPrivatePathLocal(target:Target,ports:{storage:Pi
  const binding=Object.freeze({...target});assertTechnical(binding.ownerId);assertTechnical(binding.resourceId);ports.assertCurrent();
  const draft=`genesis-shared-work-drafts-v1:${binding.ownerId}:`,maps=`genesis-shared-mindmaps:${binding.ownerId}:`,pending=`genesis-pending-mutations-v2:${binding.ownerId}`;
  const readStorage=()=>{const rows:{key:string;raw:string}[]=[];for(let i=0;i<ports.storage.length;i++){
-  const key=ports.storage.key(i);if(!key||!key.startsWith(draft)&&!key.startsWith(maps)&&key!==pending&&!key.startsWith(pending+':'))continue;
-  const raw=ports.storage.getItem(key);if(raw!==null)rows.push({key,raw});if(rows.length>10000)throw new Error('E2EE_SOURCE_TOO_LARGE');
+  const key=ports.storage.key(i);if(!key||!key.startsWith(draft)&&!key.startsWith(maps)&&key!==pending&&!key.startsWith(pending+':')&&!(binding.kind==='personal'&&key===LAST_USER_CACHE_KEY))continue;
+  const raw=ports.storage.getItem(key);if(raw!==null&&(key!==LAST_USER_CACHE_KEY||userCachePreferenceOriginal(raw,binding.ownerId)!==null))rows.push({key,raw});if(rows.length>10000)throw new Error('E2EE_SOURCE_TOO_LARGE');
  }return rows.sort((a,b)=>a.key<b.key?-1:a.key>b.key?1:0);};
  const stored=readStorage(),mounted=await capturePrivateLocalValues(captureLocalWorkMigrationMemory(binding.ownerId),ports.assertCurrent) as ReturnType<typeof captureLocalWorkMigrationMemory>,indexed=await captureSharedEditorIndexedOriginals(binding.ownerId,ports.assertCurrent);ports.assertCurrent();
  const productForms=binding.kind==='personal'?await captureMountedBackupMigrationSources(binding.ownerId,ports.assertCurrent):null;ports.assertCurrent();
@@ -30,7 +31,11 @@ export async function captureWebPrivatePathLocal(target:Target,ports:{storage:Pi
  for(const [store,rows]of [['localStorage',stored],['indexedDB',indexed]] as const)for(const row of rows){
   ports.assertCurrent();size+=encoder.encode(row.raw).length;if(size>MAX)throw new Error('E2EE_SOURCE_TOO_LARGE');
   const value=parse(row.raw);let content:unknown=value,spaceId:string|null=null,projectId:string|null=null;
-  if(row.key.startsWith(draft)){
+  if(row.key===LAST_USER_CACHE_KEY){
+   if(binding.kind!=='personal')continue;
+   content=userCachePreferenceOriginal(row.raw,binding.ownerId);
+   if(content===null)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+  }else if(row.key.startsWith(draft)){
    const match=/^([^:]+):([^:]+):([^:]+)$/.exec(row.key.slice(draft.length));
    if(!match||!value||typeof value!=='object'||Array.isArray(value))throw new Error('E2EE_LOCAL_WORK_SOURCE_INVALID');
    const envelope=value as Record<string,unknown>;if(envelope.version!==1||envelope.id!==match[3]||typeof envelope.iv!=='string'||typeof envelope.ciphertext!=='string')throw new Error('E2EE_LOCAL_WORK_SOURCE_INVALID');

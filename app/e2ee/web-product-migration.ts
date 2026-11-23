@@ -17,6 +17,7 @@ import {admitE2eeStorage,E2EE_PROVIDER_STORAGE_BUDGET} from './storage-capacity.
 import type {VerifiedDirectory} from './directory.ts';
 import type {E2eeMigrationSources} from './migration-sources.ts';
 import type {WebProductMigrationFence} from './legacy-transport-fence.ts';
+import {retainEncryptedUserCache} from './user-cache-retention.ts';
 
 type Target={ownerId:string;scopeId:string;kind:'personal'|'space'|'project';resourceId:string};
 export type WebSharedMigrationTarget=Pick<Target,'scopeId'|'resourceId'>&{kind:'space'|'project'};
@@ -159,7 +160,10 @@ export class WebProductMigration{
      const active=await this.device.rememberDirectory(this.target.scopeId,this.device.authorityPin,response.events,this.target.ownerId);current();
      if(active.state!=='active'||active.kind!==this.target.kind||active.resourceId!==this.target.resourceId)throw new Error('E2EE_MIGRATION_UNVERIFIED');
      await fence.activate(active);current();const token=await fence.token();if(!token)throw new Error('E2EE_LOCAL_FENCE_REQUIRED');
-     if(this.target.kind==='personal')retainLocalMigrationFence(this.target.ownerId,this.target.scopeId,token,'active');this.directory=active;
+     if(this.target.kind==='personal'){
+      retainLocalMigrationFence(this.target.ownerId,this.target.scopeId,token,'active');
+      await retainEncryptedUserCache(this.device,current);current();
+     }this.directory=active;
     }});current();
   }finally{held.fill(0);this.#running=false;if(this.#operation===operation)this.#operation=null;drained();}
  }

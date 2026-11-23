@@ -15,6 +15,7 @@ import {encodeE2eeBytes,type E2eeContext} from './envelope.ts';
 import {samePrivateJson as same} from './product-json.ts';
 import {exactKeys} from './keys.ts';
 import {E2EE_CHUNK_BYTES} from './files.ts';
+import {validateRetainedProfileOriginal,retainedProfilePreferenceHistory} from './user-cache-retention.ts';
 
 /** Read-only typed retention. No marker/receipt is imported as enrollment,
  * membership, retry, restored device keys or an executable archive command. */
@@ -35,6 +36,11 @@ export async function inspectDeviceControlCustody(options:{device:Pick<UnlockedW
   for(const objectId of ids)claim('draft',objectId,scopeId,'device-control-history');return opened.value;
  }
  const markers=await vault.listLocal('draft',PERSONAL_DEVICE_ENTRY_ID);current();if(markers.some(id=>id!==PERSONAL_DEVICE_ENTRY_ID))throw new Error('E2EE_DEVICE_ACCESS_INVALID');
+ for(const id of await vault.listLocal('draft','profile-original:')){
+  current();if(!options.personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+  const original=await document(id,value=>validateRetainedProfileOriginal(value,device.ownerId),()=>options.personalScopeId!);
+  await retainedProfilePreferenceHistory(id,original,device.ownerId);current();
+ }
  if(markers.length)await document(PERSONAL_DEVICE_ENTRY_ID,value=>validatePersonalDeviceEntryMarker(value,device.ownerId),marker=>{
   if(!same(marker.target.authority,device.authorityPin)||options.personalScopeId!==null&&marker.target.scopeId!==options.personalScopeId)throw new Error('E2EE_AUTHORITY_CHANGED');return marker.target.scopeId;
  });

@@ -1,4 +1,5 @@
 "use client";
+import {cacheLastUser,privateUserCacheRequired,LAST_USER_CACHE_KEY} from './last-user-cache';
 import {PrivateGoogleCopy} from './PrivateGoogleCopy';
 import release319Copy from "./release-319-copy.json";
 import { GENESIS_TELEGRAM, genesisTelegramLabel } from './site-links';
@@ -438,7 +439,7 @@ type SolarLocationStatus = "loading" | "ready";
 type TaskSeriesScope = "occurrence" | "series";
 type PendingTaskDeletion = { taskId: string; occurrenceDate: string };
 
-const LAST_USER_KEY = "genesis-last-user-v2";
+const LAST_USER_KEY = LAST_USER_CACHE_KEY;
 
 const NAVIGATION: Array<{ id: ViewName; label: string; symbol: string }> = [
   { id: "today", label: "Сегодня", symbol: "☉" },
@@ -1567,7 +1568,7 @@ export function GenesisCalendar() {
           if (!user || user.uid !== accountId) throw new Error("Theme account session changed");
           if (fresh) {
             setCloudUser(user);
-            if (!privateDeviceAccessBlocked()) localStorage.setItem(LAST_USER_KEY, JSON.stringify(user));
+            cacheLastUser(user);
           }
           return {
             theme: normalizeWebTheme(user.theme),
@@ -1582,7 +1583,7 @@ export function GenesisCalendar() {
           if (signal.aborted) throw new DOMException("Theme write aborted", "AbortError");
           if (cloudUserRef.current?.uid === accountId) {
             setCloudUser(result.user);
-            if (!privateDeviceAccessBlocked()) localStorage.setItem(LAST_USER_KEY, JSON.stringify(result.user));
+            cacheLastUser(result.user);
           }
           return {
             theme: normalizeWebTheme(result.user.theme),
@@ -1796,7 +1797,7 @@ export function GenesisCalendar() {
     setCloudUser(current => current?.uid === user.uid ? user : current);
     try {
       const cached = JSON.parse(localStorage.getItem(LAST_USER_KEY) || "null") as GenesisUser | null;
-      if (cached?.uid === user.uid && !privateDeviceAccessBlocked()) localStorage.setItem(LAST_USER_KEY, JSON.stringify(user));
+      if (cached?.uid === user.uid) cacheLastUser(user);
     } catch { /* Server preferences remain saved when device storage is unavailable. */ }
   }, []);
   const { layout: accountLayout, save: saveLayout, error: layoutError } = useAccountLayout(cloudUser, applyLayoutUser);
@@ -2397,7 +2398,7 @@ export function GenesisCalendar() {
       setLanguage(effectiveLanguage);
       storeLanguage(effectiveLanguage);
       setCloudUser(effectiveUser);
-      if (!privateDeviceAccessBlocked()) localStorage.setItem(LAST_USER_KEY, JSON.stringify(effectiveUser));
+      cacheLastUser(effectiveUser);
       if (pendingLanguage) {
         localStorage.removeItem(LANGUAGE_LOGIN_PENDING_KEY);
         if (pendingLanguage !== serverLanguage) {
@@ -2405,7 +2406,7 @@ export function GenesisCalendar() {
             .then((result) => {
               if (!active || !workspaceReady || loadedUserId !== user.uid) return;
               setCloudUser(result.user);
-              if (!privateDeviceAccessBlocked()) localStorage.setItem(LAST_USER_KEY, JSON.stringify(result.user));
+              cacheLastUser(result.user);
             })
             .catch((error: Error) => {
               if (!active) return;
@@ -2538,9 +2539,9 @@ export function GenesisCalendar() {
         }
         // A failed background check must not replace the live workspace with an older cache.
         if(cloudUserRef.current?.uid){setAuthResolved(true);setSyncStatus(navigator.onLine ? "error" : "offline");return;}
-        const cached = JSON.parse(localStorage.getItem(LAST_USER_KEY) || "null") as GenesisUser | null;
+        let cached = JSON.parse(localStorage.getItem(LAST_USER_KEY) || "null") as GenesisUser | null;
         if (cached?.uid) {
-          if(Object.hasOwn(cached,'privatePreferencesMode')){await restoreOfflinePrivateWorkspace(cached);if(!active)return;}
+          if(privateUserCacheRequired(cached)){cached=await restoreOfflinePrivateWorkspace(cached);if(!active)return;}
           else restoreOfflineWorkspaceSession(cached.uid,cached.authProvider === "yandex" ? "yandex" : "google");
           const cachedLanguage = normalizeLanguage(cached.language);
           const local = loadLocalWorkspace(`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${cached.uid}`);
@@ -5300,7 +5301,7 @@ export function GenesisCalendar() {
     const updatedUser = { ...user, calendarMode: mode };
     cloudUserRef.current = updatedUser;
     setCloudUser(updatedUser);
-    try { if (!privateDeviceAccessBlocked()) localStorage.setItem(LAST_USER_KEY, JSON.stringify(updatedUser)); }
+    try { cacheLastUser(updatedUser); }
     catch { /* The visible choice still works when browser storage is unavailable. */ }
     const save = async () => {
       if (revision !== displayCalendarRevisionRef.current || cloudUserRef.current?.uid !== user.uid) return;
@@ -7146,7 +7147,7 @@ export function GenesisCalendar() {
         order={todayOrder} halfBlocks={todayHalves} hiddenBlocks={todayHidden} webVisibility={webHabitHeader} language={language} onSave={saveTodayOrder} onClose={() => setTodayOrderEditor({owner: todayOrderOwner, view, open: false})}/></Suspense> : null}
       {experimentalProjectFormOpen ? <div className="modal-backdrop experimental-project-composer-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setExperimentalProjectFormOpen(false); }}>{renderProjectCreateForm()}</div> : null}
       <ActionNotice message={layoutError || (view === "projects" && activeProjectsArea === "shared" ? "" : notice)}/>
-      <UpgradeAccessUI user={cloudUser} onUserChange={user=>{if(cloudUserRef.current?.uid!==user.uid)return;setCloudUser(user);if(!privateDeviceAccessBlocked())localStorage.setItem(LAST_USER_KEY,JSON.stringify(user));}}/>
+      <UpgradeAccessUI user={cloudUser} onUserChange={user=>{if(cloudUserRef.current?.uid!==user.uid)return;setCloudUser(user);cacheLastUser(user);}}/>
       {cloudUser?<Suspense fallback={null}><SupportNotice key={cloudUser.uid} user={cloudUser}/></Suspense>:null}
       {cloudUser?<Suspense fallback={null}><PlanGuidanceHost key={cloudUser.uid} user={cloudUser} section={view}/></Suspense>:null}
       {iosInstallOpen ? <Suspense fallback={null}><IosInstallPrompt language={language} onClose={() => setIosInstallOpen(false)} /></Suspense> : null}
@@ -7239,7 +7240,7 @@ export function GenesisCalendar() {
               setCloudUser(current => current?.uid === user.uid ? { ...current, emailVerification: user.emailVerification } : current);
               if (!privateDeviceAccessBlocked()) try {
                 const cached=JSON.parse(localStorage.getItem(LAST_USER_KEY) || "null");
-                if(cached?.uid===user.uid)localStorage.setItem(LAST_USER_KEY,JSON.stringify({...cached,emailVerification:user.emailVerification}));
+                if(cached?.uid===user.uid)cacheLastUser({...cached,emailVerification:user.emailVerification});
               } catch { /* The live verified state remains available if this cache cannot be written. */ }
             }} /> : null}
             {authError ? <p className="oauth-callback-error" role="alert">{authError}</p> : null}
@@ -8003,7 +8004,7 @@ export function GenesisCalendar() {
               setCloudUser(user);
               const nextTaskCalendarMode = user.taskCalendarMode ?? "sacred";
               setTaskRecurrenceConfig((current) => alignRecurrenceConfigWithCalendar(current, nextTaskCalendarMode, newTaskDueDate));
-              if (!privateDeviceAccessBlocked()) localStorage.setItem(LAST_USER_KEY, JSON.stringify(user));
+              cacheLastUser(user);
             }}
           />
         </Suspense>

@@ -71,7 +71,8 @@ internal object E2eeMigrationOwnershipCatalogue {
         }
         private fun state(id:String,target:E2eeSourceStage.Target):State {
             val row=view.read("local-snapshot",id)?:invalid()
-            return try{current();val paths=options.inventory.required(target.kind);State(E2eeMigrationStateCodec.read(row.bytes,view,target,paths.map{it.id},paths.flatMap{it.domains}.toSet()),row.serial,hash(row.bytes))}finally{row.bytes.fill(0)}
+            return try{current();val paths=options.inventory.required(target.kind);State(E2eeMigrationStateCodec.read(row.bytes,view,target,paths.map{it.id},paths.flatMap{it.domains}.toSet()),row.serial,hash(row.bytes))}
+            catch(error:org.json.JSONException){throw IllegalStateException("E2EE_SOURCE_HISTORY_INVALID",error)}finally{row.bytes.fill(0)}
         }
         private fun originalRead(scope:Scope)=E2eeRemoteOriginal.ReadOptions(view,E2eeRemoteOriginal.Target(scope.target.ownerId,scope.target.scopeId,scope.target.kind),options.originalCapacity,::current)
         private fun root(scope:Scope,frame:E2eeDirectory.Verified)=E2eeKeys.openRoot((frame.devices[actor.deviceId]?:invalid()).capsule,device.readKeys().receiving,

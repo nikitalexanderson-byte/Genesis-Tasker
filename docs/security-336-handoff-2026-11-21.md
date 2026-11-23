@@ -1,5 +1,48 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября, текущее продолжение: приватный кэш и native150
+
+После f9ae9591 исправлена реальная утечка трёх private preferences в обычный
+last-user cache. Единая запись, frozen preparing, owner-bound оригиналы,
+encrypted custody/readback до очистки, safe portable projection и офлайн apply
+описаны в e2ee-336-private-profile-cache.md. Targeted29/29 PASS; build16 PASS.
+Typecheck04/lint03 запущены. Исходный security prompt не изменялся.
+
+Mounted private16 ранее дошёл до activation, затем упал на ошибочном ожидании
+bootstrap.workspace. Реальный контракт после activation —409 E2EE_UPGRADE_REQUIRED.
+Это ожидание исправлено; private17/session88074 идёт на immutable build15:
+output/playwright/security336-private-17-1123/, runtime/consolidated-private17.log.
+Сценарий включает canary profile cache, нормальные edit/reload, offline unlock
+и recovery в чистом браузере. Последние archive/custody добавления уже в build16.
+
+Первый native150 успешно собран, но platform run INCOMPLETE:6 FAIL и изменение
+source hash во время instrumentation. Два класса:5 несовпадений ожидаемых ранних
+отказов и1 неверный fixture count11 вместо10 relational paths. Общий контракт
+содержит20 paths; relational subset —10, включая personal.local-work. Root/capsule
+fixture mismatch из предыдущего продолжения исправлен. Уточнены ранние отказы,
+сохранены no-write/cold-repair assertions; JSONException повреждённого source
+журнала теперь нормализуется в E2EE_SOURCE_HISTORY_INVALID. Ни один failed run
+не объявляется PASS. APK до cache fix сохранены как partial в
+output/release-3.3.6/native150-before-cache-1123/; fingerprint не подменялся.
+
+Новый incremental build и7 затронутых cases: session85329,
+output/qa/security336-native150-api34-1123-2/,
+runtime/consolidated-native150-api34-2.log. Synthetic API34 auth refresher03
+session99419 ждёт build report, не меняет credential и останавливается marker03.stop.
+Предыдущие refreshers завершены. Только owned emulator-5580/API34 и
+emulator-5594/API26; личные устройства не трогать.
+
+Убраны точные три дочерних процесса superseded baseline от00:48 Moscow,
+чей rendered-html worker крутился больше6h; evidence runtime/superseded-baseline-processes.json.
+Это не завершённая приёмка того старого run. Все security gates/floors off,
+coverage9/20, production APK149 и deployAndroid=false сохраняются.
+
+Остаток: завершить mounted personal recovery, native corrections/API26,
+полный immutable browser regression, 20-path/48-scenario evidence, minified/lint,
+signed149→150 direct update, internal final crypto review и отдельные штатные
+web/API/APK workflows. Security branch ещё не опубликована. demo-output/ не читать,
+не stage и не удалять. Новые source изменения требуют точной новой build identity.
+
 ## 23 ноября, 03:05 UTC: perf corrections и подготовка номера150
 
 Unit5:2115 PASS/2 FAIL из2117. Обе ошибки окружения: отсутствующий PHP в PATH

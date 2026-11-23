@@ -15,6 +15,7 @@ import {assertLegacyLocalWriteAllowed,localMigrationMarker} from './e2ee/web-loc
 import {showPrivateMigration} from './private-migration-ui';
 import {closePrivateAccount,requirePrivateAccount,waitForPrivateAccount,unlockPrivateAccount,privateAccountView,subscribePrivateAccount,markPrivateAccountOwner,privateAccountIsRequired,type PrivateAccountTransport} from './e2ee/product-session';
 import {PRIVATE_VAULT_COPY} from './private-vault-copy';
+import {privateUserCacheRequired} from './last-user-cache';
 import {protectPrivateWorkspaceOwner,installPrivateWorkspaceStorage,retirePrivateWorkspaceStorage} from './private-workspace-storage';
 import type { Language } from "./i18n";
 import { apiUnavailableMessage, billingApiErrorMessage, isTemporaryApiStatus } from "./api-availability";
@@ -180,6 +181,7 @@ export type GenesisUser = {
   uid: string;
   dataGeneration?: number;
   privateVault?: boolean;
+  privatePreferencesMode?: 'e2ee';
   forecastElitePlus?: boolean;
   subscriptionPlan?: SubscriptionPlan;
   featureAccess?: import("./feature-access").FeatureAccess;
@@ -3785,10 +3787,12 @@ export async function privateServiceRequest<T>(ownerId:string,service:'dream-clo
  * the independent device secret and verified saved directory; no HTTP session,
  * device enrollment, billing or ACL is restored from this profile. */
 export async function restoreOfflinePrivateWorkspace(user:GenesisUser){
-  if(localSessionEnded||privateDeviceAccessBlocked()||!Object.hasOwn(user,'privatePreferencesMode')||confirmedTransportOwnerId!==null&&confirmedTransportOwnerId!==user.uid)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');
+  if(localSessionEnded||privateDeviceAccessBlocked()||!privateUserCacheRequired(user)||confirmedTransportOwnerId!==null&&confirmedTransportOwnerId!==user.uid)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');
   confirmedTransportOwnerId=user.uid;privateIdentityCache=user;serverProtectedTransportOwners.add(user.uid);markPrivateAccountOwner(user.uid);
   protectPrivateWorkspaceOwner(user.uid,`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${user.uid}`);
   await waitForPrivateAccount(user.uid,user.language);requirePrivateAccount(user.uid).requireOpen();
+  const check=captureAccountSessionGuard(),{privatePreferences}=await import('./e2ee/preferences-product');check();
+  const restored=await privatePreferences(user.uid).apply({...user,privatePreferencesMode:'e2ee'});check();return restored;
 }
 async function privatePersonalProduct(ownerId:string){
   const check=captureAccountSessionGuard();check();if(confirmedTransportOwnerId!==ownerId)throw new Error('E2EE_ACCOUNT_CHANGED');
@@ -4093,6 +4097,8 @@ export async function unlockCurrentPrivateAccount(secret:string,kit?:import('./e
   const check=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;
   if(!owner||!serverProtectedTransportOwners.has(owner))throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');
   await unlockPrivateAccount(secret,privateAccountHttpTransport(),()=>{check();if(confirmedTransportOwnerId!==owner)throw new Error('E2EE_ACCOUNT_CHANGED');},kit,async account=>{
+    const {retainEncryptedUserCache}=await import('./e2ee/user-cache-retention');check();account.requireOpen();
+    await retainEncryptedUserCache(account.device,()=>{check();account.requireOpen();});check();
     const {E2eePersonalProduct}=await import('./e2ee/personal-product');check();account.requireOpen();
     const product=new E2eePersonalProduct(account);await product.load(account.mode);check();account.requireOpen();
     privatePersonalProducts.set(account,product);installPrivateWorkspaceStorage(owner,`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${owner}`,{

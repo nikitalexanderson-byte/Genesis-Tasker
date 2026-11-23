@@ -99,7 +99,7 @@ class E2eeStreamedPlanningDeviceTest {
         var migration:E2eeMigration
         init {
             check(BuildConfig.DEBUG&&app.packageName=="ru.genesis.calendar.qa1103.debug")
-            val rawRoot=E2eeKeys.freshSecret();val publicKeys=E2eeKeys.publicKeys(device.keys());val keyId="streamed-root"
+            val rawRoot=root.encoded;val publicKeys=E2eeKeys.publicKeys(device.keys());val keyId="streamed-root"
             val payload=JSONObject().put("kind",kind).put("resourceId",owner).put("keyId",keyId).put("generation",1).put("recoveryKit",recovery.kit).put("deviceKeys",publicKeys)
                 .put("deviceCapsule",E2eeKeys.sealRoot(rawRoot,publicKeys.getString("receivingKey"),E2eeKeys.RootRecipient(owner,scope,1,keyId,device.deviceId)))
                 .put("recoveryCapsule",E2eeKeys.sealRoot(rawRoot,recovery.kit.getJSONObject("authority").getString("receivingKey"),E2eeKeys.RootRecipient(owner,scope,1,keyId,"recovery")))
@@ -237,7 +237,9 @@ class E2eeStreamedPlanningDeviceTest {
         for(role in listOf("journal","remote","local"))Rig().use{f->f.stage();f.migration.prepareStreamedPlanning(f.options());val attempt=UUID.randomUUID().toString()
             val id=when(role){"journal"->"content-plan:$attempt:journal";"remote"->"$attempt:upload:0";else->"$attempt:private:0:0"}
             f.device.vault.write(listOf(UnlockedE2eeVault.Write(if(role=="remote")"outbox"else"local-snapshot",id,"UNKNOWN ROLE".toByteArray(),null)));val kept=f.snapshot();val commands=f.commands.size
-            refused("E2EE_SOURCE_HISTORY_PLAN_REVIEW_REQUIRED"){f.migration.withStreamedPlanning(f.options()){error("UNKNOWN_ROLE_REACHED_CONSUMER")}}
+            // The account-wide catalogue rejects this unowned role before the
+            // older per-scope source-history checker can inspect its namespace.
+            refused("E2EE_MIGRATION_HISTORY_REVIEW_REQUIRED"){f.migration.withStreamedPlanning(f.options()){error("UNKNOWN_ROLE_REACHED_CONSUMER")}}
             assertEquals(kept,f.snapshot());assertEquals(commands,f.commands.size);assertEquals(0,f.httpCalls)
         }
     }
@@ -329,7 +331,9 @@ class E2eeStreamedPlanningDeviceTest {
                     }
                 }
             }
-            refused("E2EE_LOCAL_CONFLICT"){f.migration.withStreamedPlanning(f.options()){session->
+            // The fresh authenticated catalogue detects this serial race before
+            // the eventual state CAS. Cold repair below must still be lossless.
+            refused("E2EE_SOURCE_HISTORY_CHANGED"){f.migration.withStreamedPlanning(f.options()){session->
                 val port=E2eeSignedMigrationTransport(f.device,f.directory,setOf("workspace"),session){_,packet,observation->val bytes=response(f);try{withContext(Dispatchers.IO){f.http(packet,observation,bytes)}}finally{bytes.fill(0)}}
                 port.legacyWorkspace(session.context);adopted=true
             }}
@@ -345,7 +349,7 @@ class E2eeStreamedPlanningDeviceTest {
             }
             val state=f.state();state.getJSONObject("ownership").getJSONArray("originals").getJSONObject(0).getJSONObject("completion").put("rawHash",hash("different original".toByteArray()))
             val row=f.row();val changed=state.toString().toByteArray();try{f.device.vault.write(listOf(UnlockedE2eeVault.Write("local-snapshot","migration:"+hash(f.scope.toByteArray()),changed,row.serial)))}finally{row.bytes.fill(0);changed.fill(0)}
-            val before=f.snapshot();var entered=false;refused("E2EE_CORRUPT_STREAMED_OWNERSHIP"){f.migration.withStreamedPlanning(f.options()){entered=true}}
+            val before=f.snapshot();var entered=false;refused("E2EE_MIGRATION_HISTORY_REVIEW_REQUIRED"){f.migration.withStreamedPlanning(f.options()){entered=true}}
             assertFalse(entered);assertEquals(1,f.httpCalls);assertEquals(before,f.snapshot())
         }
     }
@@ -398,7 +402,7 @@ class E2eeStreamedPlanningDeviceTest {
             if(mode=="unowned")capture.prepare(ru.genesis.calendar.auth.E2eeHttpObservation.Request("/e2ee/v1/read","POST",packet.toString()))
             if(mode=="duplicate")f.migration.reserveStreamedRemoteOriginal(reg,packet,f.options())
             val before=f.snapshot();val calls=f.commands.size
-            refused(if(mode=="signer")"UNTRUSTED_COMMAND"else if(mode=="unowned")"ORIGINAL_REVIEW_REQUIRED"else"ALREADY_RESERVED"){
+            refused(if(mode=="signer")"UNTRUSTED_COMMAND"else if(mode=="unowned")"E2EE_MIGRATION_HISTORY_REVIEW_REQUIRED"else"ALREADY_RESERVED"){
                 if(mode=="unowned")f.migration.prepareStreamedPlanning(f.options())else f.migration.reserveStreamedRemoteOriginal(reg,packet,f.options())}
             assertEquals(before,f.snapshot());assertEquals(calls,f.commands.size);capture.close()
         }

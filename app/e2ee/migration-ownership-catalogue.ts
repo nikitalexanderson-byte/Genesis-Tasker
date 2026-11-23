@@ -45,6 +45,7 @@ function binding(state:MigrationState){return [state.migrationId,state.ancestors
 export async function openMigrationOwnershipCatalogue(source:Options){
  const options={...source,capacity:{...source.capacity},originalCapacity:{...source.originalCapacity}},device=options.device,base=device.vault;
  const identity:Identity=Object.freeze({...base.localIdentity()}),rows=new Map<string,Row>(),roles=new Map<string,Role>(),lists=new Map<string,string[]>();
+ const reads=new Map<string,{serial:number;value:Uint8Array<ArrayBuffer>}>();let readBytes=0;
  let closed=false,totalBytes=0,metadataBytes=0,roleContext:Role|null=null;
  const metadataRows=new Set<string>();
  const current=()=>{options.assertCurrent();device.requireOpen();base.assertUnlocked();if(closed)throw new Error('E2EE_MIGRATION_HISTORY_CLOSED');const actor=base.localIdentity();if(actor.ownerId!==identity.ownerId||actor.scopeId!==identity.scopeId||actor.deviceId!==identity.deviceId)invalid();};
@@ -61,7 +62,11 @@ export async function openMigrationOwnershipCatalogue(source:Options){
  };
  const asSource=async<T,>(scopeId:string,operation:()=>Promise<T>):Promise<T>=>{const previous=roleContext;roleContext={scopeId,role:'authenticated-source'};try{return await operation();}finally{roleContext=previous;}};
  const read:UnlockedE2eeVault['read']=async(domain,id)=>{
-  current();const row=await base.read(domain,id);current();const coordinate=key(domain,id),old=rows.get(coordinate);
+  current();const coordinate=key(domain,id),cached=reads.get(coordinate);
+  // This catalogue is one read-only snapshot. Repeated nested original/manifest
+  // checks use its already authenticated bytes; assertUnchanged below always
+  // rereads the real provider before publishing or consuming the catalogue.
+  const row=cached?{serial:cached.serial,value:new Uint8Array(cached.value)}:await base.read(domain,id);current();const old=rows.get(coordinate);
   if(!row){if(old)throw new Error('E2EE_SOURCE_HISTORY_CHANGED');return null;}
   try{const digest=hash(row.value);if(old){if(old.serial!==row.serial||old.hash!==digest||old.bytes!==row.value.length)throw new Error('E2EE_SOURCE_HISTORY_CHANGED');}
    else{
@@ -73,15 +78,18 @@ export async function openMigrationOwnershipCatalogue(source:Options){
     const body=domain==='outbox'||domain==='draft'||domain==='local-snapshot'&&(/:source:[0-9]+$|:private:[0-9]+:[0-9]+$/.test(id)||/^source-stage:[^:]+:[^:]+:p:/.test(id)||/^remote-original:[^:]+:[^:]+:p:/.test(id));
     if(!body){metadataRows.add(coordinate);metadataBytes+=row.value.length;}
    }
+   if(!cached&&row.value.length<=256*1024&&reads.size<512&&readBytes+row.value.length<=4*1024*1024){reads.set(coordinate,{serial:row.serial,value:new Uint8Array(row.value)});readBytes+=row.value.length;}
    if(roleContext)claim(domain,id,roleContext.scopeId,roleContext.role);return row;
   }catch(reason){row.value.fill(0);throw reason;}
  };
  const list:UnlockedE2eeVault['listLocal']=async(domain,prefix)=>{
-  current();const value=(await base.listLocal(domain,prefix)).sort();current();const coordinate=key(domain,prefix),old=lists.get(coordinate);
-  if(old&&(old.length!==value.length||old.some((id,at)=>id!==value[at])))throw new Error('E2EE_SOURCE_HISTORY_CHANGED');if(!old)lists.set(coordinate,[...value]);return value;
+  current();const coordinate=key(domain,prefix),old=lists.get(coordinate);if(old)return[...old];
+  const value=(await base.listLocal(domain,prefix)).sort();current();lists.set(coordinate,[...value]);return value;
  };
  const vault={read,listLocal:list,localIdentity:()=>identity,assertUnlocked:current};
  const values=retainedMigrationValueCollector(vault,current);
+ const close=()=>{closed=true;values.close();for(const row of reads.values())row.value.fill(0);reads.clear();readBytes=0;rows.clear();roles.clear();lists.clear();metadataRows.clear();};
+ try{
  const metadata=async(id:string,limit=4*1024*1024,domain:E2eeContext['domain']='local-snapshot')=>{
   const row=await read(domain,id);if(!row)invalid();
   try{if(row.value.length<1||row.value.length>limit)invalid();
@@ -263,5 +271,6 @@ export async function openMigrationOwnershipCatalogue(source:Options){
   scope(scopeId:string){current();const scope=scopes.find(row=>row.target.scopeId===scopeId);if(!scope)invalid();return structuredClone(scope);},
   contents:values.list(),async readContent(id:string,write:(bytes:Uint8Array)=>Promise<void>){current();await assertUnchanged();const metadata=await values.read(id,write);await assertUnchanged();current();return metadata;},
   role(domain:E2eeContext['domain'],id:string){current();const role=roles.get(key(domain,id));if(!role)invalid();return role;},assertUnchanged,
-  usage:Object.freeze({bytes:totalBytes,records:rows.size,metadataBytes,scopes:scopes.length}),close(){closed=true;values.close();rows.clear();roles.clear();lists.clear();metadataRows.clear();}});
+  usage:Object.freeze({bytes:totalBytes,records:rows.size,metadataBytes,scopes:scopes.length}),close});
+ }catch(error){close();throw error;}
 }
