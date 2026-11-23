@@ -29,6 +29,32 @@ class Keys {
 }
 const bytes=text=>new TextEncoder().encode(text),text=value=>new TextDecoder().decode(value);
 
+test('parallel scope readers wait for one verified refresh rather than observing its temporary closed flag',async()=>{
+ const f=await fixture(),client=f.make();await client.refresh();
+ let release,started,calls=0,settled=false;const gate=new Promise(resolve=>release=resolve),begun=new Promise(resolve=>started=resolve),directory=f.transport.directory;
+ f.transport.directory=async()=>{calls++;started();await gate;return directory();};
+ const first=client.refresh();await begun;const second=client.refresh();
+ const read=client.recoverReceipt('diary','not-saved').finally(()=>settled=true);read.catch(()=>{});
+ await new Promise(resolve=>setTimeout(resolve,10));
+ const before={calls,settled};release();await Promise.allSettled([first,second,read]);
+ assert.deepEqual(before,{calls:1,settled:false});assert.equal(await read,null);f.device.lock();
+});
+test('a failed parallel scope refresh cannot silently use stale online authority',async()=>{
+ const f=await fixture(),client=f.make();await client.refresh();let release,started;
+ const gate=new Promise(resolve=>release=resolve),begun=new Promise(resolve=>started=resolve);
+ f.transport.directory=async()=>{started();await gate;throw Error('DIRECTORY_UNAVAILABLE');};
+ const refresh=client.refresh();await begun;
+ const read=client.recoverReceipt('diary','not-saved');read.catch(()=>{});release();
+ await assert.rejects(refresh,/DIRECTORY_UNAVAILABLE/);await assert.rejects(read,/DIRECTORY_UNAVAILABLE/);
+ await assert.rejects(client.recoverReceipt('diary','not-saved'),/E2EE_REFRESH_REQUIRED/);f.device.lock();
+});
+test('closing the scope during a pending refresh cannot reinstall an open channel',async()=>{
+ const f=await fixture(),client=f.make();await client.refresh();let release,started;
+ const gate=new Promise(resolve=>release=resolve),begun=new Promise(resolve=>started=resolve),directory=f.transport.directory;
+ f.transport.directory=async()=>{started();await gate;return directory();};
+ const refresh=client.refresh();await begun;client.close();release();
+ await assert.rejects(refresh,/E2EE_UNLOCK_REQUIRED/);await assert.rejects(client.recoverReceipt('diary','not-saved'),/E2EE_REFRESH_REQUIRED/);f.device.lock();
+});
 test('an active migration freezes encrypted uploads and editors, then permits initialization while its surface remains visible',async()=>{
   const f=await fixture(),client=f.make();await client.refresh();
   await client.prepare('diary','frozen-upload',bytes('retained pending input'),0);
