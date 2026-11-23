@@ -171,6 +171,67 @@ test('a confirmed local write pins its head even before first download; server r
   const f=await fixture(),client=f.make();await client.refresh();await client.prepare('workspace','one',bytes('private'),0);await client.flush('workspace','one');
   f.server.objects.delete('workspace\0one');await assert.rejects(client.read('workspace','one'),/REMOTE_ROLLBACK/);
 });
+
+test('concurrent authenticated reads reuse an identical durable floor without rewriting it',async()=>{
+  const f=await fixture(),client=f.make();await client.refresh();
+  await client.prepare('workspace','parallel-read',bytes('PARALLEL PRIVATE CONTENT'),0);await client.flush('workspace','parallel-read');
+  const before=JSON.stringify([...f.storage.rows]),read=f.transport.read;let arrived=0,release;
+  const together=new Promise(resolve=>{release=resolve;});
+  f.transport.read=async packet=>{
+    const response=await read(packet);
+    if(packet.command.action==='get'&&packet.command.payload.domain==='workspace'&&packet.command.payload.objectId==='parallel-read'){
+      if(++arrived===2)release();await together;
+    }
+    return response;
+  };
+  try{
+    const opened=await Promise.all([client.read('workspace','parallel-read'),client.read('workspace','parallel-read')]);
+    try{for(const result of opened)assert.equal(text(result.bytes),'PARALLEL PRIVATE CONTENT');}
+    finally{for(const result of opened)result.bytes.fill(0);}
+    assert.equal(JSON.stringify([...f.storage.rows]),before,'identical reads must not publish fresh checkpoint revisions');
+  }finally{release();f.device.lock();}
+});
+
+test('two readers establish missing authenticated floors atomically and converge after CAS',async()=>{
+  const f=await fixture(),client=f.make();await client.refresh();
+  await client.prepare('workspace','new-floor',bytes('SAME VERIFIED VERSION'),0);await client.flush('workspace','new-floor');
+  for(const [key,row]of f.storage.rows)if(/^(floor:|confirmed:)/.test(row.envelope.context.objectId))f.storage.rows.delete(key);
+  let release,arrived=0;const together=new Promise(resolve=>{release=resolve;}),read=f.transport.read;
+  f.transport.read=async packet=>{const response=await read(packet);if(packet.command.action==='get'&&packet.command.payload.domain==='workspace'){
+    if(++arrived===2)release();await together;
+  }return response;};
+  try{
+    const opened=await Promise.all([client.read('workspace','new-floor'),client.read('workspace','new-floor')]);
+    try{for(const result of opened)assert.equal(text(result.bytes),'SAME VERIFIED VERSION');}finally{opened.forEach(result=>result.bytes.fill(0));}
+    const floors=[...f.storage.rows.values()].filter(row=>/^(floor:|confirmed:)/.test(row.envelope.context.objectId));
+    assert.equal(floors.length,3);assert(floors.every(row=>row.serial===1));
+  }finally{release();f.device.lock();}
+});
+
+test('an older in-flight read refuses a newer durable floor without overwriting it',async()=>{
+  const f=await fixture(),client=f.make();await client.refresh();
+  await client.prepare('workspace','changed-during-read',bytes('OLD VERSION'),0);await client.flush('workspace','changed-during-read');
+  let release,observed;const held=new Promise(resolve=>{release=resolve;}),arrived=new Promise(resolve=>{observed=resolve;}),read=f.transport.read;
+  f.transport.read=async packet=>{const response=await read(packet);if(packet.command.action==='get'&&packet.command.payload.domain==='workspace'){
+    observed();await held;
+  }return response;};
+  const pending=client.read('workspace','changed-during-read');
+  try{
+    await arrived;await client.prepare('workspace','changed-during-read',bytes('NEW VERSION'),1);await client.flush('workspace','changed-during-read');
+    const retained=JSON.stringify([...f.storage.rows]);release();
+    await assert.rejects(pending,/E2EE_REMOTE_ROLLBACK/);assert.equal(JSON.stringify([...f.storage.rows]),retained);
+  }finally{release();await pending.catch(()=>{});f.device.lock();}
+});
+
+test('read checkpoint CAS retries are bounded and preserve all original records',async()=>{
+  const f=await fixture(),client=f.make();await client.refresh();
+  await client.prepare('workspace','contended-floor',bytes('RETAINED VERSION'),0);await client.flush('workspace','contended-floor');
+  for(const [key,row]of f.storage.rows)if(row.envelope.context.objectId.startsWith('floor:'))f.storage.rows.delete(key);
+  const original=JSON.stringify([...f.storage.rows]),commit=f.storage.commit.bind(f.storage);let attempts=0;
+  f.storage.commit=async(changes,signal)=>{if(changes.some(row=>row.value?.envelope.context.objectId.startsWith('floor:'))){attempts++;throw new Error('E2EE_LOCAL_CONFLICT');}return commit(changes,signal);};
+  try{await assert.rejects(client.read('workspace','contended-floor'),/E2EE_LOCAL_CONFLICT/);assert.equal(attempts,4);assert.equal(JSON.stringify([...f.storage.rows]),original);}
+  finally{f.device.lock();}
+});
 test('rotation keeps authentic history readable but rejects new ciphertext forged under an old epoch',async()=>{
   const f=await fixture(),client=f.make();await client.refresh();await client.prepare('workspace','one',bytes('AUTHENTIC BEFORE ROTATION'),0);await client.flush('workspace','one');
   const original=f.server.objects.get('workspace\0one');await f.rotate();await client.refresh();

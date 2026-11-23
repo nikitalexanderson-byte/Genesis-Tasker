@@ -346,6 +346,27 @@ export class E2eeScopeClient {
     const sealed=current.sealedHeads;if(!sealed||context.cryptoEpoch>sealed.cryptoEpoch)throw new Error('E2EE_UNSEALED_HISTORY');
     if(!head||head.revision!==context.revision||head.payloadHash!==payloadHash)throw new Error('E2EE_UNSEALED_HISTORY');
   }
+  async #rememberRead(id:string,envelope:E2eeEnvelope,chunks:E2eeEnvelope[],payloadHash:string){
+    // Concurrent readers can observe the same authenticated version. Keep an
+    // identical checkpoint stable, and recheck every floor after a CAS race;
+    // retrying never authorizes an older version or repeats a remote request.
+    for(let attempt=0;attempt<4;attempt++){
+      this.#device.requireOpen();const floorRecord=await this.#device.vault.read('key-check',`floor:${id}`),writes:LocalWrite[]=[];
+      try{
+        const floor=floorRecord?JSON.parse(decoder.decode(floorRecord.value)) as {revision:number;hash:string}:null;
+        if(floor){exactKeys(floor,['revision','hash']);
+          if(!Number.isSafeInteger(floor.revision)||floor.revision<1)throw new Error('E2EE_CORRUPT_CHECKPOINT');decodeE2eeBytes(floor.hash,32);
+          if(floor.revision>envelope.context.revision||floor.revision===envelope.context.revision&&floor.hash!==payloadHash)throw new Error('E2EE_REMOTE_ROLLBACK');
+        }
+        if(!floor||floor.revision<envelope.context.revision)writes.push({domain:'key-check',objectId:`floor:${id}`,
+          value:encoder.encode(JSON.stringify({revision:envelope.context.revision,hash:payloadHash})),expected:floorRecord?.serial??null});
+        for(const record of [...chunks,envelope]){const observed=await this.#confirmed(record);if(observed)writes.push(observed);}
+        if(writes.length)await this.#device.vault.write(writes);
+        this.#device.requireOpen();return;
+      }catch(error){if(!(error instanceof Error)||error.message!=='E2EE_LOCAL_CONFLICT'||attempt===3)throw error;}
+      finally{floorRecord?.value.fill(0);writes.forEach(write=>write.value.fill(0));}
+    }
+  }
   async read(domain:E2eeContext['domain'],objectId:string,expected?:{revision:number;payloadHash:string}):Promise<{bytes:Uint8Array;filename:string;mediaType:string;revision:number}|null> {
     this.#open();const id=await this.#id(domain,objectId),floorRecord=await this.#device.vault.read('key-check',`floor:${id}`);
     let floor:{revision:number;hash:string}|null=null;
@@ -363,11 +384,8 @@ export class E2eeScopeClient {
     const chunks:E2eeEnvelope[]=[];
     const opened=domain==='shared-comment'?{bytes:await openE2eeEnvelope(root,signer,context,envelope),filename:'',mediaType:'application/json'}
       :await openE2eeFile(root,signer,context,envelope,async chunkId=>{const chunk=await this.#getEnvelope('attachment',chunkId);if(!chunk)throw new Error('E2EE_CORRUPT_FILE');await this.#historicalHead(chunk);chunks.push(chunk);return chunk;});
-    const encoded=encoder.encode(JSON.stringify({revision:context.revision,hash:payloadHash}));
-    const writes:LocalWrite[]=[{domain:'key-check',objectId:`floor:${id}`,value:encoded,expected:floorRecord?.serial??null}];
-    try{for(const record of [...chunks,envelope]){const observed=await this.#confirmed(record);if(observed)writes.push(observed);}
-      await this.#device.vault.write(writes);this.#device.requireOpen();return{...opened,revision:context.revision};}
-    catch(error){opened.bytes.fill(0);throw error;}finally{writes.forEach(write=>write.value.fill(0));}
+    try{await this.#rememberRead(id,envelope,chunks,payloadHash);return{...opened,revision:context.revision};}
+    catch(error){opened.bytes.fill(0);throw error;}
   }
   async assertObjectReference(domain:E2eeContext['domain'],objectId:string,revision:number,payloadHash:unknown){
     const directory=this.#open(),envelope=await this.#getEnvelope(domain,objectId);this.#device.requireOpen();
