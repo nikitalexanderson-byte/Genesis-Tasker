@@ -1526,7 +1526,7 @@ export function GenesisCalendar() {
   const projectEditorDialogRef = useDialogAccessibility<HTMLFormElement>(() => setEditingProject(null), Boolean(editingProject));
   const themeAccountId = cloudUser?.uid ?? null;
   useMoonReminders(themeAccountId, language === "en");
-  useDocumentLanguage(language);
+  useDocumentLanguage(legalPage ? browserLanguage() : language);
 
   useEffect(() => {
     cloudUserRef.current = cloudUser;

@@ -3,7 +3,7 @@ import {readFile} from 'node:fs/promises';
 import {assertPublicDocumentReferences} from './public-document-references.mjs';
 
 const readJson=async name=>JSON.parse(await readFile(new URL('../app/'+name+'.json',import.meta.url),'utf8'));
-const [copy,domestic,pageCopy,retention,weather,international,regionCopy]=await Promise.all(['public-product-copy','public-domestic-service-copy','public-page-copy','account-retention-legal-copy','weather-legal-copy','public-international-copy','website-region-copy'].map(readJson));
+const [copy,domestic,pageCopy,retention,weather,international,regionCopy,billingLegal]=await Promise.all(['public-product-copy','public-domestic-service-copy','public-page-copy','account-retention-legal-copy','weather-legal-copy','public-international-copy','website-region-copy','public-billing-legal-copy'].map(readJson));
 const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pages=['home','login','privacy','terms','refund','support','delete-account'];
 const editions=['international','domestic'];
@@ -40,6 +40,10 @@ export async function verifyPublicLocales(output) {
       for(const alternate of Object.keys(copy))assert.ok(body.includes('lang="'+alternate+'" hreflang="'+alternate+'"'),label+': language '+alternate+' available without JavaScript');
     } else {
       assertPublicDocumentReferences(html,page,language);
+      if(page==='terms'&&edition==='international'){
+        assert.ok(body.includes(escape(billingLegal[language])),label+': international USD terms');
+        assert.doesNotMatch(body,/\bRUB\b|3330|5550|7770|12900|рубл/iu,label+': no obsolete domestic prices');
+      }
       assert.ok(body.includes('2026-11-23'),label+': policy revision');
       if(page==='privacy'){
         assert.ok(body.includes('AES-256-GCM'),label+': backup cryptography disclosure');
