@@ -53,14 +53,14 @@ export function PrivateBackupPanel({ownerId,language}:{ownerId:string;language:s
   <section className="backup-panel"><h3>{text.import}</h3><fieldset disabled={busy}>
    <label>{text.backupFile}<input type="file" accept=".genesisbackup,application/octet-stream,application/json" onChange={event=>{setFile(event.target.files?.[0]??null);setPayload(null);setContent('');}}/></label>
    <label>{c('Ключ копии','Backup key')}<input type="password" autoComplete="off" value={key} maxLength={64} onChange={event=>setKey(event.target.value)}/></label>
-   <button type="button" disabled={!file||!key.trim()} onClick={()=>void importFile()}>{text.import}</button>
+   <button type="button" data-dialog-save="false" disabled={!file||!key.trim()} onClick={()=>void importFile()}>{text.import}</button>
   </fieldset>{message?<p role="status">{message}</p>:null}{error?<p role="alert">{text.error}</p>:null}
    <button type="button" disabled={busy} onClick={()=>void loadRetained()}>{text.history}</button>
    {archives.map(id=><button type="button" key={id} disabled={busy} onClick={()=>void loadRetained(id)}>{id}</button>)}
    {rows.length?<label>{text.history}<select value={selected} onChange={event=>inspect(event.target.value)}><option value="">—</option>{rows.map(row=><option key={row.key} value={row.key}>{row.title}</option>)}</select></label>:null}
    {content?<pre style={{whiteSpace:'pre',overflow:'auto',maxHeight:'50vh'}}>{content}</pre>:null}
    {binary?<p>{filesText.binary}</p>:null}
-   {selected?<><p>{filesText.notice}</p><button type="button" disabled={busy} onClick={()=>void saveSelected()}>{filesText.download}</button></>:null}
+   {selected?<><p>{filesText.notice}</p><button type="button" data-dialog-save="false" disabled={busy} onClick={()=>void saveSelected()}>{filesText.download}</button></>:null}
   </section>
   <PrivatePersonalContentRestore ownerId={ownerId} language={language} payload={payload} selection={(()=>{const row=rows.find(row=>row.key===selected);return row&&['workspace','diary','mindmaps','physis','aurora','stoicheion','shared-drafts'].includes(payload?.sections[row.sectionIndex]?.id??'')?{sectionIndex:row.sectionIndex,entryIndex:row.entryIndex,versionId:row.versionId}:null;})()}/>
  </div>;
