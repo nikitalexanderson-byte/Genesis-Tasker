@@ -1,5 +1,86 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября: web30 и выполняющиеся controller27 / lint27
+
+Root native inputs всё ещё build27 (53BCD53E… / APK50C4B9C3…). Actual API26/API34
+cache/source каждый7/7 PASS. Controller27 PID22333 уже дал две ACTIVE фазы
+(personal затем project), идёт space. Источник фаз — безопасный logcat
+Genesis336QaPhase; android-full пишет instrumentation log только после выхода.
+Wrapper session34049 (он сначала завершил API34 source cases), full lint27
+session29974. До конца обоих root app/android/contracts/public НЕ менять,
+новый Gradle не запускать. Native27 XML1442/1434PASS/8skip уже сохранены.
+
+Web48 на immutable29 завершён FAIL после15PASS. Все три backup checks приняты,
+но shared discovery после настоящего429 потеряла unlocked Account, и старый
+locator не нашёл private-shared-security. Runner теперь после Retry-After
+восстанавливает аккаунт через reload + настоящую recovery form и открывает
+тот же saved scope/journal. Лимиты и persistent guards не ослаблены.
+
+В linked window-worktree (HEAD5ddf30dd) подготовлены ещё три commits для root:
+35c18344 (исправить private Google-unlock claim), abcb0954 (пакетная проверка
+web originals),5ddf30dd (полная ширина trusted-device form). f7802e17 — только
+merge уже существующего root2f511cbd в linked baseline; переносить этот merge
+в root не надо. Конфликты старого NativeDeviceAuthentication и docs разрешены
+точной актуальной root2f версией; root не изменялся.
+
+Audit RED:6 originals требовали30 namespace scans; GREEN:3 scans и6 body reads.
+Связанные JS114/114 PASS, включая tampered later request до первого body,
+namespace drift до/после body, partial/missing originals и actor retirement.
+Evidence runtime/web-original-audit-before.log и after-root-sync.log. Первый
+strip-only запуск и старый linked fixture не были product failures: после
+transform loader и актуального root fixture весь набор PASS. Scoped lint,
+полный typecheck и web30 build PASS; immutable web-private-30/public_html.
+Impeccable narrow layout: context выполнен, detector на2UI targets вернул[].
+
+Devices49/50 были locator failures. Devices51 прошёл Google-only lock и
+negative fingerprint UI, затем отказ create request;429 не было, точный код
+старый runner не сохранил.52 добавляет безопасные false conditional logpoints
+(только E2EE codes, без пауз/keys) и HTTP refusals на новой странице, а также
+8 trusted-entry geometry/screenshots. Старый screenshot51 показал section
+в узкой icon-column;5ddf исправляет full-span/fields/scroll.
+
+Сейчас на immutable30 выполняются devices52/session2300 и content53/session77441.
+Logs runtime/consolidated-private-devices52.log и consolidated-private-content53.log.
+Оба root QA runner files НЕ менять до завершения этих runs; hashes записаны
+в runtime/web-private-52-runner-input.json и -53-. Новые source files сохранены
+отдельным checkpoint (точный HEAD см. git log), но новый push ещё проверить.
+После runtime/lint27 перенести3linked commits, не потерять их в output worktree.
+
+CI exact root2f: Source checks push45253770962 Android SUCCESS(job137970045887),
+web job137970045541 ещё Browser scenarios; PR45253782855 проверить отдельно.
+Production149, formal coverage9/20, cutover/floors off, deployAndroid=false.
+
+## 23 ноября: build27 и actual active-fence acceptance
+
+Build27 SUCCESS20m55s на2f511cbd: JVM1442,1434 PASS/0 failures/8 прежних opt-in
+HTTP skips. XML сохранены в runtime/native150-build27-unit. Native input
+SHA53BCD53E1AEB1D45F2CCE73292A68636EE1F93713F042CBFB324DE490B9E1DCB;
+main APK50C4B9C3… / test APK EA2B5E48…; полная identity/counts/result —
+runtime/native150-archive-profile-build27-*.json. Новые archive discovery и
+Retry-After regressions входят в этот полный JVM-прогон.
+
+Actual cache/source27 API26 и API34 каждый7/7 PASS: cache3, archives2,
+relational adapters2. Cache теперь проверяет настоящий active SQL fence,
+public-profile save/read/clear и deny legacy exact/descendant writes.
+Reports: output/qa/security336-native150-cache-source27-api26 и api34.
+Controller27 без periodic HAT refresh и full lint27 выполняются отдельно;
+их результата пока нет. Root app/android/contracts/public НЕ менять до конца
+этих exact-input runs. Никаких новых Gradle builds параллельно lint27.
+
+Immutable web29 build/scoped lint/storage12/12 PASS. Content48 уже прошёл15
+checks, включая весь backup download/wrong key/import/history cold-read journey.
+Project/space/files ещё RUNNING, actual Retry-After соблюдается без сброса
+budget. Device51 на том же29 проверяет нормальный trusted-device UI без
+recovery secret;49/50 закончились locator failures, не crypto acceptance.
+Source hashes51 записаны в runtime/web-private-devices51-runner-input.json;
+оба QA runner files до его завершения не менять. Его новые файлы ещё dirty.
+
+В linked window-worktree подготовлен35c18344: private Account больше не обещает
+автоматическую расшифровку через Google, использует существующую14-language
+trusted-device notice. Он ещё НЕ cherry-picked в root и НЕ входит в web29.
+Перенести после runtime/lint27 freeze, затем собрать согласованный web30.
+Production149, formal coverage9/20, cutover/floors off, deployAndroid=false.
+
 ## 23 ноября,22:55 Москва: portable inventory и private profile corrections
 
 Build26 SUCCESS:1437 JVM,1429 PASS/0 failures/8 existing opt-in skips;

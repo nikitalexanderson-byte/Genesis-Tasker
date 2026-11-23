@@ -5,6 +5,7 @@ import {mkdirSync, readFileSync, writeFileSync,readdirSync} from 'node:fs';
 import path from 'node:path';
 import {chromium} from 'playwright';
 import {openBackup} from '../../app/backup-format.ts';
+import {checkPrivateDeviceAccess} from './web-private-device-access.mjs';
 
 const baseURL=process.env.GENESIS_QA_WEB_ORIGIN;
 assert(/^http:\/\/127\.0\.0\.1:\d+$/.test(baseURL??''));
@@ -15,7 +16,7 @@ const vault=JSON.parse(readFileSync('contracts/e2ee/vault-copy-v1.json','utf8'))
 const report={synthetic:true,scope:'mounted web product + real PHP/SQLite',status:'RUNNING',checks:[],apiErrors:[],pageErrors:[],caughtCodes:[],caughtFrames:[],storageFailures:[],migrationRefusals:[],migrationErrorFrames:[],networkFailures:[],networkRetries:[],historyGuards:[],rateLimits:[],rateRetries:[],custodyFrames:[],custodyPredicates:[],transferredScopes:[]};
 report.keyBundleRefusals=[];
 const browser=await chromium.launch({headless:true});report.browser=browser.version();
-let page,secret,kit,backupKey;
+let page,secret,kit,backupKey,deviceLocalCode;
 const diagnostics=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='diagnostics';
 const profileOnly=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='profile';
 const sharedJourney=['shared','shared-locales','content'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
@@ -27,7 +28,7 @@ const sharedMigration=JSON.parse(readFileSync('contracts/e2ee/shared-migration-c
 const canary='PRIVATE-PRODUCT-'+crypto.randomUUID();
 const cacheCanary='PRIVATE-CACHE-'+crypto.randomUUID();
 let sharedFixture;
-const redactPrivateText=value=>[secret,backupKey].filter(Boolean).reduce((text,key)=>text.replaceAll(key,'[redacted synthetic secret]'),String(value));
+const redactPrivateText=value=>[secret,backupKey,deviceLocalCode].filter(Boolean).reduce((text,key)=>text.replaceAll(key,'[redacted synthetic secret]'),String(value));
 const save=()=>writeFileSync(`${output}/private-product-results.json`,JSON.stringify(report,null,2)+'\n');
 const check=async(name,operation)=>{
  try{await operation();report.checks.push({name,status:'PASS'});console.log('PASS private-product '+name);save();}
@@ -68,7 +69,7 @@ const continueMigration=async(dialog,button,label)=>{
  }
  throw new Error('Migration network retry budget exhausted');
 };
-const withRateRetry=async(label,operation)=>{
+const withRateRetry=async(label,operation,beforeRetry)=>{
  for(let attempt=0;attempt<4;attempt++){
   const previous=report.rateLimits.length;
   try{return await operation();}catch(error){
@@ -78,6 +79,7 @@ const withRateRetry=async(label,operation)=>{
    report.rateRetries.push({label,attempt:attempt+1,until,policy:'Actual Retry-After boundary; no rate table reset or larger budget'});save();
    console.log('WAIT private-product rate boundary '+label+' '+Math.max(0,until-Date.now())+'ms');
    while(Date.now()<until){assert(!page.isClosed());await page.waitForTimeout(Math.min(5000,until-Date.now()));}
+   await beforeRetry?.();
   }
  }
 };
@@ -301,6 +303,7 @@ try{
    throw error;
   }finally{await clean.close();}
  });
+ if(process.env.GENESIS_QA_FOLLOWUP_SCOPE==='devices')await checkPrivateDeviceAccess({browser,page,baseURL,output,login,check,report,canary,rememberSecret:value=>{deviceLocalCode=value;},withRateRetry});
  if(backupJourney){
   const copy=JSON.parse(readFileSync('contracts/e2ee/content-archive-copy-v1.json','utf8')).ru;
   let archive,selection;
@@ -379,6 +382,7 @@ try{
     await page.locator('.workspace-startup-gate').waitFor({state:'hidden'});
    };
    const account=async()=>{await page.getByRole('button',{name:'Открыть личный кабинет и настройки',exact:true}).click();await page.locator('[data-settings-tab=account]').click();};
+   const restoreOnlineAccount=async()=>{await page.reload();await unlock();await account();};
    const openTransfer=async(kind,resource)=>withRateRetry(kind+' discovery',async()=>{
     const panel=page.locator('.private-shared-security');await debug.send('Debugger.setPauseOnExceptions',{state:diagnostics?'all':'none'});
     await panel.locator(':scope > button').filter({hasText:sharedCopy.load}).click();
@@ -386,7 +390,7 @@ try{
     await panel.getByRole('combobox',{name:sharedMigration.transfer,exact:true}).selectOption(`${kind}:${resource.id}`);
     await panel.getByRole('button',{name:sharedMigration.transfer,exact:true}).first().click();
     const dialog=page.locator('.private-migration-dialog');await recoveryInput(dialog);return dialog;
-   });
+   },restoreOnlineAccount);
    const reconfirm=async(dialog,kind,resource)=>{
     let delivered=false;const pattern='**/api/auth/google/start?*';
     const provider=async route=>{
@@ -399,16 +403,18 @@ try{
     finally{await page.unroute(pattern,provider);}
     assert(delivered,'The actual reconfirm action must reach the synthetic provider');
     report.identityDelivery='Synthetic Google provider completion; no live provider UI claim';
-    await unlock();await account();return openTransfer(kind,resource);
+    return withRateRetry(kind+' post-provider entry',async()=>{await restoreOnlineAccount();return openTransfer(kind,resource);});
    };
    // Return from the deliberately offline capability to an online unlocked one.
-   await page.reload();await unlock();await account();
+   await withRateRetry('shared account entry',restoreOnlineAccount);
    for(const [kind,resource]of [['project',sharedFixture.project],['space',sharedFixture.space]]){
     let dialog=await openTransfer(kind,resource);
     if(kind==='project'){
-     await identityConfirmation(false);await dialog.getByRole('button',{name:migration.resume,exact:true}).click();
-     await dialog.getByRole('alert').filter({hasText:migration.reauthRequired}).waitFor();
-     const status=await(await context.request.get('/api/e2ee/v1/status')).json();assert(!status.scopes.some(scope=>scope.kind===kind&&scope.resourceId===resource.id&&scope.state==='active'));
+     await withRateRetry('expired project identity check',async()=>{
+      await identityConfirmation(false);await recoveryInput(dialog);await dialog.getByRole('button',{name:migration.resume,exact:true}).click();
+      await dialog.getByRole('alert').filter({hasText:migration.reauthRequired}).waitFor();
+      const status=await(await context.request.get('/api/e2ee/v1/status')).json();assert(!status.scopes.some(scope=>scope.kind===kind&&scope.resourceId===resource.id&&scope.state==='active'));
+     },async()=>{await restoreOnlineAccount();dialog=await openTransfer(kind,resource);});
      dialog=await reconfirm(dialog,kind,resource);
     }else await identityConfirmation(true);
     await debug.send('Debugger.setPauseOnExceptions',{state:diagnostics?'all':'none'});
@@ -422,7 +428,7 @@ try{
       throw new Error(kind+' migration refused: '+report.caughtCodes.join(', ')+'; '+await dialog.getByRole('alert').innerText());
      }
      throw new Error('Owned provider reconfirmation did not admit the transfer');
-    });
+    },async()=>{await restoreOnlineAccount();dialog=await openTransfer(kind,resource);});
     await debug.send('Debugger.setPauseOnExceptions',{state:'none'});
     const status=await(await context.request.get('/api/e2ee/v1/status')).json();assert(status.scopes.some(scope=>scope.kind===kind&&scope.resourceId===resource.id&&scope.state==='active'));
     report.transferredScopes.push({kind,state:'active'});save();
@@ -463,4 +469,4 @@ try{
  report.status='FAIL';report.error=redactPrivateText(error.message);process.exitCode=1;
  if(page){report.finalLocks=await page.evaluate(()=>navigator.locks.query()).catch(()=>null);await page.screenshot({path:`${output}/private-product-failure.png`,fullPage:true,mask:[page.locator('input[type=password],textarea')]}).catch(()=>{});writeFileSync(`${output}/private-product-failure.txt`,redactPrivateText(await page.locator('body').ariaSnapshot().catch(()=>'')));}
  console.error(redactPrivateText(error.message));
-}finally{secret=undefined;kit=undefined;backupKey=undefined;save();await context.close();await browser.close();}
+}finally{secret=undefined;kit=undefined;backupKey=undefined;deviceLocalCode=undefined;save();await context.close();await browser.close();}
