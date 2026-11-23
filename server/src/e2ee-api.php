@@ -63,8 +63,10 @@ function genesisE2eeRoute(string $method,string $path): never
     }
     if($path==='e2ee/v1/read')genesisJson(genesisE2eeRead($owner,$body,$binding));
     if($path==='e2ee/v1/challenge') {
-        genesisE2eeExactFields($body,['scopeId','deviceId','keys']);
-        genesisJson(genesisE2eeCreateChallenge($owner,genesisE2eeIdentifier($body['scopeId']),$binding,['deviceId'=>$body['deviceId'],'keys'=>$body['keys']]));
+        $fields=['scopeId','deviceId','keys'];$input=['deviceId'=>$body['deviceId']??null,'keys'=>$body['keys']??null];
+        if(array_key_exists('requestId',$body)){$fields[]='requestId';$input['requestId']=$body['requestId'];}
+        genesisE2eeExactFields($body,$fields);
+        genesisJson(genesisE2eeCreateChallenge($owner,genesisE2eeIdentifier($body['scopeId']),$binding,$input));
     }
     if($path==='e2ee/v1/directory'||$path==='e2ee/v1/source') {
         genesisE2eeExactFields($body,['scopeId']);$scope=genesisE2eeScope($owner,genesisE2eeIdentifier($body['scopeId']));
