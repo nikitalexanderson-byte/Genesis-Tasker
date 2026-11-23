@@ -12,6 +12,44 @@ import java.util.UUID
 /** Public synthetic keys only; the QA package owns all Keystore/SQLite data. */
 @RunWith(AndroidJUnit4::class)
 class E2eeKeyAuditDeviceTest {
+    @Test fun durabilityWitnessRejectsProtectedBundleChangeAndStaysDeniedAfterRestoration(){
+        val context=InstrumentationRegistry.getInstrumentation().targetContext;val owner="audit-durable-${UUID.randomUUID()}"
+        val recovery=E2eeKeys.createRecoveryKit(owner);val device=UnlockedE2eeDevice.provision(context,owner,recovery.secret,recovery.kit)
+        val persistence=UnlockedE2eeDevice::class.java.getDeclaredField("persistence").apply{isAccessible=true}.get(device) as E2eeDeviceVault
+        val file=E2eeDeviceVault::class.java.getDeclaredField("file").apply{isAccessible=true}.get(persistence) as android.util.AtomicFile
+        check(file.baseFile.parentFile==context.noBackupFilesDir&&file.baseFile.name.startsWith("e2ee-device-"))
+        val original=file.openRead().use{it.readBytes()}
+        fun write(bytes:ByteArray){val output=file.startWrite();try{output.write(bytes);file.finishWrite(output)}catch(error:Exception){file.failWrite(output);throw error}}
+        try{
+            device.ensureDurableKeys();val changed=original.copyOf();changed[changed.lastIndex]=(changed.last().toInt() xor 1).toByte()
+            try{write(changed)}finally{changed.fill(0)}
+            assertEquals("E2EE_DEVICE_KEY_UNAVAILABLE",runCatching{device.ensureDurableKeys()}.exceptionOrNull()?.message)
+            write(original)
+            assertEquals("E2EE_DEVICE_KEY_UNAVAILABLE",runCatching{device.ensureDurableKeys()}.exceptionOrNull()?.message)
+        }finally{write(original);original.fill(0);device.lock();recovery.secret.fill(0)}
+    }
+    @Test fun durabilityWitnessRejectsMissingOrReplacedHardwareKeyWithoutReplacingTheBundle(){
+        val context=InstrumentationRegistry.getInstrumentation().targetContext;val owner="audit-alias-${UUID.randomUUID()}"
+        val recovery=E2eeKeys.createRecoveryKit(owner);val device=UnlockedE2eeDevice.provision(context,owner,recovery.secret,recovery.kit)
+        val observer=UnlockedE2eeDevice.unlock(context,owner)
+        val persistence=UnlockedE2eeDevice::class.java.getDeclaredField("persistence").apply{isAccessible=true}.get(device) as E2eeDeviceVault
+        val alias=E2eeDeviceVault::class.java.getDeclaredField("alias").apply{isAccessible=true}.get(persistence) as String
+        val file=E2eeDeviceVault::class.java.getDeclaredField("file").apply{isAccessible=true}.get(persistence) as android.util.AtomicFile
+        check(file.baseFile.parentFile==context.noBackupFilesDir&&file.baseFile.name.startsWith("e2ee-device-"))
+        val original=file.openRead().use{it.readBytes()}
+        try{
+            java.security.KeyStore.getInstance("AndroidKeyStore").apply{load(null);deleteEntry(alias)}
+            assertEquals("E2EE_DEVICE_KEY_UNAVAILABLE",runCatching{device.ensureDurableKeys()}.exceptionOrNull()?.message)
+            val spec=android.security.keystore.KeyGenParameterSpec.Builder(alias,android.security.keystore.KeyProperties.PURPOSE_ENCRYPT or android.security.keystore.KeyProperties.PURPOSE_DECRYPT)
+                .setBlockModes(android.security.keystore.KeyProperties.BLOCK_MODE_GCM).setEncryptionPaddings(android.security.keystore.KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setKeySize(256).setUserAuthenticationRequired(true).setInvalidatedByBiometricEnrollment(false)
+            if(android.os.Build.VERSION.SDK_INT>=30)spec.setUserAuthenticationParameters(300,android.security.keystore.KeyProperties.AUTH_BIOMETRIC_STRONG or android.security.keystore.KeyProperties.AUTH_DEVICE_CREDENTIAL)
+            else @Suppress("DEPRECATION") spec.setUserAuthenticationValidityDurationSeconds(300)
+            javax.crypto.KeyGenerator.getInstance(android.security.keystore.KeyProperties.KEY_ALGORITHM_AES,"AndroidKeyStore").apply{init(spec.build())}.generateKey()
+            assertEquals("E2EE_DEVICE_KEY_UNAVAILABLE",runCatching{observer.ensureDurableKeys()}.exceptionOrNull()?.message)
+            val retained=file.openRead().use{it.readBytes()};try{assertArrayEquals(original,retained)}finally{retained.fill(0)}
+        }finally{original.fill(0);observer.lock();device.lock();recovery.secret.fill(0)}
+    }
     @Test fun directoryPersistsExactVerifiedInputsAndObserverCannotChangeAuthorityOrRoot() {
         val context=InstrumentationRegistry.getInstrumentation().targetContext
         val owner="audit-${UUID.randomUUID()}";val scope="personal:$owner";val keyId="audit-root"

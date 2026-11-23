@@ -12,6 +12,7 @@ import org.json.JSONObject
 import java.io.File
 import java.security.KeyStore
 import java.security.MessageDigest
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -76,21 +77,84 @@ class E2eeDeviceVault(context: Context, ownerId: String, slotId: String? = null)
         catch (_: KeyPermanentlyInvalidatedException) { throw IllegalStateException("E2EE_DEVICE_KEY_INVALIDATED") }
         finally { copy.fill(0) }
     }
-    fun unlock(): ByteArray = synchronized(mutationLock) {
+    private fun encryptedBundle():ByteArray {
         val bytes = file.openRead().use { input ->
             val buffer = ByteArray(MAX_PRIVATE + 30); var size = 0
-            while (size < buffer.size) { val read = input.read(buffer, size, buffer.size - size); if (read < 0) break; size += read }
-            buffer.copyOf(size)
+            try {
+                while (size < buffer.size) { val read = input.read(buffer, size, buffer.size - size); if (read < 0) break; size += read }
+                buffer.copyOf(size)
+            }finally{buffer.fill(0)}
         }
         if (bytes.size !in 29..(MAX_PRIVATE + 29) || bytes[0] != 1.toByte()) throw IllegalStateException("E2EE_CORRUPT_DEVICE_VAULT")
+        return bytes
+    }
+    private fun decryptBundle(bytes:ByteArray,key:SecretKey):ByteArray {
+        val cipher=Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.DECRYPT_MODE,key,GCMParameterSpec(128,bytes.copyOfRange(1,13)))
+        cipher.updateAAD(aad());return cipher.doFinal(bytes.copyOfRange(13,bytes.size))
+    }
+    /** Cold entry always consumes a real, current hardware authentication. */
+    fun unlock(): ByteArray = synchronized(mutationLock) {
+        val bytes=encryptedBundle()
         try {
-            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-            cipher.init(Cipher.DECRYPT_MODE, key(false), GCMParameterSpec(128, bytes.copyOfRange(1,13)))
-            cipher.updateAAD(aad()); cipher.doFinal(bytes.copyOfRange(13,bytes.size))
+            decryptBundle(bytes,key(false))
         } catch (_: UserNotAuthenticatedException) { throw IllegalStateException("E2EE_UNLOCK_REQUIRED") }
         catch (_: KeyPermanentlyInvalidatedException) { throw IllegalStateException("E2EE_DEVICE_KEY_INVALIDATED") }
         catch (error: IllegalStateException) { if (error.message == "E2EE_DEVICE_KEY_UNAVAILABLE") throw error; throw IllegalStateException("E2EE_CORRUPT_DEVICE_VAULT") }
         catch (_: Exception) { throw IllegalStateException("E2EE_CORRUPT_DEVICE_VAULT") }
+        finally{bytes.fill(0)}
+    }
+    internal class OpenedDevice(val bytes:ByteArray,val durability:DeviceDurability){
+        override fun toString()="E2eeDeviceVault.OpenedDevice([redacted])"
+    }
+    /** Memory-only witness for an ALREADY decrypted device. It cannot open a
+     * new device or satisfy cold authentication. Slot, exact ciphertext, opaque
+     * Keystore key identity and creation metadata must remain unchanged. */
+    internal inner class DeviceDurability internal constructor(private var openedKey:SecretKey?,private val createdAt:Long?,private val sealedHash:ByteArray):AutoCloseable {
+        private val closed=AtomicBoolean(false)
+        private val broken=AtomicBoolean(false)
+        fun verify()=synchronized(mutationLock){
+            check(!closed.get()){"E2EE_UNLOCK_REQUIRED"};check(!broken.get()){"E2EE_DEVICE_KEY_UNAVAILABLE"}
+            try{
+                requireCurrentSlot()
+                val store=KeyStore.getInstance("AndroidKeyStore").apply{load(null)}
+                fun sameKey(){check(store.getKey(alias,null)==openedKey&&store.getCreationDate(alias)?.time==createdAt){"E2EE_DEVICE_KEY_UNAVAILABLE"}}
+                sameKey();val bytes=encryptedBundle()
+                try{
+                    check(MessageDigest.isEqual(MessageDigest.getInstance("SHA-256").digest(bytes),sealedHash)){"E2EE_DEVICE_KEY_UNAVAILABLE"}
+                    try{decryptBundle(bytes,requireNotNull(openedKey)).fill(0)}
+                    catch(expired:UserNotAuthenticatedException){
+                        // HAT expiry does not revoke keys already held in an
+                        // admitted foreground session. Unknown key metadata
+                        // cannot provide this durability proof and must refuse.
+                        if(createdAt==null)throw expired
+                    }
+                    requireCurrentSlot();sameKey()
+                    val after=encryptedBundle()
+                    try{check(MessageDigest.isEqual(MessageDigest.getInstance("SHA-256").digest(after),sealedHash)){"E2EE_DEVICE_KEY_UNAVAILABLE"}}finally{after.fill(0)}
+                }finally{bytes.fill(0)}
+            }catch(_:UserNotAuthenticatedException){broken.set(true);throw IllegalStateException("E2EE_UNLOCK_REQUIRED")}
+            catch(_:KeyPermanentlyInvalidatedException){broken.set(true);throw IllegalStateException("E2EE_DEVICE_KEY_INVALIDATED")}
+            catch(error:Exception){broken.set(true);throw IllegalStateException(error.message?.takeIf{it in setOf("E2EE_DEVICE_KEY_UNAVAILABLE","E2EE_CORRUPT_DEVICE_VAULT")}?:"E2EE_DEVICE_KEY_UNAVAILABLE")}
+        }
+        override fun close()=synchronized(mutationLock){closed.set(true);openedKey=null;sealedHash.fill(0)}
+        override fun toString()="E2eeDeviceVault.DeviceDurability([redacted])"
+    }
+    /** The witness is issued only AFTER actual Keystore decryption, never from
+     * a remembered UI result, disk flag, recovery file or caller-supplied hash. */
+    internal fun unlockForDevice():OpenedDevice=synchronized(mutationLock){
+        val wire=encryptedBundle();var plain:ByteArray?=null;var witness:DeviceDurability?=null;var transferred=false
+        try{
+            val store=KeyStore.getInstance("AndroidKeyStore").apply{load(null)}
+            val actual=store.getKey(alias,null) as? SecretKey?:error("E2EE_DEVICE_KEY_UNAVAILABLE")
+            val created=store.getCreationDate(alias)?.time
+            val unlocked=decryptBundle(wire,actual);plain=unlocked
+            val proof=DeviceDurability(actual,created,MessageDigest.getInstance("SHA-256").digest(wire));witness=proof;proof.verify()
+            OpenedDevice(unlocked,proof).also{transferred=true}
+        }catch(_:UserNotAuthenticatedException){throw IllegalStateException("E2EE_UNLOCK_REQUIRED")}
+        catch(_:KeyPermanentlyInvalidatedException){throw IllegalStateException("E2EE_DEVICE_KEY_INVALIDATED")}
+        catch(error:Exception){throw IllegalStateException(error.message?.takeIf{it in setOf("E2EE_DEVICE_KEY_UNAVAILABLE","E2EE_CORRUPT_DEVICE_VAULT","E2EE_UNLOCK_REQUIRED","E2EE_DEVICE_KEY_INVALIDATED")}?:"E2EE_CORRUPT_DEVICE_VAULT")}
+        finally{wire.fill(0);if(!transferred){plain?.fill(0);witness?.close()}}
     }
     /** Recovery is explicit and owner-bound; no key deletion, database reset or empty fallback. */
     fun recoverWithSecret(secret: ByteArray, protectedBundle: JSONObject): ByteArray =

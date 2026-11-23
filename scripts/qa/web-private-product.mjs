@@ -11,7 +11,7 @@ const output=process.env.GENESIS_QA_WEB_OUTPUT;
 assert(output);mkdirSync(output,{recursive:true});
 const migration=JSON.parse(readFileSync('contracts/e2ee/migration-copy-v1.json','utf8')).ru;
 const vault=JSON.parse(readFileSync('contracts/e2ee/vault-copy-v1.json','utf8')).ru;
-const report={synthetic:true,scope:'mounted web product + real PHP/SQLite',status:'RUNNING',checks:[],apiErrors:[],pageErrors:[],caughtCodes:[],caughtFrames:[],storageFailures:[],migrationRefusals:[],historyGuards:[],rateLimits:[],rateRetries:[],custodyFrames:[],custodyPredicates:[],transferredScopes:[]};
+const report={synthetic:true,scope:'mounted web product + real PHP/SQLite',status:'RUNNING',checks:[],apiErrors:[],pageErrors:[],caughtCodes:[],caughtFrames:[],storageFailures:[],migrationRefusals:[],migrationErrorFrames:[],historyGuards:[],rateLimits:[],rateRetries:[],custodyFrames:[],custodyPredicates:[],transferredScopes:[]};
 const browser=await chromium.launch({headless:true});report.browser=browser.version();
 let page,secret,kit;
 const diagnostics=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='diagnostics';
@@ -64,7 +64,7 @@ try{
   for(const {file,source,found} of candidates){
    const at=source.indexOf('return '+found[3]+'===`E2EE_REAUTH_REQUIRED`',found.index);
    const before=source.slice(0,at),lineNumber=before.split('\n').length-1,columnNumber=at-before.lastIndexOf('\n')-1;
-   const condition=`(()=>{const qaFailure=${found[2]},message=qaFailure instanceof Error?qaFailure.message:'';console.info('GENESIS_QA_MIGRATION_REFUSAL '+(/^E2EE_[A-Z_]+$/.test(message)?message:'NON_TECHNICAL_ERROR'));if(message==='E2EE_PRODUCT_CUSTODY_REVIEW_REQUIRED'){const frames=(qaFailure.stack??'').split(String.fromCharCode(10)).slice(1,9).flatMap(frame=>{const match=/[/]assets[/]([a-zA-Z0-9_.-]+[.]js):([0-9]+):([0-9]+)/.exec(frame);return match?[{artifact:match[1],line:Number(match[2]),column:Number(match[3])}]:[];});console.info('GENESIS_QA_MIGRATION_FRAMES '+JSON.stringify(frames));}return false;})()`;
+   const condition=`(()=>{const qaFailure=${found[2]},message=qaFailure instanceof Error?qaFailure.message:'',technical=/^E2EE_[A-Z_]+$/.test(message);console.info('GENESIS_QA_MIGRATION_REFUSAL '+(technical?message:'NON_TECHNICAL_ERROR'));if(message==='E2EE_PRODUCT_CUSTODY_REVIEW_REQUIRED'||!technical){const frames=(typeof qaFailure?.stack==='string'?qaFailure.stack:'').split(String.fromCharCode(10)).slice(1,9).flatMap(frame=>{const match=/[/]assets[/]([a-zA-Z0-9_.-]+[.]js):([0-9]+):([0-9]+)/.exec(frame);return match?[{artifact:match[1],line:Number(match[2]),column:Number(match[3])}]:[];});if(technical)console.info('GENESIS_QA_MIGRATION_FRAMES '+JSON.stringify(frames));else console.info('GENESIS_QA_MIGRATION_ERROR '+JSON.stringify({name:typeof qaFailure?.name==='string'&&/^[A-Za-z]+$/.test(qaFailure.name)?qaFailure.name:typeof qaFailure,frames}));}return false;})()`;
    await debug.send('Debugger.setBreakpointByUrl',{url:baseURL+'/assets/'+file,lineNumber,columnNumber,condition});
   }
   for(const artifact of readdirSync(assets).filter(name=>/^private-security-ui-[\w-]+\.js$/.test(name))){
@@ -97,7 +97,7 @@ try{
   void debug.send('Debugger.resume').catch(()=>{});
  });
  page.on('pageerror',error=>report.pageErrors.push(redactPrivateText(error.message)));
- page.on('console',message=>{const prefix='GENESIS_QA_IDB_FAILURE ',refusal='GENESIS_QA_MIGRATION_REFUSAL ',history='GENESIS_QA_HISTORY_GUARD ',frames='GENESIS_QA_MIGRATION_FRAMES ',predicates='GENESIS_QA_CUSTODY_PREDICATES ';if(message.text().startsWith(prefix)){report.storageFailures.push(JSON.parse(message.text().slice(prefix.length)));save();}else if(message.text().startsWith(refusal)){report.migrationRefusals.push(message.text().slice(refusal.length));console.log(message.text());save();}else if(message.text().startsWith(history)){report.historyGuards.push(JSON.parse(message.text().slice(history.length)));console.log(message.text());save();}else if(message.text().startsWith(frames)){report.custodyFrames.push(JSON.parse(message.text().slice(frames.length)));console.log(message.text());save();}else if(message.text().startsWith(predicates)){report.custodyPredicates.push(JSON.parse(message.text().slice(predicates.length)));console.log(message.text());save();}});
+ page.on('console',message=>{const prefix='GENESIS_QA_IDB_FAILURE ',refusal='GENESIS_QA_MIGRATION_REFUSAL ',history='GENESIS_QA_HISTORY_GUARD ',frames='GENESIS_QA_MIGRATION_FRAMES ',predicates='GENESIS_QA_CUSTODY_PREDICATES ',failure='GENESIS_QA_MIGRATION_ERROR ';if(message.text().startsWith(prefix)){report.storageFailures.push(JSON.parse(message.text().slice(prefix.length)));save();}else if(message.text().startsWith(refusal)){report.migrationRefusals.push(message.text().slice(refusal.length));console.log(message.text());save();}else if(message.text().startsWith(history)){report.historyGuards.push(JSON.parse(message.text().slice(history.length)));console.log(message.text());save();}else if(message.text().startsWith(frames)){report.custodyFrames.push(JSON.parse(message.text().slice(frames.length)));console.log(message.text());save();}else if(message.text().startsWith(predicates)){report.custodyPredicates.push(JSON.parse(message.text().slice(predicates.length)));console.log(message.text());save();}else if(message.text().startsWith(failure)){report.migrationErrorFrames.push(JSON.parse(message.text().slice(failure.length)));console.log(message.text());save();}});
  page.on('response',async response=>{
   if(response.url()===baseURL+'/api/bootstrap'){const body=await response.json().catch(()=>null);console.log('BOOTSTRAP '+JSON.stringify({status:response.status(),keyMode:body?.workspace?.keyMode,keyPresent:!!body?.workspace?.key}));}
   if(response.url().startsWith(baseURL+'/api/e2ee/v1/')){
@@ -242,7 +242,7 @@ try{
    await other.getByRole('button',{name:`Вернуть задачу «${canary}»`,exact:true}).waitFor();
    await other.screenshot({path:`${output}/clean-recovery.png`,fullPage:true,animations:'disabled'});
   }catch(error){
-   if(other){await other.screenshot({path:`${output}/clean-recovery-failure.png`,fullPage:true,animations:'disabled'}).catch(()=>{});writeFileSync(`${output}/clean-recovery-failure.txt`,await other.locator('body').ariaSnapshot().catch(()=>''));}
+   if(other){await other.screenshot({path:`${output}/clean-recovery-failure.png`,fullPage:true,animations:'disabled'}).catch(()=>{});writeFileSync(`${output}/clean-recovery-failure.txt`,redactPrivateText(await other.locator('body').ariaSnapshot().catch(()=>'')));}
    throw error;
   }finally{await clean.close();}
  });

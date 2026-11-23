@@ -1,5 +1,95 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## Продолжение23 ноября: immutable web27 и текущие два прогона
+
+Исправления web в linked window-worktree сохранены отдельными commits:
+9321d478 — стабильные authenticated read floors (4 новых regressions),
+e78799c7 — coalesced first scope opening (3 новых regressions, сохранение первого
+reader и отказы чужому binding/позднему ответу после close). Scoped35/35 PASS,
+full typecheck/scoped lint/build:web27 PASS; immutable web-private-27/public_html.
+Не повышать acceptance по этим component checks. Полный web41/session29331
+выполняется на27; log runtime/consolidated-private-shared41.log. Full40 на26
+имел13 PASS, обе shared области ACTIVE, но реальные задачи после reload не
+показались. Current native controller22/session3253 ещё выполняется без скрытого
+HAT refresh; выход не получен. До его завершения root app/android/contracts/public
+сохранять. Затем переносить9321d478 и e78799c7 с проверкой diff и обновлением native
+identity; broad source hash включает app TS, даже если APK окажутся теми же.
+
+Пользователю дана предварительная оценка остатка2–4 рабочих дня: завершение
+миграции/сквозной приёмки,149 upgrade,14 языков/final internal crypto review,
+подписанные отдельные публикации. Это оценка, не обещание готового релиза.
+VPN не ускоряет текущие локальные Gradle/Keystore/UI проверки.
+
+## 23 ноября: native22 component PASS и следующая гонка shared reader
+
+Native22/session43915 завершён SUCCESS22m48s, identity и оба APK сохранены в
+runtime/native150-foreground-durability-build22-identity.json. Полный JVM1432:
+1424 PASS/0 FAIL/8 прежних opt-in HTTP skips; XML скопированы в native150-build22-unit/.
+Full lint22 SUCCESS:0 errors/224 warnings/9 hints, exact inputs/APK проверены.
+Это фактические counts большого кандидата, не сравнение с историческими208.
+Actual key-audit: API26 и API34 по3/3 PASS, включая exact bundle tamper и удаление/
+замену hardware alias. Evidence: output/qa/security336-native150-durability-audit-22/.
+Actual unlock component: API34-22 и API26-22b каждый5/5 PASS, включая305s expiry,
+живой foreground vault, отказ cold open и повторный настоящий PIN; cancel/fingerprint/
+background тоже PASS. API26 NONE/0prints восстановлен. Первый22 setup упал до
+instrumentation: confirm field ещё не был готов; cleanup отдельно сохранён.
+Harness теперь bounded-waits фактическое системное поле вместо fixed350ms.
+
+Full native controller22/session3253 запущен БЕЗ periodic HAT renewal:
+runtime/native150-private-controller-api34-22-no-refresh-wrapper.log,
+output/qa/security336-native150-controller-unlock-api34-22-no-refresh/.
+App/android/contracts/public root пока не менять до конца этого exact run.
+
+Web39 на immutable26 остановлен после6 PASS с NON_TECHNICAL_ERROR при personal
+upload; guard не ослаблен. Следующий web40 на ТОМ ЖЕ bundle имеет13 PASS:
+personal + project ACTIVE + space ACTIVE, затем actual shared-task reader timeout.
+Таким образом полный web journey ещё не PASS. Диагностика теперь сохраняет
+только тип исключения и asset/line/column frames, без messages/секретов.
+В linked window-worktree commit9321d478 исправлен concurrent read-floor CAS
+(32/32 scoped). Следующий deterministic RED подтвердил2 параллельных first-open
+для одной shared scope: второй channel закрывал уже захваченный первый.
+Там же добавлена coalesced opening с immutable binding, отказом чужому owner/
+resource/authority и закрытием при account lock;35/35 scoped PASS после исправления
+пропущенного импорта. Lint/types/build27 session1709 выполняются. Эти изменения
+ещё НЕ перенесены в root: дождаться native22 identity/runtime, затем cherry-pick.
+
+Source checks PR45192824022 для exact0fea7e95 SUCCESS, обе jobs web-and-api/android.
+Новым uncommitted corrections этот CI не приписывать. Production3.3.5/149,
+coverage9/20, cutover/floors off и deployAndroid=false сохраняются.
+
+## 23 ноября: foreground durability и параллельные web reads
+
+Последний полный web38: personal/recovery12 PASS, project ACTIVE; space остановился
+с E2EE_LOCAL_CONFLICT. Это не повтор custody guard и не полный shared PASS.
+Короткий deterministic regression воспроизвёл такой же CAS при двух authenticated
+reads одного объекта. В linked window-worktree исправлен scope-client: одинаковый
+floor не переписывается, при CAS до4 раз заново проверяются durable floor и все
+confirmed heads без повторной сети. Более новый/другой hash по-прежнему отказывает.
+32/32 scoped JS, scoped lint, полный typecheck и build:web PASS; immutable web26.
+RED: runtime/parallel-read-floor-before-02.log; GREEN: parallel-read-floor-after.log.
+Первый strip-only запуск был tooling failure, не product RED. Изменения пока
+только в linked window-worktree: root native inputs build22 заморожены.
+Web39/session52769 запущен на web26: полный personal + project/space journey,
+runtime/consolidated-private-shared39.log, результаты пока не получены.
+
+На APK21 реальные PIN/fingerprint/cancel/background/305s expiry прошли5/5 и API26,
+и API34; это component scope. API26 восстановлен в NONE/0prints. Controller21
+без скрытого HAT refresh упал с E2EE_UNLOCK_REQUIRED в ensureDurableKeys во время
+долгой миграции. Подготовлено разделение cold decryption и memory-only durability
+уже открытого устройства, с exact ciphertext/slot/Keystore identity checks.
+Новые native negative tests сохраняют bundle при порче/исчезновении/замене key;
+expiry test проверяет работу открытого vault и отказ cold entry до нового PIN.
+Полный controller test использует настоящий credential composable для повторного
+входа; driver22 вводит synthetic PIN только в наблюдаемое системное поле.
+Native build22/session43915 выполняет full JVM + debug/test APK; identity ещё нет.
+Log: runtime/native150-foreground-durability-build22.log. До результата не менять
+app/android/contracts/public inputs root. После SUCCESS нужны platform tests
+нового witness, оба5-case authentication runs и full controller без periodic HAT.
+
+Production3.3.5/149, accepted coverage9/20, floors0/cutover off и
+GENESIS_DEPLOY_ANDROID=false сохраняются. Финальная приёмка всего продукта,
+149→3.3.6 upgrade, итоговое internal crypto review и публикации ещё не завершены.
+
 ## 23 ноября, после17:13 Москва: JVM20 PASS, shared37 перенёс обе области
 
 Native20/session86184 SUCCESS22m25s: полный JVM1432 (1424 PASS/0 FAIL/8 opt-in

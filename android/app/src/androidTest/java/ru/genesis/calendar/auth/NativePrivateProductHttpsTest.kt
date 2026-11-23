@@ -2,8 +2,15 @@ package ru.genesis.calendar.auth
 
 import android.content.Context
 import android.os.Bundle
+import android.os.SystemClock
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.Until
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -23,12 +30,16 @@ import ru.genesis.calendar.data.GenesisProject
 import ru.genesis.calendar.data.LocalCipher
 import ru.genesis.calendar.data.WorkspaceStructureRepository
 import ru.genesis.calendar.security.*
+import ru.genesis.calendar.ui.LocalGenesisLanguage
+import ru.genesis.calendar.ui.RecoveryCredentialActivity
 import java.io.ByteArrayInputStream
+import java.io.File
 import java.net.URL
 import java.security.KeyStore
 import java.security.cert.CertificateFactory
 import java.util.Base64
 import java.util.UUID
+import java.util.regex.Pattern
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
@@ -94,6 +105,29 @@ class NativePrivateProductHttpsTest {
             repository.saveProject(localProject)
             assertTrue(repository.workspace.first().projects.any{it.id==localProject.id})
             val material=E2eeKeys.createRecoveryKit(owner);recovery=material
+            var coldAttempt=0
+            suspend fun coldUnlock(){
+                val attempt=++coldAttempt;val outcome=CompletableDeferred<Exception?>()
+                val credential=NativeMigrationCredential.captureVault(owner,"controller-cold-$attempt",attempt.toLong(),E2eeEnvelope.encode(material.secret),material.kit,
+                    false,false,SystemClock.elapsedRealtime(),auth.privateUiOwnerGuard(owner))
+                host.scenario.onActivity{activity->activity.setContent{
+                    CompositionLocalProvider(LocalGenesisLanguage provides "en"){
+                        RecoveryCredentialActivity(credential,"GENESIS cold unlock QA","Unlock the retained private account",
+                            operation={_,held,admit->admit();auth.unlockPrivateVault(E2eeEnvelope.encode(held.secret),held.kit);admit()},
+                            finished={_,error->outcome.complete(error)})
+                    }
+                }}
+                val ui=UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+                val pin=By.text(Pattern.compile(Pattern.quote("Use device screen lock"),Pattern.CASE_INSENSITIVE or Pattern.UNICODE_CASE))
+                assertTrue("Explicit production credential prompt",ui.wait(Until.hasObject(pin),20000));requireNotNull(ui.findObject(pin)).click()
+                ui.wait(Until.findObject(By.res("com.android.systemui:id/button_use_credential")),5000)?.click()
+                assertTrue("Observed system PIN field",ui.wait(Until.hasObject(By.pkg(Pattern.compile("com\\.android\\.(settings|systemui)")).clazz(Pattern.compile(".*(EditText|PasswordTextView)"))),20000))
+                ui.dumpWindowHierarchy(File(app.getExternalFilesDir(null),"genesis-owned-unlock-prompt.xml"))
+                val fingerprint=java.security.MessageDigest.getInstance("SHA-256").digest(certificate.encoded).joinToString(""){"%02X".format(it)}
+                File(app.getExternalFilesDir(null),"genesis-controller-pin-ready.json").writeText(JSONObject().put("fixture",fingerprint).put("request",attempt).toString())
+                try{withTimeout(120000){outcome.await()}?.let{throw it}}
+                finally{credential.close();host.scenario.onActivity{it.setContent{}}}
+            }
             NativeMigrationUiState.show(owner,"en",false)
             val intent=requireNotNull(NativeMigrationUiState.state.value)
             assertFalse("A periodic worker must defer before changing the migration's authentication generation",auth.synchronizeInBackground())
@@ -143,11 +177,11 @@ class NativePrivateProductHttpsTest {
             assertEquals("E2EE_UPGRADE_REQUIRED",request("/api/bootstrap",expected=409).getString("error"))
             NativeMigrationUiState.close(intent.id);auth.checkSession()
             withTimeout(120000){auth.state.first{it.user?.uid==owner&&it.user?.privateVault==true&&it.ready&&!it.busy}}
-            auth.unlockPrivateVault(E2eeEnvelope.encode(material.secret),material.kit)
+            coldUnlock()
             withTimeout(120000){repository.workspace.first{row->row.projects.any{it.id==localProject.id&&it.title==localProject.title}}}
             repository.saveProject(localProject.copy(title="EDITED $canary"));NativePrivateProducts.flush(accountScope)
             auth.onTrialBackground();assertFalse(NativePrivateProducts.isOpen(accountScope));auth.onTrialForeground()
-            auth.unlockPrivateVault(E2eeEnvelope.encode(material.secret),material.kit)
+            coldUnlock()
             withTimeout(120000){repository.workspace.first{row->row.projects.any{it.id==localProject.id&&it.title=="EDITED $canary"}}}
             for((kind,resource)in listOf("project" to project,"space" to space)){
                 // Only provider delivery is synthetic. Refresh its confirmation

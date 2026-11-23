@@ -21,6 +21,8 @@ import ru.genesis.calendar.BuildConfig
 import ru.genesis.calendar.PagerTestActivity
 import ru.genesis.calendar.security.E2eeDeviceVault
 import ru.genesis.calendar.security.NativeMigrationCredential
+import ru.genesis.calendar.security.E2eeKeys
+import ru.genesis.calendar.security.UnlockedE2eeDevice
 import java.util.UUID
 import java.io.File
 import java.util.regex.Pattern
@@ -106,13 +108,25 @@ class NativeDeviceAuthenticationUiTest {
         assertEquals("OPENED",outcome.get());assertEquals(1,operations.get())
     }
     @Test fun e_expiredForegroundAuthenticationRequiresFreshSystemPin(){
-        instrumentation.sendStatus(2,Bundle().apply{putString("stream","GENESIS_UNLOCK_UI_WAIT:expiry\n")})
-        val until=SystemClock.elapsedRealtime()+305000L
-        while(SystemClock.elapsedRealtime()<until)SystemClock.sleep(250)
-        assertTrue(compose.activity.lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED))
-        val refused=runCatching{vault.unlock().also{it.fill(0)}}.exceptionOrNull()
-        assertEquals("E2EE_UNLOCK_REQUIRED",refused?.message);assertEquals(0,operations.get())
-        prompt();requireNotNull(device.findObject(pinSelector)).click();signal("pin");waitOutcome()
-        assertEquals("OPENED",outcome.get());assertEquals(1,operations.get())
+        val liveOwner="$owner-active";val recovery=E2eeKeys.createRecoveryKit(liveOwner)
+        val live=UnlockedE2eeDevice.provision(compose.activity,liveOwner,recovery.secret,recovery.kit)
+        try{
+            instrumentation.sendStatus(2,Bundle().apply{putString("stream","GENESIS_UNLOCK_UI_WAIT:expiry\n")})
+            val until=SystemClock.elapsedRealtime()+305000L
+            while(SystemClock.elapsedRealtime()<until)SystemClock.sleep(250)
+            assertTrue(compose.activity.lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED))
+            val refused=runCatching{vault.unlock().also{it.fill(0)}}.exceptionOrNull()
+            assertEquals("E2EE_UNLOCK_REQUIRED",refused?.message);assertEquals(0,operations.get())
+            // Existing foreground material stays usable; this memory-only
+            // durability witness cannot authorize a second cold opening.
+            live.ensureDurableKeys()
+            live.vault.write(listOf(ru.genesis.calendar.security.UnlockedE2eeVault.Write("draft","expiry-live",content,null)))
+            val row=requireNotNull(live.vault.read("draft","expiry-live"));try{assertArrayEquals(content,row.bytes)}finally{row.bytes.fill(0)}
+            assertEquals("E2EE_UNLOCK_REQUIRED",runCatching{E2eeDeviceVault(compose.activity,liveOwner).unlock().also{it.fill(0)}}.exceptionOrNull()?.message)
+            live.lock()
+            prompt();requireNotNull(device.findObject(pinSelector)).click();signal("pin");waitOutcome()
+            assertEquals("OPENED",outcome.get());assertEquals(1,operations.get())
+            assertEquals("E2EE_UNLOCK_REQUIRED",runCatching{live.ensureDurableKeys()}.exceptionOrNull()?.message)
+        }finally{live.lock();recovery.secret.fill(0)}
     }
 }

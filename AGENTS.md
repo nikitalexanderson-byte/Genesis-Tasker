@@ -1,5 +1,13 @@
 # Genesis Tasker: действующие правила
 
+- Текущая native build22 проверяет foreground durability после300s Keystore HAT:
+  cold opening по-прежнему требует реального системного PIN/STRONG biometric;
+  memory-only witness уже открытого устройства проверяет exact bundle/slot/key.
+  До результата build22 не менять root app/android/contracts/public inputs.
+  Web read-floor correction разрабатывается в существующем linked worktree;
+  перед переносом дождаться identity22. Старые build9/build14 freezes ниже —
+  история, не действующие сборки. Приёмка нового блока ещё не завершена.
+
 - Подтверждение отпечатка использует публичный Compose launcher AndroidX
   Biometric1.4.0-rc01 с Class3/STRONG на всех поддерживаемых API. Core1.18
   FingerprintManagerCompat оказался no-op и удалён из этого пути; старое

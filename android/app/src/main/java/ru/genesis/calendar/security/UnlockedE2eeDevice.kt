@@ -10,7 +10,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 /** Portable format matches the browser device bundle. Hardware presence protects
  * the Android copy; independent recovery never grants an account session. */
 class UnlockedE2eeDevice private constructor(override val ownerId:String,private val bundle:JSONObject,
-    private var privateKeys:E2eeKeys.DeviceKeys?,override val vault:UnlockedE2eeVault,private val persistence:E2eeDeviceVault,private val storage:E2eeSqliteStorage) : E2eeScopeDevice, E2eeDeviceReadView {
+    private var privateKeys:E2eeKeys.DeviceKeys?,override val vault:UnlockedE2eeVault,private val persistence:E2eeDeviceVault,private val storage:E2eeSqliteStorage,
+    private val durability:E2eeDeviceVault.DeviceDurability,private val openedBundle:ByteArray) : E2eeScopeDevice, E2eeDeviceReadView {
     override val deviceId:String=bundle.getString("deviceId")
     override val authorityPin:JSONObject get()=JSONObject(bundle.getJSONObject("authorityPin").toString())
     private val closed=AtomicBoolean(false)
@@ -18,18 +19,12 @@ class UnlockedE2eeDevice private constructor(override val ownerId:String,private
     override fun readSavedDirectory(scopeId:String,onVerified:((E2eeDirectory.Verified)->Unit)?)=savedDirectory(scopeId,onVerified)
     override fun readKeys():E2eeKeys.ReadKeys{requireOpen();val keys=requireNotNull(privateKeys);return E2eeKeys.ReadKeys(E2eeKeys.publicKeys(keys),keys.receiving,keys.signing.public)}
     override fun keys():E2eeKeys.DeviceKeys {requireOpen();return requireNotNull(privateKeys)}
-    fun lock(){if(!closed.compareAndSet(false,true))return;vault.lock();privateKeys=null;bundle.remove("localRoot");bundle.remove("deviceKeys");storage.close()}
+    fun lock(){if(!closed.compareAndSet(false,true))return;durability.close();openedBundle.fill(0);vault.lock();privateKeys=null;bundle.remove("localRoot");bundle.remove("deviceKeys");storage.close()}
     override fun ensureDurableKeys() {
-        requireOpen();val bytes=persistence.unlock()
-        try {requireOpen();val saved=JSONObject(bytes.toString(Charsets.UTF_8))
-            check(saved.get("protocol")==1&&saved.get("ownerId")==ownerId&&saved.getString("deviceId")==deviceId && saved.getString("localKeyId")==bundle.getString("localKeyId")
-                &&saved.getString("localRoot")==bundle.getString("localRoot")
-                &&E2eeCommands.canonical(saved.getJSONObject("deviceKeys")).contentEquals(E2eeCommands.canonical(bundle.getJSONObject("deviceKeys")))
-                &&E2eeCommands.canonical(saved.getJSONObject("authorityPin")).contentEquals(E2eeCommands.canonical(bundle.getJSONObject("authorityPin")))) {"E2EE_DEVICE_KEY_UNAVAILABLE"}
-        }finally{bytes.fill(0)}
+        requireOpen();durability.verify();requireOpen()
     }
     internal fun retainDeviceRecovery(secret:ByteArray,kit:JSONObject,current:()->Unit){
-        requireOpen();current();ensureDurableKeys();val bytes=persistence.unlock()
+        requireOpen();current();ensureDurableKeys();val bytes=openedBundle.copyOf()
         try{
             persistence.retainRecovery(secret,kit,bytes);current()
             val custody=persistence.originalCustodyStorage();var retained=false
@@ -49,7 +44,7 @@ class UnlockedE2eeDevice private constructor(override val ownerId:String,private
         check(secret.size==32){"E2EE_INVALID_ORIGINAL_CUSTODY"};val held=secret.copyOf();var bytes:ByteArray?=null;var root:ByteArray?=null
         val current:()->Unit={requireOpen();assertCurrent()}
         try{
-            val kit=JSONObject(recoveryKit.toString());current();ensureDurableKeys();current();bytes=persistence.unlock();current()
+            val kit=JSONObject(recoveryKit.toString());current();ensureDurableKeys();current();bytes=openedBundle.copyOf();current()
             val saved=JSONObject(bytes.toString(Charsets.UTF_8));check(saved.get("ownerId")==ownerId&&saved.get("deviceId")==deviceId&&saved.get("localKeyId")=="local:$deviceId"){"E2EE_DEVICE_KEY_UNAVAILABLE"}
             root=E2eeEnvelope.decode(saved.getString("localRoot"),32);val signer=saved.getJSONObject("deviceKeys").getString("signingKey");saved.remove("localRoot");saved.remove("deviceKeys");bytes.fill(0)
             val sealed=E2eeOriginalCustody.seal(E2eeOriginalSource.Identity(ownerId,"device:$deviceId",deviceId,1,1,1),"local:$deviceId",signer,root,authorityPin,kit,held,current)
@@ -117,7 +112,7 @@ class UnlockedE2eeDevice private constructor(override val ownerId:String,private
             }finally{old.lock()}
         }
         private fun openDevice(context:Context,ownerId:String,allowCreateRecords:Boolean):UnlockedE2eeDevice {
-            val persistence=E2eeDeviceVault(context,ownerId);val bytes=persistence.unlock()
+            val persistence=E2eeDeviceVault(context,ownerId);val opened=persistence.unlockForDevice();val bytes=opened.bytes;var transferred=false
             try {
                 val bundle=JSONObject(bytes.toString(Charsets.UTF_8))
                 E2eeKeys.exact(bundle,setOf("protocol","ownerId","deviceId","localKeyId","localRoot","deviceKeys","authorityPin"))
@@ -128,8 +123,8 @@ class UnlockedE2eeDevice private constructor(override val ownerId:String,private
                 val root=try{E2eeEnvelope.importRoot(raw)}finally{raw.fill(0)}
                 val storage=E2eeSqliteStorage(context,allowCreateRecords)
                 val vault=UnlockedE2eeVault(storage,UnlockedE2eeVault.Scope(ownerId,"device:$deviceId",deviceId,1,1,1,localKeyId,keys.signing.private,mapOf(localKeyId to root)) {if(it==deviceId)keys.signing.public else null})
-                return UnlockedE2eeDevice(ownerId,bundle,keys,vault,persistence,storage)
-            }finally{bytes.fill(0)}
+                return UnlockedE2eeDevice(ownerId,bundle,keys,vault,persistence,storage,opened.durability,bytes.copyOf()).also{transferred=true}
+            }finally{bytes.fill(0);if(!transferred)opened.durability.close()}
         }
     }
 }
