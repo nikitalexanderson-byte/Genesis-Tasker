@@ -2713,7 +2713,11 @@ async function sharedCachedRequest<T>(path: string, signal?: AbortSignal): Promi
   }
 }
 
-export function sharedDataCameFromOfflineCache() { return sharedReadAvailability().size > 0; }
+export function sharedDataCameFromOfflineCache() {
+  const owner=confirmedTransportOwnerId;
+  if(owner&&serverProtectedTransportOwners.has(owner))return requirePrivateAccount(owner).mode==='offline';
+  return sharedReadAvailability().size > 0;
+}
 
 export async function queuedSharedMutations(projectId: string) {
   if(confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId)){
