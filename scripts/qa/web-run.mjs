@@ -39,6 +39,10 @@ async function freePort() {
 }
 const port = await freePort(), apiPort = await freePort();
 const origin = `http://127.0.0.1:${port}`;
+function assertRetainedOwnership(owner,client,clientState){
+  if(owner.synthetic!==true||owner.directory!==runtime.replaceAll('\\','/')||owner.origin!==origin||owner.configSha256!==hash(readFileSync(path.join(runtime,'config.php')))
+    ||client.synthetic!==true||client.directory!==clientState.replaceAll('\\','/')||client.origin!==origin)throw new Error('Synthetic retention ownership check failed');
+}
 const prepared = spawnSync(php, ['-d', 'disable_functions=curl_exec,mail', 'scripts/qa/backend-fixture.php', `--dir=${runtime}`, `--origin=${origin}`, `--run-id=${id}`, ...(suite === 'private-product' ? ['--e2ee'] : [])], { cwd: root, encoding: 'utf8', windowsHide: true });
 if (prepared.status !== 0) throw new Error('Synthetic fixture preparation failed: ' + (prepared.stderr || prepared.error?.message));
 const apiLog = createWriteStream(path.join(output, 'local-api.log'));
@@ -78,12 +82,16 @@ finally {
   let cleanup;
   const clientState=path.join(output,'client-state');
   if(args['preserve-failure']==='true'&&featureExitCode!==0&&existsSync(path.join(clientState,'recovery.private.json'))){
-    const owner=JSON.parse(readFileSync(path.join(runtime,'owner.json'),'utf8'));
-    const client=JSON.parse(readFileSync(path.join(clientState,'owner.json'),'utf8'));
-    if(owner.synthetic!==true||owner.directory!==runtime.replaceAll('\\','/')||owner.origin!==origin||owner.configSha256!==hash(readFileSync(path.join(runtime,'config.php')))
-      ||client.synthetic!==true||client.directory!==clientState.replaceAll('\\','/')||client.origin!==origin)throw new Error('Synthetic retention ownership check failed');
-    cleanup={status:'PRESERVED_SYNTHETIC',runtime,clientState,origin,port,apiPort,ownershipChecked:true,servicesStopped:true,mustCleanBeforeRelease:true};
-    writeFileSync(path.join(output,'preserved-runtime.json'),JSON.stringify(cleanup,null,2));
+    try{
+      const owner=JSON.parse(readFileSync(path.join(runtime,'owner.json'),'utf8'));
+      const client=JSON.parse(readFileSync(path.join(clientState,'owner.json'),'utf8'));
+      assertRetainedOwnership(owner,client,clientState);
+      cleanup={status:'PRESERVED_SYNTHETIC',runtime,clientState,origin,port,apiPort,ownershipChecked:true,servicesStopped:true,mustCleanBeforeRelease:true};
+      writeFileSync(path.join(output,'preserved-runtime.json'),JSON.stringify(cleanup,null,2));
+    }catch{
+      cleanup={status:'RETENTION_BOUNDARY_CHECK_FAILED',runtime,clientState,ownershipChecked:false,servicesStopped:true};
+      runError=[runError,'Synthetic retention ownership check failed; files were left untouched'].filter(Boolean).join('; ');process.exitCode=1;
+    }
   }else{
     cleanup=cleanupBackendRuntime(runtime,output);
     if(existsSync(clientState))cleanupBackendRuntime(clientState,output);
