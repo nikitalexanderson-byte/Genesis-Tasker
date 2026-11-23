@@ -193,3 +193,56 @@ test('physical request BOM is forbidden on protected readback as on native even 
  try{await f.vault.write([{domain:'local-snapshot',objectId:jid,value:encoded,expected:journal.serial}]);}finally{encoded.fill(0);bytes.fill(0);}
  const before=new Map(f.storage.rows);await assert.rejects(readAll(f.options,marker.id,{allowIncomplete:true}),/E2EE_/);await assert.rejects(remoteOriginals.describeRemoteOriginal(f.options,marker.id),/E2EE_/);assert.deepEqual(f.storage.rows,before);
 });
+
+test('bulk original ownership audit enumerates one stable namespace rather than one per retained request',async()=>{
+ const f=await fixture(),copies=[];for(let i=0;i<6;i++)copies.push(await complete(f,encode(JSON.stringify({private:'audit-'+i}))));
+ let enumerations=0,bodyReads=0;const list=f.storage.list.bind(f.storage),get=f.storage.get.bind(f.storage);
+ f.storage.list=async prefix=>{enumerations++;return list(prefix);};
+ f.storage.get=async key=>{if(/:p:00000$/.test(key))bodyReads++;return get(key);};
+ let headers=0;
+ const receipts=await remoteOriginals.verifyRemoteOriginals(f.options,new Set(copies.map(row=>row.ref.id)),descriptor=>{
+  assert.equal(descriptor.bodyVerified,false);assert.equal(bodyReads,0,'all signed requests precede every body');headers++;
+ });
+ assert.equal(headers,6);assert(receipts.every(row=>row.complete));
+ assert.equal(receipts.length,6);assert.equal(bodyReads,6);
+ console.log('ORIGINAL_AUDIT_COST '+JSON.stringify({requests:6,enumerations,bodyReads}));
+ assert(enumerations<=3,'one before/request-preflight/after inventory must cover the entire owned batch');
+});
+
+test('bulk original audit authenticates a later resealed request before reading the first body',async()=>{
+ const f=await fixture(),first=await complete(f),second=await complete(f);
+ const ids=await f.vault.listLocal('local-snapshot','remote-original:'),rid=ids.find(id=>id.includes(`:${second.ref.id}:r:00000`)),jid=ids.find(id=>id.includes(`:${second.ref.id}:j:00000`));assert(rid&&jid);
+ const raw=await f.vault.read('local-snapshot',rid),packet=JSON.parse(new TextDecoder().decode(raw.value));raw.value.fill(0);
+ packet.signature=(packet.signature[0]==='A'?'B':'A')+packet.signature.slice(1);const bytes=encode(JSON.stringify(packet));
+ const key=[...f.storage.rows.keys()].find(key=>key.endsWith(rid)),stored=f.storage.rows.get(key);
+ f.storage.rows.set(key,{serial:1,envelope:await sealE2eeEnvelope(f.scope.roots.get(f.scope.keyId),f.keys.signing.privateKey,stored.envelope.context,bytes)});
+ const journal=await f.vault.read('local-snapshot',jid),value=decodeCanonicalE2eeValue(journal.value);journal.value.fill(0);value.request={size:bytes.length,hash:hash(bytes)};
+ const metadata=canonicalE2eeValue(value);try{await f.vault.write([{domain:'local-snapshot',objectId:jid,value:metadata,expected:journal.serial}]);}finally{metadata.fill(0);bytes.fill(0);}
+ let bodyReads=0;const get=f.storage.get.bind(f.storage);f.storage.get=async key=>{if(/:p:00000$/.test(key))bodyReads++;return get(key);};
+ const before=structuredClone(f.storage.rows);await assert.rejects(remoteOriginals.verifyRemoteOriginals(f.options,new Set([first.ref.id,second.ref.id]),()=>{}),/E2EE_/);
+ assert.equal(bodyReads,0);assert.deepEqual(f.storage.rows,before);
+});
+
+test('bulk original audit detects a namespace mutation during metadata preflight before any body',async()=>{
+ const f=await fixture(),copy=await complete(f);let changed=false,bodyReads=0;const get=f.storage.get.bind(f.storage);
+ f.storage.get=async key=>{if(/:p:00000$/.test(key))bodyReads++;return get(key);};
+ await assert.rejects(remoteOriginals.verifyRemoteOriginals(f.options,new Set([copy.ref.id]),async()=>{
+  if(!changed){changed=true;const extra=await registered(f);extra.close();}
+ }),/E2EE_REMOTE_ORIGINAL_BUSY/);
+ assert.equal(bodyReads,0);assert.deepEqual((await readAll(f.options,copy.ref.id)).bytes,Buffer.from(copy.raw));
+});
+
+test('bulk original audit rechecks the whole namespace after body EOF without returning partial receipts',async()=>{
+ const f=await fixture(),copy=await complete(f),extra=await complete(f);let changed=false;const get=f.storage.get.bind(f.storage);
+ const key=[...f.storage.rows.keys()].find(key=>key.includes(`:${extra.ref.id}:r:00000`));assert(key);
+ f.storage.get=async id=>{const value=await get(id);if(!changed&&id.includes(`:${copy.ref.id}:p:00000`)){changed=true;f.storage.rows.delete(key);}return value;};
+ await assert.rejects(remoteOriginals.verifyRemoteOriginals(f.options,new Set([copy.ref.id]),()=>{}),/E2EE_/);assert(changed);
+});
+
+test('bulk original audit distinguishes incomplete, absent and complete originals and stops on actor retirement',async()=>{
+ const f=await fixture(),copy=await complete(f),partial=await registered(f),partialId=partial.registration().id;partial.close();const missing=crypto.randomUUID();
+ const rows=await remoteOriginals.verifyRemoteOriginals(f.options,new Set([copy.ref.id,partialId,missing]),()=>{});
+ assert.equal(rows.length,2);assert.equal(rows.find(row=>row.id===copy.ref.id).complete,true);assert.equal(rows.find(row=>row.id===partialId).complete,false);assert(!rows.some(row=>row.id===missing));
+ const before=structuredClone(f.storage.rows),get=f.storage.get.bind(f.storage);f.storage.get=async key=>{const value=await get(key);if(/:p:00000$/.test(key))f.retire();return value;};
+ await assert.rejects(remoteOriginals.verifyRemoteOriginals(f.options,new Set([copy.ref.id]),()=>{}),/E2EE_ACCOUNT_CHANGED/);assert.deepEqual(f.storage.rows,before);
+});

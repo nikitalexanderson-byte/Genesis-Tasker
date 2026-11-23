@@ -208,6 +208,25 @@ export async function describeRemoteOriginal(source:RemoteOriginalReadOptions,id
  const item=before.journals.find(row=>row.value.id===id);if(!item)throw new Error('E2EE_REMOTE_ORIGINAL_MISSING');const j=item.value,registered=await verifiedRequest(options,before,j);
  await stable(options,before);check(options);return Object.freeze({registration:registered,bodyVerified:false,phase:j.phase,request:Object.freeze({...j.request}),response:j.response?Object.freeze({...j.response}):null,size:j.size,parts:j.parts.length,rawHash:j.rawHash,manifestHash:j.manifestHash});
 }
+/** One bounded namespace audit for a retained ownership batch. Authenticate
+ * every selected request before opening any body, then verify exact full/prefix
+ * EOF and the complete namespace again before publishing any receipt. Missing
+ * reserved IDs receive no receipt; callers still enforce completion claims. */
+export async function verifyRemoteOriginals(source:RemoteOriginalReadOptions,ids:ReadonlySet<string>,beforeRead:(descriptor:RemoteOriginalDescriptor)=>void|Promise<void>){
+ const options=readOptions(source),wanted=new Set(ids);check(options);for(const id of wanted)if(typeof id!=='string'||!uuid.test(id))invalid();
+ const before=await inventory(options);within(before.usage,options.capacity);
+ const selected=before.journals.filter(row=>wanted.has(row.value.id));
+ for(const row of selected){
+  const j=row.value,registered=await verifiedRequest(options,before,j);check(options);
+  await beforeRead(Object.freeze({registration:registered,bodyVerified:false,phase:j.phase,request:Object.freeze({...j.request}),response:j.response?Object.freeze({...j.response}):null,size:j.size,parts:j.parts.length,rawHash:j.rawHash,manifestHash:j.manifestHash}));check(options);
+ }
+ await stable(options,before);check(options);
+ const receipts=[];
+ for(const row of selected){
+  receipts.push(await readVerifiedOriginal(options,before,row.value,async input=>{for await(const bytes of input){check(options);bytes.fill(0);}},true,false));check(options);
+ }
+ await stable(options,before);check(options);return Object.freeze(receipts);
+}
 /** Active-original-actor read scope. All yielded loans expire on next/return;
  * a partial prefix is available only by explicit opt-in and never claims EOF. */
 export async function withRemoteOriginal(sourceOptions:RemoteOriginalReadOptions,id:string,consume:(source:AsyncIterable<Uint8Array>)=>Promise<void>,mode:{allowIncomplete?:boolean}={}){
@@ -215,6 +234,10 @@ export async function withRemoteOriginal(sourceOptions:RemoteOriginalReadOptions
  check(options);if(!uuid.test(id))invalid();const before=await inventory(options);within(before.usage,options.capacity);const item=before.journals.find(row=>row.value.id===id);if(!item)throw new Error('E2EE_REMOTE_ORIGINAL_MISSING');const j=item.value;
  if(j.phase!=='complete'&&!allowIncomplete)throw new Error('E2EE_REMOTE_ORIGINAL_INCOMPLETE');
  await verifiedRequest(options,before,j);
+ return readVerifiedOriginal(options,before,j,consume,allowIncomplete,true);
+}
+async function readVerifiedOriginal(options:RemoteOriginalReadOptions,before:Inventory,j:Journal,consume:(source:AsyncIterable<Uint8Array>)=>Promise<void>,allowIncomplete:boolean,verifyNamespace:boolean){
+ const id=j.id;check(options);if(j.phase!=='complete'&&!allowIncomplete)throw new Error('E2EE_REMOTE_ORIGINAL_INCOMPLETE');
  let live=true,started=false,ended=false,failed=false,busy=false;const digest=sha256.create();let size=0,iterator:AsyncGenerator<Uint8Array>|undefined;
  const generate=async function*(){
   try{for(const[index,part]of j.parts.entries()){
@@ -227,6 +250,6 @@ export async function withRemoteOriginal(sourceOptions:RemoteOriginalReadOptions
   if(!live||started){failed=true;throw new Error('E2EE_REMOTE_ORIGINAL_READER_CLOSED');}started=true;iterator=generate();const current=iterator;
   return{next(){if(!live||busy)return reject();busy=true;const pending=current.next();void pending.catch(()=>{failed=true;});void pending.finally(()=>{busy=false;}).catch(()=>{});return pending;},return(){if(!ended)failed=true;const pending=current.return(undefined);void pending.catch(()=>{});return pending;}};
  }};
- try{await consume(source);check(options);if(!started||!ended||failed||size!==j.size)throw new Error('E2EE_REMOTE_ORIGINAL_INCOMPLETE_READ');const rawHash=encodeE2eeBytes(digest.digest());if(j.phase==='complete'&&rawHash!==j.rawHash)invalid();await stable(options,before);check(options);return Object.freeze({id,size,rawHash,complete:j.phase==='complete',manifestHash:j.manifestHash});}
+ try{await consume(source);check(options);if(!started||!ended||failed||size!==j.size)throw new Error('E2EE_REMOTE_ORIGINAL_INCOMPLETE_READ');const rawHash=encodeE2eeBytes(digest.digest());if(j.phase==='complete'&&rawHash!==j.rawHash)invalid();if(verifyNamespace)await stable(options,before);check(options);return Object.freeze({id,size,rawHash,complete:j.phase==='complete',manifestHash:j.manifestHash});}
  finally{live=false;try{await iterator?.return(undefined);}catch{/* Preserve the consumer/actor error and drain the owned loan. */}finally{digest.destroy();}}
 }

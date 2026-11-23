@@ -9,7 +9,7 @@ import {validateStagedMigrationSnapshot} from './migration-stage.ts';
 import {inspectSourceStages,openSourceStage,authenticateInterruptedSourceStage,type SourceStageTarget} from './source-stage.ts';
 import {openLegacyMigrationSnapshot,captureLegacyMigrationSnapshotReference} from './legacy-snapshot-stream.ts';
 import {validateStreamedPlanningOwnership} from './migration-ownership.ts';
-import {authenticateRemoteOriginalRegistration,describeRemoteOriginal,listRemoteOriginals,withRemoteOriginal,type RemoteOriginalReadOptions} from './remote-original.ts';
+import {authenticateRemoteOriginalRegistration,verifyRemoteOriginals,listRemoteOriginals,type RemoteOriginalReadOptions} from './remote-original.ts';
 import {inspectMigrationContentPlanAttempt,openMigrationContentPlan,retainedMigrationPlanValues} from './content-plan.ts';
 import {authenticateRetainedMigrationControls,inspectRetainedLegacyPlan,type RetainedMigrationFrame} from './retained-migration-proof.ts';
 import {E2EE_PROVIDER_STORAGE_BUDGET} from './storage-capacity.ts';
@@ -233,16 +233,19 @@ export async function openMigrationOwnershipCatalogue(source:Options){
     ||adopted.state.checkpointHash!==expected.hash||adopted.state.directoryRevision!==expected.revision||adopted.state.sourceHash!==state.sourceHash
     ||!same(adopted.state.ownership,state.ownership)||!same(binding(adopted.state),binding(state)))invalid();
    await authenticateRetainedMigrationControls(adopted.state,frame,identity.deviceId,current);current();claim('local-snapshot',state.adopted.stateId,scope.target.scopeId,'adoption');}
+  const expectedOriginals=new Map<string,(typeof state.ownership.originals)[number]>();
   for(const original of state.ownership.originals){
    if(!state.lease)invalid();await authenticateRemoteOriginalRegistration(original.registration,original.packet,signer,{...readOptions,generation:state.lease.generation});current();
-   // A different generation in the same target may own another marker. The
-   // final global inventory joins it to its own exact reservation, never skips it.
-   await asSource(scope.target.scopeId,async()=>{const present=(await listRemoteOriginals(readOptions)).find(row=>row.id===original.registration.id);if(!present){if('completion'in original&&original.completion!==null)invalid();return;}
-    const descriptor=await describeRemoteOriginal(readOptions,present.id);current();if(!same(descriptor.registration,original.registration))invalid();
-    const proof=await withRemoteOriginal(readOptions,present.id,async input=>{for await(const bytes of input){current();bytes.fill(0);}},{allowIncomplete:true});current();
-    if('completion'in original&&original.completion!==null&&(!proof.complete||!same(original.completion,{id:proof.id,manifestHash:proof.manifestHash,rawHash:proof.rawHash,size:proof.size})))invalid();
-    let verified=verifiedOriginals.get(scope.target.scopeId);if(!verified)verifiedOriginals.set(scope.target.scopeId,verified=new Set());verified.add(present.id);
-   });
+   if(expectedOriginals.has(original.registration.id))invalid();expectedOriginals.set(original.registration.id,original);
+  }
+  const proofs=new Map((await asSource(scope.target.scopeId,()=>verifyRemoteOriginals(readOptions,new Set(expectedOriginals.keys()),descriptor=>{
+   const original=expectedOriginals.get(descriptor.registration.id);if(!original||!same(descriptor.registration,original.registration))invalid();current();
+  }))).map(proof=>[proof.id,proof]));current();
+  for(const [id,original]of expectedOriginals){
+   const proof=proofs.get(id);
+   if(!proof){if('completion'in original&&original.completion!==null)invalid();continue;}
+   if('completion'in original&&original.completion!==null&&(!proof.complete||!same(original.completion,{id:proof.id,manifestHash:proof.manifestHash,rawHash:proof.rawHash,size:proof.size})))invalid();
+   let verified=verifiedOriginals.get(scope.target.scopeId);if(!verified)verifiedOriginals.set(scope.target.scopeId,verified=new Set());verified.add(id);
   }
   let adoptedPlanFound=state.protocol!==5;
   if(state.ownership.protocol===3)for(const plan of state.ownership.plans){
