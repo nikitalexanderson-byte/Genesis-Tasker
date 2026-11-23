@@ -1,5 +1,59 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## Последний срез: native29, web57 и consolidated checks
+
+Root HEAD643f01fb; linked HEAD1ac8a2ea. Root включил refresh9518e059 как
+aadb00cc, затем1ac8a2ea как191625eb. Root Native LocalPreferences projection
+syntax исправлен отдельно643f; linked этот единственный Kotlin fix ещё не получил.
+Build28/session48729 FAIL12m14s: Kotlin117 comma-separated val declarations.
+Old XML, скопированные wrapper28 до проверки exit, НЕ evidence нового кода.
+Build29/session76282 выполняется; runtime/native150-ui-preferences-build29-*.json
+и log. До результата/identity app/android/contracts/public inputs не менять.
+Новый wrapper29 сохраняет XML только при exit0.
+
+Web scope fix дедуплицирует online refresh и ждёт его до protected reads;
+неизменный signed checkpoint не заменяет held directory object; failed refresh
+не даёт stale online authority; close не переустанавливается late completion.
+RED: parallel2directory calls и ранний closed-flag refusal. GREEN37/37, затем
+close regression и correlated suites52/52. Authority input snapshot перенесён
+до первого нового await; combined correction58/58 PASS. Logs web-scope-refresh-*
+и web-scope-custody-corrections32.log.
+
+Full JS2157:2153PASS/4FAIL, log web31-all-unit.log. Environment failures: missing
+GENESIS_QA_PHP for2 cases и missing SSR dist for rendered. С корректным PHP и
+после npm build все повторены PASS: scoped58/58, rendered62/62. Четвёртый FAIL
+в custody test был no-op replace last char with0, когда random ID уже кончался0;
+fixture теперь гарантирует different ID и указывает mutation index. Не guard fix.
+Typecheck/scoped lint/web build31 PASS. Source content snapshot correction
+после31 касается authority methods, не layout/обычных read refresh guards.
+
+Web56/session2447 FAIL не принимается: первый bundle hash был вычислен до конца
+Copy-Item immutable31; final hash mismatch. Ошибка порядка исполнителя, не product
+PASS. Дополнительно project transfer упал TypeError fetch с observed
+net::ERR_CONNECTION_FAILED, без429; synthetic runtime очищен. Immutable31 теперь
+полностью скопирован. Web57/session25778 повторяет content/files; log
+runtime/consolidated-private-content57.log; output/playwright/
+security336-private-content-57-1124. Root scripts не менять без необходимости;
+run идёт из linked и сервирует immutable31.
+
+Consolidated backend/session70643 выполняется: runtime/backend-final-1124-01/
+results.json и backend-final-1124-01-wrapper.log. Предыдущий backend155/1 упал
+только shared-bulk-large по300s internal test budget; текущего итога ещё нет.
+Actual HTTP API/session8344 PASS402/402: runtime/api-http-final-1124-01.
+I18n14 audit PASS: i18n-final-1124-01.log. Dependency audit1124 exit0, all0:
+dependency-audit-1124-candidate28.json. GitHub PR Source checks45253782855 обе
+jobs SUCCESS на2f511cbd; свежий root ещё не pushed и не проверен exact-head CI.
+
+После build29: actual API26/API34 source cases затем full controller +4UI
+через runtime/native150-private-controller-and-unlock-api34-28.ps1
+-RunId security336-native150-controller-unlock-api34-29-no-refresh
+-NoAuthenticationRefresh -KeepFixture. KeepFixture добавлен/PS syntax checked:
+после controller PASS stops processes/reverse, проверяет owner и сохраняет
+runtime/config/cert hashes в preserved-runtime.json. Это только owned synthetic
+fixture; его надо удалить через существующий guarded cleanup до final release.
+Если controller не PASS, runtime очищается как раньше. Никакой periodic HAT.
+Production149, coverage9/20, pilot/cutover/floors off, deployAndroid=false.
+
 ## Текущий срез: native UI preferences и web55
 
 Старые RUNNING/freeze записи ниже исторические: controller27/lint27 завершены.

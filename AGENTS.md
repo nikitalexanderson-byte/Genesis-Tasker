@@ -1,5 +1,20 @@
 # Genesis Tasker: действующие правила
 
+- Самый новый срез: build28 завершилась compile FAIL (LocalPreferences117:
+  Kotlin не допускает comma-separated val locals). Исправлено643f01fb;
+  build29/session76282 выполняется, app/android/contracts/public до identity29
+  не менять. XML из28 не являются новым unit evidence (tasks не выполнялись).
+  Web parallel scope-refresh fix aadb00cc/191625eb перенесён в root; typed
+  authority inputs snapshot до await. JS full2157:2153PASS/4FAIL; три environment
+  prerequisites устранены и rerun PASS, четвёртый — no-op random-ID mutation
+  fixture, исправлен гарантированной заменой. Scoped58/58 и rendered62/62 PASS.
+  API HTTP402/402 PASS, i18n14 audit PASS, dependency audit0. Full backend ещё
+  выполняется. Web56 не засчитан: запущен до завершения immutable copy и bundle
+  hash изменился; дополнительно observed transient fetch connection failure.
+  Web57/session25778 повторяет content/files на уже завершённом immutable31.
+  Runtime29 использовать wrapper28 с явным -RunId29 -NoAuthenticationRefresh
+  -KeepFixture (preserves только owned synthetic runtime после controller PASS).
+
 - Последний срез продолжения: native27 full controller PASS (1503s), full lint27
   SUCCESS0errors/224warnings/9hints; UI27 первые2/4 PASS, затем реальный crash
   legacy LocalPreferences.setRemote под active fence. Исправлен цельным блоком:
