@@ -22,6 +22,8 @@ type ObjectValue=Record<string,unknown>;
 export type SharedLiveContext={ownerId:string;spaceId:string;role:string;spaceRole:string;permissions:Record<string,boolean>;members:ObjectValue[];invitations:ObjectValue[]};
 export type SavedSharedRequest={protocol:1;scopeId:string;id:string;method:string;path:string;body:ObjectValue;createdAt:string;edits:ProductEdit[]|null;result:ObjectValue|null;complete:boolean};
 type SavedRequest=SavedSharedRequest;
+type SharedReadSnapshot={context:SharedLiveContext;versions:ProductVersion[]};
+type SharedReadBatch={requests:{path:string;body:ObjectValue;resolve:(value:ObjectValue)=>void;reject:(reason:unknown)=>void}[]};
 export interface SharedLivePorts{
  binding:SharedDomainBinding;actorId:string;online:boolean;current:()=>void;
  context:()=>Promise<SharedLiveContext>;versions:()=>Promise<ProductVersion[]>;
@@ -66,6 +68,7 @@ export function validateSharedLiveContext(input:unknown):SharedLiveContext{
  * Unsupported operations fail explicitly instead of reaching legacy routes. */
 export class SharedLiveModel{
  #serial:Promise<unknown>=Promise.resolve();
+ #readBatch:SharedReadBatch|null=null;
  #completion:VerifiedProductProposal[]=[];
  #pendingEntities=new Set<string>();
  constructor(private readonly ports:SharedLivePorts){}
@@ -206,7 +209,7 @@ export class SharedLiveModel{
   const ids=new Set<string>();for(const event of events){assertTechnical(event.id);assertTechnical(event.objectId);if(event.actorId!==null)assertTechnical(event.actorId);if(ids.has(String(event.id))||typeof event.action!=='string'||typeof event.createdAt!=='string'||!Number.isFinite(Date.parse(event.createdAt)))throw new Error('E2EE_SHARED_DOMAIN_INVALID');ids.add(String(event.id));}
   await this.ports.eventCache.save(events);this.ports.current();return events;
  }
- async #get(path:string){const url=new URL(path,'https://private.invalid'),{context,versions}=await this.#snapshot(),segments=url.pathname.split('/').filter(Boolean),live=versions.filter(row=>!row.deleted);
+ async #get(path:string,observe?:()=>Promise<SharedReadSnapshot>){const url=new URL(path,'https://private.invalid'),{context,versions}=await(observe?observe():this.#snapshot()),segments=url.pathname.split('/').filter(Boolean),live=versions.filter(row=>!row.deleted);
   if(segments[0]==='execution'&&segments[1]==='capture'&&segments.length===2){if(this.#pendingEntities.size)throw new Error('E2EE_PENDING_REVIEW_REQUIRED');return{binding:structuredClone(this.ports.binding),context:structuredClone(context),versions:structuredClone(versions)};}
   if(segments[0]==='execution'&&segments[1]==='ready'&&segments.length===2)return this.#execution(context,versions).ready(url.searchParams.get('now')??new Date().toISOString());
   if(segments[0]==='tasks'&&segments[2]==='series'&&segments.length===3)return{series:this.#execution(context,versions).seriesForTask(segments[1])};
@@ -453,12 +456,12 @@ export class SharedLiveModel{
  #orderedEdits(edits:ProductEdit[]){const created=new Set(edits.filter(v=>v.action==='create').map(v=>v.entityId)),done=new Set<string>(),pending=[...edits],ordered:ProductEdit[]=[];
   while(pending.length){let progress=false;for(let at=0;at<pending.length;){const edit=pending[at],dependencies=[...(edit.parentId?[edit.parentId]:[]),...(edit.metadata.dependsOnIds??[])].filter(v=>created.has(v));if(dependencies.every(v=>done.has(v))){ordered.push(edit);done.add(edit.entityId);pending.splice(at,1);progress=true;}else at++;}if(!progress)throw new Error('E2EE_PRODUCT_DEPENDENCY_INVALID');}return ordered;
  }
- async #execute(method:string,path:string,held:ObjectValue,intentId?:string){
+ async #execute(method:string,path:string,held:ObjectValue,intentId?:string,observe?:()=>Promise<SharedReadSnapshot>){
   const segments=path.split('?')[0].split('/').filter(Boolean);
    if(this.ports.binding.kind==='space'&&segments.length===3&&segments[0]==='members'&&segments[2]==='project-access'&&(method==='GET'||method==='POST')){
     if(!this.ports.online||!this.ports.membershipView)throw new Error('E2EE_ONLINE_REQUIRED');assertTechnical(segments[1]);if(method==='GET')exactKeys(held,[]);const result=await this.ports.membershipView(segments[1],method==='GET'?null:held);this.ports.current();return result;
    }
-   if(method==='GET')return this.#get(path);
+   if(method==='GET')return this.#get(path,observe);
   if(method==='POST'&&segments.length===3&&segments[0]==='tasks'&&segments[2]==='approval-preview'){
    if(!this.ports.online||!this.ports.approvalPreview)throw new Error('E2EE_ONLINE_REQUIRED');const {context,versions}=await this.#snapshot(),task=this.#find(versions,'task',segments[1]),proposals=await this.ports.approvalPreview(task.entityId);this.ports.current();
    return{current:this.#task(task,versions,context),proposals:proposals.map(row=>({...row,task:this.#task(row.version,versions,context)}))};
@@ -505,6 +508,23 @@ export class SharedLiveModel{
   await this.ports.saveRequest({...request,complete:true},saved.serial);this.ports.current();
   return structuredClone(request.result!);
  }
- request(method:string,path:string,body:ObjectValue={}):Promise<ObjectValue>{const held=structuredClone(body);return this.#run(()=>this.#execute(method,path,held));}
- resume(id:string){assertTechnical(id);return this.#run(async()=>{const saved=await this.ports.loadRequest(id);if(!saved)throw new Error('E2EE_SHARED_REQUEST_MISSING');const value=validateSharedLiveRequest(this.ports.binding,saved.value);return this.#execute(value.method,value.path,structuredClone(value.body),id);});}
+ request(method:string,path:string,body:ObjectValue={}):Promise<ObjectValue>{
+  const held=structuredClone(body);
+  if(method!=='GET'){this.#readBatch=null;return this.#run(()=>this.#execute(method,path,held));}
+  // Only overlapping reads before the next mutation share this fresh, verified
+  // observation. No timer cache, plaintext fallback or skipped role check.
+  let batch=this.#readBatch;const start=!batch;
+  if(!batch)this.#readBatch=batch={requests:[]};
+  const owned=batch,pending=new Promise<ObjectValue>((resolve,reject)=>owned.requests.push({path,body:held,resolve,reject}));
+  if(start)void this.#run(async()=>{
+   if(this.#readBatch===owned)this.#readBatch=null;
+   let observation:Promise<SharedReadSnapshot>|undefined;
+   const observe=async()=>structuredClone(await(observation??=this.#snapshot()));
+   for(const request of owned.requests)try{
+    this.ports.current();const result=await this.#execute('GET',request.path,request.body,undefined,observe);this.ports.current();request.resolve(structuredClone(result));
+   }catch(error){request.reject(error);}
+  }).catch(error=>{if(this.#readBatch===owned)this.#readBatch=null;for(const request of owned.requests)request.reject(error);});
+  return pending;
+ }
+ resume(id:string){assertTechnical(id);this.#readBatch=null;return this.#run(async()=>{const saved=await this.ports.loadRequest(id);if(!saved)throw new Error('E2EE_SHARED_REQUEST_MISSING');const value=validateSharedLiveRequest(this.ports.binding,saved.value);return this.#execute(value.method,value.path,structuredClone(value.body),id);});}
 }

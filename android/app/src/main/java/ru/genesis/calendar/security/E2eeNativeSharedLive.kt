@@ -18,7 +18,9 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
     private val mutex=Mutex();private val trust=E2eeSharedTrust(account);private val opened=mutableMapOf<String,Live>()
     private var aggregateSeed:JSONObject?=null
     private fun validatePersonal(value:JSONObject):JSONObject{
-        E2eeKeys.exact(value,setOf("protocol","ownerId","views","requests","readFlags","watching"));check(value.getInt("protocol")==1&&value.getString("ownerId")==account.ownerId&&value.getJSONArray("views").length()<=10000&&value.getJSONArray("requests").length()<=10000&&value.getJSONObject("readFlags").length()<=100000&&value.getJSONObject("watching").length()<=100000){"E2EE_SHARED_VIEW_INVALID"};return JSONObject(value.toString())
+        E2eeKeys.exact(value,setOf("protocol","ownerId","views","requests","readFlags","watching")+(if(value.has("layouts"))setOf("layouts")else emptySet()));check(value.getInt("protocol")==1&&value.getString("ownerId")==account.ownerId&&value.getJSONArray("views").length()<=10000&&value.getJSONArray("requests").length()<=10000&&value.getJSONObject("readFlags").length()<=100000&&value.getJSONObject("watching").length()<=100000){"E2EE_SHARED_VIEW_INVALID"}
+        if(value.has("layouts")){val layouts=value.getJSONObject("layouts");check(layouts.length()<=4096){"E2EE_SHARED_QUERY_TOO_LARGE"};for(space in layouts.keys()){E2eeKeys.technical(space);val ids=layouts.getJSONArray(space);check(ids.length()<=100){"INVALID_SHARED_UI_STATE"};val seen=mutableSetOf<String>();for(index in 0 until ids.length())check(seen.add(E2eeKeys.technical(ids.getString(index)))){"INVALID_SHARED_UI_STATE"}}}
+        return JSONObject(value.toString())
     }
     private val aggregatePersonal by lazy{E2eeFeatureDocument(account,"workspace","personal-shared-views-live-v1",::validatePersonal,{aggregateSeed?.let{JSONObject(it.toString())}?:error("E2EE_PRIVATE_SEED_REQUIRED")},::current)}
     private val aggregateRuntime=NativeAdviceProductRuntime(context,"shared-aggregate")
@@ -124,6 +126,7 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
                 JSONObject().put("format","genesis-private-table-v1").put("pathId","personal.local-work").put("table","shared_saved_views").put("rows",rows).put("execution","content-only")}
             "personalWrite"->{E2eeKeys.exact(payload,setOf("document"));aggregatePersonal.write(validatePersonal(payload.getJSONObject("document")))}
             "personalFlush"->{E2eeKeys.exact(payload,emptySet());aggregatePersonal.flush()}
+            "layoutSeed"->{E2eeKeys.exact(payload,emptySet());check(!account.offline){"E2EE_OFFLINE_CONTENT_UNAVAILABLE"};E2eePrivateTableReader.read({id->val original=account.client.readMigrationOriginal("local-snapshot",id);current();E2eePrivateTableReader.Opened(original.bytes,original.revision)},"private-table:personal.local-work:shared_space_ui","personal.local-work","shared_space_ui",::current)}
             else->error("E2EE_SHARED_REQUEST_INVALID")
         }.also{current()}}
         return aggregateRuntime.execute(JSONObject().put("protocol",1).put("mode","shared-aggregate-v1").put("actorId",account.ownerId).put("method",method).put("path",path).put("body",body),::current,::call)
@@ -156,7 +159,7 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
         current();val uri=Uri.parse(path);val parts=uri.pathSegments;check(parts.firstOrNull()=="shared"){"E2EE_SHARED_REQUEST_INVALID"};val query=uri.encodedQuery?.let{"?$it"}?:"";val input=body?.let{JSONObject(it.toString())}?:JSONObject()
         if(parts.getOrNull(1)=="bulk")return@withLock bulk(method,path,input)
         if(parts.getOrNull(1)=="invitations"){val recipient=E2eeInvitationRecipient(account,::current);if(method=="GET"&&parts.size==2)return@withLock JSONObject().put("invitations",recipient.list());if(method=="POST"&&parts.size==3){if(parts[2]=="accept"){E2eeKeys.exact(input,setOf("id"));return@withLock recipient.respond(E2eeKeys.technical(input.getString("id")),true)};E2eeKeys.exact(input,emptySet());return@withLock recipient.respond(E2eeKeys.technical(parts[2]),false)};error("E2EE_SHARED_OPERATION_REVIEW_REQUIRED")}
-        if(parts.getOrNull(1) in setOf("views","overview","inbox","notifications")||parts.getOrNull(1)=="spaces"&&parts.getOrNull(3)=="mindmaps"||parts.size==6&&parts[1]=="projects"&&parts[3]=="tasks"&&parts[5] in setOf("read","watch")||method=="GET"&&(parts.size==2&&parts[1]=="tasks"||parts.size==4&&parts[1]=="spaces"&&parts[3]=="search"))return@withLock aggregate(method,path,input)
+        if(parts.getOrNull(1) in setOf("views","overview","inbox","notifications")||parts.getOrNull(1)=="spaces"&&(parts.getOrNull(3)=="mindmaps"||parts.getOrNull(3)=="ui"&&parts.size==4)||parts.size==6&&parts[1]=="projects"&&parts[3]=="tasks"&&parts[5] in setOf("read","watch")||method=="GET"&&(parts.size==2&&parts[1]=="tasks"||parts.size==4&&parts[1]=="spaces"&&parts[3]=="search"))return@withLock aggregate(method,path,input)
         if(method=="GET"&&parts.getOrNull(1)=="tasks"&&(parts.size==4&&parts[3]=="image"||parts.size==5&&parts[3]=="attachments")){
             for(binding in bindings())if(binding.getString("kind")=="project"){val live=open("project",binding.getString("resourceId"));val entities=live.records.index()
                 if((0 until entities.length()).any{entities.getJSONObject(it).let{row->row.getString("entityId")=="task:${parts[2]}"&&row.getString("kind")=="task"&&!row.getBoolean("deleted")}})

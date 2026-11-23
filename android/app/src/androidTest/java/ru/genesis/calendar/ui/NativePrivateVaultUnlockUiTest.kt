@@ -1,6 +1,5 @@
 package ru.genesis.calendar.ui
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
@@ -62,7 +61,9 @@ class NativePrivateVaultUnlockUiTest {
         return app.assets.open("native-unlock-copy-v1.json").use{val copy=JSONObject(it.readBytes().toString(Charsets.UTF_8));copy.optJSONObject(language)?:copy.getJSONObject("en")}
     }
     private fun waitFor(operation:()->Boolean)=runBlocking{withTimeout(90000){while(!operation())delay(100)}}
-    private fun foregroundMain(){
+    private fun stage(label:String){instrumentation.sendStatus(2,Bundle().apply{putString("stream","GENESIS_UNLOCK_UI_STAGE:$label\n")})}
+    private fun foregroundMain(label:String="entry"){
+        stage("$label-launch")
         // A user relaunches from the launcher. An app-originated start while
         // Home is foreground can be denied by Android's background policy.
         device.executeShellCommand("am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n ${app.packageName}/${MainActivity::class.java.name}")
@@ -71,14 +72,17 @@ class NativePrivateVaultUnlockUiTest {
             instrumentation.runOnMainSync{resumed=ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED).any{it is MainActivity}}
             resumed&&device.hasObject(By.pkg(app.packageName))
         }
+        stage("$label-resumed")
     }
     private fun showLock():JSONObject{
         check(InstrumentationRegistry.getArguments().getString("genesisFullQaHttps")=="true"&&BuildConfig.DEBUG&&app.packageName=="ru.genesis.calendar.qa1103.debug")
         foregroundMain()
-        instrumentation.runOnMainSync{auth.onTrialBackground();auth.onTrialForeground();auth.checkSession()}
-        waitFor{auth.state.value.user?.privateVault==true&&!auth.state.value.requiresSignIn&&!auth.state.value.busy}
+        // Exercise the real launcher/Activity lifecycle. Re-running auth and
+        // synthesizing background callbacks here can race the prior unlock.
+        waitFor{auth.state.value.user?.privateVault==true&&!auth.state.value.requiresSignIn}
+        stage("private-identity")
         assertFalse(NativePrivateProducts.isOpen(app.workspaceScope))
-        val copy=text();assertTrue(device.wait(Until.hasObject(By.text(copy.getString("unlock"))),30000));return copy
+        val copy=text();assertTrue(device.wait(Until.hasObject(By.text(copy.getString("unlock")).enabled(true)),30000));stage("lock-visible");return copy
     }
     private fun screenLock(copy:JSONObject)=By.text(Pattern.compile(Pattern.quote(copy.getString("pin")),Pattern.CASE_INSENSITIVE or Pattern.UNICODE_CASE))
     private fun prompt(copy:JSONObject){
@@ -110,7 +114,7 @@ class NativePrivateVaultUnlockUiTest {
     @Test fun c_backgroundCannotAdmitAPendingFingerprint(){
         val copy=showLock();prompt(copy);device.pressHome()
         waitFor{!NativePrivateProducts.isOpen(app.workspaceScope)}
-        foregroundMain()
+        foregroundMain("pending-biometric-return")
         assertTrue(device.wait(Until.hasObject(By.text(copy.getString("unlock"))),30000))
         assertFalse(NativePrivateProducts.isOpen(app.workspaceScope))
     }

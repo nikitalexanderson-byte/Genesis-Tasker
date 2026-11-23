@@ -39,6 +39,7 @@ function aggregate(ownerId:string){const account=requirePrivateAccount(ownerId);
   return seedPersonalSharedState({format:'genesis-private-table-v1',pathId:'personal.local-work',table:'shared_saved_views',rows,execution:'content-only'},ownerId,await account.personal().client.sharedReadHistory());
  }});
  value=new SharedAggregateModel({actorId:ownerId,current:()=>account.requireOpen(),personal,
+  layoutSeed:async()=>{if(account.mode==='offline')throw new Error('E2EE_OFFLINE_CONTENT_UNAVAILABLE');return readPrivateTable(async id=>{const row=await account.personal().client.readMigrationOriginal('local-snapshot',id);account.requireOpen();return row;},'private-table:personal.local-work:shared_space_ui','personal.local-work','shared_space_ui',()=>account.requireOpen());},
   bindings:async()=>(await bindings(ownerId)).map(row=>({scopeId:row.scopeId,kind:row.kind,resourceId:row.resourceId})),
   request:async(binding,method,path,body={})=>{const live=await open(ownerId,binding.kind,binding.resourceId);account.requireOpen();if(live.records.binding.scopeId!==binding.scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');return live.model.request(method,path,body);},
  });aggregates.set(account,value);return value;
@@ -124,7 +125,7 @@ export async function privateSharedRequest(ownerId:string,path:string,init:Reque
   if(method==='POST'&&segments.length===3){if(segments[2]==='accept'){exactKeys(body,['id']);assertTechnical(body.id);return recipient.respond(body.id,true);}exactKeys(body,[]);return recipient.respond(segments[2],false);}
   throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
  }
- if(['views','overview','inbox','notifications'].includes(segments[1])||segments[1]==='spaces'&&segments[3]==='mindmaps'||segments[1]==='projects'&&segments.length===6&&segments[3]==='tasks'&&['read','watch'].includes(segments[5])||method==='GET'&&(segments[1]==='tasks'&&segments.length===2||segments[1]==='spaces'&&segments[3]==='search'&&segments.length===4)){
+ if(['views','overview','inbox','notifications'].includes(segments[1])||segments[1]==='spaces'&&(segments[3]==='mindmaps'||segments[3]==='ui'&&segments.length===4)||segments[1]==='projects'&&segments.length===6&&segments[3]==='tasks'&&['read','watch'].includes(segments[5])||method==='GET'&&(segments[1]==='tasks'&&segments.length===2||segments[1]==='spaces'&&segments[3]==='search'&&segments.length===4)){
   const result=await aggregate(ownerId).request(method,path,body);requirePrivateAccount(ownerId).requireOpen();init.signal?.throwIfAborted();return result;
  }
  const run=async(binding:Pick<SharedDomainBinding,'kind'|'resourceId'>,relative:string)=>{

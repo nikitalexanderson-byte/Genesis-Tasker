@@ -12,17 +12,20 @@ import {validateMindmap} from '../mindmaps-model.ts';
 
 type Row=Record<string,unknown>;
 type PersonalView=SharedSavedView&{deleted:boolean};
-export type PersonalSharedState={protocol:1;ownerId:string;views:PersonalView[];requests:{id:string;method:string;path:string;input:Row;result:Row}[];readFlags:Record<string,boolean>;watching:Record<string,boolean>};
+export type PersonalSharedState={protocol:1;ownerId:string;views:PersonalView[];requests:{id:string;method:string;path:string;input:Row;result:Row}[];readFlags:Record<string,boolean>;watching:Record<string,boolean>;layouts?:Record<string,string[]>};
 export interface SharedAggregatePorts{
  actorId:string;current:()=>void;bindings:()=>Promise<SharedDomainBinding[]>;
  request:(binding:SharedDomainBinding,method:string,path:string,body?:Row)=>Promise<Row>;
  personal:FeatureDocumentPort<PersonalSharedState>;
+ layoutSeed?:()=>Promise<unknown>;
 }
 function object(value:unknown):asserts value is Row{if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('E2EE_SHARED_CONTENT_INVALID');}
 function rows(value:unknown):Row[]{if(!Array.isArray(value)||value.length>10000)throw new Error('E2EE_SHARED_QUERY_TOO_LARGE');for(const row of value)object(row);return value;}
 function parse(value:string){return parseLegacyMigrationJson(value,'E2EE_SHARED_FILTER_INVALID',1024*1024);}
 export function validatePersonalSharedState(input:unknown,ownerId:string):PersonalSharedState{
- exactKeys(input,['protocol','ownerId','views','requests','readFlags','watching']);if(input.protocol!==1||input.ownerId!==ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+ const hasLayouts=!!input&&typeof input==='object'&&!Array.isArray(input)&&Object.hasOwn(input,'layouts');
+ exactKeys(input,['protocol','ownerId','views','requests','readFlags','watching',...(hasLayouts?['layouts']:[])]);if(input.protocol!==1||input.ownerId!==ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+ if(Object.hasOwn(input,'layouts'))validateLayouts(input.layouts);
  for(const name of ['readFlags','watching']){object(input[name]);if(Object.keys(input[name]).length>100000)throw new Error('E2EE_SHARED_QUERY_TOO_LARGE');for(const [id,value]of Object.entries(input[name])){assertTechnical(id);if(typeof value!=='boolean')throw new Error('E2EE_SHARED_CONTENT_INVALID');}}
  const seen=new Set<string>();for(const row of rows(input.views)){
   exactKeys(row,['id','spaceId','visibility','revision','updatedAt','canEdit','invalid','definition','deleted']);assertTechnical(row.id);if(row.spaceId!==null)assertTechnical(row.spaceId);
@@ -31,6 +34,13 @@ export function validatePersonalSharedState(input:unknown,ownerId:string):Person
  }
  const requests=new Set<string>();for(const row of rows(input.requests)){exactKeys(row,['id','method','path','input','result']);assertTechnical(row.id);if(requests.has(String(row.id))||!['POST','PATCH','DELETE'].includes(String(row.method))||typeof row.path!=='string')throw new Error('E2EE_SHARED_REQUEST_INVALID');requests.add(String(row.id));object(row.input);object(row.result);}
  return input as PersonalSharedState;
+}
+function expandedIds(input:unknown):string[]{if(!Array.isArray(input)||input.length>100||new Set(input).size!==input.length)throw new Error('INVALID_SHARED_UI_STATE');for(const id of input)assertTechnical(id);return [...input] as string[];}
+function validateLayouts(input:unknown):Record<string,string[]>{object(input);if(Object.keys(input).length>4096)throw new Error('E2EE_SHARED_QUERY_TOO_LARGE');for(const [space,ids]of Object.entries(input)){assertTechnical(space);expandedIds(ids);}return input as Record<string,string[]>;}
+export function seedPersonalSharedLayouts(input:unknown,ownerId:string):Record<string,string[]>{
+ const result:Record<string,string[]>=Object.create(null);
+ for(const row of rows(input)){exactKeys(row,['user_id','space_id','expanded_json','updated_at']);if(row.user_id!==ownerId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');assertTechnical(row.space_id);if(Object.hasOwn(result,row.space_id))throw new Error('E2EE_SHARED_CONTENT_INVALID');result[row.space_id]=expandedIds(parse(String(row.expanded_json)));}
+ return validateLayouts(result);
 }
 /** Only personally owned view content is seeded. Permissions, membership,
  * historical requests and any inherited server receipts are never adopted. */
@@ -46,10 +56,24 @@ export function seedPersonalSharedState(input:unknown,ownerId:string,technical:u
  * to the legacy index. Missing scopes fail instead of yielding partial totals. */
 export class SharedAggregateModel{
  #serial:Promise<unknown>=Promise.resolve();
+ #readers=new Set<Promise<unknown>>();
  constructor(private readonly ports:SharedAggregatePorts){}
- #run<T>(run:()=>Promise<T>){const pending=this.#serial.catch(()=>undefined).then(async()=>{this.ports.current();return run();});this.#serial=pending;return pending;}
+ #run<T>(run:()=>Promise<T>,readOnly=false){const previous=this.#serial,readers=readOnly?[]:[...this.#readers];const pending=previous.catch(()=>undefined).then(async()=>{await Promise.allSettled(readers);this.ports.current();const result=await run();this.ports.current();return result;});
+  if(readOnly){this.#readers.add(pending);void pending.then(()=>this.#readers.delete(pending),()=>this.#readers.delete(pending));}else this.#serial=pending;return pending;
+ }
  async #bindings(){const bindings=await this.ports.bindings();this.ports.current();if(bindings.length>4096||new Set(bindings.map(row=>row.scopeId)).size!==bindings.length)throw new Error('E2EE_SHARED_CONTEXT_INVALID');return bindings;}
  async #state(){const view=await this.ports.personal.read();this.ports.current();if(view.conflict)throw new Error('E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED');return validatePersonalSharedState(view.document,this.ports.actorId);}
+ async #layout(method:string,spaceId:string,input:Row,bindings:SharedDomainBinding[]){
+  assertTechnical(spaceId);if(!bindings.some(row=>row.kind==='space'&&row.resourceId===spaceId))throw new Error('E2EE_SHARED_SCOPE_FORBIDDEN');
+  if(!['GET','PUT'].includes(method))throw new Error('E2EE_SHARED_REQUEST_INVALID');exactKeys(input,method==='GET'?[]:['expandedIds']);
+  const state=await this.#state();let layouts=state.layouts;
+  if(!layouts){if(!this.ports.layoutSeed)throw new Error('E2EE_PRIVATE_SEED_REQUIRED');layouts=seedPersonalSharedLayouts(await this.ports.layoutSeed(),this.ports.actorId);this.ports.current();}
+  const visible=new Set((await this.#projects(bindings)).filter(row=>row.project.spaceId===spaceId&&!row.project.archivedAt).map(row=>String(row.project.id)));this.ports.current();
+  if(method==='PUT'){const ids=expandedIds(input.expandedIds);if(ids.some(id=>!visible.has(id)))throw new Error('INVALID_SHARED_UI_STATE');const next={...layouts,[spaceId]:ids};await this.ports.personal.write({...state,layouts:next});this.ports.current();await this.ports.personal.flush();this.ports.current();layouts=next;}
+  // A read never uploads an imported history or changes the current view. A
+  // later explicit layout save retains the seeded history in the normal queue.
+  return{expandedIds:(Object.hasOwn(layouts,spaceId)?layouts[spaceId]:[]).filter(id=>visible.has(id))};
+ }
  async #views(bindings:SharedDomainBinding[]){const personal=(await this.#state()).views.filter(row=>!row.deleted),all:SharedSavedView[]=[...personal];
   for(const scope of bindings.filter(row=>row.kind==='space')){const response=await this.ports.request(scope,'GET','views');this.ports.current();for(const row of rows(response.views)){if(row.visibility!=='shared'||row.spaceId!==scope.resourceId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');all.push(row as unknown as SharedSavedView);}}
   if(all.length>10000||new Set(all.map(row=>row.id)).size!==all.length)throw new Error('E2EE_SHARED_VIEW_INVALID');return all;
@@ -155,9 +179,10 @@ export class SharedAggregateModel{
   if(method==='PUT'){const document=validateMindmap(input.document);if(document.id!==id)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');const expected=scopes.find(row=>row.kind===(document.projectId?'project':'space')&&row.resourceId===(document.projectId??spaceId));if(!expected)throw new Error('E2EE_SHARED_SCOPE_FORBIDDEN');if(target&&target.scopeId!==expected.scopeId)throw new Error('E2EE_SHARED_CROSS_SCOPE_REVIEW_REQUIRED');target=expected;}
   if(!target)throw new Error('E2EE_PRODUCT_ENTITY_MISSING');return this.ports.request(target,method,`mindmaps/${encodeURIComponent(id)}`,input);
  }
- request(method:string,path:string,input:Row={}){return this.#run(async()=>{
+ request(method:string,path:string,body:Row={}){const input=structuredClone(body);return this.#run(async()=>{
   const url=new URL(path,'https://private.invalid'),segments=url.pathname.split('/').filter(Boolean).map(decodeURIComponent),bindings=await this.#bindings();if(segments[0]!=='shared')throw new Error('E2EE_SHARED_REQUEST_INVALID');
   if(['overview','inbox','notifications'].includes(segments[1])||segments[1]==='projects'&&segments.length===6&&segments[3]==='tasks'&&['read','watch'].includes(segments[5]))return this.#notificationRequest(method,url,input,bindings);
+  if(segments[1]==='spaces'&&segments[3]==='ui'&&segments.length===4)return this.#layout(method,segments[2],input,bindings);
   if(segments[1]==='spaces'&&segments[3]==='mindmaps'&&segments.length>=4&&segments.length<=6)return this.#maps(method,url,input,bindings);
   if(method==='GET'&&segments[1]==='tasks'&&segments.length===2){if(url.searchParams.get('cursor'))throw new Error('E2EE_SHARED_QUERY_REFRESH_REQUIRED');const filter=parse(url.searchParams.get('filter')??'{}');object(filter);return this.#tasks(bindings,filter,url.searchParams.get('sort')??'position');}
   if(segments[1]==='views'){
@@ -177,5 +202,5 @@ export class SharedAggregateModel{
    return{projects,tasks:page.tasks,total:page.total,projectTotal:projects.length,nextCursor:null,hasMore:false};
   }
   throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
- });}
+ },method==='GET');}
 }

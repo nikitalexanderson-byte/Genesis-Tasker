@@ -185,6 +185,7 @@ async function run(encoded:string){
       const actorId=value.actorId,invoke=(method:string,payload:unknown={}):Promise<unknown>=>new Promise((resolve,reject)=>{current();const id=crypto.randomUUID();pending.set(id,{resolve,reject,chunks:''});try{send({job,id,kind:'shared-aggregate-call',method,payload});}catch(error){pending.delete(id);reject(error);}});
       const view=(input:unknown)=>{exactKeys(input,['document','base','pending','remoteRevision','conflict']);const result=input as FeatureDocumentView<PersonalSharedState>;result.document=validatePersonalSharedState(result.document,actorId);result.base=validatePersonalSharedState(result.base,actorId);if(result.conflict)result.conflict.document=validatePersonalSharedState(result.conflict.document,actorId);return result;};
       const model=new SharedAggregateModel({actorId,current,
+        layoutSeed:()=>invoke('layoutSeed'),
         bindings:async()=>await invoke('bindings') as SharedDomainBinding[],
         request:async(binding,method,path,body={})=>await invoke('scopedRequest',{binding,method,path,body}) as Record<string,unknown>,
         personal:{read:async()=>{try{return view(await invoke('personalRead'));}catch(error){if(!(error instanceof Error)||error.message!=='E2EE_PRIVATE_SEED_REQUIRED')throw error;
