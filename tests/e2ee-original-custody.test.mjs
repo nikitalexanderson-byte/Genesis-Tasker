@@ -72,9 +72,9 @@ test('wrong secret, either changed primary public key, and an otherwise valid sa
 test('root signer original coordinates purpose and artifact substitution cannot be accepted with a recomputed ciphertext hash',async()=>{
  const f=await fixture(),other=await generateDeviceKeys(),otherPublic=await publicDeviceKeys(other);
  const changes=[p=>{p.root=encodeE2eeBytes(freshSecret());},p=>{p.certificate.command.payload.signer=otherPublic.signingKey;},p=>{p.certificate.command.payload.original.generation=2;},
-  p=>{p.certificate.command.action='enroll';},p=>{p.certificate.command.payload.artifactId=f.sealed.artifact.id.replace(/.$/,'0');},p=>{p.deviceKeys=f.saved.deviceKeys;},
+  p=>{p.certificate.command.action='enroll';},p=>{p.certificate.command.payload.artifactId=f.sealed.artifact.id.replace(/.$/,last=>last==='0'?'1':'0');},p=>{p.deviceKeys=f.saved.deviceKeys;},
   async p=>{p.certificate=await signE2eeCommand(p.certificate.command,f.device.keys().signing.privateKey);}];
- for(const change of changes)await assert.rejects(openOriginalCustody(await rewrap(f,change)),/E2EE_/);
+ for(const [index,change]of changes.entries())await assert.rejects(openOriginalCustody(await rewrap(f,change)),/E2EE_/,`original custody mutation ${index}`);
  // Even a valid owner signature cannot make a changed expected source/root true.
  await assert.rejects(openOriginalCustody(await rewrap(f,async p=>{p.certificate.command.payload.original.cryptoEpoch=2;p.certificate=await signE2eeCommand(p.certificate.command,f.recovery.keys.signing.privateKey);})),/ORIGINAL_CUSTODY/);
  for(const change of [{original:{...f.sealed.reference.original,deviceId:'wrong-device'}},{keyId:'different-key'}, {signer:otherPublic.signingKey}])await assert.rejects(openOriginalCustody({...f.options,reference:{...f.sealed.reference,...change}}),/E2EE_/);

@@ -499,24 +499,27 @@ export class E2eeScopeClient {
     return this.#packet('membership-authorize',{intentId,changeHash});
   }
   async authorizeMembershipAtomic(action:MembershipAtomicStagingAction,input:Record<string,WireValue>){
+    const payload=membershipAtomicStagingPayload(action,input);
     await this.#waitForRefresh();
-    const payload=membershipAtomicStagingPayload(action,input),directory=this.#open(),own=directory.devices.get(this.#device.deviceId);
+    const directory=this.#open(),own=directory.devices.get(this.#device.deviceId);
     if(!this.#refreshed||directory.kind!=='personal'||directory.ownerId!==this.#device.ownerId||directory.state!=='active'||own?.role!=='owner'||own.revoked)throw new Error('E2EE_OWNER_REQUIRED');
     return this.#packet(action,payload);
   }
   async authorizeMembershipAtomicApply(action:MembershipAtomicApplyAction,input:Record<string,WireValue>){
+    const payload=membershipAtomicApplyPayload(action,input);
     await this.#waitForRefresh();
-    const payload=membershipAtomicApplyPayload(action,input),directory=this.#open(),own=directory.devices.get(this.#device.deviceId);
+    const directory=this.#open(),own=directory.devices.get(this.#device.deviceId);
     if(!this.#refreshed||directory.kind!=='personal'||directory.ownerId!==this.#device.ownerId||directory.state!=='active'||own?.role!=='owner'||own.revoked)throw new Error('E2EE_OWNER_REQUIRED');
     return this.#packet(action,payload);
   }
   /** Frozen packet for the containing transaction. It cannot be executed by
    * the ordinary command route or renewed into a different directory frame. */
   async prepareMembershipProduct(intentId:string,membershipHash:string,input:ProductMutation[]){
-    await this.#waitForRefresh();
     assertTechnical(intentId);decodeE2eeBytes(membershipHash,32);const operations=input.map(productMutation);
     if(operations.length<1||operations.length>100||new Set(operations.map(row=>row.entityId)).size!==operations.length)throw new Error('E2EE_PRODUCT_BATCH_INVALID');
-    const payload=snapshotE2eeValue({intentId,membershipHash,operations}) as unknown as Record<string,WireValue>,id='membership-product:'+await hash(this.#scopeId+'\0'+intentId),prior=await this.#device.vault.read('outbox',id);this.#device.requireOpen();
+    const payload=snapshotE2eeValue({intentId,membershipHash,operations}) as unknown as Record<string,WireValue>;
+    await this.#waitForRefresh();
+    const id='membership-product:'+await hash(this.#scopeId+'\0'+intentId),prior=await this.#device.vault.read('outbox',id);this.#device.requireOpen();
     try{if(prior){const packet=JSON.parse(decoder.decode(prior.value)) as SignedE2eeCommand,c=packet.command;
       const before=canonicalE2eeValue(c.payload),after=canonicalE2eeValue(payload);try{if(c.action!=='product-commit-bound'||c.ownerId!==this.#owner||c.scopeId!==this.#scopeId||c.deviceId!==this.#device.deviceId||before.length!==after.length||before.some((byte,index)=>byte!==after[index]))throw new Error('E2EE_IDEMPOTENCY_CONFLICT');}finally{before.fill(0);after.fill(0);}return snapshotE2eeValue(packet);}
       const directory=this.#open(),own=directory.devices.get(this.#device.deviceId);if(!this.#refreshed||directory.state!=='active'||!own||own.revoked||!['owner','writer'].includes(own.role))throw new Error('E2EE_WRITE_FORBIDDEN');
@@ -524,6 +527,7 @@ export class E2eeScopeClient {
     }finally{prior?.value.fill(0);}
   }
   async prepareDeviceAccess(input:DeviceAccessRequest,comparedFingerprint:string){
+    input=snapshotE2eeValue(input);
     await this.#waitForRefresh();
     const request=await verifyDeviceAccessRequest(input),directory=this.#open();this.#device.requireOpen();
     const own=directory.devices.get(this.#device.deviceId),target=request.target,challenge=request.challenge;
@@ -552,6 +556,7 @@ export class E2eeScopeClient {
    * server preview may propose it, but may never silently approve recipients.
    * Only public HPKE capsules enter the durable retry record or the network. */
   async prepareMembershipRotation(changeHash:string,reviewed:ReviewedDeviceRole[],manifest:{manifestHash:string;objectCount:number},expected:{directoryRevision:number;checkpointHash:string;cryptoEpoch:number;securityEpoch:number;ownerId:string;kind:string;resourceId:string}):Promise<SignedE2eeCommand>{
+    reviewed=snapshotE2eeValue(reviewed);manifest=snapshotE2eeValue(manifest);expected=snapshotE2eeValue(expected);
     await this.#waitForRefresh();
     decodeE2eeBytes(changeHash,32);decodeE2eeBytes(manifest.manifestHash,32);const roles=snapshotE2eeValue(reviewed),directory=this.#open(),own=directory.devices.get(this.#device.deviceId);
     if(!this.#refreshed||directory.kind==='personal'||directory.ownerId!==this.#device.ownerId||own?.role!=='owner'||own.revoked||!['active','retirement'].includes(directory.state))throw new Error('E2EE_OWNER_REQUIRED');
