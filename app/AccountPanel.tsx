@@ -13,6 +13,7 @@ import { BackupPanel } from './BackupPanel';
 import {PrivateSharedSecurityPanel} from './PrivateSharedSecurityPanel';
 import {PrivateMigrationEntry} from './PrivateMigrationGate';
 import {PRIVATE_VAULT_COPY} from './private-vault-copy';
+import privateDeviceEntryCopy from '../contracts/e2ee/personal-device-entry-copy-v1.json';
 import { GoogleIdentityPanel } from './AccountSecurityPanels';
 import {UpgradeButton,isFreeBillingUser} from './UpgradeUI';
 import {BillingTrialStatus} from './BillingTrialStatus';
@@ -1219,7 +1220,7 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
             <span className="eyebrow">Encrypted workspace</span>
             <h3 id="account-e2ee-title">{user.language === "en" ? "Encrypted personal data" : "Шифрование личных данных"}</h3>
           </div>
-          <p>{(user.language === "en" ? "Projects and tracker data are encrypted before storage. After Google sign-in, an authenticated GENESIS session unlocks them automatically on every device—no recovery code is required." : "Проекты и данные трекеров шифруются перед сохранением. После входа через Google защищённая сессия GENESIS автоматически открывает их на любом устройстве — код восстановления не нужен.")}</p>
+          <p data-no-translate={user.privateVault||undefined}>{user.privateVault?privateDeviceEntryCopy[user.language].notice:(user.language === "en" ? "Projects and tracker data are encrypted before storage. After Google sign-in, an authenticated GENESIS session unlocks them automatically on every device—no recovery code is required." : "Проекты и данные трекеров шифруются перед сохранением. После входа через Google защищённая сессия GENESIS автоматически открывает их на любом устройстве — код восстановления не нужен.")}</p>
         </section>
 
         <section className="account-oauth-note" aria-label="Безопасность входа" data-settings-group="account">
