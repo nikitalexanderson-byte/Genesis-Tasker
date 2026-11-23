@@ -182,7 +182,16 @@ class NativePrivateProductHttpsTest {
             try{withTimeout(1200000){migration.run(material.secret,material.kit,::progress)}}catch(error:Throwable){diagnose("personal-refusal");throw error}finally{sourceDiagnostic.cancel();auth.closePrivateMigration(migration)}
             assertEquals("E2EE_UPGRADE_REQUIRED",request("/api/bootstrap",expected=409).getString("error"))
             NativeMigrationUiState.close(intent.id);auth.checkSession()
-            withTimeout(120000){auth.state.first{it.user?.uid==owner&&it.user?.privateVault==true&&it.ready&&!it.busy}}
+            // Identity is adopted before unlocking. A locked private account is
+            // deliberately not ready; waiting for ready here prevents the actual
+            // production credential UI below from ever being reached.
+            try{withTimeout(120000){auth.state.first{it.user?.uid==owner&&it.user?.privateVault==true&&!it.busy&&!it.requiresSignIn}}}
+            catch(error:kotlinx.coroutines.TimeoutCancellationException){
+                val panel=auth.state.value
+                throw AssertionError("Private identity checkpoint: sameOwner=${panel.user?.uid==owner}, privateVault=${panel.user?.privateVault==true}, ready=${panel.ready}, busy=${panel.busy}, requiresSignIn=${panel.requiresSignIn}",error)
+            }
+            assertFalse("The migrated account still requires a cold credential unlock",NativePrivateProducts.isOpen(accountScope))
+            assertFalse("The locked private identity must not expose ready content",auth.state.value.ready)
             coldUnlock()
             withTimeout(120000){repository.workspace.first{row->row.projects.any{it.id==localProject.id&&it.title==localProject.title}}}
             repository.saveProject(localProject.copy(title="EDITED $canary"));NativePrivateProducts.flush(accountScope)

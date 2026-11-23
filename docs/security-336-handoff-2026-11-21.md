@@ -1,5 +1,47 @@
 # GENESIS 3.3.6 — передача работы в новый чат
 
+## 23 ноября,21:33 Москва: controller24 и проверка источников
+
+Controller24 без periodic HAT refresh прошёл личную миграцию до ACTIVE за7m33s:
+sources4m05s вместо прежних17min, reconciliation2m20s, upload/readback1m03s.
+Следующий шаг fixture ошибочно ждёт `ready` до cold unlock, хотя
+`completeSignedIn` намеренно публикует locked private identity с `ready=false`.
+Итог controller24 FAIL120s после activation; shared и unlock UI не запускались.
+Следующая правка — только test predicate с сохранением настоящего PIN и всех
+normal-reader checks. До завершения lint24 root native inputs не менять.
+
+Update21:50: lint24 завершён SUCCESS28m42s,0errors/224warnings/9hints,
+source/APK identity verified. Predicate исправлен только в instrumentation:
+дождаться подтверждённой private identity, затем явно assert locked/not-ready,
+и только потом настоящий PIN. Main code не меняется; следующая build25 —
+debug/test APK для полного controller repeat. Web44 отдельно PASS13/13 и112/112
+vault visual cases на неизменном bundle27, с owned runtime cleanup PASS.
+Source checks45236669430: Android SUCCESS, web-and-api ещё browser stage.
+
+Actual archives/relational source regression24: API26 и API34 по4/4 PASS.
+Reports: output/qa/security336-native150-source-regression24-api26/ и api34/.
+Identity/hash и controller finding сохранены в runtime/native150-acceptance-checkpoint24.json.
+Это source-component evidence, не20/20 full product acceptance. Web43 всё ещё
+выполняется; personal/recovery12 checks PASS, shared ещё не завершён. CI45236669430
+и full lint24 также выполняются. Production149 и rollout gates не менялись.
+
+## 23 ноября: identity24, controller24 и web43
+
+Build24 SUCCESS4m15s: весь RemoteOriginal suite22/22 PASS/0skip, debug/test APK и
+identity в runtime/native150-original-audit-build24-identity.json. Main code тот же,
+что прошёл1428 unfiltered JVM23; единственный исправленный test-only counter прошёл.
+Новый общий1437/1437 прогон этим не заявляется; exact-head CI выполнит его отдельно.
+Root4eaf3e81 pushed в существующий draft PR48. Source checks нового SHA пока уточнить.
+Controller24/session91522 выполняется без periodic HAT renewal; full lint24/session10895
+также выполняется. Root app/android/contracts/public не менять до конца exact run.
+
+Web42:13 PASS, обе shared области ACTIVE. Последний shared reader не прошёл: unlock
+получил429 на /status, а retry wrapper раньше охватывал только transfer. Он теперь
+охватывает также обычный reader, с реальным Retry-After и без очистки rate tables.
+Это test runner change, код приложения/immutable27 не менялся. Web43/session pending
+запущен на том же bundle; log runtime/consolidated-private-shared43.log. До успеха
+всего reader journey не объявлять полный web PASS.
+
 ## 23 ноября: JVM23 и test-only refresh24
 
 Build23 компилировала main/test и завершилась на JVM:1437 tests,1428 PASS/1 FAIL/

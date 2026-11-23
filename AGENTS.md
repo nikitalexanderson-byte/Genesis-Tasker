@@ -1,5 +1,14 @@
 # Genesis Tasker: действующие правила
 
+- Последний срез23 ноября21:50: full lint24 SUCCESS0errors/224warnings/9hints,
+  actual archives+relational source regression24 API26/API34 по4/4 PASS.
+  Controller24 дошёл до personal ACTIVE за7m33s; затем test-only predicate ждал
+  ready до реального PIN, хотя locked private identity намеренно ready=false.
+  Fixture исправлен с явными отрицательными проверками content readiness.
+  Следующий build25 меняет только instrumentation; до его identity root
+  app/android/contracts/public снова не менять. Web44 vault visuals112/112 PASS,
+  но полный shared43 ещё выполняется. Production149 и gates остаются прежними.
+
 - Build23 завершилась JVM1437:1428 PASS/1 FAIL/8 existing opt-in skips. Единственный
   FAIL — новый fixture counter перечислений (реальный vault фильтрует objectPrefix
   после storage.list), не crypto/body отказ. Counter исправлен без изменения main

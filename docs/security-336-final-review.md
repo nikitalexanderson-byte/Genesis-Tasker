@@ -34,3 +34,24 @@
 Существующие условия охвата, восстановления, обязательного обновления, сохранения
 package/сертификата/данных и подтверждённой доставки не ослаблены. Pilot/cutover,
 floors и GENESIS_DEPLOY_ANDROID не меняются одним редактированием этого файла.
+
+## Промежуточная смысловая сверка23 ноября
+
+Повторно прочитаны168 значений на всех14 языках: vault-copy
+`kitHint/privacy/offlineDescription`, native-key-recovery `notice`,
+personal-device-entry `codeNotice/replaceNotice/retainedNotice` и все5 значений
+native-unlock. Смысл сохранён: Google identity не расшифровывает vault, recovery
+secret не отправляется серверу, offline edits ожидают online unlock; локальный
+код браузера не заменяет recovery, отзыв требует нового одобрения, прежняя
+история не воспроизводит команды, PIN/отпечаток относятся к блокировке устройства.
+Новых смысловых противоречий в этом объёме не найдено. Это частная вычитка,
+не приёмка остальных текстов или всех экранов. Визуальный повтор vault27:
+output/playwright/security336-private-locales-44-1123/, PASS13/13 checks,
+112/112 сочетаний14 языков×2 схем×360/390/768/1440 без горизонтального overflow.
+Bundle SHA-25632789ed4598609ef29a044c3ee611d1c4caa1808cab66bbfc1a51bdba273a5de
+не изменился во время прогона; owned runtime cleanup PASS. Вручную просмотрены
+EN light360/dark1440, RU dark390, DE light360 и EL/PL/TR/JA light+dark360;
+наложений не найдено. Остальные снимки имеют автоматическую geometry-проверку,
+но не полный ручной визуальный просмотр. Это только locked-vault states,
+не acceptance остальных security/recovery/shared экранов или font-scale1.3.
+Окончательный вывод этого review остаётся открытым до общей приёмки/исправлений.

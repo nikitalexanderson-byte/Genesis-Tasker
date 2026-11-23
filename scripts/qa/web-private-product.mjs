@@ -64,6 +64,19 @@ const continueMigration=async(dialog,button,label)=>{
  }
  throw new Error('Migration network retry budget exhausted');
 };
+const withRateRetry=async(label,operation)=>{
+ for(let attempt=0;attempt<4;attempt++){
+  const previous=report.rateLimits.length;
+  try{return await operation();}catch(error){
+   await page.waitForTimeout(100);
+   const limited=report.rateLimits.at(-1);if(report.rateLimits.length===previous||!limited||attempt===3)throw error;
+   const until=limited.observedAt+limited.retryAfterSeconds*1000+1000;
+   report.rateRetries.push({label,attempt:attempt+1,until,policy:'Actual Retry-After boundary; no rate table reset or larger budget'});save();
+   console.log('WAIT private-product rate boundary '+label+' '+Math.max(0,until-Date.now())+'ms');
+   while(Date.now()<until){assert(!page.isClosed());await page.waitForTimeout(Math.min(5000,until-Date.now()));}
+  }
+ }
+};
 try{
  await login(context);page=await context.newPage();page.setDefaultTimeout(20000);
  const debug=await context.newCDPSession(page);await debug.send('Debugger.enable');
@@ -108,7 +121,7 @@ try{
  debug.on('Debugger.paused',event=>{
   const code=event.data?.description?.match(/E2EE_[A-Z_]+/)?.[0];
   if(code&&!report.caughtCodes.includes(code)){report.caughtCodes.push(code);report.caughtFrames.push({code,functions:event.callFrames.slice(0,8).map(frame=>frame.functionName)});console.log('DIAGNOSTIC '+code);}
-  if(!code&&event.data?.description){const message=event.data.description.split('\n')[0].slice(0,160);if(message!=='Promise'&&!message.startsWith('Error: Minified React error #460'))console.log('SYNTHETIC CAUGHT '+message);}
+  if(!code&&event.data?.description){const message=event.data.description.split('\n')[0].slice(0,160);if(message!=='Promise'&&!message.startsWith('Error: Minified React error #460'))console.log('SYNTHETIC CAUGHT '+redactPrivateText(message));}
   void debug.send('Debugger.resume').catch(()=>{});
  });
  page.on('pageerror',error=>report.pageErrors.push(redactPrivateText(error.message)));
@@ -304,19 +317,6 @@ try{
     await page.locator('.workspace-startup-gate').waitFor({state:'hidden'});
    };
    const account=async()=>{await page.getByRole('button',{name:'Открыть личный кабинет и настройки',exact:true}).click();await page.locator('[data-settings-tab=account]').click();};
-   const withRateRetry=async(label,operation)=>{
-    for(let attempt=0;attempt<4;attempt++){
-     const previous=report.rateLimits.length;
-     try{return await operation();}catch(error){
-      await page.waitForTimeout(100);
-      const limited=report.rateLimits.at(-1);if(report.rateLimits.length===previous||!limited||attempt===3)throw error;
-      const until=limited.observedAt+limited.retryAfterSeconds*1000+1000;
-      report.rateRetries.push({label,attempt:attempt+1,until,policy:'Actual Retry-After boundary; no rate table reset or larger budget'});save();
-      console.log('WAIT private-product rate boundary '+label+' '+Math.max(0,until-Date.now())+'ms');
-      while(Date.now()<until){assert(!page.isClosed());await page.waitForTimeout(Math.min(5000,until-Date.now()));}
-     }
-    }
-   };
    const openTransfer=async(kind,resource)=>withRateRetry(kind+' discovery',async()=>{
     const panel=page.locator('.private-shared-security');await debug.send('Debugger.setPauseOnExceptions',{state:diagnostics?'all':'none'});
     await panel.locator(':scope > button').filter({hasText:sharedCopy.load}).click();
@@ -369,8 +369,10 @@ try{
   await check('normal shared reader opens transferred task content and refuses the legacy project route',async()=>{
    const legacy=await context.request.get(`/api/shared/projects/${sharedFixture.project.id}`);assert.equal(legacy.status(),409);assert.equal((await legacy.json()).error,'E2EE_UPGRADE_REQUIRED');
    const target=new URL('/',baseURL);target.searchParams.set('affairs','shared');target.searchParams.set('space',sharedFixture.space.id);target.searchParams.set('project',sharedFixture.project.id);target.searchParams.set('projectView','board');target.hash='projects';
-   await page.goto(target.href);const gate=page.locator('.private-vault-dialog');await gate.waitFor();await recoveryInput(gate);await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
-   await page.locator(`[data-shared-task-id="${sharedFixture.task.id}"]`).getByText(sharedFixture.task.title,{exact:true}).waitFor({timeout:60000});
+   await withRateRetry('normal shared reader',async()=>{
+    await page.goto(target.href);const gate=page.locator('.private-vault-dialog');await gate.waitFor();await recoveryInput(gate);await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
+    await page.locator(`[data-shared-task-id="${sharedFixture.task.id}"]`).getByText(sharedFixture.task.title,{exact:true}).waitFor({timeout:60000});
+   });
    await page.screenshot({path:`${output}/private-shared-task-readback.png`,fullPage:true,animations:'disabled'});
   });
  }
