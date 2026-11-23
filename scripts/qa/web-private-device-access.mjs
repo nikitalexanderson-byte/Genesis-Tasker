@@ -1,14 +1,22 @@
 import assert from 'node:assert/strict';
 import {readFileSync,readdirSync,writeFileSync} from 'node:fs';
 import path from 'node:path';
+import {filesBelow,hash} from './full-lib.mjs';
 
 // Real two-browser product enrollment. Only the existing synthetic identity
 // provider is supplied by the fixture; no recovery secret opens the new device.
-export async function checkPrivateDeviceAccess({browser,page,baseURL,output,login,check,report,canary,rememberSecret,withRateRetry}) {
+export async function checkPrivateDeviceAccess({browser,page,baseURL,output,login,check,report,canary,rememberSecret,withRateRetry,ownerRecoveryInput}) {
  const read=name=>JSON.parse(readFileSync(`contracts/e2ee/${name}-copy-v1.json`,'utf8')).ru;
  const c=read('personal-device-entry'),d=read('device-access'),common=read('shared-security'),v=read('vault');
  let clean,fresh,localCode;const pageErrors=[];
  try {
+  // The preceding offline scenario deliberately leaves a read-only account.
+  // Return through the actual online cold-unlock form before owner approval.
+  await withRateRetry('trusted-device owner online entry',async()=>{
+   await page.reload();const gate=page.locator('.private-vault-dialog');await gate.waitFor();await ownerRecoveryInput(gate);
+   await gate.getByRole('button',{name:v.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
+   await page.locator('.workspace-startup-gate').waitFor({state:'hidden'});
+  });
   await page.getByRole('button',{name:'Открыть личный кабинет и настройки',exact:true}).click();
   await page.locator('[data-settings-tab=account]').click();
   const ownerPanel=page.locator('section.account-preferences').filter({has:page.getByRole('heading',{name:d.title,exact:true})}).last();
@@ -47,7 +55,13 @@ export async function checkPrivateDeviceAccess({browser,page,baseURL,output,logi
   });
   await gate.getByRole('button',{name:c.title,exact:true}).click();
   const entry=gate.locator('section').filter({has:fresh.getByRole('heading',{name:c.title,exact:true})}).first();
-  await check('trusted-device form uses its full column in both themes at all required widths',async()=>{
+  if(process.env.GENESIS_QA_DEVICE_VISUAL_PROOF){
+   const proofPath=path.resolve(process.env.GENESIS_QA_DEVICE_VISUAL_PROOF),proof=JSON.parse(readFileSync(proofPath,'utf8')),run=JSON.parse(readFileSync(path.join(path.dirname(proofPath),'run.json'),'utf8'));
+   const directory=path.resolve(process.env.GENESIS_QA_DIAGNOSTIC_BUNDLE),files=filesBelow(directory).sort().map(file=>({path:path.relative(directory,file).replaceAll('\\','/'),sha256:hash(readFileSync(file))}));
+   assert.equal(run.build.sha256,hash(JSON.stringify(files)));assert.equal(run.buildAfterSha256,run.build.sha256);
+   assert.equal(proof.deviceVisualCases.length,8);assert(proof.deviceVisualCases.every(row=>row.status==='PASS'));
+   report.deviceVisualEvidence={reusedFrom:proofPath,bundleSha256:run.build.sha256,cases:8};
+  }else await check('trusted-device form uses its full column in both themes at all required widths',async()=>{
    report.deviceVisualCases=[];
    for(const scheme of ['light','dark']){
     const session=await(await clean.request.get('/api/session')).json();

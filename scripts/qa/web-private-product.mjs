@@ -303,7 +303,7 @@ try{
    throw error;
   }finally{await clean.close();}
  });
- if(process.env.GENESIS_QA_FOLLOWUP_SCOPE==='devices')await checkPrivateDeviceAccess({browser,page,baseURL,output,login,check,report,canary,rememberSecret:value=>{deviceLocalCode=value;},withRateRetry});
+ if(process.env.GENESIS_QA_FOLLOWUP_SCOPE==='devices')await checkPrivateDeviceAccess({browser,page,baseURL,output,login,check,report,canary,rememberSecret:value=>{deviceLocalCode=value;},withRateRetry,ownerRecoveryInput:recoveryInput});
  if(backupJourney){
   const copy=JSON.parse(readFileSync('contracts/e2ee/content-archive-copy-v1.json','utf8')).ru;
   let archive,selection;
