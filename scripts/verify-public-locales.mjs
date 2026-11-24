@@ -3,7 +3,7 @@ import {readFile} from 'node:fs/promises';
 import {assertPublicDocumentReferences} from './public-document-references.mjs';
 
 const readJson=async name=>JSON.parse(await readFile(new URL('../app/'+name+'.json',import.meta.url),'utf8'));
-const [copy,domestic,pageCopy,retention,weather,regionCopy,availability]=await Promise.all(['public-product-copy','public-domestic-service-copy','public-page-copy','account-retention-legal-copy','weather-legal-copy','website-region-copy','service-availability-copy'].map(readJson));
+const [copy,domestic,pageCopy,retention,weather,regionCopy,availability,paddle]=await Promise.all(['public-product-copy','public-domestic-service-copy','public-page-copy','account-retention-legal-copy','weather-legal-copy','website-region-copy','service-availability-copy','paddle-legal-copy'].map(readJson));
 const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pages=['home','login','privacy','terms','refund','support','delete-account'];
 const route=(language,page)=>(page==='home'?'/':'/'+page)+(language==='en'?'':'?lang='+language);
@@ -22,7 +22,9 @@ export async function verifyPublicLocales(output) {
     for(const alternate of Object.keys(copy))assert.ok(html.includes('hreflang="'+alternate+'" href="https://genesiscalendar.com'+route(alternate,page)+'"'),label+': alternate '+alternate);
     assert.ok(html.includes('hreflang="x-default"'),label+': default locale');
     assert.doesNotMatch(html,/https:\/\/(?:ru|en|de|fr)\.genesiscalendar\.com/,label+': one application origin');
-    assert.doesNotMatch(body,/paddle/i,label+': retired processor');
+    if (['terms','privacy','refund'].includes(page)) {
+      assert.ok(paddle[language]&&body.includes(escape(paddle[language])),label+': conditional Paddle disclosure');
+    }
     assert.doesNotMatch(html,/(?:href|content)="(?:https:\/\/genesiscalendar\.com)?\/ru(?:\/|[?"#])/,label+': one website');
     for(const text of (page==='home'||page==='login'?[c.creator,c.infrastructure]:[c.creator,c.infrastructure,c.paymentRoles]))assert.ok(body.includes(escape(text)),label+': actual parties');
     for(const name of ['terms','privacy','refund','support'])assert.ok(body.includes('href="'+route(language,name)+'"'),label+': localized '+name);

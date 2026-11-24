@@ -46,11 +46,11 @@ function genesisBillingBaseUpgradeQuote(PDO $db, string $userId, array $offer, i
         AND EXISTS(SELECT 1 FROM billing_upgrade_credits c WHERE c.order_id=t.id) ORDER BY t.created_at,t.id LIMIT 1");
     $pending->execute([$userId,$offer['plan'],$offer['periodMonths']]);$pendingOrder=$pending->fetch();
     if($pendingOrder)return genesisBillingPendingUpgradeQuote($quote,$pendingOrder);
-    if(($offer['provider']??null)==='yookassa'){
+    if(in_array($offer['provider']??null,['yookassa','paddle'],true)){
         // Closing/reopening the payment dialog must resume the frozen checkout, even with a new client key.
-        $pending=$db->prepare("SELECT * FROM billing_orders WHERE user_id=? AND provider='yookassa' AND plan=? AND period_months=?
+        $pending=$db->prepare("SELECT * FROM billing_orders WHERE user_id=? AND provider=? AND plan=? AND period_months=?
             AND currency=? AND status='pending' AND upgrade_credit_minor=0 ORDER BY created_at,id LIMIT 1");
-        $pending->execute([$userId,$offer['plan'],$offer['periodMonths'],$offer['currency']]);$pendingOrder=$pending->fetch();
+        $pending->execute([$userId,$offer['provider'],$offer['plan'],$offer['periodMonths'],$offer['currency']]);$pendingOrder=$pending->fetch();
         if($pendingOrder)return genesisBillingPendingUpgradeQuote($quote,$pendingOrder);
     }
     if (($ranks[$offer['plan']] ?? -1) <= $ranks[$current] || $current === 'free') return $quote;

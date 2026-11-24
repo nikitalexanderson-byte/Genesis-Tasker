@@ -4,6 +4,7 @@ import policy from '../server/resources/feature-access-policy.json';
 import copy from './public-product-copy.json';
 import domesticCopy from './public-domestic-service-copy.json';
 import paymentCopy from './public-payment-copy.json';
+import paddleLegal from './paddle-legal-copy.json';
 import type {PublicCurrency} from './public-currency';
 import {publicGalleryItems} from './public-gallery';
 import {publicPagePath,currentPublicEdition,type PublicPage,type PublicEdition} from './public-route';
@@ -79,5 +80,6 @@ export function publicMerchantHtml(language:string,page:string,base=APP_BASE,edi
   const r=referralCopy[language as keyof typeof referralCopy]??referralCopy.en;
   const referrals=page==='terms'?`<section data-no-translate><h2>${escape(r.title)}</h2><p>${escape(r.rules)}</p><p>${escape(r.monthlyOnly)}</p></section>`:page==='privacy'?`<section data-no-translate><h2>${escape(r.title)}</h2><p>${escape(r.privacy)}</p></section>`:'';
   const contact=page==='refund'?publicRefundContactsHtml(language):`<p><a href="mailto:${SERVICE_CONTACT}">${SERVICE_CONTACT}</a> · <a href="${publicLink(language,'refund',base,edition)}">${escape(c.refund)}</a></p>`;
-  return `${referrals}<section class="public-merchant" data-no-translate><h2>${escape(c.merchantTitle)}</h2>${roles}<p>${escape(c.merchant)}</p><p>${escape(c.pending)}</p><p>${escape(c.merchantPrivacy)}</p>${page === 'terms' || page === 'refund' ? `<p>${escape(c.renew)}</p><p>${escape(c.refundSummary)}</p>` : ''}${contact}</section>`;
+  const paddle=['terms','privacy','refund'].includes(page)?`<p>${escape(paddleLegal[language as keyof typeof paddleLegal]??paddleLegal.en)}</p>`:'';
+  return `${referrals}<section class="public-merchant" data-no-translate><h2>${escape(c.merchantTitle)}</h2>${roles}<p>${escape(c.merchant)}</p><p>${escape(c.pending)}</p><p>${escape(c.merchantPrivacy)}</p>${paddle}${page === 'terms' || page === 'refund' ? `<p>${escape(c.renew)}</p><p>${escape(c.refundSummary)}</p>` : ''}${contact}</section>`;
 }
