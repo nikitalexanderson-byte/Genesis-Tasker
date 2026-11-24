@@ -37,7 +37,8 @@ test('account checkout has its own POST route and retains generation and account
   ]);
   assert.match(transport, /path == "\/donations\/cloudtips\/checkout" && method == "POST"/);
   assert.match(transport, /fun donationCheckout\(expected: Long\): JSONObject = request\(expected, "\/donations\/cloudtips\/checkout", JSONObject\(\)\)/);
-  const donation = controller.split('internal suspend fun donationUrl(): String {')[1].split('suspend fun todayAds')[0];
+  const donation = controller.split(/internal suspend fun donationUrl\([^)]*\): String \{/)[1]?.split('suspend fun todayAds')[0];
+  assert.ok(donation,'The selected donation method must retain the controller entry point');
   assert.match(donation, /client\.donationCheckout\(generation\)/);
   assert.match(donation, /!client\.isCurrent\(generation\)/);
   assert.match(donation, /current\.user\?\.uid != uid/);
@@ -58,7 +59,7 @@ test('native donation controls request a checkout on click and notifications onl
     assert.match(text, /rememberDonationAction\(controller\)/);
     assert.doesNotMatch(text, /pay\.cloudtips\.ru/);
   }
-  assert.match(action, /val url = controller\.donationUrl\(\)/);
+  assert.match(action, /val url = controller\.donationUrl\(provider\)/);
   assert.doesNotMatch(action, /publicDonationUrl|pay\.cloudtips\.ru/);
   assert.doesNotMatch(notification, /donationUrl\(|donationCheckout\(|pay\.cloudtips\.ru/);
   assert.match(notification, /putExtra\("scope",scope\)/);

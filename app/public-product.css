@@ -44,7 +44,13 @@
 .public-merchant p { font-size:13px; line-height:1.7; }
 .welcome-shell .public-merchant h2 { font-size:14px; line-height:1.5; }
 .public-footer { gap:8px 24px; flex-wrap:wrap; align-items:center; padding:24px 0; }
+.public-footer-details { flex-basis:100%; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px 40px; padding-bottom:16px; text-align:left; }
+.public-footer-details p { min-width:0; max-width:65ch; margin:0; color:#c1ccc6; font-size:16px; line-height:1.65; letter-spacing:0; }
+.public-footer-prices{flex-basis:100%;padding-bottom:16px;color:#c1ccc6;font-size:16px;line-height:1.65;letter-spacing:0;text-align:left}
+.public-footer-prices ul{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 40px;list-style:none;padding:0;margin:12px 0 0}
+.public-footer-prices li{min-width:0}
 .public-footer>span { color:#c1ccc6; font-size:14px; line-height:1.7; letter-spacing:0; }
+.welcome-shell .welcome-footer.public-footer>span { display:block; }
 .public-footer nav { display:flex; flex-wrap:wrap; gap:8px 24px; }
 .public-footer a { display:inline-flex; min-width:44px; min-height:44px; align-items:center; font-size:14px; }
 .welcome-shell .welcome-nav nav { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:4px 18px; }
@@ -55,6 +61,7 @@
 .public-language-links a { display:inline-flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; color:inherit; text-underline-offset:4px; }
 .public-language-links a[aria-current="page"] { font-weight:700; text-decoration-thickness:2px; }
 @media(max-width:1000px) { .public-plans { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:600px) { .public-footer-details { grid-template-columns:minmax(0,1fr); gap:16px; } .public-footer-prices ul{grid-template-columns:minmax(0,1fr)} }
 @media(max-width:600px) { .welcome-shell .welcome-nav { flex-wrap:wrap; justify-content:center; gap:8px; padding:18px 0; } .welcome-shell .welcome-nav nav { justify-content:center; width:100%; } .public-features,.public-previews,.public-plans { grid-template-columns:1fr; } .public-section { padding:36px 0; } .public-features { gap:20px; } .public-footer nav { justify-content:center; gap:4px 14px; } .public-footer { text-align:center; } }
 @media(prefers-reduced-motion:reduce) { .welcome-shell * { scroll-behavior:auto; animation:none !important; transition:none !important; } }
 

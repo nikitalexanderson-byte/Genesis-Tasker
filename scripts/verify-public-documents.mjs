@@ -16,21 +16,21 @@ const pages = {
   "delete-account": "Удаление аккаунта и данных",
 };
 for (const [slug, title] of Object.entries(pages)) {
-  const html = await readFile(new URL(`ru/${slug}.html`, output), "utf8");
+  const html = await readFile(new URL(`_public-locales/ru/${slug}.html`, output), "utf8");
   const body = html.split("<body>")[1]?.split("</body>")[0];
   assert.ok(body, `${slug}: HTML body is required`);
   assert.ok(body.includes(`<h1>${title}</h1>`), `${slug}: document must be readable without JavaScript`);
   assert.ok(body.includes(revision), `${slug}: current revision is required`);
   assert.ok(body.includes("<section><h2>"), `${slug}: substantive sections are required`);
-  assert.ok(body.includes('href="/ru/privacy"') && body.includes('href="/ru/terms"'), `${slug}: navigation is required`);
-  assert.ok(html.includes(`rel="canonical" href="https://genesiscalendar.com/ru/${slug}"`), `${slug}: canonical URL is required`);
+  assert.ok(body.includes('href="/privacy?lang=ru"') && body.includes('href="/terms?lang=ru"'), `${slug}: navigation is required`);
+  assert.ok(html.includes(`rel="canonical" href="https://genesiscalendar.com/${slug}?lang=ru"`), `${slug}: canonical URL is required`);
   assert.match(html, /<script type="module"[^>]*src="[^"]+\.js"/, `${slug}: interactive client must remain available`);
   assertPublicDocumentReferences(html, slug);
   assert.match(body, /Владелец домена и хостинга — Юрий Логвинов/, `${slug}: infrastructure owner must be named accurately`);
   assert.match(body, /Создатель сайта и приложения, основатель GENESIS — Ляпин Никита Александрович/, `${slug}: creator must be named separately`);
-  assert.match(body, /для США отвечает Юрий Логвинов; для России — Ляпин Никита Александрович/, `${slug}: payment responsibilities must identify both territories`);
+  assert.doesNotMatch(body, /для США отвечает Юрий Логвинов/, `${slug}: retired split seller role`);
   assert.doesNotMatch(body, /Owned and operated by|GENESIS is owned by|Сайт, домен и хостинг принадлежат другому лицу/, `${slug}: obsolete ownership claims must be absent`);
-  assert.match(body, /demiurge\.soft@gmail\.com/, `${slug}: Paddle support is required`);
+  assert.match(body, /demiurge\.soft@gmail\.com/, `${slug}: infrastructure contact is required`);
   assert.doesNotMatch(body, /jurijjlogvinov@gmail\.com/i, `${slug}: retired contact must be absent`);
   if (slug === "privacy" || slug === "delete-account") {
     const retention = body.match(/<h2>Общие задачи и вложения после удаления аккаунта<\/h2><p>([\s\S]*?)<\/p>/)?.[1];
@@ -63,4 +63,4 @@ assert.ok(homepage.includes("demiurge.soft@gmail.com") && homepage.includes('hre
 assert.ok(homepage.includes("AI NCII") && homepage.includes("Google Calendar") && homepage.includes("Google Tasks"));
 assert.doesNotMatch(homepage, /%GENESIS_SERVICE_IDENTITY%/, "public identity must resolve at build time");
 await verifyPublicLocales(output);
-console.log("Russian section and English homepage preserve all existing disclosures; localized public HTML and Google-only .com references verified.");
+console.log("Unified Russian documents and English homepage preserve all existing disclosures; localized public HTML and Google-only .com references verified.");

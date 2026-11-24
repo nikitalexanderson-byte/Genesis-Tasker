@@ -2,7 +2,6 @@
 import {useEffect,useState} from 'react';
 import {publicFeatureIntroHtml,publicFooterHtml,publicPricingCardsHtml,publicPricingTermsHtml,publicProductCopy} from './public-product';
 import {PublicGallery} from './PublicGallery';
-import {requestWebsiteLocation,useWebsiteRegion} from './website-region';
 import {PUBLIC_CURRENCY_KEY,publicCurrency,resolvePublicCurrency,type PublicCurrency} from './public-currency';
 import pricingCopy from './public-pricing-copy.json';
 import {currentPublicEdition,type PublicEdition} from './public-route';
@@ -12,19 +11,16 @@ export function PublicProduct({language,edition=currentPublicEdition()}:{languag
   const [manual,setManual]=useState<PublicCurrency|null>(()=>{
     try {return publicCurrency(localStorage.getItem(PUBLIC_CURRENCY_KEY));} catch {return null;}
   });
-  const region=useWebsiteRegion();
   useEffect(()=>{
-    if(edition!=='domestic'||language!=='ru')return;
     const storage=(event:StorageEvent)=>{if(event.key===PUBLIC_CURRENCY_KEY)setManual(publicCurrency(event.newValue));};
     window.addEventListener('storage',storage);
     return()=>window.removeEventListener('storage',storage);
-  },[language,edition]);
-  const selection=edition==='domestic'&&language==='ru'?resolvePublicCurrency({deviceRegion:region.device,ipRegion:region.ip,manual,language}):{currency:'USD' as const,source:'manual' as const};
+  },[]);
+  const selection=resolvePublicCurrency({manual,language});
   const choose=(currency:PublicCurrency|null)=>{
     setManual(currency);
     try {if(currency)localStorage.setItem(PUBLIC_CURRENCY_KEY,currency);else localStorage.removeItem(PUBLIC_CURRENCY_KEY);} catch { /* Keep this visit's choice even without persistence. */ }
   };
-  const locate=()=>{choose(null);void requestWebsiteLocation();};
   return <div className="public-product" data-no-translate>
     <section className="public-section" id="features" aria-labelledby="public-features-title">
       <div dangerouslySetInnerHTML={{__html:publicFeatureIntroHtml(language,edition)}} />
@@ -33,16 +29,13 @@ export function PublicProduct({language,edition=currentPublicEdition()}:{languag
     </section>
     <section className="public-section" id="pricing" aria-labelledby="public-pricing-title">
       <h2 id="public-pricing-title">{c.pricing}</h2><p>{c.free}</p>
-      {edition==='domestic'&&language==='ru'?<><div className="public-currency-controls">
+      <div className="public-currency-controls">
         <span id="public-currency-label">{p.currency}</span>
         <div className="public-currency-switch" role="group" aria-labelledby="public-currency-label">
           {(['USD','RUB'] as const).map(currency=><button key={currency} type="button" aria-pressed={selection.currency===currency} onClick={()=>choose(currency)}>{currency}</button>)}
         </div>
         <button className="public-currency-auto" type="button" aria-pressed={manual===null} onClick={()=>choose(null)}>{p.auto}</button>
-        <button className="public-currency-locate" type="button" onClick={locate} disabled={region.locating} title={p.privacy}>{region.locating?p.locating:p.locate}</button>
       </div>
-      <p className="public-currency-status" role="status">{region.error?p.unavailable:p[selection.source]}</p>
-      <p className="public-currency-privacy">{p.privacy}</p></>:null}
       <div className="public-plans" data-currency={selection.currency} dangerouslySetInnerHTML={{__html:publicPricingCardsHtml(language,selection.currency,undefined,edition)}} />
       <div dangerouslySetInnerHTML={{__html:publicPricingTermsHtml(language,selection.currency,undefined,edition)}} />
     </section>

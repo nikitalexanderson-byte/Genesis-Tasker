@@ -31,6 +31,9 @@ class AuthSessionRoutesTest {
             assertFalse(allowedAuthSessionRoute(method, "/donations/cloudtips/checkout"))
         assertFalse(allowedAuthSessionRoute("POST", "/donations/cloudtips/checkout?user=someone"))
         assertFalse(allowedBillingRoute("POST", "/donations/cloudtips/checkout"))
+        assertTrue(allowedAuthSessionRoute("GET", "/donations/methods"))
+        assertFalse(allowedAuthSessionRoute("POST", "/donations/methods"))
+        assertFalse(allowedAuthSessionRoute("GET", "/donations/methods?user=someone"))
     }
 
     @Test fun verificationStatusAndExplicitResendReachTheTransportGuard() {

@@ -30,6 +30,7 @@ internal fun allowedAuthSessionRoute(method: String, path: String): Boolean =
     (path == "/account/email/verification/dismiss" && method == "POST") ||
     (path == "/account/support-notice" && method == "POST") ||
     (path == "/donations/cloudtips/checkout" && method == "POST") ||
+    (path == "/donations/methods" && method == "GET") ||
     (path == "/weather/v1/current" && method == "POST") ||
     (path == "/account/plan-guidance" && method == "GET") ||
     (path in setOf("/account/plan-guidance/claim", "/account/plan-guidance/shown", "/account/plan-guidance/read", "/account/plan-guidance/release") && method == "POST") ||
@@ -264,6 +265,7 @@ internal class AuthSessionClient(context: Context) {
         request(expected, if (dismiss) "/advice/dismiss" else "/advice/view", DailyAdviceProtocol.record(id, day))
     fun workspace(expected: Long): JSONObject = request(expected, "/workspace", null)
     fun donationCheckout(expected: Long): JSONObject = request(expected, "/donations/cloudtips/checkout", JSONObject())
+    fun donationMethods(expected: Long): JSONObject = request(expected, "/donations/methods", null)
     fun weather(expected: Long, location: ru.genesis.calendar.domain.WeatherRequestV1, call: ForegroundAccountCall): JSONObject =
         request(expected, "/weather/v1/current", location.json(), foregroundCall = call)
     fun planGuidance(expected: Long, path: String, body: JSONObject?, call: ForegroundAccountCall): JSONObject {

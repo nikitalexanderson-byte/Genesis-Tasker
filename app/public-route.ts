@@ -17,29 +17,22 @@ export function publicRouteForPath(pathname:string,base='',search=''):PublicRout
   const language=selected??(domestic?'ru':'en'),explicitLanguage=!!selected||domestic;
   if(parts.length>1)return null;
   const slug=(parts[0]??'home').replace(/\.html$/,''),page=slug==='index'?'home':slug;
-  return (PUBLIC_PAGES as readonly string[]).includes(page)?{language,page:page as PublicPage,explicitLanguage,edition:domestic?'domestic':'international'}:null;
+  return (PUBLIC_PAGES as readonly string[]).includes(page)?{language,page:page as PublicPage,explicitLanguage,edition:'domestic'}:null;
 }
 
-export function currentPublicEdition(base=process.env.NEXT_PUBLIC_GENESIS_BASE_PATH?.trim()||''):PublicEdition {
-  return typeof window==='undefined'?'international':publicRouteForPath(window.location.pathname,base)?.edition??'international';
+export function currentPublicEdition(_base=process.env.NEXT_PUBLIC_GENESIS_BASE_PATH?.trim()||''):PublicEdition {
+  void _base;return 'domestic';
 }
-export function publicPagePath(language:RegionLanguage,page:PublicPage='home',base='',edition:PublicEdition=currentPublicEdition(base)) {
-  const prefix=base.replace(/\/$/,'');
-  const path=`${prefix}${edition==='domestic'?'/ru':''}${page==='home'?'/':`/${page}`}`;
-  return language===(edition==='domestic'?'ru':'en')?path:`${path}?lang=${language}`;
+export function publicPagePath(language:RegionLanguage,page:PublicPage='home',base='',_edition:PublicEdition=currentPublicEdition(base)) {
+  void _edition;const prefix=base.replace(/\/$/,'');
+  const path=`${prefix}${page==='home'?'/':`/${page}`}`;
+  return language==='en'?path:`${path}?lang=${language}`;
 }
 
 export function publicPageAlternates(page:PublicPage,base='',edition:PublicEdition=currentPublicEdition(base)) {
   return [...REGION_LANGUAGES.map(language=>({language,path:publicPagePath(language,page,base,edition)})),
-    {language:'x-default',path:publicPagePath(edition==='domestic'?'ru':'en',page,base,edition)}];
+    {language:'x-default',path:publicPagePath('en',page,base,edition)}];
 }
 
-/** Preserve an explicit language, document, query and anchor when GPS selects /ru. */
-export function publicDomesticDestination(input:string,base=''):string|null {
-  const url=new URL(input),route=publicRouteForPath(url.pathname,base,url.search);
-  if(!route||route.edition==='domestic'||['code','state','token','auth','error'].some(key=>url.searchParams.has(key))||route.page==='home'&&url.hash&&!['#features','#pricing','#sign-in'].includes(url.hash))return null;
-  const next=new URL(publicPagePath(route.explicitLanguage?route.language:'ru',route.page,base,'domestic'),url.origin);
-  url.pathname=next.pathname;
-  if(next.searchParams.has('lang'))url.searchParams.set('lang',next.searchParams.get('lang')!);else url.searchParams.delete('lang');
-  return url.href;
-}
+/** Compatibility export: country signals no longer select a website edition. */
+export function publicDomesticDestination(_input:string,_base=''):string|null {void _input;void _base;return null;}

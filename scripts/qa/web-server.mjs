@@ -33,10 +33,13 @@ export async function startWebServer({ port = 4380, apiPort = 4381 } = {}) {
     const publicDocument = url.pathname.match(/^\/(ru\/)?(login|terms|privacy|refund|support|delete-account)(?:\.html)?\/?$/);
     const publicHome = /^\/(?:ru\/?|(?:ru\/)?index\.html)?$/.test(url.pathname);
     if (publicDocument || publicHome) {
+      if(url.pathname==='/ru'||url.pathname.startsWith('/ru/')){
+        if(!url.searchParams.has('lang'))url.searchParams.set('lang','ru');
+        response.writeHead(302,{'Location':`/${publicDocument?.[2]??''}${url.search}`,'Cache-Control':'no-store'});response.end();return;
+      }
       const requested = url.searchParams.get('lang');
-      const domestic = url.pathname.startsWith('/ru');
-      const language = ['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'].includes(requested) ? requested : domestic ? 'ru' : 'en';
-      const localeDirectory = domestic ? language === 'ru' ? 'ru' : `_domestic-locales/${language}` : language === 'en' ? '' : `_public-locales/${language}`;
+      const language = ['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'].includes(requested) ? requested : 'en';
+      const localeDirectory = language === 'en' ? '' : `_public-locales/${language}`;
       candidate = path.join(directory, localeDirectory, `${publicDocument?.[2] ?? 'index'}.html`);
     }
     if (!existsSync(candidate) || !statSync(candidate).isFile()) {

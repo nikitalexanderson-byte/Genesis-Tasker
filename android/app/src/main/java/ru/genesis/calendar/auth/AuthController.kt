@@ -422,7 +422,21 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         return result
     }
 
-    internal suspend fun donationUrl(): String {
+    internal suspend fun donationMethods(): JSONObject {
+        val generation=client.currentGeneration()
+        val response=withContext(Dispatchers.IO){client.donationMethods(generation)}
+        if(!client.isCurrent(generation))throw CancellationException()
+        require(response.getInt("schemaVersion")==1)
+        return response
+    }
+
+    internal suspend fun donationUrl(provider:String="cloudtips"): String {
+        require(provider in setOf("cloudtips","boosty"))
+        if(provider=="boosty"){
+            val method=donationMethods().getJSONObject("boosty")
+            require(method.getBoolean("available"))
+            return boostyDonationUrl(method.getString("url"))
+        }
         val initial = mutableState.value
         val uid = initial.user?.uid ?: run {
             if (initial.busy) throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)

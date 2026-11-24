@@ -76,7 +76,7 @@ internal fun nativeBillingProviderPrice(offer: JSONObject?, provider: String): P
     val raw = price.opt("amountMinor")
     if (raw !is Int && raw !is Long) return null
     val amount = (raw as Number).toLong(); val currency = price.optString("currency")
-    if (amount !in 1L..9_007_199_254_740_991L || currency != if (provider in setOf("paddle","lemon-squeezy")) "USD" else "RUB") return null
+    if (provider !in setOf("google-play","yookassa","lemon-squeezy") || amount !in 1L..9_007_199_254_740_991L || currency != if (provider == "lemon-squeezy") "USD" else "RUB") return null
     return amount to currency
 }
 internal fun nativeBillingProviderChoices(catalog: JSONObject?, offer: JSONObject?, playDistribution: Boolean): List<String> {
@@ -495,7 +495,7 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                                 if (providerChoices.isNotEmpty()) {
                                     UpgradeText(copy("Способ оплаты", "Payment method"), style = MaterialTheme.typography.titleSmall)
                                     providerChoices.forEach { method ->
-                                        val methodName = when (method) { "google-play" -> "Google Play"; "yookassa" -> "ЮKassa"; "paddle" -> "Paddle"; else -> method }
+                                        val methodName = when (method) { "google-play" -> "Google Play"; "yookassa" -> "ЮKassa"; else -> method }
                                         androidx.compose.material3.Surface(onClick = { provider = method }, enabled = !busy, shape = AffairsLayout.shape,
                                             color = selectedControlContainer(provider == method,!busy),
                                             border = selectedControlBorder(provider == method,!busy),
@@ -506,7 +506,7 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                                         }
                                     }
                                 }
-                                if (provider in setOf("paddle","lemon-squeezy") && catalog?.optJSONObject("foreignPricing")?.optString("pricingModel") != "fixed") catalog?.optJSONObject("foreignPricing")?.optJSONObject("rate")?.let { rate ->
+                                if (provider == "lemon-squeezy" && catalog?.optJSONObject("foreignPricing")?.optString("pricingModel") != "fixed") catalog?.optJSONObject("foreignPricing")?.optJSONObject("rate")?.let { rate ->
                                     UpgradeText("1 USD = ${rate.optString("quotePerBase")} RUB · ${rate.optString("effectiveDate")}",
                                         style = MaterialTheme.typography.bodySmall, color = upgradeScheme.onSurfaceVariant)
                                 }
