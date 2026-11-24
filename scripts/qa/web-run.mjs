@@ -10,11 +10,12 @@ import { resolveBackendPhp } from './backend-php.mjs';
 import { filesBelow, hash } from './full-lib.mjs';
 import { runSharedStartup } from './web-shared-startup.mjs';
 import { waitForQaBackend } from './backend-ready.mjs';
+import { runMembershipRoot } from './web-membership-root.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const args = Object.fromEntries(process.argv.slice(2).map(argument => { const [key, ...parts] = argument.replace(/^--/, '').split('='); return [key, parts.join('=')]; }));
 const suite = args.suite ?? 'full';
-if (!['full', 'followup317', 'trial317', 'history317', 'retention', 'header', 'dialog-focus', 'mindmap-save', 'shared-inbox', 'public-region', 'private-product'].includes(suite)) throw new Error('Unknown web QA suite');
+if (!['full', 'followup317', 'trial317', 'history317', 'retention', 'header', 'dialog-focus', 'mindmap-save', 'shared-inbox', 'public-region', 'private-product','membership-root'].includes(suite)) throw new Error('Unknown web QA suite');
 if(args['preserve-failure']&&suite!=='private-product')throw new Error('Synthetic failure retention is confined to the private-product fixture');
 const id = args['run-id'] ?? `web-${Date.now()}-${randomBytes(3).toString('hex')}`;
 if (!/^[a-zA-Z0-9-]{6,80}$/.test(id)) throw new Error('Invalid run ID');
@@ -49,7 +50,7 @@ const apiLog = createWriteStream(path.join(output, 'local-api.log'));
 const api = spawn(php, ['-d', 'disable_functions=curl_exec,mail', '-S', `127.0.0.1:${apiPort}`, 'scripts/qa/backend-router.php'], { cwd: root, windowsHide: true, env: { ...process.env, GENESIS_FULL_QA: 'isolated', GENESIS_FULL_QA_DIR: runtime.replaceAll('\\', '/') }, stdio: ['ignore', 'pipe', 'pipe'] });
 const apiClosed = new Promise(resolve => api.once('close', resolve));
 api.stdout.pipe(apiLog); api.stderr.pipe(apiLog);
-let server, runError, startupGate, featureExitCode;
+let server, runError, startupGate, membershipRootGate, featureExitCode;
 try {
   await waitForQaBackend(api, `http://127.0.0.1:${apiPort}`, id);
   server = await startWebServer({ port, apiPort, directory: bundleDirectory });
@@ -62,7 +63,8 @@ try {
       ||sources.some(source=>hash(readFileSync(path.resolve(root,source.path)))!==source.sha256))throw new Error('Startup reuse requires the exact checked build and unchanged startup sources');
     startupGate={...prior.startupGate,reusedFrom:args['startup-report']};
   }else startupGate = await runSharedStartup({ baseURL: origin, output });
-  const exitCode = await new Promise((resolve, reject) => {
+  if(['full','private-product','membership-root'].includes(suite))membershipRootGate=await runMembershipRoot({baseURL:origin,output,bundleDirectory});
+  const exitCode = suite==='membership-root'?0:await new Promise((resolve, reject) => {
     const script = {full: 'scripts/qa/web-full.mjs', followup317: 'scripts/qa/web-followup317.mjs', trial317: 'scripts/qa/web-trial-only317.mjs', history317: 'scripts/qa/web-hidden-map-history317.mjs', retention: 'scripts/qa/web-retention.mjs', header: 'scripts/qa/web-header-startup.mjs', 'dialog-focus': 'scripts/qa/web-dialog-focus.mjs', 'mindmap-save': 'scripts/qa/web-mindmap-save.mjs', 'shared-inbox':'scripts/qa/web-shared-inbox.mjs', 'public-region':'scripts/qa/web-public-region.mjs', 'private-product':'scripts/qa/web-private-product.mjs'}[suite];
     const child = spawn(process.execPath, [script], { cwd: root, windowsHide: true, env: { ...process.env, GENESIS_QA_WEB_ORIGIN: origin, GENESIS_QA_WEB_OUTPUT: output, GENESIS_QA_BACKEND_RUNTIME: runtime, GENESIS_QA_PHP: php, GENESIS_QA_PHASE: 'isolated', ...(args['preserve-failure']==='true'?{GENESIS_QA_PRESERVE_SYNTHETIC:'true'}:{}), ...(args.focus ? { GENESIS_QA_FOLLOWUP_SCOPE: args.focus } : {}), ...(args.tiers ? { GENESIS_QA_TIERS: args.tiers } : {}) }, stdio: ['ignore', 'pipe', 'pipe'] });
     const log = createWriteStream(path.join(output, 'web.log'));
@@ -98,6 +100,6 @@ finally {
   }
   const buildAfter = bundleIdentity();
   if (buildAfter.sha256 !== build.sha256) { runError = 'Compiled web bundle changed during the test run'; process.exitCode = 1; }
-  writeFileSync(path.join(output, 'run.json'), JSON.stringify({ runId: id, origin, featureExitCode: featureExitCode ?? null, build, buildAfterSha256: buildAfter.sha256, startupGate: startupGate ?? null, externalNetwork: 'browser allows only local origin; PHP curl/mail disabled; no provider credentials', cleanup, error: runError ?? null }, null, 2));
+  writeFileSync(path.join(output, 'run.json'), JSON.stringify({ runId: id, origin, featureExitCode: featureExitCode ?? null, build, buildAfterSha256: buildAfter.sha256, startupGate: startupGate ?? null,membershipRootGate:membershipRootGate??null, externalNetwork: 'browser allows only local origin; PHP curl/mail disabled; no provider credentials', cleanup, error: runError ?? null }, null, 2));
   if (runError) console.error(runError);
 }

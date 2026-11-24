@@ -493,7 +493,9 @@ try{
    await page.screenshot({path:`${output}/private-shared-task-readback.png`,fullPage:true,animations:'disabled'});
   });
   if(membershipJourney)await check('normal team role change requires explicit full owner review and survives cold readback',async()=>{
-   await debug.send('Debugger.setPauseOnExceptions',{state:'all'});
+   // Phase logpoints and visible refusal surfaces observe this journey without
+   // pausing live IndexedDB transactions in the foreground consent path.
+   await debug.send('Debugger.setPauseOnExceptions',{state:'none'});
    const waitForMembership=async(target,label,options={})=>{
     // A scope refresh can be waiting on an actual 600s rate window. Bound the
     // real UI operation, while failing promptly on its visible error surface.
@@ -520,13 +522,15 @@ try{
    const row=await openTeam('normal membership editor');
    await row.getByRole('combobox',{name:'Доступ к пространству',exact:true}).selectOption('guest');
    (report.membershipSteps??=[]).push({label:'normal role selected',status:'SUBMITTED',observedAt:Date.now()});save();
-   const dialog=page.locator('.private-membership-dialog');await waitForMembership(dialog,'plan');
+   const dialog=page.locator('.private-membership-dialog'),planAck=dialog.getByRole('checkbox',{name:membershipCopy.planAck,exact:true});
+   await waitForMembership(planAck.and(dialog.locator('input:enabled')),'loaded plan');
    await dialog.screenshot({path:`${output}/membership-plan-review.png`,animations:'disabled'});
    assert(await dialog.getByRole('button',{name:membershipCopy.confirm,exact:true}).isDisabled());
-   await dialog.getByRole('checkbox',{name:membershipCopy.planAck,exact:true}).check({timeout:10000});
+   await planAck.check({timeout:10000});
    await dialog.getByRole('button',{name:membershipCopy.confirm,exact:true}).click();
    const owners=dialog.getByRole('region',{name:membershipCopy.owners,exact:true});await waitForMembership(owners,'owner review');
    for(let index=0;index<3;index++){
+    await waitForMembership(owners.getByRole('checkbox',{name:membershipCopy.ack,exact:true}).and(owners.locator('input:enabled')),'loaded owner scope '+(index+1));
     assert(await owners.getByRole('button',{name:membershipCopy.approve,exact:true}).isDisabled());
     await owners.getByRole('checkbox',{name:membershipCopy.ack,exact:true}).check();
     await owners.getByRole('button',{name:membershipCopy.approve,exact:true}).click();
@@ -540,8 +544,10 @@ try{
    assert(await final.getByRole('button',{name:membershipCopy.apply,exact:true}).isDisabled());
    await final.getByRole('checkbox',{name:membershipCopy.finalAck,exact:true}).check();await final.getByRole('button',{name:membershipCopy.apply,exact:true}).click();
    await waitForMembership(dialog,'applied',{state:'hidden'});
-   await page.reload();const gate=page.locator('.private-vault-dialog');await gate.waitFor();await recoveryInput(gate);await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
-   await page.locator(`[data-shared-task-id="${sharedFixture.task.id}"]`).getByText(sharedFixture.task.title,{exact:true}).waitFor({timeout:60000});
+   await withRateRetry('cold membership readback',async()=>{
+    await page.reload();const gate=page.locator('.private-vault-dialog');await gate.waitFor();await recoveryInput(gate);await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
+    await page.locator(`[data-shared-task-id="${sharedFixture.task.id}"]`).getByText(sharedFixture.task.title,{exact:true}).waitFor({timeout:60000});
+   });
    const fresh=await openTeam('cold membership editor');
    assert.equal(await fresh.getByRole('combobox',{name:'Доступ к пространству',exact:true}).inputValue(),'guest');
    await page.screenshot({path:`${output}/membership-cold-team-readback.png`,fullPage:true,animations:'disabled'});

@@ -1,5 +1,23 @@
 # Genesis Tasker: действующие правила
 
+## Продолжение24 ноября: реальная точка входа72
+
+- Mounted64 завершён FAIL12PASS/1FAIL,2notRepeated; все3shared ACTIVE, normal
+  task readback/legacy deny PASS. Все4 phase logpoints пройдены за40ms; ожидание
+  было после modal-request. Cleanup PASS, immutable63 hash8fa49a79…1b6fa unchanged.
+- Причина: web/main.tsx не монтировал PrivateMembershipGate, хотя Next layout
+  его содержал. Gate добавлен рядом с Vault/Migration за пределами content
+  boundary. Build:web72 PASS; immutable72 hash3cb209db…7bf94,8983files.
+- Новый actual compiled-root smoke72: RED05 на63 не создаёт review;
+  GREEN05 на72 PASS2/2 — реальный root создаёт его и actual foreground guard
+  закрывает legacy identity с E2EE_ACCOUNT_CHANGED,0authority mutations.
+  Оба cleanup PASS, bundles unchanged. Это wiring/refusal, не owner consent UI.
+  Ранние01–04 — QA setup/ожидание persistent dialog при locked identity;
+  сохранять FAIL. Guard не обходился. Quick root gate теперь перед private-product.
+- Full membership72 ещё требуется на immutable72. QA ждёт enabled plan/owner
+  controls после actual IO; phase logpoints не паузят IDB. Budgets не менялись,
+  основной149/устройства/Play не тронуты. Native63 предшествует copy69/71/72.
+
 ## Продолжение24 ноября: readonly queue71 и exact CI f330
 
 - Source checks45430372649/45430353686 exactf330 SUCCESS обоих jobs. Первый web

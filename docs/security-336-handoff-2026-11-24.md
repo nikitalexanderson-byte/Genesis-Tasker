@@ -1,5 +1,30 @@
 # Продолжение24 ноября: выпуск3.3.6 и отдельный сайт
 
+## Последнее: пропущенный web root renderer72
+
+Mounted64 FAIL12PASS/1FAIL,2notRepeated, cleanup PASS, immutable63 unchanged
+8fa49a79420d3b26c254531be658e50978a4bcbc7cbc1eafd539f573eeb1b6fa. Все3shared
+ACTIVE/normal task+legacy deny PASS; callback→modal-request прошли за40ms.
+Root cause: web/main.tsx не монтировал PrivateMembershipGate (Next layout
+монтировал).72 подключает настоящий renderer вне content boundary; build PASS.
+Новый immutable72 полностью скопирован после build,8983files, SHA256
+3cb209dba3ffb7ec977b001caf3fa5ce18e1b941284e16031892e6ac5f07bf94. Не менять.
+
+Actual compiled root smoke: red05 на63 FAIL/no mount; green05 на72 PASS2/2:
+request channel действительно монтирует review, guard закрывает legacy identity
+с E2EE_ACCOUNT_CHANGED без authority commands. Оба cleaned/unchanged. Это
+wiring/refusal, не whole owner UI. Early01–04 сохранены как QA failures: нельзя
+требовать persistent review у locked identity или обходить foreground guard.
+Root gate теперь перед private-product в web-run; suite membership-root.
+
+Следующий full72 должен использовать этот immutable72, --focus=membership и
+прежний PHP. Startup reuse после изменения QA sources не пройдёт — не обходить
+его hash guard, запустить4startup cases штатно. Plan/owner waits теперь ждут
+enabled checkbox; cold readback сохраняет bounded actual rate policy. Exception
+pauses для owner path выключены,4phase logpoints остаются non-pausing.
+Native63 не принимает эти последующие inputs; controller37 не повторять.
+Whole20/48, final exact AI review, signed149→150 и release всё ещё открыты.
+
 ## Последнее: exact f330 CI и readonly queue71
 
 Source checks45430372649/45430353686 оба SUCCESS, web/API и Android. Первый

@@ -8,6 +8,7 @@ import { DialogHeaderActions } from "../app/DialogHeaderActions";
 import { PrivateProductBoundary } from "../app/PrivateProductBoundary";
 import { PrivateVaultGate } from "../app/PrivateVaultGate";
 import { PrivateMigrationGate } from "../app/PrivateMigrationGate";
+import { PrivateMembershipGate } from "../app/PrivateMembershipGate";
 import { installWebBrandIcon } from "./web-brand-icon";
 import "./visual-refinements.css";
 import "../app/globals.css";
@@ -62,6 +63,7 @@ createRoot(root).render(
     </div>
     <PrivateVaultGate />
     <PrivateMigrationGate />
+    <PrivateMembershipGate />
   </StrictMode>,
 );
 

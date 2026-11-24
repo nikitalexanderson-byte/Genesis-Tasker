@@ -1,5 +1,38 @@
 # Общие проекты: приёмка изменения участников 24 ноября
 
+## Пропущенный renderer рабочей точки входа72
+
+Mounted64 завершён **12PASS/1FAIL**,2notRepeated; cleanup PASS. Immutable63
+8fa49a79420d3b26c254531be658e50978a4bcbc7cbc1eafd539f573eeb1b6fa не изменён.
+Personal и3shared scopes ACTIVE, normal task/legacy deny приняты. Четыре
+non-pausing logpoints проходят callback, durable intent, completed inspection и
+modal-request за40ms. Поэтому71 не объясняет этот конкретный зависший этап.
+
+В рабочем static web/main.tsx отсутствовал PrivateMembershipGate, подключённый
+лишь в Next layout. Точка входа теперь монтирует его рядом с Vault/Migration,
+за пределами content boundary. Build:web72 PASS. Immutable72:
+3cb209dba3ffb7ec977b001caf3fa5ce18e1b941284e16031892e6ac5f07bf94,8983files.
+
+scripts/qa/web-membership-root.mjs проверяет настоящий compiled root через тот
+же request channel: без unlocked private authority review должен создаться,
+а foreground guard отказать. RED72-05 на63: review не монтируется. GREEN72-05
+на72: **2/2 PASS**, настоящий renderer создан, E2EE_ACCOUNT_CHANGED закрывает
+его, authority commands отсутствуют. Обе startup4/4, cleanup PASS, bundles
+unchanged. Root gate теперь выполняется до каждого private-product journey;
+отдельный suite membership-root позволяет быстро обнаружить такое отсутствие.
+Это проверка регистрации/отказа, без auth-success mock, ключей или owner consent.
+
+Ранние root01–04 сохранены как FAIL: QA сначала ожидал постоянно видимый dialog
+у legacy identity, затем diagnostic observer доказал actual mount и корректное
+guard closure;02 был отказ точного startup reuse после изменения QA source.
+Финальный05 различает mounted+refused от never-mounted+pending. Timeout options
+затем приведены к третьему аргументу Playwright; production inputs не менялись.
+
+Полный owner-review/apply ещё нужен на72. QA теперь ждёт enabled plan и owner
+checkbox после загрузки, не фотографирует/подтверждает незагруженный план.
+Cold readback использует прежний actual Retry-After; budgets/rows не менялись.
+Owner path наблюдается phase logpoints без exception pauses в IDB transactions.
+
 ## Независимое чтение и сохранение операции71
 
 Найден отдельный блокирующий порядок: MembershipOperationDrafts.snapshot
