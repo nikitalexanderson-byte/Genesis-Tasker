@@ -1,5 +1,77 @@
 # Genesis Tasker: действующие правила
 
+## Последнее дополнение24 ноября: Boosty и принятый native40
+
+- Boosty Basic фактически подтверждён в UI (VERIFICATION COMPLETED, до EUR500/год).
+  Страница boosty.to/genesiscalendar имеет сохранённые название GENESIS · Nikita
+  Lyapin и About; официальный Copy link дал /genesiscalendar/donate. В закрытый
+  config.php Hostinger добавлен только boosty (enabled/profile_verified=true,
+  этот URL); остальные настройки строго сверены, private rollback сохранён.
+  Это пока не публикация нового сайта и не проверка реального платежа.
+- Срочный PR49 HEAD3f91441d: PR Source checks45356215106 оба jobs PASS;
+  push45356202996 пока ждёт web-and-api. Защита main не обойдена; merge/Deploy
+  ещё не выполнены. Production4cc67503/APK149 остаётся. Новый main сначала
+  обязан пройти собственные exact-source checks, затем прежний deploy.yml.
+- Controller37 platform PASS_LOCAL_SCOPE, actual migration/private reader/
+  cold PIN1/1 PASS; старый wrapper INCOMPLETE из-за UI harness. Миграцию не
+  повторять для UI: сохранён owned runtime37. UI37/38 дают2PASS/2FAIL; это не
+  принятое4/4. Native39 выявил некликабельный Text-child Compose в test selector.
+  Native40 ищет реального enabled button ancestor и требует actual STOPPED
+  перед следующим launcher entry; diagnostics сохраняют только threads/screen.
+  Build40 PASS, unitExecuted=false, product APK byte-identical build37
+  (7A7AF1CFB732BF00726E5B8B49DD050CE205E86C872D6B61B4D33A81A9F44D8F).
+  UI40 на retained37 завершён PASS_LOCAL_SCOPE:4/4 реальных UI сценария,
+  backend unchanged, QA data preserved, services stopped/reverse removed.
+  Native inputs разморожены; использовать этот результат без новой миграции.
+- API26 source37: фактически36PASS/1FAIL, оригинальный отчёт INCOMPLETE сохранён
+  (его Measure-Object сумма2 ошибочна; derived-totals.json считает36/1).
+  Source39 focused capacity PASS1/1 после настоящего observed PIN после тяжёлой
+  подготовки; periodicRefresh=false, исходный NONE восстановлен. Product APK
+  тот же. API34 source37 прежние37/37 PASS; не называть это полной UI приёмкой.
+- Отдельный worktree prodamus-gateway-worktree, branch codex/prodamus-gateway-
+  20261124, commit5216f0dc: strict form/HMAC/receipt wire contract,63 checks PASS.
+  В API не подключён, checkout не активирован. Durable state/schema141, полный
+  gateway/web/native, pending/refund lifecycle и merchant acceptance ещё нужны.
+  Не изобретать lookup/refund API или merchant URL. Регистрация Prodamus ждёт
+  опубликованных реквизитов/тарифов и двух подтверждённых ссылок на шаге3/5.
+
+Следующий раздел и старые sessions ниже — исторические срезы; это дополнение
+имеет приоритет. No subagents/Daybreak, private client-state/demo-output запреты,
+сохранность данных/подписи и раздельные web/API/APK публикации сохраняются.
+
+## Актуальное продолжение 24 ноября 2026
+
+- Security HEAD c0ac5d82; exact-source CI45343556816 SUCCESS обоих jobs.
+  Native build37 SUCCESS, actual JVM1452:1444 PASS/0 failures/8 opt-in skips;
+  source hash38322BF326156883D86C237581E33DE5E51B7716FE16BFD1CE5F373DA84A6DCD.
+  Focused API34 source37:4 suites/37 cases PASS. API26 per-case source37 идёт
+  отдельно с реальным наблюдаемым системным PIN перед каждым case; исходный NONE
+  обязателен к восстановлению. Controller37 + unlock UI идёт без периодического
+  обновления HAT и с настоящим launcher driver. До его завершения app/android/
+  contracts/public в root не менять. Документы не являются native inputs.
+- В c0 исправлены web input ownership races (snapshot секретов до await,
+  zero owned buffers finally): actual Chromium/IDB RED4 failures, GREEN5/5;
+  native source bridge освобождает finished permit до JS acknowledgement,
+  сохраняя лимит2 unfinished requests. Streamed source fixture дополнен
+  обязательной protocol/owner/scope/migration/hash/fence binding; guard не ослаблен.
+- Срочный сайт ведётся в output/release-3.3.6/unified-payments-worktree,
+  branch codex/unified-payments-20261124, commit875c8b5e, PR49. Пользователь отменил
+  Paddle и две витрины: единый genesiscalendar.com с14 языками, старые /ru/ только
+  redirect; исполнитель/PD-controller Никита Ляпин, НПД/ИНН772495179010; Юрий
+  Логвинов владеет доменом и хостингом. ФИО, ИНН, реальные тарифы помещены в подвал.
+  Политические/санкционные гарантии всех стран не заявляются, реальные роли и
+  сервисы обработки данных сохраняются. Source checks веб-ветки пока выполняются;
+  это не Deploy и не выпуск безопасности. Production4cc67503/APK149 сохраняется.
+- Донаты: CloudTips для российских карт, Boosty для других; ручной выбор доступен,
+  регион меняет только порядок. boosty.to/genesiscalendar создана на Никиту после
+  отдельного подтверждения условий. Несмотря на ответ владельца о верификации,
+  свежая Boosty Verification всё ещё показывает незаполненную AML/KYC форму.
+  Не включать приём до действительного допуска; не читать/не присылать коды и
+  документы в чат. Анкета Prodamus на шаге3/5 ждёт публикации сайта с реквизитами.
+- Полный crypto review,48-system-scenario evidence и signed149→150 ещё не закрыты.
+  Старую формальную coverage9/20 нельзя повышать по сумме component test counts.
+  No subagents/Daybreak; demo-output и client-state/*.private.json не читать/stage.
+
 - Актуальнее предыдущих срезов: root b929b60f, принятый main4cc67503 включён.
   Block0c5aa442 исправил общий reader: overlapping GETs используют один свежий
   verified snapshot, aggregate GETs не блокируют друг друга, mutations остаются

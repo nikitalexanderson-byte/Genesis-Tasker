@@ -1,9 +1,16 @@
 package ru.genesis.calendar.security
 
 import android.content.ContextWrapper
+import android.app.KeyguardManager
+import android.content.Context
+import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
+import android.os.Bundle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.Until
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -14,6 +21,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.security.MessageDigest
+import java.util.regex.Pattern
 
 /** Actual provider metadata and filesystem space. No other namespace's body
  * or private key is decrypted by measurement. Only the QA package is used. */
@@ -36,6 +44,22 @@ class E2eeStorageAdmissionDeviceTest {
         override fun close(){first.lock();second.lock();kits.forEach{it.secret.fill(0)};check(folder.deleteRecursively())}
     }
     private fun refused(code:String,operation:()->Unit){try{operation();fail("Unsafe capacity grant accepted")}catch(error:Exception){assertEquals(code,error.message)}}
+    private fun confirmPreparedKeyCredential(){
+        if(InstrumentationRegistry.getArguments().getString("genesisPreparedKeyCredential")!="true")return
+        val instrumentation=InstrumentationRegistry.getInstrumentation();val app=instrumentation.targetContext
+        check(BuildConfig.DEBUG&&app.packageName=="ru.genesis.calendar.qa1103.debug")
+        // Slow API26 key derivation can outlast the real Keystore HAT. Ask for
+        // a genuine system credential after preparation; no callback grants keys.
+        val keyguard=app.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+        val intent=requireNotNull(keyguard.createConfirmDeviceCredentialIntent("GENESIS synthetic capacity QA","Confirm the prepared key-capacity attempt"))
+        app.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        val device=UiDevice.getInstance(instrumentation)
+        val field=By.pkg("com.android.settings").clazz(Pattern.compile(".*EditText"))
+        assertTrue("Real system credential field must appear",device.wait(Until.hasObject(field),20000))
+        device.dumpWindowHierarchy(File(app.getExternalFilesDir(null),"genesis-capacity-credential.xml"))
+        instrumentation.sendStatus(2,Bundle().apply{putString("stream","GENESIS_CAPACITY_WAIT:prepared-credential\n")})
+        assertTrue("The external driver must complete the actual system prompt",device.wait(Until.gone(field),60000))
+    }
     @Test fun allAccountsSourcesQueuesAndKeysCountWithoutCrossNamespaceReadAuthority(){
         Rig().use{f->val before=f.snapshot();val usage=E2eeStorageAdmission.measure(f.first){}
             assertEquals(3L,usage.records);assertEquals(2L,usage.keyRecords);assertTrue(usage.usageBytes>0);assertTrue(usage.quotaBytes>=usage.usageBytes)
@@ -108,13 +132,14 @@ class E2eeStorageAdmissionDeviceTest {
             val kits=(1..2).map{E2eeKeys.createRecoveryKit("last-capacity-owner-$it-${UUID.randomUUID()}")}
             val executor=Executors.newFixedThreadPool(2);val start=CountDownLatch(1)
             try{
+                confirmPreparedKeyCredential()
                 val attempts=kits.map{kit->executor.submit(Callable{
                     start.await()
                     try{UnlockedE2eeDevice.provision(f.context,kit.kit.getString("ownerId"),kit.secret,kit.kit).also{it.lock()};"PASS"}
                     catch(error:Exception){error.message}
                 })}
                 start.countDown();val outcomes=attempts.map{it.get()}
-                assertEquals(1,outcomes.count{it=="PASS"});assertEquals(1,outcomes.count{it=="E2EE_STORAGE_CAPACITY"})
+                assertEquals("Protected-key creation outcomes: $outcomes",1,outcomes.count{it=="PASS"});assertEquals("Protected-key creation outcomes: $outcomes",1,outcomes.count{it=="E2EE_STORAGE_CAPACITY"})
                 assertEquals(limit,E2eeStorageAdmission.measure(f.first){}.keyRecords)
             }finally{executor.shutdownNow();kits.forEach{it.secret.fill(0)}}
         }
