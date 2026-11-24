@@ -1,5 +1,32 @@
 # 24 November: retained controller and actual device unlocking
 
+## Current rate correction57
+
+Build57 SUCCESS14m52s, fresh focused6/6 JVM (not the entire suite), source
+`11DB6869A7EB8294145D7B85052D27E2F4FC6B81B61CAC5EFA5316956DF3CD7C`, commit40e4f4c7.
+QA APK `198B39F058D7B439F5E0961ECC0FB82F5FBE34CFFC9595CDFA86403C537E8160`;
+instrumentation remained327EC0D3…11826. Genuine platform UI57 PASS4/4 on retained37:
+cancel/PIN/pending-biometric background/hardware fingerprint with relocking.
+Identity delivery1/1 PASS, no periodic credential refresh or new migration.
+Evidence: `output/qa/security336-native150-ui57-launcher-driver-preserved37/results.json`.
+The current backend differs in the exact reviewed eight payment/history paths;
+its full hash6192CD13…BF357C is recorded, not described as byte-identical37.
+Data preserved, services stopped and reverse removed. Retained37 must be cleaned
+before release. The later scenario35 interface correction has separate inputs;
+these results are not acceptance of that later diff.
+
+## Live Play signing comparison57
+
+Read-only Play Console App signing for `ru.genesis.calendar` showed an in-use
+signing key and the Digital Asset Links fingerprint
+`1e161d36f574b0560d808c7ee95e1abe98165b3385336d0276fb381dfd901cb8`.
+It matches the existing website release certificate requirement. Evidence:
+`output/release-3.3.6/runtime/play-signing57-20261124.json` and the browser
+observation. No signing settings, tracks or releases changed. This accepts only
+the live certificate comparison; final signed150 identity and actual149-to150
+data-preserving update remain required for scenario42. The console also showed
+a separate November22 payments-account notification, which was not modified.
+
 ## Current candidate41
 
 Native41 rebuilt the accepted unified website/payment changes and browser

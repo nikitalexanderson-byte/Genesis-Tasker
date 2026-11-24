@@ -1,5 +1,17 @@
 # Genesis Tasker: действующие правила
 
+## Продолжение24 ноября: native57 принят
+
+- Build57 SUCCESS14m52s, focused6/6 JVM, exact source11DB6869…6DF3CD7C.
+  UI57 на retained37 PASS4/4 с настоящими PIN/fingerprint/cancel/background;
+  QA data preserved, services stopped/reverse removed. Миграцию не повторяли,
+  основной signed149 не трогали. Root inputs разморожены; retained37 очистить
+  до release. Web54 продолжает на immutable df8d904f…d2b05c9 без смены bundle.
+- При проверке сценария35 обнаружено misleading generic notReady и stale web
+  security code после MESSENGER_DEVICE_CHANGED. Следующий законченный correction
+  block добавляет отдельное сообщение14languages и repository regression;
+  старые APK/runtime57 не выдавать за приёмку этого нового UI diff.
+
 ## Продолжение24 ноября: Android normal-read retry56
 
 - У normal account transport Android обнаружен тот же пробел: bounded retry

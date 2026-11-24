@@ -130,7 +130,8 @@ export default function Messenger({ userId, language, active = true, view = 'con
                 if (version !== generation.current)
                     return;
                 setMessages([]);
-                setSecretError(e instanceof Error && e.message === 'MESSENGER_SECRET_DEVICE_ONLY' ? c('deviceOnly') : c('notReady'));
+                setCode('');
+                setSecretError(c(e instanceof Error && e.message === 'MESSENGER_SECRET_DEVICE_ONLY' ? 'deviceOnly' : e instanceof Error && e.message === 'MESSENGER_DEVICE_CHANGED' ? 'keyChanged' : 'notReady'));
                 return;
             }
         }

@@ -198,3 +198,9 @@ Component53/immutable49 сравнение завершено: before49=after49=
 SHA2565af34101e8215d26cfdfabb1d063129b321fbf455e06cf6031160b8cc7df9506,
 mounted49-comparison.json. Это доказывает неизменность UI bundle в53, но не
 превращает FAIL49 в успешный membership journey.
+
+После изменения normal reader новый real store/crypto прогон55 на dab6eb7a:
+6/6 PASS, cleanup PASS. Тот же исходник QA50, но уже исправленный product scope
+refresh. Output: output/qa/security336-membership-clients55-1124/, input-identity
+подтверждает чистый production diff против dab6. Scope/ограничения прежние:
+CLI/SQLite/HPKE и encrypted in-memory vault, не HTTP/IDB/owner-consent UI.

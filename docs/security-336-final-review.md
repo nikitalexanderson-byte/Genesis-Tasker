@@ -112,3 +112,19 @@ automation стартует выключенной. Локальная исто�
 обещается без него или его encrypted content backup. Противоречий не найдено,
 тексты не менялись. Evidence: runtime/recovery-copy-semantic52-1124.json. Это
 тот же ограниченный смысловой review, не runtime/UI или итог всего кандидата.
+
+## Зависимости и redacted history scan24 ноября
+
+Fresh pnpm audit24 ноября: exit0, все severity counts0. Отчёт —
+runtime/dependency-audit-20261124.json. Lockfile не менялся.
+Gitleaks8.30.1 на4b5c167c:412 commits/all local refs,328887843 bytes, redact100;
+generated/output/demo-output/client-state исключены. **165 raw findings**, не0.
+164 прежних immutable fingerprints уже классифицированы как public synthetic
+vectors/test keys либо non-secret localStorage placeholders. Новая находка
+5216f0dc:server/tests/billing-prodamus-contract.php:13 — явно synthetic HMAC
+test key чистого contract suite, без чтения environment/merchant credentials.
+Значение не печаталось. Reviewed165, confirmed credential leaks0,
+unclassified0. Metadata-only review: runtime/secrets-history56-1124-reviewed.json;
+исходный redacted report и scanner log сохранены рядом. Это история/committed
+implementation source, не сканирование закрытых production configs или
+запрещённого private client-state. Финальный системный crypto вывод ещё открыт.

@@ -1,5 +1,46 @@
 # Продолжение24 ноября: выпуск3.3.6 и отдельный сайт
 
+## Последнее: native57 PASS и scenario35
+
+Native57 SUCCESS14m52s, focused6/6 JVM, actual UI57 PASS4/4 на retained37;
+identity1/1, services stopped/reverse removed, main149 untouched. Input11DB6869…
+6DF3CD7C, APK198B39F0…7E8160. Root freeze57 снят.40e4f4c7 pushed; exact CI
+проверяется отдельно. Live Play signing comparison совпал с site cert1e161d36…
+90 1c b8 (полный fingerprint в device-acceptance/evidence); настроек/треков не меняли.
+Final signed150 и149→150 ещё нужны. Retained37 остаётся до guarded cleanup.
+
+Scenario35 выявил misleading generic notReady и stale web security code после
+MESSENGER_DEVICE_CHANGED. Добавлены отдельная14-language copy, web clearCode,
+native mapping и targeted repository/browser acceptance. Новый code block ещё
+не принят runtime57: следующий build58 имеет собственный input/hash/results.
+Точные границы — security-336-secret-peer-keys.md. Web membership54 продолжает
+на прежнем immutable bundle, вторая реальная rate wait команды; bundle не менять.
+
+## Новейший срез: normal Android transport56
+
+Root40e4f4c7 (ещё не pushed; previous4b5c167c pushed) добавляет native normal-account retry, тот же дефект,
+что web54: раньше только migration read имел bounded wait. Новый
+auth/E2eePrivateReadRetry.kt сохраняет JSON до ожидания и повторяет только
+/read,/directory,/status с captured generation/current/device guard. Все
+writer/challenge/membership routes остаются single-send.3 новых JVM cases
+дополняют3 прежних policy cases. Build56 завершён FAIL Kotlin IR/default suspend
+delay lambda/AddContinuation, unitExecuted=false. Старые APK/XML не evidence56.
+Sync adapter теперь использует IO wait с общей e2eeReadRetrySeconds policy,
+без runBlocking bridge. Build57/session40665 RUNNING, prefix native150-rate-build57.
+Это focused6, не full1453. Не менять app/android/contracts/public до identity/runtime57.
+Подготовлен focus-native57-launcher-driver.ps1 для retained37, без повторной controller migration. При
+адаптации focus-native41 учитывать reviewed server epoch-history fix307be526
+и новый server test, помимо прежних6 payment files; backend не byte-identical37.
+Primary signed149/UID10194 остаётся на emulator5580, его не seed/clear/reinstall.
+
+Web54/session24674 RUNNING на неизменном df8d904f…d2b05c9; personal/read/edit
+и первый project ACTIVE. Дальше Inbox/space/membership. Не менять bundle.
+Это web candidate dab6, его inputs не менялись в native56. CI45400562946/
+45400549205 superseded после push4b; CI45405212247/45405198208 проверяют4b,
+не более новый40e4. Новое read-only receipt/history
+проверено6/6 real CLI/store55, cleanup PASS. General20/48, exact final review
+и signed149→150 впереди; релиз не объявлять. No agents/Daybreak/private reads.
+
 ## Последнее: rate discovery54
 
 Mounted49 FAIL12PASS/1FAIL,2notRepeated; personal+3shared ACTIVE и normal task
@@ -8,8 +49,16 @@ before=after=component53=5af34101…df9506. Directory/status actual429 обхо�
 существующий read retry и делали refreshed false. RED3/3 сохранён.
 Новая web correction54: typed429 для read/status/directory, scope refresh и
 scopeSummaries через прежний guarded bounded retry. GREEN65/65 +close1/1,
-types/scoped lint/build:web PASS. Новая immutable54 копия создаётся ПОСЛЕ
-completion94990. Нужен полный mounted54 на ней, без larger/reset rate budget.
+types/scoped lint/build:web PASS. Immutable54 полностью скопирован ПОСЛЕ
+completion94990. Mounted54/session24674 RUNNING на bundle
+df8d904f685fbd4bf130cfb06fc29e0f6e539167e2a8dca0dd6a36b24d2b05c9;
+runtime/membership-ui54-input-identity.json хранит args/QA hash. Не менять bundle,
+не увеличивать/reset rate budget. Сейчас personal migration/read/edit PASS,
+shared transfer ещё впереди. Root dab6eb7a4a01cc54a879ebf6cd50121fb6fb7d58 pushed,
+новые CI45400562946/45400549205 выполняются; local docs только обновляют handoff.
+На новом dab6 повторён затронутый real store/crypto boundary55:6/6 PASS,
+cleanup PASS, output/qa/security336-membership-clients55-1124/input-identity.json.
+Это не повтор native или whole UI; ограничения CLI/encrypted memory прежние.
 QA membership waits bounded20min per stage + fail-fast visible alerts; drafts/
 intents не сбрасываются. Old exact12ef CI45392523518/11880 оба SUCCESS, не
 выдавать их за последующий54 diff. Новый source check после сохранения54.

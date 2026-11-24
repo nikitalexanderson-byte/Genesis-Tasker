@@ -167,7 +167,7 @@ import java.util.UUID
             TextButton({help=!help},Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(c(current.kind));GenesisLucideIcon(if(help)"chevron-up" else "chevron-down")}
             if(help)Text(c(if(current.kind=="secret")"secretHelp"else"cloudHelp")+(if(current.kind=="project")"\n"+c("projectHelp")else""),Modifier.padding(horizontal=12.dp),style=MaterialTheme.typography.bodySmall)
             if(own?.status=="pending")Column(Modifier.padding(12.dp)){Text(c("invitation"));Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){Button({run{repository.membership("accept")}},enabled=!busy){Text(c("accept"))};OutlinedButton({run{repository.membership("decline")}},enabled=!busy){Text(c("decline"))}}}
-            state.secretError?.let{Text(c(if(it=="MESSENGER_SECRET_DEVICE_ONLY")"deviceOnly"else"notReady"),Modifier.padding(12.dp),color=MaterialTheme.colorScheme.onSurfaceVariant)}
+            state.secretError?.let{Text(c(when(it){"MESSENGER_SECRET_DEVICE_ONLY"->"deviceOnly";"MESSENGER_DEVICE_CHANGED"->"keyChanged";else->"notReady"}),Modifier.padding(12.dp),color=MaterialTheme.colorScheme.onSurfaceVariant)}
             if(state.offline)Text(c("failure"),Modifier.padding(horizontal=12.dp),style=MaterialTheme.typography.bodySmall)
             val list=rememberLazyListState()
             LaunchedEffect(state.rows.size,current.id){if(state.rows.isNotEmpty()&&(list.layoutInfo.visibleItemsInfo.lastOrNull()?.index?:0)>=state.rows.size-5)list.animateScrollToItem(state.rows.size-1)}
