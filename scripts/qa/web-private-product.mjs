@@ -8,6 +8,7 @@ import {fileURLToPath} from 'node:url';
 import {chromium} from 'playwright';
 import {openBackup} from '../../app/backup-format.ts';
 import {checkPrivateDeviceAccess} from './web-private-device-access.mjs';
+import {seedSharedRecords,readSharedRecords} from './web-private-shared-records.mjs';
 
 const baseURL=process.env.GENESIS_QA_WEB_ORIGIN;
 assert(/^http:\/\/127\.0\.0\.1:\d+$/.test(baseURL??''));
@@ -22,10 +23,11 @@ const browser=await chromium.launch({headless:true});report.browser=browser.vers
 let page,secret,kit,backupKey,deviceLocalCode,fixtureOwnerId;
 const diagnostics=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='diagnostics';
 const profileOnly=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='profile';
-const sharedJourney=['shared','shared-locales','content','membership'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
+const sharedJourney=['shared','shared-locales','content','files','membership','shared-records'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
+const sharedRecordsJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='shared-records';
 const membershipJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='membership';
 const membershipCopy=JSON.parse(readFileSync('contracts/e2ee/membership-review-copy-v2.json','utf8')).ru;
-const sharedFilesJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='content';
+const sharedFilesJourney=['content','files'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
 const localeJourney=['locales','shared-locales'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
 const backupJourney=['backup','content'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
 const legacyStorageJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='legacy-storage';
@@ -37,8 +39,8 @@ let sharedFixture;
 const redactPrivateText=value=>[secret,backupKey,deviceLocalCode].filter(Boolean).reduce((text,key)=>text.replaceAll(key,'[redacted synthetic secret]'),String(value));
 const save=()=>writeFileSync(`${output}/private-product-results.json`,JSON.stringify(report,null,2)+'\n');
 const check=async(name,operation)=>{
- if(membershipJourney&&['offline unlock restores encrypted preferences and the edited task','clean browser cannot open content using identity alone or a wrong secret'].includes(name)){
-  (report.notRepeated??=[]).push({name,acceptedEvidence:'output/playwright/security336-legacy-retirement42-1124',reason:'Unchanged personal recovery path; this focused run covers normal membership UI and preserves its live owner context.'});save();return;
+ if((membershipJourney||sharedFilesJourney||sharedRecordsJourney||backupJourney)&&['offline unlock restores encrypted preferences and the edited task','clean browser cannot open content using identity alone or a wrong secret'].includes(name)){
+  (report.notRepeated??=[]).push({name,acceptedEvidence:'output/playwright/security336-legacy-retirement42-1124',reason:'Unchanged personal recovery path; this focused run covers shared membership or content and preserves its live owner context.'});save();return;
  }
  try{await operation();report.checks.push({name,status:'PASS'});console.log('PASS private-product '+name);save();}
  catch(error){report.checks.push({name,status:'FAIL',error:redactPrivateText(error.message)});throw error;}
@@ -233,6 +235,7 @@ try{
   const task=(await post(`shared/projects/${project.id}/tasks`,{title:'PRIVATE SHARED TASK '+canary,description:'Retained shared task body '+canary,statusId:status.id,requestId:crypto.randomUUID(),
    ...file?{attachments:[{name:'retained-private-file.txt',data:'data:text/plain;base64,'+file.toString('base64')}],imageData:'data:image/png;base64,'+image.toString('base64')}:{}})).task;
   sharedFixture={space,project,task,file,image,member,inbox};
+  if(sharedRecordsJourney){sharedFixture.records=await seedSharedRecords({context,baseURL,space,project,task,canary});report.sharedRecordsSeed={maps:2,mapVersions:4,disabledAutomation:true,workflowVersions:2,comments:2};}
   if(file){
    assert.equal(task.attachments.length,1);const source=new URL(task.attachments[0].url,baseURL);assert.equal(source.origin,baseURL);
    const response=await context.request.get(source.href);assert(response.ok());assert.deepEqual(await response.body(),file);
@@ -360,8 +363,20 @@ try{
    await openBackups();const panel=page.locator('section.backup-panel').filter({has:page.getByRole('heading',{name:copy.deviceSnapshot,exact:true})});
    await panel.getByRole('button',{name:'Создать ключ',exact:true}).click();backupKey=await panel.locator('textarea').inputValue();assert(backupKey.length>=43&&backupKey.length<=64);
    await panel.locator('input[type=checkbox]').nth(0).check();await panel.locator('input[type=checkbox]').nth(1).check();
-   const pending=page.waitForEvent('download',{timeout:120000}),refused=panel.getByRole('alert').waitFor({timeout:120000}).then(async()=>{const code=await panel.getByRole('alert').innerText();throw new Error(/^E2EE_[A-Z_]+$/.test(code)?code:'BACKUP_UI_REFUSAL');});
-   await panel.getByRole('button',{name:copy.deviceSnapshot,exact:true}).click();archive=(await downloadBytes(await Promise.race([pending,refused]))).toString('utf8');
+   for(let attempt=0;attempt<3;attempt++){
+    let delivered;const pending=new Promise(resolve=>{delivered=resolve;}),listener=download=>delivered(download);page.on('download',listener);
+    try{
+     await panel.getByRole('button',{name:copy.deviceSnapshot,exact:true}).click();
+     const refused=panel.getByRole('alert').waitFor({timeout:120000}).then(async()=>({refused:await panel.getByRole('alert').getAttribute('data-backup-failure')}));
+     const outcome=await Promise.race([pending.then(download=>({download})),refused]);
+     if(outcome.download){archive=(await downloadBytes(outcome.download)).toString('utf8');break;}
+     assert.equal(outcome.refused,'changed','Unexpected backup UI refusal');assert(attempt<2,'Backup content kept changing');
+     assert.equal(await panel.locator('textarea').inputValue(),backupKey,'A refused capture preserves its original backup key');
+     (report.backupCaptureRetries??=[]).push({attempt:attempt+1,reason:'authenticated content changed',policy:'Explicit existing UI action after a safe refusal; no source reset or partial file accepted'});save();
+     await page.waitForTimeout(1000);
+    }finally{page.off('download',listener);}
+   }
+   assert.equal(typeof archive,'string','The actual backup download is required');
    assert.equal(archive.includes(canary),false);assert.equal(archive.includes(secret),false);assert.equal(archive.includes(backupKey),false);
    const payload=await openBackup(archive,backupKey),owner=(await(await context.request.get('/api/session')).json()).user.uid;
    assert.equal(payload.ownerId,owner);assert.equal(payload.source,'device_snapshot');assert.equal(payload.billingEvidence,null);
@@ -554,14 +569,20 @@ try{
    report.membership={operation:'space-role',role:'guest',scopes:3,explicitOwnerConsents:3,coldNormalTaskRead:true,coldNormalTeamRead:true};save();
    await debug.send('Debugger.setPauseOnExceptions',{state:'none'});
   });
+  if(sharedRecordsJourney)await check('populated shared comments rules and map titles survive cold normal product entry',async()=>{
+   report.sharedRecordsReadback=await readSharedRecords({page,fixture:sharedFixture,output});save();
+  });
   if(sharedFilesJourney)await check('migrated multi-chunk attachment and photo open through the normal authorized task interface',async()=>{
    await page.locator(`[data-shared-task-id="${sharedFixture.task.id}"]`).getByText(sharedFixture.task.title,{exact:true}).click();
    const dialog=page.getByRole('dialog',{name:sharedFixture.task.title,exact:true});await dialog.waitFor();
-   const image=dialog.getByRole('img',{name:'Фото, прикреплённое к задаче',exact:true});await image.waitFor();
+   const image=dialog.getByRole('img',{name:'Фото, прикреплённое к задаче',exact:true});
+   // The normal reader may still be honouring an observed ten-minute rate
+   // window. A loading view is not proof of a failed file or a missing image.
+   await Promise.race([image.waitFor({timeout:1200000}),dialog.getByText('Фото недоступно. Проверьте подключение и доступ к задаче.',{exact:true}).waitFor({timeout:1200000}).then(()=>{throw new Error('PRIVATE_IMAGE_READ_REFUSED');})]);
    await page.waitForFunction(()=>{const image=document.querySelector('.shared-task-modal[open] .shared-task-image img');return image?.complete&&image.naturalWidth>0;},null,{timeout:60000});
    assert((await image.getAttribute('src')).startsWith('blob:'),'The task displays a locally decrypted image');
    assert.deepEqual(Buffer.from(await image.evaluate(async element=>Array.from(new Uint8Array(await(await fetch(element.src)).arrayBuffer())))),sharedFixture.image);
-   const pending=page.waitForEvent('download',{timeout:60000});await dialog.locator('.shared-task-attachments button').filter({hasText:'retained-private-file.txt'}).click();
+   const pending=page.waitForEvent('download',{timeout:1200000});void pending.catch(()=>{});await dialog.locator('.shared-task-attachments button').filter({hasText:'retained-private-file.txt'}).click();
    assert.deepEqual(await downloadBytes(await pending),sharedFixture.file);
    const source=new URL(sharedFixture.task.attachments[0].url,baseURL);assert.equal(source.origin,baseURL);
    const legacy=await context.request.get(source.href);assert.equal(legacy.status(),409);assert.equal((await legacy.json()).error,'E2EE_UPGRADE_REQUIRED');

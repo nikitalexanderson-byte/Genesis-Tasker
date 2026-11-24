@@ -1,5 +1,28 @@
 # 3.3.6: незакрытые системные критерии приёмки
 
+## Актуальные уточнения73–75,24 ноября
+
+Это дополнение заменяет устаревшие формулировки «writers ещё не подключены»
+и «остальные11 sources ещё нужны» в исторической таблице ниже. Все20 paths
+подключены; приёмка их полного содержимого и lifecycle остаётся открытой.
+
+| Сценарии | Фактический новый объём и границы |
+| --- | --- |
+| 05,07,17,19,22–27 | Mounted42 принимает personal migration/legacy storage retirement/cold recovery13/13. Messenger62 принимает nonempty encrypted drafts/history, pending retry и отсутствие отправки при migration5/5. Это не полный20-path verdict. |
+| 06,31,32 | Content74 на immutable72 принял13 начальных checks: local archive download, independent decryption, wrong-key deny, history-only import и cold history с сохранением текущей edited task. Shared multi-chunk file/photo stage ещё выполняется. |
+| 12,33,34 | SQLite/client50 и admission70 отдельно принимают atomic3-root rotation, revoked-reader refusal, explicit recipient/device/history consent и cold epochs1/2. Реальный owner-review/apply UI73 ещё выполняется; CLI не заменяет его. |
+| 35 | Secret-peer59 принимает actual React/WebCrypto/IDB warning, stale-code removal, encrypted draft/cold pin, original history, exact lost-ACK retry и cold PATCH:5 functional +112 layout checks. Native58 принимает2 peer-pin repository cases в focused8 JVM. Chat replies modeled; real two-party enrollment этим не проверялся. |
+| 47 | Все26 E2EE copy-каталогов смыслово прочитаны; три PT/ZH correction включены в native73. Это не вся product/legal/update copy и не полная визуальная приёмка. |
+| 48 | Native37 controller и retained UI40/41/57 имеют отдельные source bindings; основную миграцию не повторять. Compiled root72 впервые принимает actual membership renderer2/2, но не owner approval. Shared-records75-02 добавляет nonempty comments,4 map versions, disabled automation и2 workflow versions; normal cold readback пока RUNNING. |
+
+Shared-records75-01 остановился до fixture из-за404 прежнего PHP download URL;
+не продуктовый PASS.75-02 использует прежний проверенный PHP8.4.27 executable,
+startup4/4 и compiled root2/2, тот же неизменяемый bundle72. Seed через обычные
+legacy APIs принят; limits/floors/production не менялись. Input hashes находятся
+в runtime/shared-records75-02-input-identity.json. Formal source acceptance9/20
+сохраняется до сведения предметных доказательств; signed149→150, final internal
+exact-candidate review и выпуск ещё не завершены.
+
 ## Дополнение70/71,24 ноября
 
 Новый nonmember проходит настоящие signed invitation/recipient consent,

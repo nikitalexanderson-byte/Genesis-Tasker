@@ -1,5 +1,46 @@
 # Продолжение24 ноября: выпуск3.3.6 и отдельный сайт
 
+## Последнее: Drive77, отказ backup76 и feedback78
+
+Exact049 CI45445304778/45445288477 завершены SUCCESS обоих jobs. Первый
+web log2232/2232, Android test/build16m1s; полные logs/status сохранены в
+runtime/ci049-*. Новый working diff78 этим CI не принят.
+
+Drive77-04 actual HTTP/SQLite/cURL + isolated TLS simulator PASS16/16, cleanup
+PASS. Wrong-sub/scope/owner, replay, metadata/ciphertext corruption, duplicate
+list,401 refresh, redirect/size bounds, lost ACK/no duplicate create и actual
+5,593,280-byte resumable с durable offset262,144 проверены. Не live OAuth,
+не native SAF/process death/max artifact; production off. Details в Drive doc.
+
+Content74 FAIL15PASS/1FAIL, cleanup PASS/immutable72 unchanged: фото ещё
+Loading при503s Retry-After, но QA имел20s timeout. Исправлен только QA wait.
+76 затем FAIL на safe E2EE_SOURCE_HISTORY_CHANGED в final catalogue-set
+comparison (compiled ordinal8). Client-state retained; private JSON не читать.
+78 сохраняет guard, original key и checkboxes, показывает actionable сообщение
+14languages и generic localized failure вместо arbitrary exception text.
+14 new values смыслово прочитаны; все старые unchanged. Types/scoped lint
+0errors/1existing warning, i18n и build:web PASS. QA даёт до2 explicit retry
+через ту же кнопку только после точного changed state; partial file не принимается.
+
+Immutable78: output/release-3.3.6/web-backup-feedback78/public_html,
+SHA256 e808ba07e7d6853868f9b2d2c725840666b61fa9dda46062b2f6a150a5f54c68,
+8983files. Source HEAD049+product diff88b93a1e…2a69f; identity в runtime.
+НЕ менять bundle. Files79/session51258 на78 пропускает3 уже принятых archive
+checks и отдельно принимает file/photo. Backup80/session36756 на78 принимает
+новый export/retry/import/history. Оба RUNNING. Два recovery42 cases notRepeated.
+Membership73/session56323 и rich shared75-02/session90503 ещё идут на72:
+73 все3shared ACTIVE/normal task readback;75 project ACTIVE. Не повторять
+их с нуля.75 seed обычными APIs:2comments,4mapversions, disabled rule,
+2workflowversions; actual cold readers ещё требуются. Inputs сохранены.
+Native73 assembly предшествует78; перед выпуском нужен новый asset identity,
+не повтор controller37 migration. Formal9/20, whole20/48, final review,
+signed149→150 и release остаются открыты. Production7964526b/APK149 unchanged.
+
+Платежи: владелец подтвердил НПД без ИП, crypto необязательно. Rechecked
+Robokassa official NPD/foreign-card9.9%/RUB pages; отсутствие прописки и admission
+полного GENESIS не подтверждены. Новый кабинет/договор/сообщение не создавались.
+Prodamus не активирован. Details в prodamus-registration doc.
+
 ## Последнее: пропущенный web root renderer72
 
 Mounted64 FAIL12PASS/1FAIL,2notRepeated, cleanup PASS, immutable63 unchanged
@@ -17,11 +58,23 @@ wiring/refusal, не whole owner UI. Early01–04 сохранены как QA f
 требовать persistent review у locked identity или обходить foreground guard.
 Root gate теперь перед private-product в web-run; suite membership-root.
 
-Следующий full72 должен использовать этот immutable72, --focus=membership и
-прежний PHP. Startup reuse после изменения QA sources не пройдёт — не обходить
-его hash guard, запустить4startup cases штатно. Plan/owner waits теперь ждут
+Current HEAD049fefb2 pushed. Full membership73/session56323 использует этот
+immutable72; content74/session5441 отдельно проверяет files/archives на нём же.
+Оба прошли startup4/4 и actual compiled-root2/2.73 имеет10initial PASS,74 —
+13initial PASS включая imported history cold readback без замены текущей задачи;
+whole results пока RUNNING. Оба не повторяют два неизменённых personal recovery42
+cases; pending QA-only change в web-private-product распространяет notRepeated
+на content lane. Не выдавать разные qaSourceSha256 за одинаковый runner.
+Startup reuse после изменения QA sources не пройдёт — не обходить
+его hash guard,4startup cases выполнены штатно. Plan/owner waits теперь ждут
 enabled checkbox; cold readback сохраняет bounded actual rate policy. Exception
 pauses для owner path выключены,4phase logpoints остаются non-pausing.
+Native73 assembly SUCCESS1m30s, wrapper98.48s; unitExecuted=false/fullUnitRun=false.
+SourceD3A19A0451FFEBA9E66FABD8BDBC00B336B5F3B131086DFF307D3D17C1289643,
+APK31AA2C04692F084556A3FE6C981DEBA3AB6F6CA6C85387C98A5119FA7555A995;
+instrumentation прежний327EC0D3…11826. Source commit049fefb2, identity/result в
+runtime/native150-membership-root73-*. Root freeze73 завершён; APK не установлен.
+Exact049 CI45445304778/45445288477 пока RUNNING. Не выдавать f330 CI за049.
 Native63 не принимает эти последующие inputs; controller37 не повторять.
 Whole20/48, final exact AI review, signed149→150 и release всё ещё открыты.
 

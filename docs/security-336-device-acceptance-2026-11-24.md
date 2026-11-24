@@ -1,5 +1,15 @@
 # 24 November: retained controller and actual device unlocking
 
+## Native73: current assembly identity
+
+Assembly73 SUCCESS1m30s, wrapper98.48s, source commit049fefb2. Source hash
+D3A19A0451FFEBA9E66FABD8BDBC00B336B5F3B131086DFF307D3D17C1289643;
+QA APK31AA2C04692F084556A3FE6C981DEBA3AB6F6CA6C85387C98A5119FA7555A995.
+Instrumentation remains327EC0D32B7F7E428019F353946BEC9C477FCBC39010F2DFDD5C6FE65CE11826.
+No JVM task ran; this includes copy69/readonly queue71/root72 assets and is not
+a repeated controller37 migration, new platform UI acceptance or signed upgrade.
+Root freeze73 is finished; the APK has not been installed on retained37/main149.
+
 ## Native59 identity only
 
 Assembly59 SUCCESS50s, source96BC214A…659DBA/commitc24a5803. No JVM task ran

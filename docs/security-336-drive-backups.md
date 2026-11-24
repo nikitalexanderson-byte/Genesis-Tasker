@@ -1,5 +1,37 @@
 # 3.3.6: personal encrypted Google Drive copies
 
+## HTTP provider acceptance77,24 November2026
+
+`output/qa/security336-drive77-1124-04/results.json`:16/16 PASS, cleanup PASS.
+The unchanged production PHP Drive service is exercised through actual session/
+CSRF/owner-bound HTTP routes, SQLite and cURL. An isolated local TLS CONNECT
+simulator terminates only the three allowlisted Google hosts and forwards
+nothing upstream. The fixture uses synthetic credentials and a short-lived test
+certificate; no personal Google account, real OAuth UI or live Drive was used.
+
+Accepted: wrong primary sub/missing scope, one-time native-code attempt, exact
+prepare/commit retry, provider metadata/full ciphertext readback, discovery,
+corruption/foreign metadata/duplicate list refusal, immutable operation/owner
+binding,401 refresh, redirect and oversized-response refusal, lost upload ACK
+without another file create, declared-size bound and disconnect without deletion.
+A5,593,280-byte artifact exercises actual durable resumable session reuse:
+the simulator retains262,144 bytes, the first upload returns uncertain, and
+retry queries that offset and sends byte-exact remaining content using one
+provider session. No product endpoint, host allowlist, TLS check or budget was
+relaxed. `--drive` is confined to the CLI-only synthetic backend fixture.
+
+Early01 failed only fixture setup (an empty owner header prevented session
+adoption);02 accepted the11-case small-file scope.03 accepted13 cases but its
+simulator incorrectly routed resumable PUT as session creation.04 corrects that
+test-only method dispatch and accepts the final16. Original results remain.
+
+Still required: real configured web/native Google OAuth, process death/restart,
+maximum-size artifact, native SAF and whole product UI. This does not enable
+`private_drive_enabled` in production or close the complete release gate.
+
+The following22 November section records the implementation-time state; its
+"no tests" wording is superseded only within the exact scoped evidence above.
+
 22 November 2026, implementation candidate. No compilation, automated tests,
 provider-account exercise, OAuth readiness check or deployment has run for this
 change. Accepted source coverage remains 9/20. `private_drive_enabled=false` by

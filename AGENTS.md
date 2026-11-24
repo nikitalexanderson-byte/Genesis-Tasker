@@ -1,5 +1,30 @@
 # Genesis Tasker: действующие правила
 
+## Продолжение24 ноября: Drive77 и backup feedback78
+
+- Exact049 Source checks45445304778/45445288477 SUCCESS обоих jobs. Первый
+  web log2232PASS/0FAIL, Android test/build SUCCESS16m1s; XML totals не извлекались.
+  Эти проверки предшествуют новому web feedback78 и QA fixture77.
+- Real PHP HTTP/SQLite/cURL Drive77-04 PASS16/16 с локальным TLS provider
+  simulator, включая lost ACK и5.59MB resumable/256KiB accepted offset. Cleanup
+  PASS. Google OAuth UI/native SAF/process death/max artifact не проверены,
+  production Drive off.01/03 были setup/simulator failures, не product passes.
+- Content74 FAIL15PASS/1FAIL: image ещё Loading при503s Retry-After, а QA ждал
+  только20s. Cleanup PASS, immutable72 unchanged. QA timeout исправлен без
+  изменения budgets.76 FAIL при safe SOURCE_HISTORY_CHANGED в final catalogue
+  comparison; owned private client-state не читать.78 сохраняет этот guard,
+  локализует actionable retry14languages и не выводит arbitrary exception text.
+  Types/scoped lint/i18n/build:web PASS;14 new values semantic read, прежние
+  значения каталога unchanged. Whole final review/source acceptance не повышать.
+- Immutable78 hash e808ba07…54c68,8983files; не менять. Files79/session51258
+  проверяет только files, backup80/session36756 — новый export/retry/history;
+  оба явно пропускают неизменённые2 recovery42 cases. Membership73/session56323
+  и rich shared75-02/session90503 продолжают на immutable72, не перезапускать.
+  QA75 seed содержит comments,4 map versions, disabled automation,2 workflow
+  versions; cold product readback ещё нужен. Native73 предшествует78; новую
+  assembly выполнять после завершения текущего correction block, без повтора
+  принятой controller37 migration. Main149/Play/устройства и gates не менять.
+
 ## Продолжение24 ноября: реальная точка входа72
 
 - Mounted64 завершён FAIL12PASS/1FAIL,2notRepeated; все3shared ACTIVE, normal
@@ -14,9 +39,13 @@
   Оба cleanup PASS, bundles unchanged. Это wiring/refusal, не owner consent UI.
   Ранние01–04 — QA setup/ожидание persistent dialog при locked identity;
   сохранять FAIL. Guard не обходился. Quick root gate теперь перед private-product.
-- Full membership72 ещё требуется на immutable72. QA ждёт enabled plan/owner
+- Full membership73/session56323 идёт на immutable72; content74/session5441
+  отдельно проверяет files/archives на том же bundle. Два personal recovery42
+  cases явно notRepeated в обоих. QA ждёт enabled plan/owner
   controls после actual IO; phase logpoints не паузят IDB. Budgets не менялись,
-  основной149/устройства/Play не тронуты. Native63 предшествует copy69/71/72.
+  основной149/устройства/Play не тронуты. Native73 assembly SUCCESS1m30s,
+  sourceD3A19A04…89643/APK31AA2C04…5A995, no JVM; freeze73 снят. Новый APK
+  не устанавливался. Native63 предшествует copy69/71/72.
 
 ## Продолжение24 ноября: readonly queue71 и exact CI f330
 

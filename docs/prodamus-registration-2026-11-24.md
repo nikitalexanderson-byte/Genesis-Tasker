@@ -10,6 +10,20 @@ withdrawal is optional. Do not activate Prodamus or invent completed onboarding.
 No cancellation or support message was sent. The submitted application below is
 historical evidence, not an approved merchant account.
 
+The owner's latest clarification explicitly retains NPD without individual
+entrepreneur registration; cryptocurrency is not a requirement. Rechecked
+Robokassa's official self-employed page (including its without-IP FAQ), tariff
+for self-employed individuals (foreign cards9.9%) and foreign-card settlement
+description (merchant balance credited in RUB). This is a conditional replacement
+candidate, not an approval of GENESIS or proof that permanent/temporary address
+evidence and a software-rights statement will not be requested. No new merchant
+account, agreement, support message or live gateway was created.
+
+Sources checked24 November2026:
+https://robokassa.com/solutions/business/samozanyatye/
+https://robokassa.com/payments/tarify/
+https://robokassa.com/payments/payment-method/inostrannye-karty/
+
 Public-source alternatives and unresolved eligibility are recorded in
 web-unified-payments-2026-11-24.md. Do not promise registration without address
 verification or documents based on advertising. No new provider account exists.

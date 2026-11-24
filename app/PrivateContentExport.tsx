@@ -20,7 +20,7 @@ export function PrivateContentExport({owner,language,capture,label,deliver,deliv
    if(deliver){await deliver(file,payload);account.requireOpen();if(token!==generation.current||requirePrivateAccount(owner)!==account)throw new Error('E2EE_ACCOUNT_CHANGED');setKey('');setSaved(false);return;}
    url=URL.createObjectURL(new Blob([file],{type:'application/octet-stream'}));const link=document.createElement('a');link.href=url;link.download=`genesis-${payload.backupId}.genesisbackup`;link.click();
    const retained=url;setTimeout(()=>URL.revokeObjectURL(retained),1000);url=undefined;
-  }catch(reason){if(token===generation.current)setError(reason instanceof Error?reason.message:'BACKUP_INVALID');}finally{if(url)URL.revokeObjectURL(url);running.current=false;setBusy(false);}
+  }catch(reason){if(token===generation.current){const code=reason instanceof Error?reason.message:'';setError(['E2EE_SOURCE_HISTORY_CHANGED','E2EE_BACKUP_CAPTURE_CHANGED'].includes(code)?'changed':'failed');}}finally{if(url)URL.revokeObjectURL(url);running.current=false;setBusy(false);}
  };
  if(!ready)return null;
  return <section className="backup-panel" data-no-translate><h3>{label??contentText.deviceSnapshot}</h3>
@@ -30,6 +30,6 @@ export function PrivateContentExport({owner,language,capture,label,deliver,deliv
    <label className="backup-check"><input type="checkbox" checked={saved} onChange={event=>setSaved(event.target.checked)}/>{c('Я сохранил ключ отдельно. Он расшифровывает данные и не восстанавливает вход.','I saved the key separately. It decrypts data and does not restore sign-in access.')}</label>
    <label className="backup-check"><input type="checkbox" checked={consent} onChange={event=>setConsent(event.target.checked)}/><span>{c('Я ознакомился с составом копии, шифрованием и условиями восстановления в','I have read about backup contents, encryption and restore in the')} <a href="/privacy" target="_blank" rel="noreferrer">{c('политике','privacy policy')}</a> {c('и','and')} <a href="/terms" target="_blank" rel="noreferrer">{c('соглашении','terms')}</a>. {deliveryNotice??c('Новые разрешения Google не запрашиваются.','No new Google permissions are requested.')}</span></label>
    <button type="button" disabled={!saved||!consent||!key.trim()} onClick={()=>void save()}>{label??contentText.deviceSnapshot}</button>
-  </fieldset>{busy?<p role="status">{c('Подготовка и проверка…','Preparing and checking…')}</p>:null}{error?<p role="alert">{error}</p>:null}
+  </fieldset>{busy?<p role="status">{c('Подготовка и проверка…','Preparing and checking…')}</p>:null}{error?<p role="alert" data-backup-failure={error}>{error==='changed'?contentText.captureChanged:contentText.error}</p>:null}
  </section>;
 }
