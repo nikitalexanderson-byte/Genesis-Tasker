@@ -3,6 +3,8 @@
 import assert from 'node:assert/strict';
 import {mkdirSync, readFileSync, writeFileSync,readdirSync} from 'node:fs';
 import path from 'node:path';
+import {createHash} from 'node:crypto';
+import {fileURLToPath} from 'node:url';
 import {chromium} from 'playwright';
 import {openBackup} from '../../app/backup-format.ts';
 import {checkPrivateDeviceAccess} from './web-private-device-access.mjs';
@@ -14,12 +16,15 @@ assert(output);mkdirSync(output,{recursive:true});
 const migration=JSON.parse(readFileSync('contracts/e2ee/migration-copy-v1.json','utf8')).ru;
 const vault=JSON.parse(readFileSync('contracts/e2ee/vault-copy-v1.json','utf8')).ru;
 const report={synthetic:true,scope:'mounted web product + real PHP/SQLite',status:'RUNNING',checks:[],apiErrors:[],pageErrors:[],caughtCodes:[],caughtFrames:[],storageFailures:[],migrationRefusals:[],migrationErrorFrames:[],networkFailures:[],networkRetries:[],historyGuards:[],rateLimits:[],rateRetries:[],custodyFrames:[],custodyPredicates:[],transferredScopes:[]};
+report.qaSourceSha256=createHash('sha256').update(readFileSync(fileURLToPath(import.meta.url))).digest('hex');
 report.keyBundleRefusals=[];
 const browser=await chromium.launch({headless:true});report.browser=browser.version();
 let page,secret,kit,backupKey,deviceLocalCode,fixtureOwnerId;
 const diagnostics=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='diagnostics';
 const profileOnly=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='profile';
-const sharedJourney=['shared','shared-locales','content'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
+const sharedJourney=['shared','shared-locales','content','membership'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
+const membershipJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='membership';
+const membershipCopy=JSON.parse(readFileSync('contracts/e2ee/membership-review-copy-v2.json','utf8')).ru;
 const sharedFilesJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='content';
 const localeJourney=['locales','shared-locales'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
 const backupJourney=['backup','content'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
@@ -32,6 +37,9 @@ let sharedFixture;
 const redactPrivateText=value=>[secret,backupKey,deviceLocalCode].filter(Boolean).reduce((text,key)=>text.replaceAll(key,'[redacted synthetic secret]'),String(value));
 const save=()=>writeFileSync(`${output}/private-product-results.json`,JSON.stringify(report,null,2)+'\n');
 const check=async(name,operation)=>{
+ if(membershipJourney&&['offline unlock restores encrypted preferences and the edited task','clean browser cannot open content using identity alone or a wrong secret'].includes(name)){
+  (report.notRepeated??=[]).push({name,acceptedEvidence:'output/playwright/security336-legacy-retirement42-1124',reason:'Unchanged personal recovery path; this focused run covers normal membership UI and preserves its live owner context.'});save();return;
+ }
  try{await operation();report.checks.push({name,status:'PASS'});console.log('PASS private-product '+name);save();}
  catch(error){report.checks.push({name,status:'FAIL',error:redactPrivateText(error.message)});throw error;}
 };
@@ -188,13 +196,27 @@ try{
   const post=async(path,data)=>{const response=await context.request.post('/api/'+path,{headers,data});assert(response.ok(),path+': '+response.status());return response.json();};
   const space=(await post('shared/spaces',{title:'PRIVATE SHARED SPACE '+canary})).space;
   const project=(await post(`shared/spaces/${space.id}/projects`,{title:'PRIVATE SHARED PROJECT '+canary,layout:'board'})).project;
+  let member,inbox;
+  if(membershipJourney){
+   const guest=await browser.newContext({baseURL});
+   try{
+    await guest.route(/https?:\/\//,route=>new URL(route.request().url()).origin===baseURL?route.continue():route.abort());
+    const admitted=await guest.request.get('/api/qa/login?tier=premium4life');assert(admitted.ok());
+    const target=(await(await guest.request.get('/api/session')).json());member={uid:target.user.uid,name:target.user.name,email:target.user.email};
+    const invitation=(await post(`shared/projects/${project.id}/invitations`,{email:member.email,role:'member'})).invitation;
+    const accepted=await guest.request.post('/api/shared/invitations/accept',{headers:{Origin:baseURL,'X-CSRF-Token':target.csrf},data:{id:invitation.id}});
+    assert(accepted.ok(),'Synthetic invite acceptance: '+accepted.status()+' '+String((await accepted.json()).error??''));
+    const elevated=await context.request.patch(`/api/shared/spaces/${space.id}/members/${member.uid}`,{headers,data:{role:'member'}});assert(elevated.ok());
+    const projects=await(await context.request.get(`/api/shared/spaces/${space.id}/projects`)).json();inbox=projects.projects.find(row=>row.isInbox);assert(inbox);
+   }finally{await guest.close();}
+  }
   const body=await(await context.request.get(`/api/shared/projects/${project.id}`)).json(),status=body.statuses.find(row=>!row.isDone);assert(status);
   const file=sharedFilesJourney?Buffer.alloc(1300*1024,'SYNTHETIC PRIVATE FILE\n'):null;
   if(file)file.write(canary+'\n');
   const image=sharedFilesJourney?Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6lWQAAAAASUVORK5CYII=','base64'):null;
   const task=(await post(`shared/projects/${project.id}/tasks`,{title:'PRIVATE SHARED TASK '+canary,description:'Retained shared task body '+canary,statusId:status.id,requestId:crypto.randomUUID(),
    ...file?{attachments:[{name:'retained-private-file.txt',data:'data:text/plain;base64,'+file.toString('base64')}],imageData:'data:image/png;base64,'+image.toString('base64')}:{}})).task;
-  sharedFixture={space,project,task,file,image};
+  sharedFixture={space,project,task,file,image,member,inbox};
   if(file){
    assert.equal(task.attachments.length,1);const source=new URL(task.attachments[0].url,baseURL);assert.equal(source.origin,baseURL);
    const response=await context.request.get(source.href);assert(response.ok());assert.deepEqual(await response.body(),file);
@@ -415,9 +437,9 @@ try{
    };
    // Return from the deliberately offline capability to an online unlocked one.
    await withRateRetry('shared account entry',restoreOnlineAccount);
-   for(const [kind,resource]of [['project',sharedFixture.project],['space',sharedFixture.space]]){
+   for(const [index,[kind,resource]]of [['project',sharedFixture.project],...(membershipJourney?[['project',sharedFixture.inbox]]:[]),['space',sharedFixture.space]].entries()){
     let dialog=await openTransfer(kind,resource);
-    if(kind==='project'){
+    if(index===0){
      await withRateRetry('expired project identity check',async()=>{
       await identityConfirmation(false);await recoveryInput(dialog);await dialog.getByRole('button',{name:migration.resume,exact:true}).click();
       await dialog.getByRole('alert').filter({hasText:migration.reauthRequired}).waitFor();
@@ -453,6 +475,42 @@ try{
     await page.locator(`[data-shared-task-id="${sharedFixture.task.id}"]`).getByText(sharedFixture.task.title,{exact:true}).waitFor({timeout:60000});
    });
    await page.screenshot({path:`${output}/private-shared-task-readback.png`,fullPage:true,animations:'disabled'});
+  });
+  if(membershipJourney)await check('normal team role change requires explicit full owner review and survives cold readback',async()=>{
+   await debug.send('Debugger.setPauseOnExceptions',{state:'all'});
+   await page.getByRole('button',{name:'Команда и приглашения',exact:true}).click();
+   const member=page.locator('.shared-team-permissions .shared-team-member').filter({hasText:sharedFixture.member.email});
+   // Names come from the ordinary authenticated profile; never an injected UI model.
+   const row=await member.count()?member:page.locator('.shared-team-permissions .shared-team-member').filter({hasText:'QA Premium4life'});
+   await row.getByLabel('Доступ к пространству',{exact:true}).selectOption('guest');
+   const dialog=page.locator('.private-membership-dialog');await dialog.waitFor();
+   await dialog.screenshot({path:`${output}/membership-plan-review.png`,animations:'disabled'});
+   assert(await dialog.getByRole('button',{name:membershipCopy.confirm,exact:true}).isDisabled());
+   await dialog.getByRole('checkbox',{name:membershipCopy.planAck,exact:true}).check({timeout:10000});
+   await dialog.getByRole('button',{name:membershipCopy.confirm,exact:true}).click();
+   const owners=dialog.getByRole('region',{name:membershipCopy.owners,exact:true});await owners.waitFor({timeout:120000});
+   for(let index=0;index<3;index++){
+    assert(await owners.getByRole('button',{name:membershipCopy.approve,exact:true}).isDisabled());
+    await owners.getByRole('checkbox',{name:membershipCopy.ack,exact:true}).check();
+    await owners.getByRole('button',{name:membershipCopy.approve,exact:true}).click();
+    await dialog.getByRole('status').filter({hasText:membershipCopy.approvalSaved}).waitFor({timeout:60000});
+    await owners.getByRole('checkbox',{name:membershipCopy.ack,exact:true}).waitFor();
+    if(index<2)await owners.getByRole('button',{name:membershipCopy.next,exact:true}).click();
+   }
+   await owners.getByRole('button',{name:membershipCopy.finalReview,exact:true}).click();
+   const final=dialog.getByRole('region',{name:membershipCopy.apply,exact:true});await final.waitFor({timeout:60000});
+   await dialog.screenshot({path:`${output}/membership-final-review.png`,animations:'disabled'});
+   assert(await final.getByRole('button',{name:membershipCopy.apply,exact:true}).isDisabled());
+   await final.getByRole('checkbox',{name:membershipCopy.finalAck,exact:true}).check();await final.getByRole('button',{name:membershipCopy.apply,exact:true}).click();
+   await dialog.waitFor({state:'hidden',timeout:120000});
+   await page.reload();const gate=page.locator('.private-vault-dialog');await gate.waitFor();await recoveryInput(gate);await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
+   await page.locator(`[data-shared-task-id="${sharedFixture.task.id}"]`).getByText(sharedFixture.task.title,{exact:true}).waitFor({timeout:60000});
+   await page.getByRole('button',{name:'Команда и приглашения',exact:true}).click();
+   const fresh=page.locator('.shared-team-permissions .shared-team-member').filter({hasText:'QA Premium4life'});await fresh.waitFor();
+   assert.equal(await fresh.getByLabel('Доступ к пространству',{exact:true}).inputValue(),'guest');
+   await page.screenshot({path:`${output}/membership-cold-team-readback.png`,fullPage:true,animations:'disabled'});
+   report.membership={operation:'space-role',role:'guest',scopes:3,explicitOwnerConsents:3,coldNormalTaskRead:true,coldNormalTeamRead:true};save();
+   await debug.send('Debugger.setPauseOnExceptions',{state:'none'});
   });
   if(sharedFilesJourney)await check('migrated multi-chunk attachment and photo open through the normal authorized task interface',async()=>{
    await page.locator(`[data-shared-task-id="${sharedFixture.task.id}"]`).getByText(sharedFixture.task.title,{exact:true}).click();

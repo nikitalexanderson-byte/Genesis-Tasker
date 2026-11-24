@@ -1,5 +1,20 @@
 # Genesis Tasker: действующие правила
 
+## Продолжение24 ноября: окно согласования доступа
+
+- Native PrivateMembershipModal сохраняет открытый editor dialog и поднимает
+  review в browser top layer; общий popup frame исключает внешний gate. Это
+  web-only UI correction; crypto guards/keys/ACL не менялись. Browser component49
+  PASS8/8 на4 ширинах×2 схемах, actual modal/fence/Close/Escape/draft retention.
+  Typecheck/build:web PASS, scoped lint0errors/3old warnings, detector49[].
+- Mounted membership46-02 ещё идёт на immutable41, с target premium4life,
+  project+Inbox+space и настоящими windows600requests/600s. Не сбрасывать rate
+  rows и не повторять native37 migration. Новый focused49/session92385 идёт на
+  уже полностью скопированном immutable49. Он явно notRepeated два принятых42
+  personal recovery cases. Ранний48 был запущен до конца copy, owner-checked
+  API stopped, cleanup PASS; его изменённый bundle hash не засчитывать как QA.
+  Подробности/ограничения — security-336-membership-acceptance-2026-11-24.md.
+
 ## Продолжение24 ноября: атомарное изменение участников
 
 - Новая предметная приёмка выявила production defect: genesisE2eeEpochKeys

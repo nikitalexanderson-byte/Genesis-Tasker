@@ -12,7 +12,7 @@ html[data-genesis-theme] {
 /* One frame for every modal; menus and anchored pickers retain their own layout. */
 html[data-genesis-theme] :is(body, .genesis-app) :is(
   dialog, [aria-modal="true"], .stoicheion-letter-dialog > article
-):not(.modal-backdrop, .stoicheion-letter-dialog, .stoicheion-motion-veil) {
+):not(.modal-backdrop, .stoicheion-letter-dialog, .stoicheion-motion-veil, .private-vault-gate) {
   box-sizing: border-box;
   width: min(var(--ui-dialog-width), calc(100vw - 24px)) !important;
   max-width: 100%;
@@ -36,7 +36,7 @@ html[data-genesis-theme] :is(body, .genesis-app) :is(
   .solar-place-popover,
   .deferred-dialog-backdrop > div,
   .stoicheion-letter-dialog > article
-):not(.modal-backdrop, .stoicheion-letter-dialog, .stoicheion-motion-veil) {
+):not(.modal-backdrop, .stoicheion-letter-dialog, .stoicheion-motion-veil, .private-vault-gate) {
   border: var(--ui-popup-border-width) solid var(--ui-popup-border);
 }
 

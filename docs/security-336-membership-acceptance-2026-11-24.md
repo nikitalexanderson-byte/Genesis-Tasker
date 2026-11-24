@@ -74,3 +74,41 @@ normal-repository readback ports здесь model fixtures. Проверка roo
 Итого focused JS30/30 PASS. Нужны реальные membership owner-review/apply UI,
 нормальное чтение истории новым участником и сводный20-path/48-scenario review.
 Все activation/update floors остаются выключенными; APK149 сохраняется.
+
+## Нативное окно браузера над редактором команды
+
+PrivateMembershipGate открывался как div за уже открытым HTML dialog команды.
+Одного z-index недостаточно: native modal исключает внешнюю область из ввода.
+Теперь PrivateMembershipModal занимает browser top layer через showModal,
+сохраняя родительский редактор и его состояние. Escape проходит существующий
+guard закрытия; новый элемент не добавляет signer/ACL capability. Общие popup
+width/height/border правила явно исключают внешний private-vault-gate, чтобы
+полноэкранный барьер не сжимался в обычную карточку. Внутренний текст/checkbox
+имеют отступы, а строка согласия сохраняет44px цель нажатия.
+
+Компонентная browser приёмка49:8/8 PASS (360/390/768/1440 × light/dark),
+output/playwright/security336-membership-modal49-final/results.json.
+Использованы реальные PrivateMembershipModal/useDialogAccessibility/editor
+fence и CSS собранного продукта; нет аккаунта, keys или auth-success mocks.
+Проверены настоящий :modal, полный viewport без горизонтального overflow,
+клик по checkbox, Close/Escape и байтово сохранённый input родительского :modal.
+Вручную просмотрены360light и1440dark. Это bounded layer/focus проверка,
+не весь crypto consent lifecycle. Build:web/typecheck PASS; scoped lint0errors
+с3 прежними hook warnings в Gate. Финальный detector49:[] findings.
+
+Ранние47 проверки кликов не засчитываются за визуальную приёмку обеих тем:
+fixture сначала имел неверные имена themes. Правильная theme/cascade проверка
+выявила конфликт generic popup !important;49 использует настоящие standart/
+standart-dark, полный viewport и соответствующий theme background. Первичная
+fixture46 без unlocked account корректно fail-closed до открытия формы и не
+является RED доказательством modal бага; соответствующие отчёты сохранены.
+
+Полный mounted membership run46-02 на immutable41 ещё выполняется отдельно:
+реальные owner+recipient legacy ACL, personal transfer, project/Inbox/space,
+нормальный task/team UI и explicit owner consents. Никакие budgets не повышались
+и rate rows не сбрасывались; actual600-request/600s windows занимают время.
+Его результат пока не принят. Новый focused49 идёт на полностью скопированном
+immutable web49; прежние offline/clean recovery проверки42 не повторяются и
+явно перечислены в notRepeated. Остальные действия выполняются в живом продукте.
+Premature48 остановлен только в owned synthetic API, runner cleanup PASS;
+его before/after bundle hashes различались, приёмкой он не является.

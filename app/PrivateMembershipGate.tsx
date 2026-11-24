@@ -1,6 +1,7 @@
 'use client';
 import {invitationSecurityCopy} from './invitation-security-copy';
 import {useEffect,useId,useRef,useState,useSyncExternalStore} from 'react';
+import {PrivateMembershipModal} from './PrivateMembershipModal';
 import copy from '../contracts/e2ee/membership-review-copy-v2.json';
 import rolesCopy from '../contracts/e2ee/device-access-copy-v1.json';
 import projectCopy from '../contracts/e2ee/project-creation-copy-v1.json';
@@ -81,7 +82,7 @@ function MembershipReview({state}:{state:PrivateMembershipUi}){
  };
  const importApproval=async(file:File)=>{if(file.size<1||file.size>2*1024*1024)throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');const approval=parseLegacyMigrationJson(await file.text(),'E2EE_MEMBERSHIP_REVIEW_MISMATCH',2*1024*1024) as MembershipAtomicOwnerApproval;current();await acceptCurrentPrivateAtomicOwnerApproval(fingerprint,approval);current();setMessage(c.approvalSaved);};
  const displayFingerprint=(value:string)=><code className="private-membership-code" dir="ltr">{value}</code>;
- return <div className="private-vault-gate private-membership-gate" data-no-translate><div ref={dialogRef} className="workspace-recovery-dialog private-vault-dialog private-migration-dialog private-membership-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}>
+ return <PrivateMembershipModal titleId={titleId} onRequestClose={close}><div ref={dialogRef} className="workspace-recovery-dialog private-vault-dialog private-migration-dialog private-membership-dialog" tabIndex={-1}>
   <header className="workspace-recovery-heading"><h2 id={titleId}>{c.title}</h2><p>{c.notice}</p></header>
   {operation?<section aria-label={c.review}><h3>{c.actions[operation.kind]}</h3>{detail?.title?<p>{detail.title}</p>:null}
    {'userId'in operation?<p>{name(operation.userId)}{name(operation.userId)!==operation.userId?<small>{displayFingerprint(operation.userId)}</small>:null}</p>:null}
@@ -122,7 +123,7 @@ function MembershipReview({state}:{state:PrivateMembershipUi}){
   {state.mode==='operation'?<details><summary>{c.cancel}</summary><label className="backup-check"><input type="checkbox" checked={cancelAck} disabled={busy} onChange={event=>setCancelAck(event.target.checked)}/>{c.cancelAck}</label><button type="button" disabled={busy||!cancelAck} onClick={()=>void run(async()=>{const result=await cancelCurrentPrivateMembershipOperation(state.intentId!);current();if(result.outcome==='reconcile-required'){setError(c.unknown);return;}closePrivateMembershipUi(state.id,'E2EE_MEMBERSHIP_CANCELLED');})}>{c.cancel}</button></details>:null}
   {busy?<p role="status" aria-live="polite">{c.busy}</p>:null}{message?<p role="status">{message}</p>:null}{error?<p className="workspace-recovery-error" role="alert">{error}</p>:null}
   <button data-dialog-initial-focus type="button" className="text-button" disabled={busy} onClick={close}>{c.keep}</button>
- </div></div>;
+ </div></PrivateMembershipModal>;
 }
 
 export function PrivateMembershipEntry({ownerId,language}:{ownerId:string;language:string}){

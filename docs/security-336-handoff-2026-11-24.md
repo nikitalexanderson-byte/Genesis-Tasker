@@ -1,5 +1,20 @@
 # Продолжение24 ноября: выпуск3.3.6 и отдельный сайт
 
+## Новое: согласование в настоящем modal
+
+Готов web correction PrivateMembershipModal + popup exclusion + consent spacing.
+Component49 PASS8/8 с actual top layer/editor fence/Close/Escape/retained input;
+typecheck/build PASS, scoped lint0errors/3existing warnings, detector49[].
+Real account/controller/shared membership46-02/session6071 остаётся на immutable41
+и ждёт собственные rate boundaries600requests/600s. Уже ACTIVE project+Inbox,
+space transfer ещё идёт; финального результата нет. Не менять этот bundle.
+Новый focused49/session92385 на immutable web-membership-modal49/public_html
+начат ПОСЛЕ completion build/copy/component49. Он явно не повторяет прежние42
+offline/clean recovery, сохраняя остальные normal UI и три owner consents.
+Premature48/session67739 остановлен только в owned API после подтверждённой
+copy race; cleanup PASS, build hashes differ, не acceptance. Никакие private
+client-state файлы не читались/создавались для resume. Full33/34 ещё открыты.
+
 ## Новое: членство и история эпох
 
 Исправлен server genesisE2eeEpochKeys: rotate-membership раньше не входил в
