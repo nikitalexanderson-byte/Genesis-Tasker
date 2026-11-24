@@ -3145,8 +3145,8 @@ test("keeps the requested calendar and privacy features wired", async () => {
   assert.match(await readFile(new URL('../app/site-links.ts', import.meta.url), 'utf8'), /https:\/\/t\.me\/genesiscalendar/);
   assert.match(calendar, /<DonationLink language=\{language\} authenticated=\{Boolean\(cloudUser\)\}/);
   const donationLink = await readFile(new URL("../app/DonationLink.tsx", import.meta.url), "utf8");
-  assert.match(donationLink, /href=\{SUPPORT_TIPS_URL\}/);
-  assert.match(donationLink, /if\(!authenticated\)\{onOpen\?\.\(\);return;\}/);
+  assert.match(donationLink, /href="#donation-method" aria-haspopup="dialog"/);
+  assert.match(donationLink, /Promise\.resolve\(\{url:SUPPORT_TIPS_URL,tracked:false\}\)/);
   assert.match(donationLink, /createCloudTipsCheckout\(\)/);
   assert.match(await readFile(new URL("../app/public-service.ts", import.meta.url), "utf8"), /https:\/\/pay\.cloudtips\.ru\/p\/4d58d20a/);
   assert.match(calendar, /Солнечный календарь/);

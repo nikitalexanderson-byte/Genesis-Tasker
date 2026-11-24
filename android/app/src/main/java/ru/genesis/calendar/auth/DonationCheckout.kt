@@ -5,6 +5,12 @@ import org.json.JSONObject
 
 internal const val publicDonationUrl = "https://pay.cloudtips.ru/p/4d58d20a"
 
+/** No identity, tokens, arbitrary redirects or tracking query may leave for Boosty. */
+internal fun boostyDonationUrl(value:String):String {
+    require(value.matches(Regex("https://boosty\\.to/[A-Za-z0-9_][A-Za-z0-9_.-]{0,63}/donate/?")))
+    return value
+}
+
 /** The only account information allowed outside GENESIS is the server's opaque invoice UUID. */
 internal fun donationCheckoutUrl(response: JSONObject): String {
     val value = response.getString("url")

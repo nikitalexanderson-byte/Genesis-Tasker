@@ -82,7 +82,8 @@ function genesisBillingRubToUsdMinor(int $rubMinor,array $rate): int
 function genesisBillingProviderPrices(int $rubMinor,array $foreign,mixed $usdMinor): array
 {
     $prices=['yookassa'=>['amountMinor'=>$rubMinor,'currency'=>'RUB'],'google-play'=>['amountMinor'=>$rubMinor,'currency'=>'RUB']];
-    if(in_array($foreign['provider']??null,['paddle','lemon-squeezy'],true)&&($foreign['currency']??null)==='USD'&&is_int($usdMinor)&&$usdMinor>0){
+    // Preserve legacy display/receipt prices without exposing a foreign checkout.
+    if(in_array($foreign['provider']??null,[null,'lemon-squeezy'],true)&&($foreign['currency']??null)==='USD'&&is_int($usdMinor)&&$usdMinor>0){
         $pricingModel=$foreign['pricingModel']??'fx-snapshot';
         if($pricingModel==='fixed')$prices['lemon-squeezy']=['amountMinor'=>$usdMinor,'currency'=>'USD'];
         elseif($pricingModel==='fx-snapshot'){
@@ -90,16 +91,23 @@ function genesisBillingProviderPrices(int $rubMinor,array $foreign,mixed $usdMin
             catch(InvalidArgumentException){ /* A malformed legacy FX snapshot cannot enable a foreign checkout. */ }
         }
     }
-    // Keep legacy receipt/display clients compatible while moving the public offering to Paddle.
-    if(isset($prices['lemon-squeezy'])&&($foreign['provider']??null)==='paddle')$prices['paddle']=$prices['lemon-squeezy'];
+    return $prices;
+}
+
+/** Display prices do not imply that a payment provider has been connected. */
+function genesisBillingDisplayPrices(int $rubMinor,array $foreign,mixed $usdMinor): array
+{
+    $prices=['RUB'=>['amountMinor'=>$rubMinor,'currency'=>'RUB']];
+    if(($foreign['currency']??null)==='USD'&&($foreign['pricingModel']??null)==='fixed'&&is_int($usdMinor)&&$usdMinor>0)
+        $prices['USD']=['amountMinor'=>$usdMinor,'currency'=>'USD'];
     return $prices;
 }
 
 function genesisBillingProviderOffer(array $offer,string $provider): array
 {
     $price=$offer['pricesByProvider'][$provider]??null;
-    $currency=in_array($provider,['paddle','lemon-squeezy'],true)?'USD':'RUB';
-    if(!in_array($provider,[...GENESIS_BILLING_PROVIDERS,'paddle'],true)||!is_array($price)||!is_int($price['amountMinor']??null)
+    $currency=$provider==='lemon-squeezy'?'USD':'RUB';
+    if(!in_array($provider,GENESIS_BILLING_PROVIDERS,true)||!is_array($price)||!is_int($price['amountMinor']??null)
         ||$price['amountMinor']<=0||($price['currency']??null)!==$currency)throw new GenesisResourceLimitException(503,'BILLING_PRICE_NOT_CONFIGURED');
     return [...$offer,'amountMinor'=>$price['amountMinor'],'currency'=>$currency,
         'provider'=>$provider,'_allAvailableProviders'=>$offer['availableProviders'],
@@ -142,7 +150,8 @@ function genesisBillingCatalog(array $settings, string $client = 'web', ?array $
         }
         $offers[] = ['id' => $id, 'plan' => $plan, 'periodMonths' => $months,
             'amountMinor' => $priced ? $amount : null, 'currency' => $priced ? $currency : null,
-            'availableProviders' => $methods,'pricesByProvider'=>$prices];
+            'availableProviders' => $methods,'pricesByProvider'=>$prices,
+            'pricesByCurrency'=>$priced&&$currency==='RUB'?genesisBillingDisplayPrices($amount,$foreign,$foreign['prices'][$plan][(string)$months]??null):[]];
     }
     $life = $definition['lifetimeOffer'];
     $configuration = $settings['offers'][$life['id']] ?? [];
@@ -151,7 +160,8 @@ function genesisBillingCatalog(array $settings, string $client = 'web', ?array $
     foreach ($providers as $provider) if (isset($prices[$provider['id']]) && $provider['available'] && is_string($configuration['products'][$provider['id']] ?? null)
         && $configuration['products'][$provider['id']] !== '') $methods[] = $provider['id'];
     $offers[] = ['id'=>$life['id'],'plan'=>'premium4life','periodMonths'=>0,'amountMinor'=>$life['amountMinor'],
-        'currency'=>$life['currency'],'seatLimit'=>$life['seats'],'availableProviders'=>$methods,'pricesByProvider'=>$prices];
+        'currency'=>$life['currency'],'seatLimit'=>$life['seats'],'availableProviders'=>$methods,'pricesByProvider'=>$prices,
+        'pricesByCurrency'=>genesisBillingDisplayPrices($life['amountMinor'],$foreign,$foreign['lifetimeAmountMinor']??null)];
     foreach($offers as &$creditOffer)$creditOffer['creditCheckoutEnabled']=$creditEnabled;
     unset($creditOffer);
     return ['schemaVersion' => 1, 'revision' => $definition['revision'], 'checkoutEnabled' => $enabled,

@@ -30,7 +30,7 @@ define('GENESIS_STATELESS_REQUEST', $method === 'OPTIONS'
     || $path === 'email/confirm'
     || ($method === 'POST' && $path === 'donations/cloudtips/webhook')
     || ($method === 'POST' && str_starts_with($path, 'billing/webhooks/'))
-    || ($method === 'GET' && in_array($path, ['health', 'auth/providers', 'billing/location'], true)));
+    || ($method === 'GET' && in_array($path, ['health', 'auth/providers', 'billing/location', 'donations/methods'], true)));
 require $serverRoot . '/src/bootstrap.php';
 require $serverRoot . '/src/repository.php';
 require $serverRoot . '/src/consumer-referral-api.php';
@@ -157,6 +157,10 @@ try {
     // Keep the capability alive through provider callbacks, local commits and
     // response construction. PHP request teardown releases it after exit/error.
     $personalLegacyIo=genesisE2eeLegacyRequestGate($method,$path,genesisCurrentUserId());
+    if ($path === 'donations/methods') {
+        if($method!=='GET')genesisJson(['error'=>'METHOD_NOT_ALLOWED'],405);
+        header('Cache-Control: no-store');genesisJson(genesisDonationMethods($_SERVER));
+    }
     if ($path === 'donations/cloudtips/webhook') {
         if ($method !== 'POST') genesisJson(['error'=>'METHOD_NOT_ALLOWED'],405);
         $raw=file_get_contents('php://input',false,null,0,16385);

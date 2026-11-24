@@ -5,11 +5,11 @@ import {pathToFileURL} from 'node:url';
 /** Isolated browser scenarios use synthetic coordinates and local fixture accounts. */
 export async function verifyPublicRegions({browser,baseURL,output}) {
   const cases=[
-    {id:'gps-ru-vpn',ip:'outside-RU',gps:{latitude:56.8389,longitude:60.6057},path:'/?lang=en#pricing',destination:'/ru/?lang=en#pricing',domestic:true},
-    {id:'gps-only-document',ip:'unknown',gps:{latitude:56.8389,longitude:60.6057},path:'/support',destination:'/ru/support',domestic:true},
-    {id:'foreign-gps-ru-ip',ip:'RU',gps:{latitude:40.7128,longitude:-74.006},path:'/?lang=en',destination:'/?lang=en',donation:false},
+    {id:'gps-ru-vpn',ip:'outside-RU',gps:{latitude:56.8389,longitude:60.6057},path:'/?lang=en#pricing',destination:'/?lang=en#pricing'},
+    {id:'gps-only-document',ip:'unknown',gps:{latitude:56.8389,longitude:60.6057},path:'/support',destination:'/support'},
+    {id:'foreign-gps-ru-ip',ip:'RU',gps:{latitude:40.7128,longitude:-74.006},path:'/?lang=en',destination:'/?lang=en',donation:true},
     {id:'ip-only-no-redirect',ip:'RU',path:'/?lang=ru',destination:'/?lang=ru',donation:true},
-    {id:'unknown-region',ip:'unknown',path:'/?lang=en',destination:'/?lang=en',donation:false},
+    {id:'unknown-region',ip:'unknown',path:'/?lang=en',destination:'/?lang=en',donation:true},
   ];
   const results=[];
   for(const scenario of cases){
@@ -24,14 +24,33 @@ export async function verifyPublicRegions({browser,baseURL,output}) {
     });
     const page=await context.newPage(),started=performance.now(),evidence=output+'/public-region-'+scenario.id+'.png';
     try{
+      if(scenario.id==='gps-ru-vpn'){
+        const metadata=await context.request.get('/api/donations/methods');assert.equal(metadata.status(),200);
+        assert.equal(metadata.headers()['set-cookie'],undefined,'Public options must not replace a login cookie');
+        assert.deepEqual(await metadata.json(),{schemaVersion:1,region:'unknown',boosty:{available:false,url:null}});
+      }
       await page.goto(scenario.path);
       await page.waitForURL(baseURL+scenario.destination);
       const merchant=page.locator('.public-merchant').first();await merchant.waitFor();
-      assert.match(await merchant.innerText(),scenario.domestic?/Nikita|Никита/:/Iurii Logvinov/);
-      if(!scenario.domestic)assert.doesNotMatch(await merchant.innerText(),/Nikita|Никита/);
+      assert.match(await merchant.innerText(),/Nikita|Никита/);
+      assert.match(await merchant.innerText(),/Iurii Logvinov/);
+      assert.match(await merchant.innerText(),/772495179010/);
       if(scenario.path.includes('lang=')){
-        await page.locator('.public-plans[data-currency="USD"]').waitFor();
+        await page.locator(`.public-plans[data-currency="${scenario.path.includes('lang=ru')?'RUB':'USD'}"]`).waitFor();
         assert.equal(await page.getByRole('radio').count(),14);
+      }
+      if(scenario.id==='gps-ru-vpn'){
+        for(const language of ['en','ru'])for(const scheme of ['light','dark'])for(const width of [360,390,768,1440]){
+          await page.setViewportSize({width,height:900});await page.emulateMedia({colorScheme:scheme});
+          await page.goto('/?lang='+language+'#pricing');
+          const footer=page.locator('.public-footer');await footer.waitFor();await page.evaluate(()=>document.fonts.ready);
+          const geometry=await footer.evaluate(element=>({width:element.getBoundingClientRect().width,overflow:element.scrollWidth>element.clientWidth+1,viewport:document.documentElement.scrollWidth>innerWidth+1,details:[...element.querySelectorAll('.public-footer-details p')].map(p=>p.getBoundingClientRect().toJSON())}));
+          assert.equal(geometry.overflow||geometry.viewport,false,`${language}/${scheme}/${width}: footer must fit`);
+          const [a,b]=geometry.details;assert.ok(a&&b&&(b.y>=a.bottom-1||b.x>=a.right-1),'Performer and infrastructure blocks must not overlap');
+          assert.match(await footer.innerText(),/772495179010/);
+          assert.match(await footer.locator('a[href$="#pricing"]').getAttribute('href'),/\/#pricing|\/\?lang=ru#pricing/);
+          await footer.screenshot({path:`${output}/footer-${language}-${scheme}-${width}.png`,animations:'disabled'});
+        }
       }
       if(scenario.donation!==undefined){
         const login=await context.request.get('/api/qa/login?tier=free');
@@ -39,11 +58,17 @@ export async function verifyPublicRegions({browser,baseURL,output}) {
         await page.goto('/?lang=en#today');
         // A hash-only navigation keeps the anonymous app instance alive after
         // the fixture login. Start the authenticated document explicitly.
-        const regionResponse=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/billing/location');
-        await page.reload();await regionResponse;
+        await page.reload();
         await page.locator('.genesis-page-footer').waitFor();await page.waitForLoadState('networkidle');
         const footer=page.locator('.genesis-page-footer');
-        if(scenario.donation)await footer.locator('a[href^="https://pay.cloudtips.ru/"]').waitFor();
+        if(scenario.donation){
+          await footer.locator('a[aria-haspopup="dialog"]').click();
+          const donation=page.locator('.donation-method-dialog');await donation.waitFor();
+          assert.equal(await donation.locator('[data-donation-method="cloudtips"]').isEnabled(),true);
+          assert.equal(await donation.locator('[data-donation-method="boosty"]').isDisabled(),true);
+          assert.doesNotMatch(await footer.innerText(),/only from Russia|только из России/i);
+          await donation.locator('.dialog-close-button').click();
+        }
         else {
           assert.equal(await footer.locator('a[href^="https://pay.cloudtips.ru/"]').count(),0);
           assert.equal(await footer.locator('button.genesis-donation-disabled').isDisabled(),true);
@@ -53,13 +78,12 @@ export async function verifyPublicRegions({browser,baseURL,output}) {
         if(scenario.id==='unknown-region'){
           // Let the saved account preference arrive before checking the URL's
           // public-document language. Anonymous rendering cannot catch this.
-          for(const [path,language,international]of [['/terms?lang=en','en',true],['/terms?lang=ru','ru',true],['/ru/terms','ru',false]]){
+          for(const [path,language]of [['/terms?lang=en','en'],['/terms?lang=ru','ru'],['/ru/terms','ru']]){
             await page.goto(path);await page.locator('.legal-document').waitFor();await page.waitForLoadState('networkidle');
             assert.equal(await page.locator('html').getAttribute('lang'),language,'Document URL wins over the account language');
             const document=await page.locator('.legal-document').innerText();
             if(language==='en')assert.match(document,/Terms of (?:Use|Service)/i);
-            if(international){assert.match(document,/USD/);assert.doesNotMatch(document,/\bRUB\b|3330|5550|7770|12900|рубл/iu);}
-            else assert.match(document,/3330|рубл/iu);
+            assert.match(document,/772495179010/);assert.match(document,/RUB|рубл/iu);assert.doesNotMatch(document,/Paddle/i);
           }
         }
       }

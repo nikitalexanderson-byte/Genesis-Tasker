@@ -1,5 +1,21 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/billing-routing.php';
+
+/** Public donation options contain no account identity or private payout details. */
+function genesisBoostyDonationDestination(mixed $settings): ?string
+{
+    $url=is_array($settings)?($settings['profile_url']??null):null;
+    $ready=is_array($settings)&&($settings['enabled']??false)===true&&($settings['profile_verified']??false)===true
+        &&is_string($url)&&preg_match('~\Ahttps://boosty\.to/[A-Za-z0-9_][A-Za-z0-9_.-]{0,63}/donate/?\z~D',$url)===1;
+    return $ready?$url:null;
+}
+function genesisDonationMethods(array $server=[]): array
+{
+    $url=genesisBoostyDonationDestination(genesisConfig()['boosty']??[]);$ready=$url!==null;
+    return ['schemaVersion'=>1,'region'=>genesisBillingRouting($server)['region'],
+        'boosty'=>['available'=>$ready,'url'=>$ready?$url:null]];
+}
 
 /** CloudTips' own webhook contract, not the separate CloudPayments payment API.
  * Notifications and HMAC: https://cloudpayments.atlassian.net/wiki/spaces/CA/pages/2612003114
@@ -23,6 +39,7 @@ function genesisCloudTipsDeletionReady(): bool
     $settings=genesisCloudTipsSettings();
     return (genesisConfig()['account_retention']['enabled']??false)===true
         &&$settings['ready']&&$settings['historyReconciled']
+        &&genesisBoostyDonationDestination(genesisConfig()['boosty']??[])===null
         &&genesisDb()->query('SELECT 1 FROM donation_receipts WHERE user_id IS NULL LIMIT 1')->fetchColumn()===false;
 }
 

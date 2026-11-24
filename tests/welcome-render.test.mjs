@@ -62,10 +62,12 @@ test("anonymous welcome renders Google-only sign-in in every supported language"
       }));
       assert.ok(html.includes("GENESIS"), `${language}: public purpose must render`);
       assert.ok(html.includes("google-signin-light-pill.svg"), `${language}: Google sign-in must render`);
-      const localePrefix=edition==='domestic'?'/ru':'';
-      const localeQuery=language===(edition==='domestic'?'ru':'en')?'':`?lang=${language}`;
+      const localePrefix='';
+      const localeQuery=language==='en'?'':`?lang=${language}`;
       assert.ok(html.includes(`href="${localePrefix}/privacy${localeQuery}"`) && html.includes(`href="${localePrefix}/terms${localeQuery}"`), `${language}: localized public documents must remain linked`);
-      if(edition==='international')assert.doesNotMatch(html,/YooKassa|ЮKassa|RUB|Russian tax|for Russia|772495179010/i,`${language}: international storefront stays in USD without regional payment notices`);
+      assert.doesNotMatch(html,/Paddle|href="\/ru\//i,`${language}: retired processor and separate storefront are absent`);
+      const footer=html.match(/<footer class="welcome-footer public-footer">[\s\S]*?<\/footer>/)?.[0];
+      assert.ok(footer?.includes('772495179010')&&footer.includes('nikitalexanderson@gmail.com'),`${language}: actual service provider and tax ID remain visible in the footer`);
       assert.equal((html.match(/role="radio"/g)??[]).length,14,`${edition}/${language}: every language remains selectable`);
       assert.doesNotMatch(html, /yandex|яндекс|genesiscalendar\.ru/i, `${language}: obsolete public auth must be absent`);
       assert.doesNotMatch(html, /android-install-welcome/, `${language}: other devices have no Android promotion`);

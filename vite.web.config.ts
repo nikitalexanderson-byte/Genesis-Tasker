@@ -61,7 +61,7 @@ function publicLegalDocuments(): Plugin {
       const root = /<div id="root">[\s\S]*<\/div>/;
       if (!root.test(template)) this.error("Public homepage root is missing.");
       const urls:string[]=[];
-      for(const edition of ['international','domestic'] as const)for(const language of REGION_LANGUAGES) {
+      for(const edition of ['domestic'] as const)for(const language of REGION_LANGUAGES) {
         const translate=(text:string)=>translateText(text,language);
         const backup=JSON.parse(readFileSync(path.join(projectRoot,'app/backup-locales',`${language}.json`),'utf8')) as Record<string,string>;
         for(const page of PUBLIC_PAGES) {
@@ -76,7 +76,7 @@ function publicLegalDocuments(): Plugin {
             .replace(/<title>[^<]*<\/title>/,`<title>${escape(title)} · Genesis Tasker</title>`)
             .replace(/(<meta name="description" content=")[^"]*("\s*\/?\s*>)/,(_match,start,end)=>`${start}${escape(description)}${end}`)
             .replace(/<link rel="canonical"[^>]*>/,`<link rel="canonical" href="${PUBLIC_ORIGIN}${canonical}" />\n${alternates}`);
-          const directory=edition==='domestic'?(language==='ru'?'ru/':`_domestic-locales/${language}/`):(language==='en'?'':`_public-locales/${language}/`);const filename=`${directory}${page==='home'?'index':page}.html`;
+          const directory=language==='en'?'':`_public-locales/${language}/`;const filename=`${directory}${page==='home'?'index':page}.html`;
           if(filename==='index.html')index.source=source;else this.emitFile({type:'asset',fileName:filename,source});
           if(page!=='login')urls.push(`${PUBLIC_ORIGIN}${canonical}`);
         }

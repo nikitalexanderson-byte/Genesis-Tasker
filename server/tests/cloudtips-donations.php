@@ -22,6 +22,14 @@ function tipsSend(string $body,?string $signature=null,string $type='application
     return genesisCloudTipsWebhook($body,$signature??base64_encode(hash_hmac('sha256',$body,'TestTips42!?',true)),$type);
 }
 $db=genesisDb();$now=genesisNow();
+$foreignUrl='https://boosty.to/genesiscalendar/donate';
+tipsCheck(genesisBoostyDonationDestination(['enabled'=>true,'profile_verified'=>true,'profile_url'=>$foreignUrl])===$foreignUrl,'Verified project donation page refused');
+foreach([[],['enabled'=>true,'profile_url'=>$foreignUrl],['enabled'=>true,'profile_verified'=>false,'profile_url'=>$foreignUrl],
+    ['enabled'=>true,'profile_verified'=>true,'profile_url'=>$foreignUrl.'?user=private'],
+    ['enabled'=>true,'profile_verified'=>true,'profile_url'=>'https://boosty.to.evil.invalid/genesiscalendar/donate']]as$unverified)
+    tipsCheck(genesisBoostyDonationDestination($unverified)===null,'Unverified or identifying foreign destination became usable');
+$options=genesisDonationMethods(['REMOTE_ADDR'=>'127.0.0.1','HTTP_CF_IPCOUNTRY'=>'RU']);
+tipsCheck($options===['schemaVersion'=>1,'region'=>'unknown','boosty'=>['available'=>false,'url'=>null]],'Unconfigured foreign method or spoofed region became active');
 tipsCheck(strlen(genesisCloudTipsSettings()['secret'])===12&&genesisCloudTipsSettings()['ready'],'Documented 12-character provider secret rejected');
 foreach(['donor','peer']as$id)$db->prepare('INSERT INTO users(id,google_sub,email,created_at,updated_at) VALUES(?,?,?,?,?)')
     ->execute([$id,'synthetic-'.$id,$id.'@example.invalid',$now,$now]);

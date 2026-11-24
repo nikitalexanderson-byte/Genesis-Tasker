@@ -3,6 +3,7 @@ import domesticServiceCopy from './public-domestic-service-copy.json';
 import {publicProductCopy} from './public-product';
 import {currentPublicEdition,type PublicEdition} from './public-route';
 import websiteRegionCopy from './website-region-copy.json';
+import donationMethodCopy from './donation-method-copy.json';
 import releaseLegalCopy from "./release-318-legal-copy.json";
 import { SERVICE_IDENTITY } from "./public-service";
 import dailyAdviceCopy from "./daily-advice-copy.json";
@@ -12,7 +13,7 @@ import { accountRetentionDeleteSection, accountRetentionPrivacySection, accountR
 import { dictationSpellingLegalSection } from './dictation-legal';
 import { weatherSolarLegalSection, weatherAndroidSolarLegalSection, weatherSourcesLegalSection } from './weather-legal';
 
-export const LEGAL_UPDATED = "2026-11-23";
+export const LEGAL_UPDATED = "2026-11-24";
 export const publicLegalUpdated=()=>LEGAL_UPDATED;
 
 const sharedDataDeletionNotice = "После удаления аккаунта общие задачи и их вложения могут сохраняться для других участников, в том числе при передаче владения проектом. Если у вас есть право редактирования задачи, на сайте откройте её, нажмите «Редактировать», затем «Убрать файл» у вложения и «Сохранить задачу». В Android откройте «Файлы задачи», выберите «Убрать файл», подтвердите «Убрать» и нажмите «Сохранить». Закрытые резервные копии удаляются по штатной ротации; мгновенное стирание отдельных записей и файлов из них не гарантируется.";
@@ -34,6 +35,7 @@ export const legalPages = {
       ["Дневник снов и диктовка", releaseLegalCopy.ru.dreamData],
       dictationSpellingLegalSection,
       ["Добровольные чаевые CloudTips", releaseLegalCopy.ru.tipsData],
+      [donationMethodCopy.ru.title,donationMethodCopy.ru.privacy],
       [dailyAdviceCopy.ru.dataTitle, dailyAdviceCopy.ru.dataNotice + " " + dailyAdviceCopy.ru.ageData],
       [billingTrialCopy.ru.privacyTitle, billingTrialCopy.ru.privacyNotice],
       ["Уведомления с советами", "Уведомления с советами выключены по умолчанию. После отдельного включения и разрешения устройства GENESIS сохраняет выбранное время и часовой пояс, а для браузера — адрес доставки Web Push и технические ключи подписки в зашифрованном виде. Сервер хранит связь устройства с аккаунтом, выбранный на день совет и состояние доставки, чтобы повторная попытка не создавала новые показы. Push-сообщение содержит технический идентификатор; перед показом браузер проверяет текущий аккаунт и согласие. Android использует локальное расписание и зашифрованный кэш аккаунта. Текст совета может быть виден на заблокированном экране согласно настройкам устройства. Нажатие открывает сохранённый совет, не выбирая новый. Материалы 18+, психопомпия и материалы об алкоголе в эти уведомления не включаются. Уведомления можно выключить в настройках советов, отключить браузерное устройство или отозвать системное разрешение. При удалении аккаунта связанные подписки и записи доставки удаляются из рабочей базы; резервные копии обслуживаются по штатной ротации."],

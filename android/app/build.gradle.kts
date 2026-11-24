@@ -186,6 +186,7 @@ val genesisAssets = tasks.register<GenesisAssetsTask>("genesisAssets") {
     from(rootProject.file("../app/billing-safety-copy.json")) { into("i18n") }
     from(rootProject.file("../app/billing-feature-copy.json")) { into("i18n") }
     from(rootProject.file("../app/billing-trial-copy.json")) { into("i18n") }
+    from(rootProject.file("../app/donation-method-copy.json")) { into("i18n") }
     from(rootProject.file("../server/resources/feature-access-policy.json")) { into("catalogs") }
     from(rootProject.file("../server/resources/billing-catalog.json")) { into("catalogs") }
     from(rootProject.file("../server/resources/advice-age-access-policy.json")) { into("catalogs") }
