@@ -65,6 +65,16 @@ export async function messengerPending(userId:string,chatId:string,value?:string
   const saved=await vault<{iv:Uint8Array;encrypted:ArrayBuffer}|null>(name);
   return saved?new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:saved.iv as BufferSource,additionalData:new TextEncoder().encode(name)},key,saved.encrypted)):null;
 }
+/** Current web Messenger is the only writer of these composition/command cells.
+ * Web Locks serialize the complete encrypted read/compare/write across tabs;
+ * a different saved value is a conflict, never an instruction to replace it. */
+export async function compareMessengerPending(userId:string,chatId:string,expected:string|null,next:string|null,current:()=>void):Promise<void>{
+ current();if(typeof navigator==='undefined'||!navigator.locks)throw new Error('KEY_STORAGE_UNAVAILABLE');
+ await navigator.locks.request('genesis-messenger-cell:'+userId+':'+chatId,async()=>{
+  current();const saved=await messengerPending(userId,chatId);current();if(saved===next)return;
+  if(saved!==expected)throw new Error('MESSENGER_DRAFT_CHANGED');await messengerPending(userId,chatId,next);current();
+ });
+}
 export async function pinPeerKey(userId:string,peerId:string,keyId:string):Promise<void>{const name='peer:'+userId+':'+peerId;if((privateAccountIsRequired(userId)?await protectedPin(userId,name,keyId):await vault(name,keyId,true))!==keyId)throw new Error('PEER_KEY_CHANGED');}
 /** Read-only legacy adoption before product access/activation. No raw key,
  * receipt or draft is uploaded; all original IDB records remain untouched. */

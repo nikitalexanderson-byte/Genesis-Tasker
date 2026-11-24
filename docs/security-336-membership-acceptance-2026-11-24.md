@@ -1,5 +1,18 @@
 # Общие проекты: приёмка изменения участников 24 ноября
 
+## Mounted54: exact selector failure
+
+Mounted54 ended FAIL after personal and three shared scopes became ACTIVE and
+normal task/legacy-deny readback passed. The final AX snapshot actually contains
+both members and their workspace role selects. The exact getByLabel query does
+not match a label wrapping this select/options; the replacement getByRole with
+the observed combobox name does. Minimal actual-browser structure diagnosis:
+old matches0, role matches1, runtime/membership54-selector-diagnosis59.json.
+All three normal role lookups now use that accessible control. This is a QA
+selector correction, not a membership/ACL bypass. Actual Retry-After windows and
+600-request limits remain. Bundle54 hashdf8d904f…d2b05c9 stayed unchanged;
+cleanup PASS. Owner consent/final apply still need their actual UI result.
+
 Исходная база7287ac54. Это дополнительная предметная приёмка, не итоговое
 крипторевью и не завершение полных сценариев33/34 или выпуска3.3.6.
 

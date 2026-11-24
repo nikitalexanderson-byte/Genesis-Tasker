@@ -21,3 +21,60 @@ The browser check covers the visible warning, stale-code removal, disabled Send,
 encrypted local draft, cold retained pin and original-key history. Its localized
 layout matrix is14 languages ×4 widths ×2 schemes. Results, exact input hashes
 and limitations must be recorded after execution; no new PASS is claimed here.
+
+## Native58 and the discovered web composition gap
+
+Native58 SUCCESS12m44s, fresh focused8/8 JVM including both current-repository
+peer-pin cases. Exact input6D331482…1928C2F; results are in runtime/
+native150-secret-build58-{result,jvm,identity}.json. This accepts the stated
+native repository cases, not a second complete UI migration or all scenarios.
+
+The browser drill exposed an implementation gap: normal web textarea changes
+were held only in React state. No general autosave existed, and an unfinished
+edit could not survive reload with its original target/revision. Code59 adds
+an encrypted versioned composition, ordered owned writes, cross-tab Web Locks
+CAS, exact edit target/base revision and stable create token. Legacy raw text
+is read without interpretation and retained. Replaced/acknowledged compositions
+and command originals remain encrypted inert history. An acknowledgement clears
+only its exact composition; revised text receives a fresh create token, while
+another composition is preserved. Failed saves block send/navigation and cause
+the ordinary browser unsaved-work prompt. Lock/account changes clear the UI
+and owned in-memory journal references. No background write or plaintext fallback.
+
+New browser runs58-01/02 were setup/selector failures (missing public build
+defines, then an intentionally absent Send control). Run03 demonstrated the
+missing draft after the key change. Its earlier async wait incorrectly treated
+a Promise as evidence: that first PASS does not prove persistence. The harness
+now explicitly awaits the actual encrypted-cell read and a bounded boolean poll.
+All three owned runtimes were cleaned; original failed reports remain unchanged.
+Code59 adds source regressions for ordering, failed storage, competing readers,
+late/repeated acknowledgement, cold edit identity and malformed/foreign input.
+The full mounted browser drill also exercises exact lost-ACK retry and cold PATCH.
+New code59 acceptance is pending; no failed result is relabelled PASS.
+
+## Accepted bounded web59 result
+
+`output/playwright/security336-secret-peer59-1124-05/results.json`: PASS5/5
+functional checks and112/112 localized layout cases, cleanup PASS, input source
+unchanged throughout. Source snapshot08b861a1…5cf17f, entryd7be45bd…70f716.
+Actual WebCrypto/IndexedDB preserve the draft after the changed key and cold
+reload. Replacing the modeled reply with the original peer still opens retained
+history. A lost message ACK is retried after cold reload with byte-identical
+POST; no duplicate message appears. A cold unfinished edit emits PATCH with
+the original message ID and base revision, never another POST. Three modeled
+mutation attempts total: original POST, exact retry and PATCH. No page errors.
+
+Pure composition regressions8/8 PASS; types/scoped lint and build:web PASS.
+Identity changes now key the inner Messenger component so old state cannot
+follow another user; this also resolves the new lint rejection of effect-time
+state resets without disabling that check. I18n/native export audit58 PASS and
+all14 changed-key messages were read semantically; their catalogue is unchanged59.
+Manual screenshots: RU390light, EN1440dark, JA360dark. Remaining109 combinations
+have geometry/input checks, not manual visual review. This is the standalone
+component with modeled chat transport, not whole-app or font-scale1.3 acceptance.
+
+Run59-04 passed the same first4 functional checks and112 layout cases, but its
+last assertion matched edited textarea text before the PATCH finished. The
+corrected59-05 waits for the actual message row. The original failure and cleanup
+remain recorded. Protected private-vault storage, final native asset59 identity,
+complete20-path/48-scenario review and signed149→150 are not claimed here.

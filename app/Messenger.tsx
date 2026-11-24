@@ -1,10 +1,11 @@
 "use client";
-import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ExperimentalIcon } from './ExperimentalIcon';
 import { DialogCloseButton } from './DialogCloseButton';
 import { messengerRequest, messengerInbox, messengerChat, messengerContacts, messengerProjects, type MessengerChat, type MessengerContact, type MessengerMessage, type MessengerDevice, type ChatKind } from './messenger-api';
 import { messengerDevice, messengerSecret, type LocalMessengerDevice } from './messenger-secrets';
-import { messengerPending } from './private-message-vault';
+import { messengerPending, compareMessengerPending } from './private-message-vault';
+import {MessengerCompositions,serializeMessengerCompose,type MessengerCompose} from './messenger-compose';
 import { encryptPrivateMessage, decryptPrivateMessage } from './private-message-crypto';
 import type { NoticeActivity } from './notification-dock-model';
 import copy from './messenger-copy.json';
@@ -22,6 +23,7 @@ type Pending = {
     method: string;
     path: string;
     body: Record<string, unknown>;
+    composition?: string;
 };
 function MessengerIcon({ label, name, onClick, disabled = false }: {
     label: string;
@@ -39,8 +41,7 @@ function MessengerDialog({ title, closeLabel, close, children }: {
     useEffect(() => { const d = ref.current; d?.showModal(); return () => d?.close(); }, []);
     return <dialog ref={ref} className="messenger-dialog" aria-label={title} onClose={close}><header><h3>{title}</h3><DialogCloseButton aria-label={closeLabel} onClick={close}/></header>{children}</dialog>;
 }
-/** Shares the existing Google session and account-generation cancellation in cloud-sync. */
-export default function Messenger({ userId, language, active = true, view = 'contacts', onActivity, onConversationOpen, legacyEnabled = false }: {
+type MessengerProps = {
     userId: string;
     language: string;
     active?: boolean;
@@ -48,7 +49,10 @@ export default function Messenger({ userId, language, active = true, view = 'con
     onActivity?: (activity: NoticeActivity) => void;
     onConversationOpen?: () => void;
     legacyEnabled?: boolean;
-}) {
+};
+/** A different identity gets fresh component state and its own local journal. */
+export default function Messenger(props:MessengerProps){return <OwnedMessenger key={props.userId} {...props}/>;}
+function OwnedMessenger({ userId, language, active = true, view = 'contacts', onActivity, onConversationOpen, legacyEnabled = false }:MessengerProps) {
     const c = (key: CopyKey) => ((copy as Record<string, Record<string, string>>)[language] ?? copy.en)[key] ?? copy.en[key];
     const [blocked,setBlocked]=useState<MessengerContact[]>([]);
     const [chats, setChats] = useState<MessengerChat[]>([]), [contacts, setContacts] = useState<MessengerContact[]>([]);
@@ -66,7 +70,26 @@ export default function Messenger({ userId, language, active = true, view = 'con
     const earlierLoaded = useRef(false);
     const generation = useRef(0), selection = useRef<string | null>(null), working = useRef(false), alive = useRef(true), device = useRef<LocalMessengerDevice | null>(null), createId = useRef('');
     const list = useRef<HTMLOListElement>(null);
-    useEffect(()=>subscribePrivateAccount(()=>{if(!privateAccountIsRequired(userId))return;const view=privateAccountView();if(view.ownerId!==userId||view.phase!=='ready'){generation.current++;selection.current=null;device.current=null;setSelected(null);setMessages([]);setCode('');setSecretError('');setPending(null);setEditing(null);}}),[userId]);
+    const composition=useRef<MessengerCompose|null>(null),draftWrites=useRef(0),draftFailed=useRef(false);
+    const compositions=useMemo(()=>new MessengerCompositions(userId,{admit:()=>captureMessagingAccess(userId),
+        read:async(key,current)=>{current();const value=await messengerPending(userId,key);current();return value;},
+        compare:(key,expected,next,current)=>compareMessengerPending(userId,key,expected,next,current).then(()=>undefined)}),[userId]);
+    useEffect(()=>{const beforeUnload=(event:BeforeUnloadEvent)=>{if(draftWrites.current||draftFailed.current){event.preventDefault();event.returnValue='';}};window.addEventListener('beforeunload',beforeUnload);return()=>window.removeEventListener('beforeunload',beforeUnload);},[]);
+    function presentComposition(value:MessengerCompose){composition.current=value;setDraft(value.text);setEditing(value.edit?{id:value.edit.id,seq:value.edit.seq,senderId:value.edit.senderId,revision:value.edit.revision,text:value.edit.sourceText,payload:null,createdAt:'1970-01-01T00:00:00Z',updatedAt:'1970-01-01T00:00:00Z',deletedAt:null,displayText:value.edit.sourceText}:null);}
+    function changeComposition(text:string,edit:DisplayMessage|null=editing,replace=false){
+        const previous=composition.current;if(!previous||previous.chatId!==selection.current)return;
+        const next:MessengerCompose={...previous,text,edit:edit?{id:edit.id,seq:edit.seq,senderId:edit.senderId,revision:edit.revision,sourceText:edit.displayText}:null,...(replace?{token:crypto.randomUUID(),sequence:1}:{})};
+        const version=generation.current;
+        try{const saving=compositions.save(next,previous.token);presentComposition(next);draftWrites.current++;
+            void saving.then(()=>{draftFailed.current=false;}).catch(()=>{draftFailed.current=true;if(alive.current&&version===generation.current)setError(c('failure'));}).finally(()=>{draftWrites.current--;});
+        }catch{draftFailed.current=true;setError(c('failure'));}
+    }
+    async function retireCommand(id:string,command:Pending,current:()=>void){
+        const raw=JSON.stringify(command),mid=typeof command.body.id==='string'?command.body.id:command.path.split('/').at(-1)!;
+        await compareMessengerPending(userId,`draft:${id}:command-history:${mid}:${command.method}:${command.body.expectedRevision??0}`,null,raw,current);current();
+        await compareMessengerPending(userId,id,raw,null,current);current();
+    }
+    useEffect(()=>subscribePrivateAccount(()=>{if(!privateAccountIsRequired(userId))return;const view=privateAccountView();if(view.ownerId!==userId||view.phase!=='ready'){generation.current++;selection.current=null;device.current=null;composition.current=null;compositions.forget();setSelected(null);setMessages([]);setDraft('');setCode('');setSecretError('');setPending(null);setEditing(null);}}),[userId,compositions]);
     const path = (id: string, suffix = '') => '/conversations/' + encodeURIComponent(id) + suffix;
     function failure(e: unknown) { const msg = e instanceof Error ? e.message : ''; return msg.includes('CONTACT_UNAVAILABLE') ? c('contactUnavailable') : msg.includes('RATE_LIMIT') ? c('requestLimit') : c('failure'); }
     async function run(action: () => Promise<void>) { if (working.current)
@@ -89,7 +112,7 @@ export default function Messenger({ userId, language, active = true, view = 'con
         await messengerRequest(path(chat.id,'/visibility'),'POST',{action});
         await refresh();
     }
-    useEffect(() => { const guard=generation; alive.current = true; return () => { alive.current = false; guard.current++; }; }, [userId]);
+    useEffect(() => { const guard=generation; alive.current = true; return () => { alive.current = false; guard.current++;void compositions.flush().catch(()=>undefined).finally(()=>compositions.forget()); }; }, [userId,compositions]);
     useEffect(() => {
         let stopped = false;
         const update = () => { if (stopped || !userId || document.visibilityState !== 'visible')
@@ -165,6 +188,7 @@ export default function Messenger({ userId, language, active = true, view = 'con
     }
     async function choose(chat: MessengerChat) {
         const current=captureMessagingAccess(userId);
+        await compositions.flush();current();
         generation.current++;
         earlierLoaded.current=false;
         selection.current = chat.id;
@@ -188,10 +212,11 @@ export default function Messenger({ userId, language, active = true, view = 'con
                 return;
             if (saved)
                 setPending(JSON.parse(saved));
-            const recovered = await messengerPending(userId, 'draft:' + chat.id);
+            const recovered = await compositions.load(chat.id);
             current();
             if (selection.current !== chat.id) return;
-            if (recovered) setDraft(recovered);
+            presentComposition(recovered);
+            draftFailed.current=false;
             await load(chat.id);
         }
         finally {
@@ -209,42 +234,44 @@ export default function Messenger({ userId, language, active = true, view = 'con
         return () => clearInterval(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selected?.id, active, view, language]);
-    const back = () => { generation.current++; selection.current = null; setSelected(null); setMessages([]); setDraft(''); setEditing(null); setPending(null); setSecretError(''); setError(''); };
+    const back = async () => {const current=captureMessagingAccess(userId);await compositions.flush();current();generation.current++;selection.current=null;composition.current=null;setSelected(null);setMessages([]);setDraft('');setEditing(null);setPending(null);setSecretError('');setError('');};
     async function selectContacts() {const current=captureMessagingAccess(userId);setTab('contacts');const result=await messengerContacts();current();if(alive.current){setContacts(result.contacts);setBlocked(result.blocked);}}
     async function submit() {
         if (!selected)
             return;
         const id = selected.id;
         const owner=captureMessagingAccess(userId),current=()=>{owner();if(!alive.current||selection.current!==id)throw new Error('E2EE_MESSAGE_CUSTODY_RETIRED');};current();
+        await compositions.flush();current();
+        const saved=compositions.snapshot(id),edit=saved.edit;
         let command = pending;
         if (!command) {
-            const fresh = await messengerChat(id), mid = editing?.id ?? crypto.randomUUID(), body: Record<string, unknown> = { id: mid };
+            const fresh = await messengerChat(id), mid = edit?.id ?? saved.token, body: Record<string, unknown> = { id: mid };
             current();
-            if (editing)
-                body.expectedRevision = editing.revision;
+            if (edit)
+                body.expectedRevision = edit.revision;
             if (fresh.kind === 'secret') {
                 const d = await localDevice(), secret = await messengerSecret(userId, fresh, d);
                 current();
                 body.deviceId = d.id;
-                body.payload = await encryptPrivateMessage(secret.key, { spaceId: 'messenger-secret-v1', conversationId: id, id: mid, senderId: userId, revision: (editing?.revision ?? 0) + 1 }, draft, secret.keyIds);
+                body.payload = await encryptPrivateMessage(secret.key, { spaceId: 'messenger-secret-v1', conversationId: id, id: mid, senderId: userId, revision: (edit?.revision ?? 0) + 1 }, saved.text, secret.keyIds);
                 current();
             }
             else
-                body.text = draft;
-            command = { method: editing ? 'PATCH' : 'POST', path: path(id, '/messages' + (editing ? '/' + mid : '')), body };
-            await messengerPending(userId, id, JSON.stringify(command));
+                body.text = saved.text;
+            command = { method: edit ? 'PATCH' : 'POST', path: path(id, '/messages' + (edit ? '/' + mid : '')), body,composition:serializeMessengerCompose(saved) };
+            await compareMessengerPending(userId,id,null,JSON.stringify(command),current);
             current();
             setPending(command);
         }
         current();await messengerRequest(command.path, command.method, command.body);current();
-        await messengerPending(userId, id, null);current();
-        await messengerPending(userId, 'draft:' + id, null);current();
+        const retained=await compositions.acknowledge(id,command.composition??null);current();
+        await retireCommand(id,command,current);
         if (selection.current !== id)
             return;
         setPending(null);
         setPendingConflict(false);
-        setDraft('');
-        setEditing(null);
+        presentComposition(retained);
+        draftFailed.current=false;
         await load(id);
         await refresh();
     }
@@ -267,15 +294,16 @@ export default function Messenger({ userId, language, active = true, view = 'con
             }
         }
         // Persist the recovered text before releasing the rejected command.
-        current();await messengerPending(userId, 'draft:' + id, text);current();
-        await messengerPending(userId, id, null);current();
+        current();await compositions.flush();current();const previous=compositions.snapshot(id),recovered={...previous,token:crypto.randomUUID(),sequence:1,text,edit:null};
+        const retained=await compositions.save(recovered,previous.token);current();
+        await retireCommand(id,pending,current);
         if (selection.current !== id) return;
-        setPending(null); setPendingConflict(false); setEditing(null); setDraft(text);
+        setPending(null);setPendingConflict(false);presentComposition(retained);
         await load(id);
     }
     async function membership(action: string, extra: Record<string, unknown> = {}) { if (!selected)
         return; const current=captureMessagingAccess(userId),id = selected.id; const deviceId = selected.kind === 'secret' && action === 'accept' ? (await localDevice()).id : undefined;current();await messengerRequest(path(id, '/membership'), 'POST', { action, ...extra, ...(deviceId ? { deviceId } : {}) });current();if (action === 'decline' || action === 'leave')
-        back();
+        await back();
     else
         await load(id); await refresh(); }
     async function create() {const current=captureMessagingAccess(userId);if (!createId.current)
@@ -297,7 +325,7 @@ export default function Messenger({ userId, language, active = true, view = 'con
     if (view === 'notices')
         return <aside aria-live="polite">{chats.filter(chat => chat.unread > 0 || chat.members.some(m => m.userId === userId && m.status === 'pending')).map(chat => <button type="button" className="shared-private-notice" key={chat.id} onClick={() => void run(() => choose(chat))}><strong>{chat.title}</strong><span>{c(chat.kind)} · {chat.unread}</span></button>)}</aside>;
     return <section className="messenger" aria-label={c('title')} data-no-translate>
-    <header className="messenger-toolbar">{selected ? <MessengerIcon label={c('back')} name="chevron-left" onClick={back} disabled={busy}/> : null}<h3>{selected?.title ?? c('title')}</h3>{selected ? <><MessengerIcon label={c('members')} name="team" onClick={() => setModal('members')} disabled={busy}/><MessengerIcon label={c('refresh')} name="map-refresh" onClick={() => void run(async () => { await refresh(); await load(selected.id); })} disabled={busy}/>{selected.kind === 'secret' && code ? <MessengerIcon label={c('security')} name="lock" onClick={() => setModal('security')} disabled={busy}/> : null}</> : null}</header>
+    <header className="messenger-toolbar">{selected ? <MessengerIcon label={c('back')} name="chevron-left" onClick={()=>void run(back)} disabled={busy}/> : null}<h3>{selected?.title ?? c('title')}</h3>{selected ? <><MessengerIcon label={c('members')} name="team" onClick={() => setModal('members')} disabled={busy}/><MessengerIcon label={c('refresh')} name="map-refresh" onClick={() => void run(async () => { await refresh(); await load(selected.id); })} disabled={busy}/>{selected.kind === 'secret' && code ? <MessengerIcon label={c('security')} name="lock" onClick={() => setModal('security')} disabled={busy}/> : null}</> : null}</header>
     {busy || loading ? <div role="status" className="messenger-loading"><span />{c('loading')}</div> : null}{error ? <p role="alert" className="messenger-error">{error}</p> : null}
     {!selected ? <><div className="messenger-tabs connected-submenu" role="group" aria-label={c('title')}><button type="button" aria-pressed={tab !== 'contacts'} onClick={() => setTab('chats')}>{c('chats')}</button><button type="button" aria-pressed={tab === 'contacts'} onClick={() => void run(selectContacts)}>{c('contacts')}</button></div>
       {tab === 'chats' ? <div className="messenger-conversation-actions">
@@ -317,11 +345,11 @@ export default function Messenger({ userId, language, active = true, view = 'con
     </> : <><details className="messenger-help"><summary>{c(selected.kind)}</summary><p>{c(selected.kind === 'secret' ? 'secretHelp' : 'cloudHelp')}</p>{selected.kind === 'project' ? <p>{c('projectHelp')}</p> : null}</details>
       {own?.status === 'pending' ? <div className="messenger-invitation"><p>{c('invitation')}</p><div className="messenger-actions"><button type="button" disabled={busy} onClick={() => void run(() => membership('accept'))}>{c('accept')}</button><button type="button" disabled={busy} onClick={() => void run(() => membership('decline'))}>{c('decline')}</button></div></div> : null}
       {secretError ? <p role="status">{secretError}</p> : null}
-      <ol ref={list} className="messenger-messages" aria-live="polite">{cursor ? <li><button type="button" disabled={busy} onClick={() => void run(() => load(selected.id, cursor))}>{c('older')}</button></li> : null}{messages.map(m => <li key={m.id} data-self={m.senderId === userId || undefined}><header><strong>{m.senderId === userId ? c('you') : selected.members.find(member => member.userId === m.senderId)?.name ?? ''}</strong><time dateTime={m.createdAt}>{new Intl.DateTimeFormat(language, { dateStyle: 'short', timeStyle: 'short' }).format(new Date(m.createdAt))}</time></header><p>{m.displayText}</p>{!m.deletedAt && m.senderId === userId ? <div className="messenger-message-actions">{<MessengerIcon label={c('edit')} name={'edit'} onClick={() => { setEditing(m); setDraft(m.displayText); }} disabled={busy || !!pending || !!m.failed}/>}{<MessengerIcon label={c('delete')} name={'trash'} onClick={() => { if (confirm(c('confirmDelete')))
+      <ol ref={list} className="messenger-messages" aria-live="polite">{cursor ? <li><button type="button" disabled={busy} onClick={() => void run(() => load(selected.id, cursor))}>{c('older')}</button></li> : null}{messages.map(m => <li key={m.id} data-self={m.senderId === userId || undefined}><header><strong>{m.senderId === userId ? c('you') : selected.members.find(member => member.userId === m.senderId)?.name ?? ''}</strong><time dateTime={m.createdAt}>{new Intl.DateTimeFormat(language, { dateStyle: 'short', timeStyle: 'short' }).format(new Date(m.createdAt))}</time></header><p>{m.displayText}</p>{!m.deletedAt && m.senderId === userId ? <div className="messenger-message-actions">{<MessengerIcon label={c('edit')} name={'edit'} onClick={() => changeComposition(m.displayText,m,true)} disabled={busy || !!pending || !!m.failed}/>}{<MessengerIcon label={c('delete')} name={'trash'} onClick={() => { if (confirm(c('confirmDelete')))
             void run(async () => { const body = { expectedRevision: m.revision, ...(selected.kind === 'secret' ? { deviceId: (await localDevice()).id } : {}) }; await messengerRequest(path(selected.id, '/messages/' + m.id), 'DELETE', body); await load(selected.id); }); }} disabled={busy || !!pending}/>}</div> : null}</li>)}</ol>
       {pending ? <p role="status">{c('pending')}</p> : null}
       {pending && pendingConflict ? <button type="button" disabled={busy} onClick={() => void run(recoverPendingConflict)}>{c('recoverPending')}</button> : null}
-      {ready ? <form className="messenger-compose" onSubmit={e => { e.preventDefault(); void run(submit); }}><label className="sr-only" htmlFor="messenger-draft">{c('message')}</label><textarea id="messenger-draft" maxLength={12000} value={draft} disabled={busy || !!pending} placeholder={c('message')} onChange={e => setDraft(e.target.value)}/><button type="submit" className="messenger-icon" aria-label={c(pending ? 'retry' : editing ? 'save' : 'send')} title={c(pending ? 'retry' : editing ? 'save' : 'send')} disabled={busy || (!pending && !draft.trim())}><ExperimentalIcon name="send"/></button>{editing && !pending ? <MessengerIcon label={c('cancel')} name={'close'} onClick={() => { setEditing(null); setDraft(''); }} disabled={busy}/> : null}</form> : null}
+      {ready ? <form className="messenger-compose" onSubmit={e => { e.preventDefault(); void run(submit); }}><label className="sr-only" htmlFor="messenger-draft">{c('message')}</label><textarea id="messenger-draft" maxLength={12000} value={draft} disabled={busy || !!pending} placeholder={c('message')} onChange={e => changeComposition(e.target.value)}/><button type="submit" className="messenger-icon" aria-label={c(pending ? 'retry' : editing ? 'save' : 'send')} title={c(pending ? 'retry' : editing ? 'save' : 'send')} disabled={busy || (!pending && !draft.trim())}><ExperimentalIcon name="send"/></button>{editing && !pending ? <MessengerIcon label={c('cancel')} name={'close'} onClick={() => changeComposition('',null,true)} disabled={busy}/> : null}</form> : null}
     </>}
     {modal === 'new' ? <MessengerDialog closeLabel={c('close')} title={c('newChat')} close={() => setModal(null)}><form onSubmit={e => { e.preventDefault(); void run(create); }}><div className="messenger-kind" role="group" aria-label={c('newChat')}>{(['direct', 'group', 'project', 'secret'] as const).map(k => <button type="button" key={k} aria-label={c(k)} title={c(k)} aria-pressed={kind === k} onClick={() => { setKind(k); createId.current = ''; }}>{k === 'project' ? 'PRO' : <ExperimentalIcon name={k === 'direct' ? 'account' : k === 'group' ? 'team' : 'eye'}/>}</button>)}</div>
       {kind === 'project' ? <label>{c('chooseProject')}<select value={project} required onChange={e => setProject(e.target.value)}><option value="">{c(projects.length ? 'chooseProject' : 'noProjects')}</option>{projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}</select></label> : <><label>{c(kind === 'group' ? 'emails' : 'email')}<input type={kind === 'group' ? 'text' : 'email'} required value={email} maxLength={12000} onChange={e => setEmail(e.target.value)}/></label>{kind === 'group' ? <label>{c('groupName')}<input value={title} required maxLength={120} onChange={e => setTitle(e.target.value)}/></label> : null}</>}
@@ -335,7 +363,7 @@ export default function Messenger({ userId, language, active = true, view = 'con
       {selected.kind === 'group' && own?.role === 'owner' ? <form className="messenger-compose" onSubmit={e => { e.preventDefault(); void run(async () => { await membership('add', { email }); setEmail(''); }); }}><input type="email" value={email} required placeholder={c('email')} aria-label={c('email')} onChange={e => setEmail(e.target.value)}/><button type="submit" disabled={busy}>{c('addMember')}</button></form> : null}
       {selected.kind === 'group' && own?.role !== 'owner' ? <button type="button" disabled={busy} onClick={() => void run(async () => { await membership('leave'); setModal(null); })}>{c('leave')}</button> : null}
       {peer && ['direct', 'secret'].includes(selected.kind) ? <button type="button" disabled={busy} onClick={() => { if (confirm(c('confirmBlock')))
-            void run(async () => { await messengerRequest('/blocks', 'POST', { userId: peer.userId, blocked: true }); setModal(null); back(); await refresh(); }); }}>{c('block')}</button> : null}
+            void run(async () => { await messengerRequest('/blocks', 'POST', { userId: peer.userId, blocked: true }); setModal(null); await back(); await refresh(); }); }}>{c('block')}</button> : null}
     </MessengerDialog> : null}
   </section>;
 }

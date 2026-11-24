@@ -1,5 +1,31 @@
 # Genesis Tasker: действующие правила
 
+## Продолжение24 ноября: compose59 принят в своём охвате
+
+- Web compose59: JS8/8, tsc/scoped lint02/build:web02 PASS. Actual browser59-05
+  PASS5 functional+112 locale/layout cases, cleanup PASS, unchanged source.
+  Native58 accepted8 JVM остаются своим native scope;59 assembly только обновит
+  web assets и identity, не является новым JVM run. No new native migration.
+- Mounted54 roster был исправен; exact getByLabel возвращает0 из-за label/select
+  options, getByRole возвращает1. Только3 QA selectors исправлены, не продуктовые
+  ACL/consents. Следующий mounted60 использует прежний immutable54 и startup proof.
+  Подробности/ограничения — security-336-secret-peer-keys.md и membership acceptance.
+- Во время asset build59 не менять app/android/contracts/public до identity.
+  No subagents/Daybreak, private JSON/demo-output запреты, основной149, gates off.
+
+## Продолжение24 ноября: web messenger compositions59
+
+- Native58 SUCCESS12m44s, focused8/8 JVM (2 current Messenger peer-pin +6 read-rate),
+  source6D331482…1928C2F. Root freeze58 снят. Это не full JVM и не новый UI4/4.
+- Web54 FAIL до role selector; owner/task +3 shared scopes ACTIVE и normal read
+  PASS. Не повторять перенос с нуля без разбора roster snapshot. Immutable54
+  не менять; cleanup/retention проверить по run.json, private JSON не читать.
+- Browser secret-peer58 выявил отсутствие web draft autosave. Новый полный59
+  block сохраняет encrypted composition/token/edit target, ordered writes,
+  Web Locks CAS и exact ACK/command cleanup с inert history. Код ещё требует
+  focused JS/browser/runtime acceptance; старые58 APK не принимают59 web diff.
+  Run03 first async Promise-based PASS не доказывает persistence; harness исправлен.
+
 ## Продолжение24 ноября: native57 принят
 
 - Build57 SUCCESS14m52s, focused6/6 JVM, exact source11DB6869…6DF3CD7C.

@@ -493,7 +493,7 @@ try{
     await panel.locator('.shared-team-member').first().waitFor({timeout:60000});
     const member=panel.locator('.shared-team-member').filter({hasText:sharedFixture.member.email});
     const row=await member.count()?member:panel.locator('.shared-team-member').filter({hasText:'QA Premium4life'});
-    await row.getByLabel('Доступ к пространству',{exact:true}).waitFor();return row;
+    await row.getByRole('combobox',{name:'Доступ к пространству',exact:true}).waitFor();return row;
    },async()=>{
     // Re-enter through the real unlock UI after an observed HTTP rate window;
     // no rate rows, recovery material, drafts or membership intents are reset.
@@ -502,7 +502,7 @@ try{
     await page.locator(`[data-shared-task-id="${sharedFixture.task.id}"]`).getByText(sharedFixture.task.title,{exact:true}).waitFor({timeout:60000});
    });
    const row=await openTeam('normal membership editor');
-   await row.getByLabel('Доступ к пространству',{exact:true}).selectOption('guest');
+   await row.getByRole('combobox',{name:'Доступ к пространству',exact:true}).selectOption('guest');
    const dialog=page.locator('.private-membership-dialog');await waitForMembership(dialog,'plan');
    await dialog.screenshot({path:`${output}/membership-plan-review.png`,animations:'disabled'});
    assert(await dialog.getByRole('button',{name:membershipCopy.confirm,exact:true}).isDisabled());
@@ -526,7 +526,7 @@ try{
    await page.reload();const gate=page.locator('.private-vault-dialog');await gate.waitFor();await recoveryInput(gate);await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
    await page.locator(`[data-shared-task-id="${sharedFixture.task.id}"]`).getByText(sharedFixture.task.title,{exact:true}).waitFor({timeout:60000});
    const fresh=await openTeam('cold membership editor');
-   assert.equal(await fresh.getByLabel('Доступ к пространству',{exact:true}).inputValue(),'guest');
+   assert.equal(await fresh.getByRole('combobox',{name:'Доступ к пространству',exact:true}).inputValue(),'guest');
    await page.screenshot({path:`${output}/membership-cold-team-readback.png`,fullPage:true,animations:'disabled'});
    report.membership={operation:'space-role',role:'guest',scopes:3,explicitOwnerConsents:3,coldNormalTaskRead:true,coldNormalTeamRead:true};save();
    await debug.send('Debugger.setPauseOnExceptions',{state:'none'});

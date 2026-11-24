@@ -1,5 +1,24 @@
 # Продолжение24 ноября: выпуск3.3.6 и отдельный сайт
 
+## Последнее: web compositions59 PASS
+
+Native58 SUCCESS: focused8/8 JVM, source6D331482…1928C2F, APK8692F310…5A97D3.
+No new native migration/UI4/4. Browser found missing ordinary web draft autosave;
+code59 now keeps versioned encrypted text/edit target, stable create token,
+serialized owner writes, cross-tab Web Locks CAS, exact ACK and inert command/
+composition history. Identity keys the inner component. No new crypto/library.
+JS8/8, tsc/scoped lint02/build:web02 PASS. Actual browser59-05 PASS5 functional
++112 locales/widths/themes, cleanup PASS. Exact POST after lost ACK/cold restart
+and cold PATCH are accepted; modeled chat transport, not full private-vault mode.
+Details and failures are retained in security-336-secret-peer-keys.md.
+
+Mounted54 FAIL13PASS/1FAIL (plus2notRepeated); its roster exists in AX. Exact
+getByLabel fails on the select/options label; accessible getByRole matches1 in
+actual browser minimal diagnosis. Three QA lookups corrected. Runtime54 cleaned;
+immutable54 unchanged. Next mounted60 can use same immutable/startup proof;
+do not repeat native37 migration. Membership consent/apply and final20/48,
+signed149→150 and final internal exact review remain open. No release yet.
+
 ## Последнее: native57 PASS и scenario35
 
 Native57 SUCCESS14m52s, focused6/6 JVM, actual UI57 PASS4/4 на retained37;
