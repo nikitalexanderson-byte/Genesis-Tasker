@@ -1,5 +1,46 @@
 # Общие проекты: приёмка изменения участников 24 ноября
 
+## Независимое чтение и сохранение операции71
+
+Найден отдельный блокирующий порядок: MembershipOperationDrafts.snapshot
+удерживал общую serial queue, пока сеть читает весь graph. Независимый access
+probe мог задерживать create/inspect новой durable операции и вход в review.
+RED71 подтверждает отсутствие сохранённого intent до завершения такого чтения:
+runtime/membership-probe71-red.log,1PASS/1FAIL. Это bounded воспроизведение,
+не доказательство единственной причины прежнего mounted60.
+
+Readonly snapshot теперь выполняет независимый capture с current-account
+проверками до и после ожидания. Он не меняет drafts/consents; preview/confirm/
+start/cancel/fork по-прежнему сериализованы, подписи/план/ACL не ослаблены.
+GREEN71:3/3 — сохранение и inspect до завершения чужого чтения, отказ старта
+без review, guard перед capture и отказ при account change до разбора ответа.
+Typecheck/scoped lint PASS. Whole UI результат ещё нужен; текущий mounted64
+использует immutable63 и эту более позднюю correction не принимает.
+
+## Новый участник через приглашение70
+
+Focused admission70-03: **5/5 PASS**, cleanup PASS. Evidence:
+output/qa/security336-membership-admission70-1124-03/results.json и input-identity.
+App/server соответствуют f330b846; QA helper и runner имеют отдельные hashes.
+Новый участник изначально отсутствует и в пространстве, и в проектах. Настоящие
+signed invitation issue/readback, recipient personal authority и durable
+InvitationRecipient сохраняют идемпотентное согласие, не давая доступа к данным.
+Owner discovery возвращает invitation-admit; production planner/SQLite atomic
+commit меняет ACL и три независимых roots, а точный commit повторяет receipt.
+Устройство нового участника ещё не имеет capsule и не открывает scope.
+Только отдельный requester-bound challenge, owner signature и явно выданная
+history capsule дают чтение epochs1/2; cold device unlock сохраняет обе записи.
+
+Это устраняет прежний пробел теста «устройство уже существующего участника»
+в реальном store/crypto scope. Transport остаётся CLI, device vault — encrypted
+in-memory CAS; root bodies синтетические. Owner-review/invitation UI, HTTP rate
+и полный сценарий34 этим не объявляются PASS. Предыдущие6/6 не повторялись.
+Ранние70-01/02 сохранены как FAIL: QA пропускал await directory verifier,
+затем брал отсутствующий email из технического users.json. QA теперь берёт
+реальный email synthetic DB user. В обоих случаях cleanup PASS; product guards
+и подписи не ослаблялись. Точное имя отказа unapproved device —
+E2EE_REVOKED_DEVICE, оно проверяется без расширенного допуска любых ошибок.
+
 ## Mounted60 и staggered read63
 
 60 FAIL12PASS/1FAIL,2notRepeated. Исправленный role selector используется;

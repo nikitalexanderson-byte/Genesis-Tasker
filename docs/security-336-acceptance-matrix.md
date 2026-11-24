@@ -1,5 +1,22 @@
 # 3.3.6: незакрытые системные критерии приёмки
 
+## Дополнение70/71,24 ноября
+
+Новый nonmember проходит настоящие signed invitation/recipient consent,
+atomic owner admission с3 rotations и точным receipt retry, отдельный device
+challenge/approval/history grant и cold чтение epochs1/2: admission70-03 PASS5/5.
+Это CLI/SQLite/WebCrypto + encrypted in-memory vault, без owner-review UI/HTTP;
+не подмена прежнего enrollment уже существующего участника и не whole34 PASS.
+
+Завершена совокупная смысловая вычитка всех26 E2EE copy-каталогов; уточнены
+три PT/ZH подписи. i18n:audit PASS. Остальные product/legal/update строки и
+полная визуальная приёмка остаются отдельным объёмом сценариев47/48.
+
+Readonly queue71 имеет собственные RED/GREEN3/3 и types/lint/build:web PASS;
+текущий mounted64 идёт на более раннем immutable63. Exact f330 CI оба SUCCESS
+2229/2229 JS и Android job; последующую71 он не проверяет. Formal9/20 не повышен,
+signed149→150 и финальное whole-candidate review по-прежнему обязательны.
+
 ## Текущий код и проверка24 ноября
 
 Старая таблица ниже — историческая карта системной приёмки20 ноября, а не

@@ -16,17 +16,24 @@ import {E2EE_SUITE,encodeE2eeBytes,importE2eeRoot} from '../../app/e2ee/envelope
 import {sealE2eeFile,envelopePayloadHash} from '../../app/e2ee/files.ts';
 import {membershipAtomicPlanHash,membershipAtomicChangeHash,membershipAtomicPageRef,membershipAtomicBatchHash} from '../../app/e2ee/membership-atomic-contract.ts';
 import {validateMembershipAtomicReceipt} from '../../app/e2ee/membership-atomic-receipts.ts';
+import {InvitationRecipient,validateRecipientRequest} from '../../app/e2ee/invitation-recipient.ts';
+import {invitationAdmissionPage} from '../../app/e2ee/invitation-admission.ts';
+import {sharedInvitationService,verifySharedInvitationResult} from '../../app/e2ee/shared-invitation-request.ts';
+import {E2eeDeviceDocument} from '../../app/e2ee/device-document.ts';
 import {resolveBackendPhp} from './backend-php.mjs';
 import {cleanupBackendRuntime} from './backend-cleanup.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
 const args=Object.fromEntries(process.argv.slice(2).map(value=>{const [key,...rest]=value.replace(/^--/,'').split('=');return[key,rest.join('=')];}));
 const id=args['run-id']??`membership-clients-${Date.now()}`;
+const scenario=args.scenario??'existing-member';assert(['existing-member','admission'].includes(scenario),'Known focused scenario required');
 assert.match(id,/^[a-zA-Z0-9-]{6,80}$/);
 const output=path.resolve(root,args.output??`output/qa/${id}`);assert(!existsSync(output),'Fresh output required');mkdirSync(output,{recursive:true});
 const runtime=path.join(output,'runtime'),php=await resolveBackendPhp(args.php);
 const report={status:'RUNNING',scope:'Real PHP/SQLite store + WebCrypto/HPKE production scope clients; synthetic in-memory encrypted device storage',checks:[],limitations:['CLI transport does not cover HTTP/session middleware or rate policy','Legacy identities/ACL are synthetic setup; no real provider or user data','Newcomer is an existing workspace member enrolling their first trusted device; this is not the invitation/owner-review UI'],sourceSha256:createHash('sha256').update(readFileSync(fileURLToPath(import.meta.url))).digest('hex')};
 const save=()=>writeFileSync(path.join(output,'results.json'),JSON.stringify(report,null,2)+'\n');
+report.scenario=scenario;
+if(scenario==='admission')report.limitations[2]='Actual new recipient invitation/consent/atomic admission/device approval, with CLI transport and in-memory encrypted vault; not owner-review or invitation UI';
 const run=(script,input)=>{
  const result=spawnSync(php,['-d','disable_functions=curl_exec,mail',script,`--dir=${runtime}`],{cwd:root,input:JSON.stringify(input),encoding:'utf8',windowsHide:true,maxBuffer:16*1024*1024});
  if(result.status!==0)writeFileSync(path.join(output,'store-failure.log'),result.stderr);
@@ -89,13 +96,75 @@ async function enroll(target,actor,scopeId,history=[]) {
  const client=scopeClient(target.device,scopeId,actor);await client.refresh();return client;
 }
 
+// A separate personal authority is required for recipient consent. This is
+// synthetic setup through real signed commands, not a membership grant.
+async function seedRecipientPersonal(target,actor,userId){
+ const scopeId='personal:'+userId,bytes=freshSecret(),keyId=crypto.randomUUID();secrets.push(bytes);
+ const context={ownerId:userId,scopeId,cryptoEpoch:1,keyId},keys=await publicDeviceKeys(target.device.keys());
+ const command={protocol:1,ownerId:userId,scopeId,deviceId:target.device.deviceId,action:'bootstrap',expectedRevision:0,checkpointHash:'genesis',securityEpoch:1,operationId:crypto.randomUUID(),payload:{kind:'personal',resourceId:userId,keyId,generation:1,recoveryKit:target.authority.kit,recoveryCapsule:await sealRoot(bytes,target.authority.kit.authority.receivingKey,{...context,recipientId:'recovery'}),deviceKeys:keys,deviceCapsule:await sealRoot(bytes,keys.receivingKey,{...context,recipientId:target.device.deviceId})}};
+ command.payload.selfProof=(await signE2eeCommand(command,target.device.keys().signing.privateKey)).signature;
+ store('bootstrap',await signE2eeCommand(command,target.authority.keys.signing.privateKey),actor);
+ const sendOwn=async(action,payload)=>{const frame=await verifyDeviceDirectory(userId,scopeId,target.authority.kit.authority,store('directory',{},actor,scopeId).events);return store('command',await signE2eeCommand({protocol:1,ownerId:userId,scopeId,deviceId:target.device.deviceId,action,expectedRevision:frame.checkpoint.revision,checkpointHash:frame.checkpoint.hash,securityEpoch:frame.securityEpoch,operationId:crypto.randomUUID(),payload},target.device.keys().signing.privateKey),actor);};
+ const migrationId=crypto.randomUUID(),source=store('source',{},actor,scopeId),lease=await sendOwn('migration-start',{migrationId,sourceHash:source.sourceHash}),manifest=store('manifest',{},actor,scopeId),verifiedCheckpoint=encodeE2eeBytes(freshSecret());
+ await sendOwn('migration-verify',{migrationId,fence:lease.fence,...manifest,verifiedCheckpoint});
+ await sendOwn('migration-commit',{migrationId,fence:lease.fence,manifestHash:manifest.manifestHash,objectCount:manifest.objectCount,verifiedCheckpoint,generation:1});
+ const client=new E2eeScopeClient(target.device,userId,scopeId,target.authority.kit.authority,transport(actor));await client.refresh();clients.set(scopeId,client);return client;
+}
+
+async function newRecipientAdmission(newcomer,personal,client,scopeId,oldRoot,oldText){
+ const actor='premium4life',unapproved=scopeClient(newcomer.device,scopeId,actor);clients.set('unapproved-new-recipient',unapproved);
+ await check('new recipient has neither workspace membership nor a usable shared device before invitation',async()=>{
+  assert.throws(()=>store('directory',{},actor,scopeId),/SHARED_PROJECT_NOT_FOUND/);
+  await assert.rejects(unapproved.refresh(),/SHARED_PROJECT_NOT_FOUND/);
+ });
+ const own=await seedRecipientPersonal(newcomer,actor,setup.newcomerId),current=()=>newcomer.device.requireOpen();
+ const local=id=>new E2eeDeviceDocument(newcomer.device,'invitation-recipient:'+id,value=>validateRecipientRequest(value,setup.newcomerId,id),current);
+ const recipient=new InvitationRecipient({ownerId:setup.newcomerId,current,page:(after,limit)=>own.readSharedInvitationPage(after,limit),state:id=>own.readSharedInvitationResponse(id),service:(payload,id)=>own.executeService('shared-invitation-respond',payload,id),load:id=>local(id).load(),save:async(id,value,expected)=>(await local(id).save(value,expected)).serial});
+ const invitation=sharedInvitationService({scopeId,kind:'project',resourceId:setup.projectId,ownerId:setup.ownerId},setup.ownerId,'POST','invitations',{email:setup.newcomerEmail,role:'member'},crypto.randomUUID());
+ const issued=await client.executeService(invitation.action,invitation.payload,invitation.intentId);
+ verifySharedInvitationResult(invitation,setup.ownerId,issued,await client.readInvitationState(invitation.ids));const invitationId=invitation.ids[0];
+ await check('recipient acceptance is durable and idempotent routing consent without content access',async()=>{
+  assert((await recipient.list()).some(row=>row.id===invitationId));const accepted=await recipient.respond(invitationId,true);assert.equal(accepted.pendingApproval,true);assert.equal(accepted.admitted,false);assert.equal(accepted.deviceApprovalRequired,true);assert.deepEqual(await recipient.respond(invitationId,true),accepted);
+  assert.throws(()=>store('directory',{},actor,scopeId),/SHARED_PROJECT_NOT_FOUND/);
+ });
+ const pending=invitationAdmissionPage(await client.readPendingInvitationPage(),''),operation=pending.operations.find(row=>row.invitationId===invitationId);
+ assert(operation);assert.equal(operation.userId,setup.newcomerId);assert.equal(operation.resourceId,setup.projectId);
+ const {plan,pages}=store('plan',{intentId:crypto.randomUUID(),operation}),planHash=membershipAtomicPlanHash(plan),changeHash=membershipAtomicChangeHash(plan),binding={intentId:plan.intentId,planHash};
+ assert(plan.scopeIds.includes(scopeId));assert(plan.scopeIds.includes('space:'+setup.spaceId));
+ const auth=(action,input)=>personal.authorizeMembershipAtomic(action,input);
+ store('begin',{plan,authorization:await auth('membership-atomic-begin',binding)});
+ for(const[index,page]of pages.entries())store('page',{...binding,phase:'plan',index,page,authorization:await auth('membership-atomic-page',{...binding,phase:'plan',index,pageHash:membershipAtomicPageRef(index,page).pageHash})});
+ const preview=store('preview',{...binding,after:0,authorization:await auth('membership-atomic-preview',{...binding,after:0})});assert.equal(preview.next,null);assert.equal(preview.scopePlans.length,plan.scopeIds.length);
+ const packets=[];for(const scope of preview.scopePlans){const source=clients.get(scope.scopeId);await source.refresh();packets.push(await source.prepareMembershipRotation(changeHash,scope.roles.map(({deviceId,role})=>({deviceId,role})),scope.manifest,scope));}
+ const page={kind:'rotation-packets',items:packets},packetPages=[membershipAtomicPageRef(0,page)];
+ store('page',{...binding,phase:'packets',index:0,page,authorization:await auth('membership-atomic-page',{...binding,phase:'packets',index:0,pageHash:packetPages[0].pageHash})});
+ const batchHash=membershipAtomicBatchHash(plan,packetPages);store('seal',{...binding,packetPages,authorization:await auth('membership-atomic-seal',{...binding,batchHash})});
+ const commit={...binding,batchHash,authorization:await personal.authorizeMembershipAtomicApply('membership-atomic-commit',{...binding,batchHash})},receipt=store('commit',commit);validateMembershipAtomicReceipt(receipt,plan,packetPages);
+ await check('atomic owner admission changes membership once while the new device remains unapproved',async()=>{
+  assert.deepEqual(store('commit',commit),receipt);for(const packet of packets){await clients.get(packet.command.scopeId).confirmMembershipRotation(packet);const p=packet.command.payload;scopeRoots.set(packet.command.scopeId,{capsule:p.recoveryCapsule,keyId:p.keyId,epoch:p.cryptoEpoch});assert(!p.capsules.some(row=>row.deviceId===newcomer.device.deviceId));}
+  const accepted=await recipient.respond(invitationId,true);assert.equal(accepted.admitted,true);assert.equal(accepted.pendingApproval,false);assert.equal(accepted.deviceApprovalRequired,true);
+  await assert.rejects(unapproved.refresh(),/E2EE_REVOKED_DEVICE/);
+ });
+ const futureText='CONTENT AFTER NEW RECIPIENT ADMISSION';await client.prepare('shared-project','admission-future',new TextEncoder().encode(futureText),0);await client.flush('shared-project','admission-future');
+ const admitted=await enroll(newcomer,actor,scopeId,[oldRoot]);clients.set('admitted-recipient',admitted);
+ await check('separate requester-bound device approval and explicit history grant open both epochs',async()=>{
+  const past=await admitted.read('shared-project','client-history'),future=await admitted.read('shared-project','admission-future');assert.equal(text(past),oldText);assert.equal(text(future),futureText);past.bytes.fill(0);future.bytes.fill(0);
+ });
+ await check('new participant retains history after a cold encrypted-device unlock',async()=>{
+  admitted.close();newcomer.device.lock();const device=await UnlockedWebDevice.unlock(setup.newcomerId,newcomer.authority.secret,newcomer.storage,newcomer.keyStorage);devices.push(device);const cold=scopeClient(device,scopeId,actor);try{await cold.refresh();const past=await cold.read('shared-project','client-history'),future=await cold.read('shared-project','admission-future');assert.equal(text(past),oldText);assert.equal(text(future),futureText);past.bytes.fill(0);future.bytes.fill(0);}finally{cold.close();}
+ });
+ report.admission={invitation:true,newMembership:true,separateDeviceApproval:true,explicitHistory:true,coldRead:true,rotatedScopes:plan.scopeIds.length};
+}
+
 try {
  const prepared=spawnSync(php,['-d','disable_functions=curl_exec,mail','scripts/qa/backend-fixture.php',`--dir=${runtime}`,'--origin=http://127.0.0.1:4380',`--run-id=${id}`,'--e2ee'],{cwd:root,encoding:'utf8',windowsHide:true});assert.equal(prepared.status,0,'Owned fixture preparation');
- setup=store('setup');owner=await makeDevice(setup.ownerId);const member=await makeDevice(setup.memberId),newcomer=await makeDevice(setup.newcomerId);
+ setup=store('setup',{scenario});owner=await makeDevice(setup.ownerId);const member=await makeDevice(setup.memberId),newcomer=await makeDevice(setup.newcomerId);
  const personal=await seedScope('personal',setup.ownerId);
  for(const [kind,resource]of [['project',setup.projectId],['project',setup.inboxId],['space',setup.spaceId]])await seedScope(kind,resource);
  const scopeId='project:'+setup.projectId,client=clients.get(scopeId),oldRoot=scopeRoots.get(scopeId),oldText='RETAINED HISTORY BEFORE MEMBERSHIP CHANGE';
  await client.prepare('shared-project','client-history',new TextEncoder().encode(oldText),0);await client.flush('shared-project','client-history');
+ if(scenario==='admission')await newRecipientAdmission(newcomer,personal,client,scopeId,oldRoot,oldText);
+ else {
  const memberClient=await enroll(member,'premium',scopeId);
  await check('current member decrypts original shared history through the production scope reader',async()=>{const value=await memberClient.read('shared-project','client-history');assert.equal(text(value),oldText);value.bytes.fill(0);});
  const before=await directory(scopeId),pendingFile=await sealE2eeFile(await importE2eeRoot(oldRoot.bytes),member.device.keys().signing.privateKey,{cryptoProtocol:1,suite:E2EE_SUITE,ownerId:setup.ownerId,scopeId,domain:'shared-project',objectId:'removed-write',schemaVersion:1,dataGeneration:1,writerProtocol:9,cryptoEpoch:1,securityEpoch:before.securityEpoch,revision:1,keyId:oldRoot.keyId,deviceId:member.device.deviceId,operationId:crypto.randomUUID()},new TextEncoder().encode('DRAFT SIGNED BEFORE REVOCATION'),{filename:'draft.json',mediaType:'application/json'});
@@ -136,6 +205,7 @@ try {
   owner.device.lock();const coldDevice=await UnlockedWebDevice.unlock(setup.ownerId,owner.authority.secret,owner.storage,owner.keyStorage);devices.push(coldDevice);
   const cold=scopeClient(coldDevice,scopeId);await cold.refresh();try{const before=await cold.read('shared-project','client-history'),after=await cold.read('shared-project','client-future');assert.equal(text(before),oldText);assert.equal(text(after),newText);before.bytes.fill(0);after.bytes.fill(0);}finally{cold.close();}
  });
+ }
  report.status='PASS';report.scopes=3;
-} catch(error) {report.status='FAIL';report.error=error.message;process.exitCode=1;console.error(error.message);}
+} catch(error) {report.status='FAIL';report.error=error.message;report.errorFrames=(error.stack??'').split('\n').slice(1).filter(line=>line.trim().startsWith('at ')).slice(0,8);process.exitCode=1;console.error(error.message);}
 finally {for(const client of clients.values())client.close();for(const device of devices)device.lock();for(const value of secrets)value.fill(0);if(existsSync(path.join(runtime,'owner.json')))report.cleanup=cleanupBackendRuntime(runtime,output);save();}

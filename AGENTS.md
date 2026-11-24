@@ -1,5 +1,46 @@
 # Genesis Tasker: действующие правила
 
+## Продолжение24 ноября: readonly queue71 и exact CI f330
+
+- Source checks45430372649/45430353686 exactf330 SUCCESS обоих jobs. Первый web
+  log2229/2229; Android unit task выполнен, без извлечённых XML totals. Это не
+  приёмка последующих copy69/readonly queue71.
+- RED71 показывает блокировку create/inspect общим lock во время независимого
+  readonly membership capture. Snapshot теперь вне draft mutation queue с
+  current guards до/после IO; consent/preview/start остаются serial. GREEN3/3,
+  tsc/scoped lint/build:web71 PASS. Не называть единственной
+  причиной60 до фактического UI результата. Native63 предшествует71.
+- Membership64/session48899 использует immutable63, все3shared ACTIVE;
+  normal membership editor ждёт actual Retry-After16:40UTC. Bundle не менять.
+
+## Продолжение24 ноября: admission70 и copy69
+
+- Новый настоящий nonmember admission70-03 PASS5/5: invitation/recipient consent,
+  atomic ACL+3roots/receipt retry, отсутствие доступа до отдельного device
+  approval, explicit history и cold epochs1/2. CLI/in-memory encrypted vault,
+  не owner-review/invitation UI; cleanup PASS. Whole34 этим не закрыт.
+- Все26 E2EE copy-каталогов смыслово прочитаны вместе с предыдущими scopes;
+  PT Drive2 labels и ZH assistantHistory уточнены. i18n:audit PASS. Это не
+  visual/font-scale/остальные product/legal/update copy и не final review.
+  Не повторять вычитку этих неизменённых каталогов. Native63 предшествует69.
+- Membership64/session48899 идёт на immutable63, оба project scopes ACTIVE;
+  последний space retry16:30UTC. Бюджет/данные/guards не обходить. Main149,
+  floors/cutover/deployAndroid=false сохраняются. Source checks f330 ещё идут.
+
+## Продолжение24 ноября: native63 и semantic65–67
+
+- Native63 assembly SUCCESS1m7s, unitExecuted=false/fullUnitRun=false;
+  sourceAF2E4715…9703BB, APKACC87877…AEDF3. Новый embedded engine отличается
+  от58; instrumentation прежний327EC0D3…11826. Root freeze снят, retained37
+  и основной149 не обновлялись. Принятую controller37 migration не повторять.
+- Semantic65:490 новых значений файлов/создания;66:476 ранее прочитанных
+  device-entry/access;67:552 оставшихся membership-review на12 языках.
+  Последний каталог полностью прочитан вместе с ранее принятыми EN/RU и
+  критичными14-language fields. Это scoped semantic read без text changes,
+  не visual/final crypto review. Keys/hashes/evidence в final-review.md.
+- Membership64/session48899 на immutable web-shared-read63 продолжает;
+  bundle не менять. Source checks exact f330 ещё не оба завершены на этом срезе.
+
 ## Продолжение24 ноября: message migration62 и read scheduling63
 
 - Exact4454e536 Source checks45418383374/45418365896 SUCCESS обоих jobs.

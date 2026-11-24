@@ -55,6 +55,20 @@ assigns Output as between user/OpenAI to extent permitted by law; это не
 
 ## Опубликовано24 ноября
 
+Дополнительный отбор после уточнения «самозанятый без ИП, crypto необязательно»:
+CloudPayments в собственном материале указывает ИП для подключения эквайринга
+самозанятому, поэтому NPD-only onboarding не подтверждён:
+https://cloudpayments.ru/blog/zachiem-ekvairingh-malomu-bizniesu/ . PayMaster
+в текущем публичном FAQ сообщает о недоступности foreign cards:
+https://info.paymaster.ru/sposoby-oplaty-na-sajte/ . Self.PayAnyWay существует
+для НПД, но актуальная публичная cards page заявляет российские карты, а не
+общий иностранный приём:
+https://service.payanyway.ru/info/w/ru/public/w/payment-methods/cards.html .
+Это дополнительные исключения/неподтверждённые варианты, не новые подключения.
+Robokassa по тарифу НПД остаётся первым условным кандидатом:9,9% foreign cards,
+RUB settlement; отсутствие требования страницы регистрации не подтверждено.
+Новые кабинеты/обращения/договоры не создавались, Prodamus не активировался.
+
 Main7964526b2e78ce5956cfaf95a1f9df129dc95b1a прошёл собственные Source checks
 45364626251, оба jobs SUCCESS. Штатный Deploy45373264770 SUCCESS. Live metadata
 подтверждает этот commit; шесть публичных EN/RU страниц возвращают200 с реальными

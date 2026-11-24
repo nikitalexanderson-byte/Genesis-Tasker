@@ -34,7 +34,7 @@ try {
         'preview'=>genesisMembershipAtomicPreview($actor,$body),
         'seal'=>genesisMembershipAtomicSeal($actor,$body),
         'commit'=>genesisMembershipAtomicCommit($actor,$body,$session),
-        'setup'=>membershipClientsSetup($db,$owner,$users),
+        'setup'=>membershipClientsSetup($db,$owner,$users,($body['scenario']??'existing-member')==='admission'),
         'plan'=>membershipClientsPlan($db,$actor,$body),
         default=>throw new RuntimeException('Unknown synthetic action'),
     };
@@ -45,19 +45,21 @@ try {
     echo json_encode(['ok'=>false,'error'=>$code],JSON_THROW_ON_ERROR);
 }
 
-function membershipClientsSetup(PDO $db,string $owner,array $users):array {
+function membershipClientsSetup(PDO $db,string $owner,array $users,bool $admission=false):array {
     $now=genesisNow();$space='clients-space';$projects=['clients-inbox','clients-project'];
     $db->prepare('INSERT INTO shared_spaces(id,title,created_by,created_at,updated_at) VALUES(?,?,?,?,?)')->execute([$space,'Synthetic client history',$owner,$now,$now]);
     foreach($projects as $project)$db->prepare('INSERT INTO shared_projects(id,space_id,title,created_by,is_inbox,created_at,updated_at) VALUES(?,?,?,?,?,?,?)')->execute([$project,$space,'Synthetic client project',$owner,(int)($project===$projects[0]),$now,$now]);
     foreach(['business'=>'owner','premium'=>'member','premium4life'=>'member'] as $tier=>$role) {
+        if($admission&&$tier==='premium4life')continue;
         $id=$users[$tier]['id'];$db->prepare('INSERT INTO shared_space_members(space_id,user_id,role,joined_at) VALUES(?,?,?,?)')->execute([$space,$id,$role,$now]);
         foreach($projects as $project)$db->prepare('INSERT INTO shared_project_members(project_id,user_id,role,joined_at) VALUES(?,?,?,?)')->execute([$project,$id,$role,$now]);
     }
-    return ['ownerId'=>$owner,'memberId'=>$users['premium']['id'],'newcomerId'=>$users['premium4life']['id'],'spaceId'=>$space,'projectId'=>$projects[1],'inboxId'=>$projects[0]];
+    return ['ownerId'=>$owner,'memberId'=>$users['premium']['id'],'newcomerId'=>$users['premium4life']['id'],'newcomerEmail'=>genesisFindUser($users['premium4life']['id'])['email'],'spaceId'=>$space,'projectId'=>$projects[1],'inboxId'=>$projects[0]];
 }
 
 function membershipClientsPlan(PDO $db,string $actor,array $body):array {
-    $operation=['kind'=>'project-grants','spaceId'=>'clients-space','userId'=>$body['userId'],'allProjects'=>false,'grants'=>[]];
+    $operation=isset($body['operation'])?genesisMembershipOperation($body['operation']):['kind'=>'project-grants','spaceId'=>'clients-space','userId'=>$body['userId'],'allProjects'=>false,'grants'=>[]];
+    if($operation['spaceId']!=='clients-space')throw new RuntimeException('Synthetic space required');
     $db->beginTransaction();
     try {$snapshot=genesisMembershipOperationSnapshot($db,$actor,'clients-space',$operation);$effects=genesisMembershipOperationPlan($snapshot,$operation);$fingerprint=genesisMembershipOperationFingerprint($snapshot,$operation);}
     finally {$db->rollBack();}

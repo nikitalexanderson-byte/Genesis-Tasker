@@ -1,5 +1,46 @@
 # Продолжение24 ноября: выпуск3.3.6 и отдельный сайт
 
+## Последнее: exact f330 CI и readonly queue71
+
+Source checks45430372649/45430353686 оба SUCCESS, web/API и Android. Первый
+web log2229/2229,0fail; Android testDebugUnitTest выполнен, BUILD SUCCESS12m48s,
+XML totals не извлекались. runtime/cif330-* сохраняет status и оба job logs.
+Этот CI предшествует copy69 и correction71.
+
+Readonly MembershipOperationDrafts.snapshot ошибочно держал serial queue во
+время capture IO, блокируя сохранение/inspect другой операции. RED71 реальный
+1FAIL/1PASS. Исправлено независимое readonly capture с current guards; mutating
+  preview/confirm/start/consents сохраняют сериализацию. GREEN3/3, types/lint и
+ build:web71 PASS. Это bounded fix, не claim всего mounted64/60 repair.
+Web64/session48899 остаётся на immutable63: все3shared scopes ACTIVE,
+normal task/legacy deny PASS, normal membership editor ждёт Retry-After16:40UTC.
+Не менять bundle/лимит и не выдавать64 за новую71. Native63 также предшествует71.
+
+## Последнее: новый участник70 и все copy-каталоги
+
+Admission70-03 PASS5/5, cleanup PASS: actual new nonmember -> signed invitation
+-> durable personal-authority consent без доступа -> atomic owner admission,
+3 rotations/byte-exact receipt retry -> отказ unapproved device -> отдельные
+challenge/owner approval/history grant -> epochs1/2 + cold participant reader.
+App/server exact f330; QA/helper hashes в input-identity. CLI/in-memory encrypted
+vault и synthetic bodies, не invitation/owner-review UI. Старые6 cases не
+повторялись. Failed70-01/02 — только QA await/email setup, оба cleaned.
+
+Semantic65–69 завершили все26 E2EE copy-каталогов вместе с прежними scoped
+reads. Три copy corrections: PT Drive data snapshots и ZH entries в assistant
+history. i18n:audit PASS, runtime/copy69-i18n-audit.log. Это не полная визуальная
+приёмка, не остальные product/legal/update тексты и не финальное crypto review.
+Новый native63 assembly SUCCESS1m7s/76.96s wrapper, no JVM; sourceAF2E4715…9703BB,
+APKACC87877…AEDF3, instrumentation прежний327EC0D3…11826. Он предшествует copy69.
+Никаких повторов controller37 migration/установки на основной149 не делалось.
+
+Membership64/session48899 продолжает на immutable web-shared-read63. Приняты
+personal и оба project scopes; space ждёт реальный Retry-After16:30UTC на
+последнем срезе. Bundle не менять, rate rows/budgets не менять. Phase logpoints
+не приостанавливают выполнение и пока не дошли до membership callback.
+Exact f330 CI45430372649/45430353686: Android SUCCESS, web/API ещё RUNNING.
+Whole20/48, exact final review, signed149→150 и release остаются открыты.
+
 ## Последнее: exact CI4454, migration62 и scheduling63
 
 4454e536 pushed. Source checks45418383374 и45418365896 оба SUCCESS, web/API и
