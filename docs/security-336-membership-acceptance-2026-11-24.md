@@ -51,6 +51,26 @@ foreign owner не вызывают transport. Cancel fence сохраняетс
 изменение caller inputs не меняет сохранённый план. Local ports здесь in-memory;
 этот bounded тест не выдаётся за encrypted IDB/Android process-death приёмку.
 
-Итого focused JS21/21 PASS. Нужны реальные membership owner-review/apply UI,
+## Согласие владельца и финальный apply
+
+Ещё9/9 focused JS PASS:6 owner-review/receipt и3 final-apply lifecycle.
+Новый helper создаёт fresh recovery/device keys, настоящие HPKE root capsules,
+подписанные bootstrap/migration/enrollment/membership chains. Проверены complete
+parts, explicit fingerprint/roster, чужая authority/identity/ownership,
+блокирующий private-effects adapter, сохранённый consent до выпуска нового root,
+export после restart без новой ротации, stale review после observed commit.
+Revoked device не открывает survivor capsule; survivor расшифровывает future
+content. Immutable receipt не завершает операцию без обязательного readback;
+его отказ можно повторить. Lost final ACK повторяет точный saved POST без
+restaging; receipt с failed readback сохраняется и не исполняет commit заново.
+
+Это production classes с реальной криптографией, но local CAS, transport и
+normal-repository readback ports здесь model fixtures. Проверка root decryption
+не выдаётся за чтение нормального task UI. Private-effects callback проверен как
+обязательный blocking capability; полнота его product semantics требует своей
+реальной populated приёмки. Начальные setup failures (prototype comparison/
+неверное имя suite в harness) исправлены без изменения production guards.
+
+Итого focused JS30/30 PASS. Нужны реальные membership owner-review/apply UI,
 нормальное чтение истории новым участником и сводный20-path/48-scenario review.
 Все activation/update floors остаются выключенными; APK149 сохраняется.
