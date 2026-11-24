@@ -57,11 +57,17 @@ RewriteRule . index.html [L]
   </IfModule>
 </FilesMatch>
 
-<FilesMatch "^(?:sw|relocated-sw|precache-manifest|paddle-checkout)\.js$">
+<FilesMatch "^(?:sw|relocated-sw|precache-manifest)\.js$">
   <IfModule mod_headers.c>
     Header set Cache-Control "no-cache, no-store, must-revalidate"
   </IfModule>
 </FilesMatch>
+
+<Files "paddle-checkout.js">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </IfModule>
+</Files>
 
 <FilesMatch "^manifest(?:\.[a-z]{2})?\.webmanifest$">
   <IfModule mod_headers.c>
