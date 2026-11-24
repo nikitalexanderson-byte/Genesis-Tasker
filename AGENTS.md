@@ -7,13 +7,23 @@
   web-only UI correction; crypto guards/keys/ACL не менялись. Browser component49
   PASS8/8 на4 ширинах×2 схемах, actual modal/fence/Close/Escape/draft retention.
   Typecheck/build:web PASS, scoped lint0errors/3old warnings, detector49[].
-- Mounted membership46-02 ещё идёт на immutable41, с target premium4life,
-  project+Inbox+space и настоящими windows600requests/600s. Не сбрасывать rate
-  rows и не повторять native37 migration. Новый focused49/session92385 идёт на
+- Mounted membership46-02 FAIL после normal shared readback: team editor не
+  открылся до role selector; snapshot содержит E2EE_REFRESH_REQUIRED/
+  E2EE_DIRECTORY_CONFLICT и actual429. Это не доказательство modal pointer bug.
+  Cleanup PASS. QA entry теперь ждёт roster и использует прежний bounded
+  Retry-After/reload/unlock. Новый focused49/session92385 всё ещё идёт на
   уже полностью скопированном immutable49. Он явно notRepeated два принятых42
   personal recovery cases. Ранний48 был запущен до конца copy, owner-checked
   API stopped, cleanup PASS; его изменённый bundle hash не засчитывать как QA.
   Подробности/ограничения — security-336-membership-acceptance-2026-11-24.md.
+- Membership clients50-05 PASS6/6: real SQLite/P256/HPKE scope clients, atomic
+  3-scope rotation + exact receipt retry, actual revoked read/write refusals,
+  old recipient cannot open future root, first trusted device of an EXISTING
+  member reads epochs1/2 with explicit history grant, cold owner vault read.
+  CLI transport + in-memory encrypted vault, не actual HTTP/IDB/owner-consent UI.
+  Cleanup PASS; failed50-04 runtime отдельно owner-checked cleaned. Новые
+  scripts/qa/membership-{clients.mjs,client-store.php} не меняют product code.
+  Полные33/34 и20-path/48-scenario вывод по-прежнему не завершены.
 
 ## Продолжение24 ноября: атомарное изменение участников
 

@@ -5,15 +5,32 @@
 Готов web correction PrivateMembershipModal + popup exclusion + consent spacing.
 Component49 PASS8/8 с actual top layer/editor fence/Close/Escape/retained input;
 typecheck/build PASS, scoped lint0errors/3existing warnings, detector49[].
-Real account/controller/shared membership46-02/session6071 остаётся на immutable41
-и ждёт собственные rate boundaries600requests/600s. Уже ACTIVE project+Inbox,
-space transfer ещё идёт; финального результата нет. Не менять этот bundle.
+Real account/controller/shared membership46-02 завершён FAIL после ACTIVE
+project+Inbox+space и normal task readback. Team editor не открылся до выбора
+роли; snapshot показывает REFRESH_REQUIRED/DIRECTORY_CONFLICT и actual429.
+Это не RED modal pointer failure; cleanup PASS. QA entry теперь ждёт actual
+roster и повторяет только editor через прежний Retry-After/cold unlock.
 Новый focused49/session92385 на immutable web-membership-modal49/public_html
 начат ПОСЛЕ completion build/copy/component49. Он явно не повторяет прежние42
 offline/clean recovery, сохраняя остальные normal UI и три owner consents.
 Premature48/session67739 остановлен только в owned API после подтверждённой
 copy race; cleanup PASS, build hashes differ, не acceptance. Никакие private
 client-state файлы не читались/создавались для resume. Full33/34 ещё открыты.
+
+Membership clients50-05 PASS6/6 на реальных PHP/SQLite/P256/HPKE и production
+scope reader: atomic3 rotations/exact receipt retry, server read/write deny
+для отозванного участника, невозможность открыть future capsule его ключом,
+epochs1/2 у первого trusted device другого существующего участника и cold
+owner vault read. Output: output/qa/security336-membership-clients50-1124-05/.
+CLI транспорт и in-memory encrypted storage не заменяют HTTP/IDB/UI acceptance.
+Все fixtures cleaned;50-04 после ошибочного cleanup-type fixture очищен отдельно.
+Прежние50-01..04 не являются product RED. Общий matrix и signed upgrade впереди.
+
+Завершена отложенная очистка retained web58: runtime и client-state удалены
+штатным cleanupBackendRuntime после marker/boundary и stopped-service checks.
+Private JSON не читались. Evidence: retained58/cleanup-completion-20261124.json.
+Restore-native31-01 уже был cleaned (10plaintext files); его cleanup.json PASS
+подтверждён, age/proof сохранены. Retained native37 пока сохраняется до release.
 
 ## Новое: членство и история эпох
 

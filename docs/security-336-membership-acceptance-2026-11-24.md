@@ -112,3 +112,43 @@ immutable web49; прежние offline/clean recovery проверки42 не �
 явно перечислены в notRepeated. Остальные действия выполняются в живом продукте.
 Premature48 остановлен только в owned synthetic API, runner cleanup PASS;
 его before/after bundle hashes различались, приёмкой он не является.
+
+## Межклиентское чтение и отзыв — реальное хранилище
+
+`scripts/qa/membership-clients.mjs` с CLI-only owned adapter
+`membership-client-store.php` проверяет production PHP/SQLite store и настоящие
+WebCrypto/P256/HPKE scope clients. Результат50-05: **6/6 PASS**, cleanup PASS,
+`output/qa/security336-membership-clients50-1124-05/results.json`.
+
+- Текущий участник открывает старое содержимое production scope reader.
+- Атомарно меняются три scope; тот же подписанный commit возвращает прежний
+  receipt, подтверждения ротаций проверяются клиентом по directory chain.
+- После отзыва сервер отказывает в refresh, двух signed reads и старой signed
+  put; локальный сохранённый draft не отправляется без нового refresh.
+- Старый recipient отсутствует среди новых capsules; его настоящий receiving
+  key не открывает ни одну future-root capsule оставшихся устройств.
+- Первое trusted device другого, уже состоящего в workspace участника получает
+  явно выданный history grant и расшифровывает содержимое epochs1/2.
+- Владелец закрывает device vault и повторно открывает сохранённый encrypted
+  bundle; новый scope client читает обе эпохи.
+
+Это CLI store integration с encrypted in-memory device storage, не HTTP rate/
+session middleware, actual IndexedDB или owner-consent/invitation UI. Корневые
+product bodies синтетические, не domain-editor acceptance. Новый участник не
+проходит здесь приглашение/изменение ACL: проверено именно первое trusted device
+у существующего участника. Поэтому полные сценарии33/34 этим не объявляются PASS.
+
+Первые50-01..04 исправляли только fixture: попытку менять immutable signed packet,
+неверный product objectId, доставку enrollment от другой session и ошибочное
+предположение о типе openRoot (возвращает non-extractable CryptoKey). Последнее
+заменено настоящим forwardRoot. Не менять эти production guards. Runtime50-04
+после отказа fixture cleanup очищен отдельно с ownership marker/boundary checks;
+остальные runtime убраны штатно. Личные данные/устройства не использовались.
+
+Mounted46-02 завершился FAIL после успешного shared task readback. Отсутствовал
+team editor до выбора роли, snapshot содержит E2EE_REFRESH_REQUIRED/
+E2EE_DIRECTORY_CONFLICT и HTTP429. Никакого pointer input в review ещё не было.
+Его cleanup PASS. QA openTeam теперь ждёт реальный roster перед fallback по
+имени и использует существующий bounded Retry-After/cold unlock при отказе.
+Focused49 по-прежнему идёт на immutable49, его результат нельзя приписывать
+более поздней правке QA-файла: исходный qaSourceSha256 сохранён в отчёте.

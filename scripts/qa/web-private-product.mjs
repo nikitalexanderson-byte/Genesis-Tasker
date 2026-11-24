@@ -478,10 +478,23 @@ try{
   });
   if(membershipJourney)await check('normal team role change requires explicit full owner review and survives cold readback',async()=>{
    await debug.send('Debugger.setPauseOnExceptions',{state:'all'});
-   await page.getByRole('button',{name:'Команда и приглашения',exact:true}).click();
-   const member=page.locator('.shared-team-permissions .shared-team-member').filter({hasText:sharedFixture.member.email});
-   // Names come from the ordinary authenticated profile; never an injected UI model.
-   const row=await member.count()?member:page.locator('.shared-team-permissions .shared-team-member').filter({hasText:'QA Premium4life'});
+   const openTeam=async label=>withRateRetry(label,async()=>{
+    await page.getByRole('button',{name:'Команда и приглашения',exact:true}).click();
+    const panel=page.locator('.shared-team-permissions');await panel.waitFor({timeout:60000});
+    // Wait for the ordinary authenticated roster before choosing its display
+    // name. An empty/loading panel is not evidence that an email is absent.
+    await panel.locator('.shared-team-member').first().waitFor({timeout:60000});
+    const member=panel.locator('.shared-team-member').filter({hasText:sharedFixture.member.email});
+    const row=await member.count()?member:panel.locator('.shared-team-member').filter({hasText:'QA Premium4life'});
+    await row.getByLabel('Доступ к пространству',{exact:true}).waitFor();return row;
+   },async()=>{
+    // Re-enter through the real unlock UI after an observed HTTP rate window;
+    // no rate rows, recovery material, drafts or membership intents are reset.
+    await page.reload();const gate=page.locator('.private-vault-dialog');await gate.waitFor();await recoveryInput(gate);
+    await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
+    await page.locator(`[data-shared-task-id="${sharedFixture.task.id}"]`).getByText(sharedFixture.task.title,{exact:true}).waitFor({timeout:60000});
+   });
+   const row=await openTeam('normal membership editor');
    await row.getByLabel('Доступ к пространству',{exact:true}).selectOption('guest');
    const dialog=page.locator('.private-membership-dialog');await dialog.waitFor();
    await dialog.screenshot({path:`${output}/membership-plan-review.png`,animations:'disabled'});
@@ -505,8 +518,7 @@ try{
    await dialog.waitFor({state:'hidden',timeout:120000});
    await page.reload();const gate=page.locator('.private-vault-dialog');await gate.waitFor();await recoveryInput(gate);await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
    await page.locator(`[data-shared-task-id="${sharedFixture.task.id}"]`).getByText(sharedFixture.task.title,{exact:true}).waitFor({timeout:60000});
-   await page.getByRole('button',{name:'Команда и приглашения',exact:true}).click();
-   const fresh=page.locator('.shared-team-permissions .shared-team-member').filter({hasText:'QA Premium4life'});await fresh.waitFor();
+   const fresh=await openTeam('cold membership editor');
    assert.equal(await fresh.getByLabel('Доступ к пространству',{exact:true}).inputValue(),'guest');
    await page.screenshot({path:`${output}/membership-cold-team-readback.png`,fullPage:true,animations:'disabled'});
    report.membership={operation:'space-role',role:'guest',scopes:3,explicitOwnerConsents:3,coldNormalTaskRead:true,coldNormalTeamRead:true};save();

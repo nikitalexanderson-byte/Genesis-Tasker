@@ -12,6 +12,12 @@ AuthController.e2eeCompleteSources содержат действующую ко�
 Это подтверждает подключение кода, но не повышает формальное9/20 по сумме unit
 tests. Для полного системного заключения ещё нужны сводные evidence каждой
 категории,48scenario coverage, signed149→150 и exact-candidate crypto review.
+
+Membership clients50-05 добавляет6/6 real store/crypto checks: атомарные3 rotations,
+revoked read/write deny, future root isolation, epochs1/2 у первого trusted device
+существующего участника и cold owner reader. Это CLI + encrypted in-memory
+storage; owner-consent/invitation UI и полные33/34 не закрывает. Точная граница и
+отчёты — security-336-membership-acceptance-2026-11-24.md.
 Девять прежних personal adapter приёмок не заменяют populated shared/archives/
 local-work lifecycle. Уже реализованные writers/capture/restore не переделывать
 по старым строкам без конкретного воспроизводимого дефекта.
