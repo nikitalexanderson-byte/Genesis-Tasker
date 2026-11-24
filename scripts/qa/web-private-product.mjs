@@ -478,6 +478,13 @@ try{
   });
   if(membershipJourney)await check('normal team role change requires explicit full owner review and survives cold readback',async()=>{
    await debug.send('Debugger.setPauseOnExceptions',{state:'all'});
+   const waitForMembership=async(target,label,options={})=>{
+    // A scope refresh can be waiting on an actual 600s rate window. Bound the
+    // real UI operation, while failing promptly on its visible error surface.
+    const alerts=page.locator('.private-membership-dialog [role=alert]:visible,.shared-team-permissions [role=alert]:visible');
+    await Promise.race([target.waitFor({...options,timeout:1200000}),alerts.first().waitFor({timeout:1200000}).then(async()=>{throw new Error('Membership '+label+' refused: '+await alerts.first().innerText());})]);
+    (report.membershipSteps??=[]).push({label,status:'OBSERVED'});save();
+   };
    const openTeam=async label=>withRateRetry(label,async()=>{
     await page.getByRole('button',{name:'Команда и приглашения',exact:true}).click();
     const panel=page.locator('.shared-team-permissions');await panel.waitFor({timeout:60000});
@@ -496,26 +503,26 @@ try{
    });
    const row=await openTeam('normal membership editor');
    await row.getByLabel('Доступ к пространству',{exact:true}).selectOption('guest');
-   const dialog=page.locator('.private-membership-dialog');await dialog.waitFor();
+   const dialog=page.locator('.private-membership-dialog');await waitForMembership(dialog,'plan');
    await dialog.screenshot({path:`${output}/membership-plan-review.png`,animations:'disabled'});
    assert(await dialog.getByRole('button',{name:membershipCopy.confirm,exact:true}).isDisabled());
    await dialog.getByRole('checkbox',{name:membershipCopy.planAck,exact:true}).check({timeout:10000});
    await dialog.getByRole('button',{name:membershipCopy.confirm,exact:true}).click();
-   const owners=dialog.getByRole('region',{name:membershipCopy.owners,exact:true});await owners.waitFor({timeout:120000});
+   const owners=dialog.getByRole('region',{name:membershipCopy.owners,exact:true});await waitForMembership(owners,'owner review');
    for(let index=0;index<3;index++){
     assert(await owners.getByRole('button',{name:membershipCopy.approve,exact:true}).isDisabled());
     await owners.getByRole('checkbox',{name:membershipCopy.ack,exact:true}).check();
     await owners.getByRole('button',{name:membershipCopy.approve,exact:true}).click();
-    await dialog.getByRole('status').filter({hasText:membershipCopy.approvalSaved}).waitFor({timeout:60000});
+    await waitForMembership(dialog.getByRole('status').filter({hasText:membershipCopy.approvalSaved}),'owner approval '+(index+1));
     await owners.getByRole('checkbox',{name:membershipCopy.ack,exact:true}).waitFor();
     if(index<2)await owners.getByRole('button',{name:membershipCopy.next,exact:true}).click();
    }
    await owners.getByRole('button',{name:membershipCopy.finalReview,exact:true}).click();
-   const final=dialog.getByRole('region',{name:membershipCopy.apply,exact:true});await final.waitFor({timeout:60000});
+   const final=dialog.getByRole('region',{name:membershipCopy.apply,exact:true});await waitForMembership(final,'final review');
    await dialog.screenshot({path:`${output}/membership-final-review.png`,animations:'disabled'});
    assert(await final.getByRole('button',{name:membershipCopy.apply,exact:true}).isDisabled());
    await final.getByRole('checkbox',{name:membershipCopy.finalAck,exact:true}).check();await final.getByRole('button',{name:membershipCopy.apply,exact:true}).click();
-   await dialog.waitFor({state:'hidden',timeout:120000});
+   await waitForMembership(dialog,'applied',{state:'hidden'});
    await page.reload();const gate=page.locator('.private-vault-dialog');await gate.waitFor();await recoveryInput(gate);await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
    await page.locator(`[data-shared-task-id="${sharedFixture.task.id}"]`).getByText(sharedFixture.task.title,{exact:true}).waitFor({timeout:60000});
    const fresh=await openTeam('cold membership editor');

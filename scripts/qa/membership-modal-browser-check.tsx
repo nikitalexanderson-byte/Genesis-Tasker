@@ -4,14 +4,17 @@ import {PrivateMembershipModal} from '../../app/PrivateMembershipModal';
 import {holdPrivateEditorFence} from '../../app/private-ui-fence';
 import {useDialogAccessibility} from '../../app/use-dialog-accessibility';
 import copy from '../../contracts/e2ee/membership-review-copy-v2.json';
+const requested=new URL(location.href).searchParams.get('lang')??'ru';
+const language=(Object.hasOwn(copy,requested)?requested:'ru') as keyof typeof copy;
+const c=copy[language];document.documentElement.lang=language;
 
 function Review({close}:{close:()=>void}){
  const ref=useDialogAccessibility<HTMLDivElement>(close);
  useLayoutEffect(()=>holdPrivateEditorFence(),[]);
  return <PrivateMembershipModal titleId="review-title" onRequestClose={close}><div ref={ref} className="workspace-recovery-dialog private-vault-dialog private-migration-dialog private-membership-dialog" tabIndex={-1}>
-  <header className="workspace-recovery-heading"><h2 id="review-title">{copy.ru.title}</h2><p>{copy.ru.notice}</p></header>
-  <label className="backup-check"><input type="checkbox"/>{copy.ru.planAck}</label>
-  <button data-dialog-initial-focus type="button" className="text-button" onClick={close}>{copy.ru.keep}</button>
+  <header className="workspace-recovery-heading"><h2 id="review-title">{c.title}</h2><p>{c.notice}</p></header>
+  <label className="backup-check"><input type="checkbox"/>{c.planAck}</label>
+  <button data-dialog-initial-focus type="button" className="text-button" onClick={close}>{c.keep}</button>
  </div></PrivateMembershipModal>;
 }
 // Actual modal + editor-fence components only. No account, keys, transport or

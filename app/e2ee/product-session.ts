@@ -11,6 +11,7 @@ import type {MembershipAtomicStager} from './membership-atomic-stager.ts';
 import type {E2eeSharedRecords} from './shared-records.ts';
 import type {E2eeSharedBootstrap} from './shared-bootstrap.ts';
 import {finishPreparedLegacyStorageRetirement} from './legacy-storage-retirement.ts';
+import {retryE2eeRead} from './read-rate-retry.ts';
 
 export type PrivateScopeSummary={scopeId:string;kind:'personal'|'project'|'space';resourceId:string;state:'preparing'|'uploading'|'verified'|'active'|'retirement'};
 export type PrivateAccountStatus={pilotAllowed:boolean;cryptoProtocol:1;scopes:PrivateScopeSummary[]};
@@ -121,7 +122,7 @@ export class WebPrivateAccount{
   }catch(error){device?.lock();throw error;}finally{held.fill(0);}
  }
  requireOpen(){if(this.#closed)throw new Error('E2EE_UNLOCK_REQUIRED');this.#current();this.device.requireOpen();}
- async scopeSummaries(){this.requireOpen();if(this.mode==='offline')throw new Error('E2EE_ONLINE_REQUIRED');const status=validateStatus(await this.#transport.status());this.requireOpen();return structuredClone(status.scopes);}
+ async scopeSummaries(){this.requireOpen();if(this.mode==='offline')throw new Error('E2EE_ONLINE_REQUIRED');const status=validateStatus(await retryE2eeRead(()=>this.#transport.status(),()=>this.requireOpen()));this.requireOpen();return structuredClone(status.scopes);}
  /** Discovery is only a candidate. Its authority becomes trusted only after
   * comparison outside this server and an explicit personal-vault decision. */
  async proposeSharedTrust(scopeId:string){

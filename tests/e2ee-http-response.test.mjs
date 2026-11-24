@@ -120,3 +120,10 @@ test('invalid E2EE route methods refuse before fetch',async()=>{
  const f=await cloudSyncClient();for(const[route,body]of [['/read',undefined],['/status',{}],['/unknown',{}]])await assert.rejects(f.client.e2eeRequest(route,body),/E2EE_ROUTE_FORBIDDEN/);
  assert.equal(f.requests.length,0);
 });
+test('read-only scope discovery exposes an actual bounded rate reply without retrying mutations',async()=>{
+ const f=await cloudSyncClient();f.respond(()=>Response.json({error:'API_RATE_LIMIT'},{status:429,headers:{'Retry-After':'3'}}));
+ for(const [route,body]of [['/status',undefined],['/directory',{scopeId:'personal:fixture'}],['/read',{}]])
+  await assert.rejects(f.client.e2eeRequest(route,body),error=>error.message==='E2EE_HTTP_ERROR'&&error.seconds===3);
+ await assert.rejects(f.client.e2eeRequest('/command',{}),error=>error.seconds===undefined);
+ assert.equal(f.requests.length,4);
+});

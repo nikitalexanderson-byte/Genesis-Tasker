@@ -152,3 +152,49 @@ E2EE_DIRECTORY_CONFLICT и HTTP429. Никакого pointer input в review е�
 имени и использует существующий bounded Retry-After/cold unlock при отказе.
 Focused49 по-прежнему идёт на immutable49, его результат нельзя приписывать
 более поздней правке QA-файла: исходный qaSourceSha256 сохранён в отчёте.
+
+## Все языки в окне согласования
+
+Component53 на CSS immutable49: **112/112 PASS**, все14 языков ×360/390/768/1440
+×standart/standart-dark, palette violet. Сами modal/focus/editor-fence компоненты продукта,
+actual localized title/notice/planAck/keep; родительский synthetic dialog/draft.
+Проверены top layer, полный viewport, отсутствие горизонтального overflow
+снаружи и внутри карточки, ввод checkbox, Close/Escape и сохранённый родитель.
+Scope: output/playwright/security336-membership-modal53-locales/results.json.
+Вручную просмотрены de360dark, ja390light, en1440dark; наложений/обрезки нет.
+Остальные изображения имеют автоматическую geometry/input проверку. Это один
+начальный review state без account/keys/auth mock; не полный Gate lifecycle,
+не font-scale1.3 и не все последующие формы owner/final review. Scoped lint PASS.
+Hash bundle/entry и точные ограничения сохранены в input-identity.json; hash
+bundle наблюдался после53 и ещё будет сопоставлен с mounted49 before/after.
+
+## Обнаруженное ограничение directory/status и исправление54
+
+Mounted49 завершился FAIL12PASS/1FAIL,2 прежних personal cases явно notRepeated.
+Все3 shared scopes ACTIVE и normal task readback PASS; team editor не появился
+до role selector. Cleanup PASS, pageErrors0. При actual429 наблюдались
+E2EE_HTTP_ERROR/CORRUPT_FILE/REFRESH_REQUIRED. Сам CORRUPT_FILE не доказывает
+повреждение ciphertext: файловый reader сводит в этот код и ошибки fetch.
+Причина воспроизведена отдельно: нормальный signed read уже ожидал bounded
+Retry-After, но status/directory не входили в этот путь. Directory429 сразу
+сбрасывал refreshed-state и оставлял ожидающих читателей без verified channel.
+
+RED54:3/3 targeted cases FAIL на прежнем коде; log scope-discovery54-red.log.
+Теперь HTTP adapter классифицирует bounded actual429 для read/status/directory;
+scope refresh и account scope discovery ждут через существующий retryE2eeRead.
+Каждая пауза/новая попытка проверяют current account/device/lifecycle. Старые
+authority/ACL не подставляются после неуспешного refresh, мутации не повторяются
+этим механизмом. No budgets changed. GREEN54:65/65 affected scope/HTTP/retry
+tests PASS плюс1/1 actual close-during-directory-rate case с неизменным vault.
+Typecheck и scoped lint PASS, build:web PASS98HTML/280gallery/locales/precache.
+Это web correction; native41 и whole membership результат им не подменяются.
+
+QA waits owner/final review теперь допускают настоящее600s окно (bounded20min
+на этап) и немедленно завершаются при visible membership error. Они не сбрасывают
+план, intents, rate rows или ciphertext. QA openTeam ждёт реальный roster, как
+описано выше. Новая mounted54 приёмка требуется на отдельно скопированном bundle.
+
+Component53/immutable49 сравнение завершено: before49=after49=after53,
+SHA2565af34101e8215d26cfdfabb1d063129b321fbf455e06cf6031160b8cc7df9506,
+mounted49-comparison.json. Это доказывает неизменность UI bundle в53, но не
+превращает FAIL49 в успешный membership journey.

@@ -49,6 +49,25 @@ test('a failed parallel scope refresh cannot silently use stale online authority
  await assert.rejects(refresh,/DIRECTORY_UNAVAILABLE/);await assert.rejects(read,/DIRECTORY_UNAVAILABLE/);
  await assert.rejects(client.recoverReceipt('diary','not-saved'),/E2EE_REFRESH_REQUIRED/);f.device.lock();
 });
+test('a rate-limited directory refresh keeps readers waiting for verified authority',async()=>{
+ const f=await fixture(),client=f.make();await client.refresh();const directory=f.transport.directory;let calls=0;
+ f.transport.directory=async()=>{if(++calls===1)throw new E2eeReadRateError(0);return directory();};
+ try{await Promise.all([client.refresh(),client.read('diary','not-saved')]);assert.equal(calls,2);assert.equal(await client.read('diary','not-saved'),null);}
+ finally{f.device.lock();}
+});
+test('rate-limited scope discovery retries only while its account remains open',async()=>{
+ const f=await fixture(),scopes=[{scopeId:f.rootContext.scopeId,kind:'personal',resourceId:f.device.ownerId,state:'active'}];let calls=0,retire=false,account;
+ f.transport.status=async()=>{calls++;if(calls%2===1){if(retire)account.close();throw new E2eeReadRateError(0);}return{pilotAllowed:true,cryptoProtocol:1,scopes};};
+ account=new WebPrivateAccount(f.device.ownerId,f.device,f.transport,()=>{});
+ try{assert.deepEqual(await account.scopeSummaries(),scopes);assert.equal(calls,2);retire=true;await assert.rejects(account.scopeSummaries(),/E2EE_UNLOCK_REQUIRED/);assert.equal(calls,3);}
+ finally{account.close();}
+});
+test('closing a scope during a directory rate refusal prevents another directory request',async()=>{
+ const f=await fixture(),client=f.make();await client.refresh();const before=structuredClone(f.storage.rows);let calls=0;
+ f.transport.directory=async()=>{calls++;client.close();throw new E2eeReadRateError(0);};
+ try{await assert.rejects(client.refresh(),/E2EE_UNLOCK_REQUIRED/);assert.equal(calls,1);assert.deepEqual(f.storage.rows,before);}
+ finally{f.device.lock();}
+});
 test('closing the scope during a pending refresh cannot reinstall an open channel',async()=>{
  const f=await fixture(),client=f.make();await client.refresh();let release,started;
  const gate=new Promise(resolve=>release=resolve),begun=new Promise(resolve=>started=resolve),directory=f.transport.directory;

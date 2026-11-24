@@ -54,7 +54,7 @@ export class E2eeScopeClient {
     const lifecycle=this.#lifecycle;
     const current=()=>{this.#current();this.#device.requireOpen();if(this.#lifecycle!==lifecycle)throw new Error('E2EE_UNLOCK_REQUIRED');};
     this.#refreshed=false;
-    current();const response=await this.#transport.directory(this.#scopeId);current();
+    current();const response=await retryE2eeRead(()=>this.#transport.directory(this.#scopeId),current);current();
     const frames=new Map<string,VerifiedDirectory>(),revisions=new Map<number,VerifiedDirectory>();
     const directory=await this.#device.rememberDirectory(this.#scopeId,this.#pin,response.events,this.#owner,frame=>{frames.set(epochKey(frame),frame);revisions.set(frame.checkpoint.revision,frame);});
     current();await this.#installDirectory(directory,frames,current);current();

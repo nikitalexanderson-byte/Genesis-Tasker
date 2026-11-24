@@ -1,5 +1,24 @@
 # Genesis Tasker: действующие правила
 
+## Продолжение24 ноября: bounded directory/status ожидание
+
+- Mounted49 завершён FAIL12PASS/1FAIL,2notRepeated; personal и3shared scopes
+  ACTIVE, normal task readback PASS. Team editor не открылся до selector.
+  Actual429 directory/status не использовали уже имеющийся signed-read retry,
+  поэтому refresh снимал refreshed flag. CORRUPT_FILE может маскировать fetch
+  failure и сам не доказывает повреждение данных. Cleanup49 PASS.
+- Web fix54: typed bounded rate для read/status/directory; scope refresh и
+  scopeSummaries используют retryE2eeRead с прежним owner/device/lifecycle guard.
+  Ни mutation retry, ни stale-authority fallback, ни larger budget не добавлены.
+  RED3/3, GREEN65/65 +close1/1, types/scoped lint/build:web PASS. Immutable54
+  копируется только после completion build54; не запускать browser на copy race.
+  Новый mounted54 впереди. Native inputs Android не менялись; старый native41
+  не выдавать за runtime этой web correction. CI12ef45392523518/11880 SUCCESS
+  обоих jobs, но не проверяет последующий54 diff.
+- Component53 accepted112/112,49before=49after=53after hash5af34101…df9506.
+  No subagents/Daybreak, private JSON/demo-output запреты, подпись/данные,
+  coverage и release gates/floors off сохраняются.
+
 ## Продолжение24 ноября: окно согласования доступа
 
 - Native PrivateMembershipModal сохраняет открытый editor dialog и поднимает
@@ -24,6 +43,13 @@
   Cleanup PASS; failed50-04 runtime отдельно owner-checked cleaned. Новые
   scripts/qa/membership-{clients.mjs,client-store.php} не меняют product code.
   Полные33/34 и20-path/48-scenario вывод по-прежнему не завершены.
+- Component53 PASS112/112:14 языков×4 widths×2 schemes, palette violet,
+  actual modal/fence/checkbox/Close/Escape/retained parent draft и inner overflow.
+  Manual de360dark/ja390light/en1440dark; другие снимки geometry/input only.
+  Runtime whole membership и font-scale1.3 этим не приняты. Семантически
+  прочитаны ещё210 критичных значений external/Drive/archive/cancel/restore copy
+  на14 языках, без противоречий; exact keys/hashes в semantic51/52 evidence и
+  final-review.md. Product/native inputs не менялись ради этих проверок.
 
 ## Продолжение24 ноября: атомарное изменение участников
 

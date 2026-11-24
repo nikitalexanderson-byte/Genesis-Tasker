@@ -82,3 +82,33 @@ the retained edited project; background relocks. Synthetic login delivery is
 supplied separately and is not claimed as restored provider credentials. External
 fixture key destroyed; successful restore plaintext/runtime cleaned. This closes
 this bounded restore drill, not signed upgrade or the final entire crypto review.
+
+## Согласия внешних копий и границы архивов24 ноября
+
+На6e2432c5 смыслово прочитаны126 значений на14 языках: external-copy
+notice/accept/required, google-copy uncertain/error, drive-backup notice/consent,
+content-archive notice/remoteNotice. Эти четыре каталога EN/RU также прочитаны
+целиком. Во всех выбранных переводах сохранены явная передача текста/имён/
+адресов/аудио внешнему провайдеру через backend вне E2EE, отдельное согласие,
+только encrypted Drive file без backup key с видимыми размерами/техническими ID,
+отдельные Calendar/Tasks permissions и сохранение файлов при отключении.
+Импорт остаётся историей без восстановления входа/прав/команд; device snapshot
+не обещает серверные/неоткрытые области. Full server snapshot требует всех
+доверенных unlocked scopes и отказывает без усечения. Unknown Google outcome
+не создаёт автоматически вторую задачу. Противоречий в этом объёме не найдено;
+тексты не менялись. Hash/keys/coverage: runtime/external-copy-semantic51-1124.json
+под output/release-3.3.6. Это частная смысловая вычитка, не визуальная приёмка,
+не все security catalogs и не окончательное криптографическое заключение.
+
+Дополнительно прочитаны84 значения на14 языках: migration-cancel confirm,
+local-recovery notice, personal-content-restore notice/localDiary/sharedNotice
+и весь device-history. Полные EN/RU migration/migration-cancel/local-recovery/
+device-history/personal-content-restore также прочитаны. Смысл согласован:
+активированную область нельзя отменой вернуть к старому режиму; отдельная копия
+message keys не восстанавливает identity; при content restore текущие версии и
+tombstones не заменяются, дневник остаётся локально до отдельного согласия,
+shared restore требует нынешних прав в том же scope, approvals не воскрешаются,
+automation стартует выключенной. Локальная история другого устройства не
+обещается без него или его encrypted content backup. Противоречий не найдено,
+тексты не менялись. Evidence: runtime/recovery-copy-semantic52-1124.json. Это
+тот же ограниченный смысловой review, не runtime/UI или итог всего кандидата.

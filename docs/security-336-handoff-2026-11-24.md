@@ -1,5 +1,21 @@
 # Продолжение24 ноября: выпуск3.3.6 и отдельный сайт
 
+## Последнее: rate discovery54
+
+Mounted49 FAIL12PASS/1FAIL,2notRepeated; personal+3shared ACTIVE и normal task
+readback PASS. Team editor не открылся до role selector. Cleanup PASS, immutable
+before=after=component53=5af34101…df9506. Directory/status actual429 обходили
+существующий read retry и делали refreshed false. RED3/3 сохранён.
+Новая web correction54: typed429 для read/status/directory, scope refresh и
+scopeSummaries через прежний guarded bounded retry. GREEN65/65 +close1/1,
+types/scoped lint/build:web PASS. Новая immutable54 копия создаётся ПОСЛЕ
+completion94990. Нужен полный mounted54 на ней, без larger/reset rate budget.
+QA membership waits bounded20min per stage + fail-fast visible alerts; drafts/
+intents не сбрасываются. Old exact12ef CI45392523518/11880 оба SUCCESS, не
+выдавать их за последующий54 diff. Новый source check после сохранения54.
+
+Следующие разделы сохраняют более ранние срезы; текущий статус49 указан выше.
+
 ## Новое: согласование в настоящем modal
 
 Готов web correction PrivateMembershipModal + popup exclusion + consent spacing.
@@ -31,6 +47,14 @@ CLI транспорт и in-memory encrypted storage не заменяют HTTP
 Private JSON не читались. Evidence: retained58/cleanup-completion-20261124.json.
 Restore-native31-01 уже был cleaned (10plaintext files); его cleanup.json PASS
 подтверждён, age/proof сохранены. Retained native37 пока сохраняется до release.
+
+Component53 PASS112/112:14languages×4widths×2schemes (violet), actual modal/fence,
+parent draft, checkbox/Close/Escape, inner/outer overflow. Manually inspected
+de360dark/ja390light/en1440dark. Output membership-modal53-locales; bundle hash
+5af34101…df9506 observed after53, ещё сравнить с завершённым mounted49 before/after.
+Не весь Gate lifecycle, не font-scale1.3. Semantic51/52:126+84 критичных значений
+на14 языках прочитаны без противоречий; exact scope/hashes в final-review.md.
+Новых product/native изменений нет; general final review не закрыт.
 
 ## Новое: членство и история эпох
 
