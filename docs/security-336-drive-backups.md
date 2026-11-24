@@ -2,6 +2,13 @@
 
 ## HTTP provider acceptance77,24 November2026
 
+Additional77-05:16/16 PASS, cleanup PASS, with2actual backend process restarts:
+after prepare and after the provider accepted the partial resumable prefix.
+SQLite file ID, encrypted connection and upload-session URI survived; retry
+allocated no replacement file/session. Native process death, other crash
+boundaries and real Google OAuth remain untested. The new runner source is
+recorded independently of the earlier04 hashes below.
+
 `output/qa/security336-drive77-1124-04/results.json`:16/16 PASS, cleanup PASS.
 The unchanged production PHP Drive service is exercised through actual session/
 CSRF/owner-bound HTTP routes, SQLite and cURL. An isolated local TLS CONNECT

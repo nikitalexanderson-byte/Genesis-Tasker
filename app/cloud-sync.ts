@@ -3600,7 +3600,17 @@ export async function removeGoogleTaskList(taskListId: string, accountId?: strin
   });
 }
 
+/** Private counts are derived from encrypted domain data. Do not continue the
+ * optional legacy aggregate upload after a protected or locked private entry.
+ * The shared transport fence also covers an activation racing this early check. */
+function privateActivityUploadsBlocked(){
+  const owner=confirmedTransportOwnerId??workspaceUserId??privateIdentityCache?.uid;
+  if(!owner)return false;
+  return serverProtectedTransportOwners.has(owner)||privateAccountView().ownerId===owner
+    ||Boolean(privateIdentityCache?.uid===owner&&privateUserCacheRequired(privateIdentityCache));
+}
 export async function saveMetrics(metrics: GenesisMetrics) {
+  if(privateActivityUploadsBlocked())return{ok:true};
   return api<{ ok: boolean }>("/metrics", { method: "POST", body: JSON.stringify({ metrics }) });
 }
 
@@ -3609,6 +3619,7 @@ export async function loadAdminStats() {
 }
 
 export async function recordFeatureUsage(features: string[], platform: "web" | "android" = "web") {
+  if(privateActivityUploadsBlocked())return{ok:true};
   return api<{ ok: boolean }>("/feature-usage", {
     method: "POST", body: JSON.stringify({ features, platform }),
   });

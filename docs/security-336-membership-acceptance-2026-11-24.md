@@ -1,5 +1,28 @@
 # Общие проекты: приёмка изменения участников 24 ноября
 
+## Full73 отказ preview; текущий UI83 и диагностический82
+
+Full73 на immutable72 завершён12PASS/1FAIL,2recovery42 notRepeated, cleanup
+PASS, bundle unchanged. Все3shared scopes ACTIVE, normal cold task read/legacy
+deny PASS. Затем UI имел checked planAck, disabled Confirm и generic error:
+draft.proposal ещё отсутствовал. Это не одобренный/применённый план. Причина
+самого preview ещё не установлена:2IDB abort и actual read429 не доказывают
+причинную связь. В report73 нет diagnosticLogpoint/membershipDiagnosticLogpoints;
+не переносить утверждение о включённой диагностике с64 на73.
+
+Законченный UI block83 запрещает отметить planAck без загруженного proposal и
+даёт явный повтор загрузки прежнего intent при отказе preview. Он не создаёт
+новый intent, не одобряет план/владельца и не меняет authority guards. Types,
+scoped lint0errors/3existing warnings/build:web PASS. Immutable838983files,
+SHA256 abda808fcef7f8a6bf2f7a6f343be4412cc03b0130d5f009f3aa1820a44dc983.
+
+Full82/session70553 идёт на83 с явной diagnostic env и preserve-failure. Его
+report действительно содержит1refusal-mapper и4phase non-pausing logpoints.
+Новые logpoints выводят только technical code и source coordinates, не keys,
+private arguments или decrypted content. QA различает loaded proposal и error,
+повторяет кнопку review только по bounded observed Retry-After. Результат
+owner approvals/apply/cold team reader остаётся обязательным, ещё не PASS.
+
 ## Пропущенный renderer рабочей точки входа72
 
 Mounted64 завершён **12PASS/1FAIL**,2notRepeated; cleanup PASS. Immutable63

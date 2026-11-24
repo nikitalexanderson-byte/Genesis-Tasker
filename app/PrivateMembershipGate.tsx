@@ -97,8 +97,9 @@ function MembershipReview({state}:{state:PrivateMembershipUi}){
   </section>:null}
   {!review&&!final&&draft&&!draft.cancelled?<>
    {choices.length>1?<ul className="private-membership-choices">{choices.map(row=><li key={row.fingerprint}><button type="button" disabled={busy} onClick={()=>void run(()=>loadOwners(row.fingerprint))}>{displayFingerprint(row.fingerprint)}</button></li>)}</ul>:null}
-   <label className="backup-check"><input type="checkbox" checked={ack} disabled={busy} onChange={event=>setAck(event.target.checked)}/>{c.planAck}</label>
+   <label className="backup-check"><input type="checkbox" checked={ack} disabled={busy||!draft.proposal} onChange={event=>setAck(event.target.checked)}/>{c.planAck}</label>
    <button type="button" className="primary-button" disabled={busy||!ack||!draft.proposal} onClick={()=>void run(build)}>{draft.started?c.prepare:c.confirm}</button>
+   {error&&!draft.proposal&&!draft.started?<button type="button" disabled={busy} onClick={()=>void run(load)}>{c.review}</button>:null}
   </>:null}
   {review&&scope&&!final?<section aria-label={c.owners}><h3>{c.owners}</h3>{detail?.title?<h4>{detail.title}</h4>:<h4>{c.scopes}</h4>}{displayFingerprint(scope.scopeId)}
    <p>{name(scope.ownerId)}{name(scope.ownerId)!==scope.ownerId?<small>{displayFingerprint(scope.ownerId)}</small>:null}</p>

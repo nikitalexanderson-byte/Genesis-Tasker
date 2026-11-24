@@ -1,6 +1,6 @@
 import {IndexedDbLegacyTransportMarkers,WebLegacyTransportGate,WebMigrationTransportFence} from '../../app/e2ee/legacy-transport-fence.ts';
 import type {LegacyOperationPermit} from '../../app/e2ee/legacy-transport-fence.ts';
-import {loadGenesisSession,loadSavedAdvice,e2eeRequest,updateAccountPreferences,personalDocumentAccess,restoreOfflineWorkspaceSession} from '../../app/cloud-sync';
+import {loadGenesisSession,loadSavedAdvice,e2eeRequest,updateAccountPreferences,personalDocumentAccess,restoreOfflineWorkspaceSession,saveMetrics,recordFeatureUsage} from '../../app/cloud-sync';
 import {MindmapRepository} from '../../app/mindmaps-storage';
 import {newMindmap} from '../../app/mindmaps-model';
 import {RestorationRepository} from '../../app/stoicheion-restoration-storage';
@@ -92,6 +92,7 @@ const api={
     });
   },
   async productSession(){return(await loadGenesisSession())?.uid??null;},
+  async productActivity(){const results=[];for(const action of [()=>saveMetrics({projectCount:2,taskCount:3,openTaskCount:2,completedTaskCount:1,googleSyncedCount:0,habitCount:1}),()=>recordFeatureUsage(['calendar.sacred'])]){try{results.push(await action());}catch(error){results.push({error:(error as Error).message});}}return results;},
   async resetProfile(){const response=await fetch('/profile-legacy');if(!response.ok)throw new Error('fixture reset failed');return(await response.json()).owner;},
   async activeProfile(){await fetch('/profile-active');return(await loadGenesisSession())?.uid??null;},
   async productRequest(){try{await loadSavedAdvice({id:'advice-synthetic',dayKey:'2026-11-18',collection:'aurora'});return{ok:true};}catch(error){return{ok:false,error:(error as Error).message};}},

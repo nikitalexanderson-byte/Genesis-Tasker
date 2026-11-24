@@ -1,5 +1,69 @@
 # Genesis Tasker: действующие правила
 
+## Продолжение24 ноября: activity87 принята в своих границах
+
+- Build:web87 PASS. Immutable87 hash5955b3f5…10d22,8983files, НЕ менять;
+  runtime/activity87-input-identity.json содержит raw source hashes.
+- Native88 SUCCESS2m18s, wrapper151.47s. Forced single JVM policy test1/1,
+  читает52 shared vectors; не full JVM. SourceABCD91DE…2B1AA,
+  APK8F6C974A…3A206, instrumentationDB90A29E…F9EF0. Actual APK policy asset
+  exact BDAA700F…22371 matches contract. Freeze88 снят; не устанавливалось.
+- Scoped JS/worker/fence20/20, updated deployed-PHP suite3/3 с52vectors,
+  actual Chromium activity87-04 PASS5/5, types/lint PASS. Ошибка первого Node
+  вызова была strip-only prerequisite; первые browser setups не PASS продукта.
+- Files79 завершён PASS14/14, cleanup PASS, before=after=e808ba07…54c68.
+  Download/image byte-exact и legacy/anonymous refusal приняты; не повторять.
+- Membership82/session70553 продолжает на83: оба projects ACTIVE, space ждёт
+  реальный boundary18:50UTC на последнем срезе. Rich85/session64997 имеет
+ 12PASS, обаshared ACTIVE, normal task readback; comment/rule/maps step ещё идёт.
+  Оба используют неизменный83; новые activity87 inputs не подменять внутри run.
+  Main149/Play/устройства/flags unchanged, formal9/20 и final review открыты.
+
+## Продолжение24 ноября: исходящие aggregate uploads87
+
+- Native84 завершён SUCCESS2m32s, wrapper162.90s, no JVM. Source428C9DB0…4AC091,
+  APK8B8F19C6…381F2, instrumentation327EC0D3…11826. Root freeze84 снят. Ничего
+  не устанавливалось; controller37 и основной149 не повторять/не менять.
+- После84 найден actual private outbound gap: в73 ушли70metrics/26feature-usage
+  POSTs, отклонённые сервером409. Shared transport contract87 теперь включает
+  оба prefixes, PHP resource copied exact, worker regenerated. Web suppresses
+  optional raw aggregate uploads for private/locked profiles; central fence
+  сохраняет race protection; delayed metrics проверяет captured session. История
+  источников и encrypted domain data сохраняются, legacy accounts не отключены.
+- Focused JS/worker/fence20/20, actual browser activity87-04 PASS5/5;52 shared
+  vectors. Types/scoped lint PASS. Early01–03 browser и strip-only Node были QA
+  setup failures; не считать product PASS. Native84 предшествует87; следующий
+  focused native policy test/assembly ещё нужен. Build:web87/session34878 идёт.
+- Read-only server canary86 на retained75:25new-generation tables/624rows/
+  866703bytes без точного private marker. Не whole confidentiality/crypto proof;
+  legacy tables/private client JSON не читались. Synthetic ownership verified.
+
+## Продолжение24 ноября: backup80 принят, membership83 и assembly84
+
+- HEAD aff70df5 pushed. Exact Source checks45455359422/45455346904 RUNNING;
+  не отменять следующим push ради статусов. Main/production7964526b, APK149.
+- Backup80 на immutable78 PASS13/13,2recovery42 notRepeated, cleanup PASS,
+  bundle unchanged.46 encrypted entries/6sections,483340bytes; wrong-key deny,
+  inert import/cold history/current edited task сохранены. Изменённый snapshot
+  в80 не воспроизводился; сообщение78 не выдавать за испытание этого отказа.
+- Membership73 FAIL12PASS/1FAIL: checked planAck при proposal отсутствовал,
+  confirm disabled и generic alert. IDB abort2, причина preview ещё неизвестна;
+  не называть её доказанно429/queue71. В73 diagnostic fields отсутствуют, старое
+  предположение о включённых phase points неверно. Cleanup PASS,72 unchanged.
+-83 блокирует planAck до proposal, даёт явный повтор load прежнего intent после
+  отказа preview. Crypto guards/consents не ослаблены. Types/scoped lint0errors/
+  3old warnings/build PASS. Immutable83 abda808f…dc983,8983files, НЕ менять.
+  Membership82/session70553 на83 действительно включил1refusal+4phase non-pausing
+  logpoints и preserve-failure. Будущий retry только после observed Retry-After.
+- Rich75-02 FAIL12PASS/1FAIL: comment уже decrypted в DOM, но скрыт за вкладкой
+  Comments. Helper теперь открывает её; rich85/session64997 идёт на83. Files79/
+  session51258 остаётся на78. Принятые stages не запускать заново без причины.
+- Drive77-05 PASS16/16 +2real backend restarts: после prepare и после partial
+  resumable. Cleanup PASS; simulator Google, не live OAuth/native process death.
+- Native84/session40679 собирает текущие feedback78+membership83 assets. До
+  identity84 app/android/contracts/public НЕ менять. JVM не запрашивался;
+  controller37 не повторять, основной149/устройства/Play и gates не трогать.
+
 ## Продолжение24 ноября: Drive77 и backup feedback78
 
 - Exact049 Source checks45445304778/45445288477 SUCCESS обоих jobs. Первый

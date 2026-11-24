@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "personalPrefixes": ["workspace","bootstrap","tasks","task-lists","diary","mindmaps","stoicheion","aurora","physis","modeling","future-modeling","habit-reminders","recovered-tasks","advice","billing/modeling/results","backup/v1/preview","backup/v1/commit","backup/v1/server-snapshot"],
+  "personalPrefixes": ["workspace","bootstrap","tasks","task-lists","diary","mindmaps","stoicheion","aurora","physis","modeling","future-modeling","habit-reminders","recovered-tasks","advice","metrics","feature-usage","billing/modeling/results","backup/v1/preview","backup/v1/commit","backup/v1/server-snapshot"],
   "personalExact": ["sync/tasks","assistant/plan","assistant/spellcheck","assistant/spelling"],
   "preferencesPath": "account/preferences",
   "metadataPreferenceKeys": ["calendarMode","taskCalendarMode","calendarExplorationPending","timeFormat","weekStart","gregorianYearStart","darkPalette","theme","expectedThemeRevision","language","sharedProjectsEnabled","stoicheionDivinationDisabled"],

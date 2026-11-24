@@ -51,6 +51,16 @@ test('private and unknown preferences are blocked; technical metadata, identity,
     assert.equal((await guard(request(path,init))).status,200);
   assert.equal(calls.length,4);
 });
+
+test('old pages cannot upload private counts or activity through the worker after the personal fence',async()=>{
+ const {guard,request,markers,calls}=fixture();
+ assert.equal((await guard(request('/metrics',{method:'POST',headers:{'X-Genesis-Account-Id':'owner'},body:'{"metrics":{"taskCount":3}}'}))).status,200);
+ assert.equal(calls.length,1);markers.rows.set('owner',{protocol:1,ownerId:'owner',scopeId:'personal:owner',phase:'active',token:'token'});
+ for(const path of ['/metrics','/metrics/','/feature-usage','/feature-usage/'])for(const headers of [{},{'X-Genesis-Account-Id':'owner'}]){
+  assert.equal((await guard(request(path,{method:'POST',headers,body:'{"private-marker":"retained"}'}))).status,409);
+ }
+ assert.equal(calls.length,1,'No private body reaches the fetch port after activation');
+});
 test('storage and missing-lock failures do not forward private bytes; incomplete responses never become success',async()=>{
   const {guard,request,markers,calls}=fixture();markers.fail=true;
   for(const headers of [{},{'X-Genesis-Account-Id':'owner'}])assert.equal((await guard(request('/workspace',{headers}))).status,503);

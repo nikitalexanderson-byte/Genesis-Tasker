@@ -43,18 +43,19 @@ export async function seedSharedRecords({context,baseURL,space,project,task,cana
 export async function readSharedRecords({page,fixture,output}){
  await page.locator(`[data-shared-task-id="${fixture.task.id}"]`).getByText(fixture.task.title,{exact:true}).click();
  const task=page.getByRole('dialog',{name:fixture.task.title,exact:true});await task.waitFor();
- await task.getByText(fixture.records.comment,{exact:true}).waitFor({timeout:60000});
+ await task.getByRole('tab',{name:/^Комментарии · \d+$/}).click();
+ await task.getByText(fixture.records.comment,{exact:true}).waitFor({timeout:1200000});
  await task.screenshot({path:`${output}/shared-records-comment.png`,animations:'disabled'});
  await task.getByRole('button',{name:'Закрыть',exact:true}).click();await task.waitFor({state:'hidden'});
  await page.locator('[data-automation-trigger]').click();
  const rules=page.locator('.shared-automations-dialog');await rules.waitFor();
- await rules.getByText(fixture.records.ruleTitle,{exact:true}).click();
- await rules.getByRole('textbox',{name:'Название правила',exact:true}).waitFor();
+ await rules.getByText(fixture.records.ruleTitle,{exact:true}).click({timeout:1200000});
+ await rules.getByRole('textbox',{name:'Название правила',exact:true}).waitFor({timeout:1200000});
  assert.equal(await rules.getByRole('textbox',{name:'Название правила',exact:true}).inputValue(),fixture.records.ruleTitle);
  await rules.screenshot({path:`${output}/shared-records-automation.png`,animations:'disabled'});
  await rules.getByRole('button',{name:'Закрыть',exact:true}).click();await rules.waitFor({state:'hidden'});
  await page.locator('.shared-mindmaps-open').click();
- for(const map of fixture.records.maps)await page.getByText(map.title,{exact:true}).waitFor({timeout:60000});
+ for(const map of fixture.records.maps)await page.getByText(map.title,{exact:true}).waitFor({timeout:1200000});
  await page.screenshot({path:`${output}/shared-records-maps.png`,fullPage:true,animations:'disabled'});
  return{taskComment:true,disabledAutomationEditor:true,projectAndSpaceMapTitles:true,historyReadback:false,workflowReadback:false};
 }

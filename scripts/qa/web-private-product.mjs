@@ -146,6 +146,14 @@ try{
   report.diagnosticLogpoint={artifacts:candidates.map(row=>row.file),pauses:false};
   if(membershipJourney){
    let points=0;
+   let failurePoints=0;
+   for(const artifact of readdirSync(assets).filter(name=>/^private-security-ui-[\w-]+\.js$/.test(name))){
+    const source=readFileSync(path.join(assets,artifact),'utf8'),pattern=/\b(?:let|const|var)\s+([\w$]+)=([\w$]+) instanceof Error\?\2.message:(?:``|"");return \1===`E2EE_BROWSER_EXPORT_LIMIT`/,found=pattern.exec(source);if(!found)continue;
+    const at=source.indexOf('return '+found[1]+'===`E2EE_BROWSER_EXPORT_LIMIT`',found.index);assert(at>=0);
+    const preceding=source.slice(0,at),condition=`(()=>{const reason=${found[2]},message=reason instanceof Error?reason.message:'',code=/^E2EE_[A-Z_]+$/.test(message)?message:'NON_TECHNICAL_ERROR',frames=(typeof reason?.stack==='string'?reason.stack:'').split(String.fromCharCode(10)).slice(1,9).flatMap(frame=>{const match=/[/]assets[/]([a-zA-Z0-9_.-]+[.]js):([0-9]+):([0-9]+)/.exec(frame);return match?[{artifact:match[1],line:Number(match[2]),column:Number(match[3])}]:[];});console.info('GENESIS_QA_MEMBERSHIP_REFUSAL '+JSON.stringify({code,frames}));return false;})()`;
+    await debug.send('Debugger.setBreakpointByUrl',{url:baseURL+'/assets/'+artifact,lineNumber:preceding.split('\n').length-1,columnNumber:at-preceding.lastIndexOf('\n')-1,condition});failurePoints++;
+   }
+   assert(failurePoints>0,'Actual membership refusal mapper observed without pausing');report.membershipFailureLogpoints=failurePoints;
    for(const artifact of readdirSync(assets).filter(name=>/^shared-web-live-[\w-]+\.js$/.test(name))){
     const source=readFileSync(path.join(assets,artifact),'utf8'),start=source.indexOf('membership:async(');if(start<0)continue;
     const end=source.indexOf(',loadRequest:',start);assert(end>start,'Actual membership callback boundary');const body=source.slice(start,end);
@@ -168,6 +176,7 @@ try{
  page.on('pageerror',error=>report.pageErrors.push(redactPrivateText(error.message)));
  page.on('console',message=>{const prefix='GENESIS_QA_KEY_BUNDLE_REFUSAL ';if(message.text().startsWith(prefix)){report.keyBundleRefusals.push(JSON.parse(message.text().slice(prefix.length)));console.log(message.text());save();}});
  page.on('console',message=>{const prefix='GENESIS_QA_MEMBERSHIP_PHASE ';if(message.text().startsWith(prefix)){const value=JSON.parse(message.text().slice(prefix.length));(report.membershipDiagnostics??=[]).push({...value,observedAt:Date.now()});console.log(message.text());save();}});
+ page.on('console',message=>{const prefix='GENESIS_QA_MEMBERSHIP_REFUSAL ';if(message.text().startsWith(prefix)){(report.membershipRefusals??=[]).push(JSON.parse(message.text().slice(prefix.length)));console.log(message.text());save();}});
  page.on('requestfailed',request=>{const url=new URL(request.url());if(url.origin!==baseURL||!/^\/api\/e2ee\/v1\/[a-z-]+$/.test(url.pathname))return;
   const reason=request.failure()?.errorText??'';const code=/^net::ERR_[A-Z_]+$/.test(reason)?reason:'UNKNOWN_NETWORK_FAILURE';
   report.networkFailures.push({path:url.pathname,code});save();
@@ -538,7 +547,10 @@ try{
    await row.getByRole('combobox',{name:'Доступ к пространству',exact:true}).selectOption('guest');
    (report.membershipSteps??=[]).push({label:'normal role selected',status:'SUBMITTED',observedAt:Date.now()});save();
    const dialog=page.locator('.private-membership-dialog'),planAck=dialog.getByRole('checkbox',{name:membershipCopy.planAck,exact:true});
-   await waitForMembership(planAck.and(dialog.locator('input:enabled')),'loaded plan');
+   await withRateRetry('membership plan preview',async()=>{
+    const retry=dialog.getByRole('button',{name:membershipCopy.review,exact:true});if(await retry.isVisible())await retry.click();
+    await waitForMembership(planAck.and(dialog.locator('input:enabled')),'loaded plan');
+   });
    await dialog.screenshot({path:`${output}/membership-plan-review.png`,animations:'disabled'});
    assert(await dialog.getByRole('button',{name:membershipCopy.confirm,exact:true}).isDisabled());
    await planAck.check({timeout:10000});

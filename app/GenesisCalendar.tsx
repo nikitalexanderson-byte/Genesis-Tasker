@@ -2695,7 +2695,9 @@ export function GenesisCalendar() {
 
   useEffect(() => {
     if (!hydrated || !cloudUser || !navigator.onLine) return;
+    const current=captureAccountSessionGuard();
     const timer = window.setTimeout(() => {
+      try{current();}catch{return;}
       void saveMetrics(metricsFor(tasks, projects, habitWorkspace.habits.length)).catch(() => undefined);
     }, 1500);
     return () => window.clearTimeout(timer);

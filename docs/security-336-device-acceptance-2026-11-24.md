@@ -1,5 +1,31 @@
 # 24 November: retained controller and actual device unlocking
 
+## Native88: activity policy and exact packed contract
+
+Build SUCCESS2m18s, wrapper151.47s, unitTaskForced=true/unitExecuted=true,
+fullUnitRun=false. One fresh JVM test passes all52 shared transport vectors;
+XML tests=1/failures=0/errors=0, timestamp18:37:19.817UTC. This is1test, not52JVM
+test cases and not a repeat of the main controller/PIN acceptance.
+
+SourceABCD91DE0373E52946B5BF9659DA28BFC5593AEC8F65ADBDDF559559D5A2B1AA;
+APK8F6C974AA8EE20CAFDD231E914AFD38F9669D669CFDE4E149C906C52C873A206;
+instrumentationDB90A29EF5D79C8735E7DA75B355A86BB4A31E11811F15655CCCCD40831F9EF0.
+The actual APK asset read by E2eeLegacyTransportPolicy.load has SHA256
+BDAA700F0CAF88E5ECBD44FBC194A309F7CBAABA7FCA6CEC3919870F70022371, exactly
+the reviewed source contract. Input vector/source hashes and asset proof are
+in runtime/native150-activity88-*. No installation or signed-upgrade claim.
+Root freeze88 is finished; main149 and retained37 remain untouched.
+
+## Native84 identity; predates activity87
+
+Assembly84 SUCCESS2m32s, wrapper162.90s; unitExecuted=false/fullUnitRun=false.
+Source428C9DB0F1117019307B63EFC947A7E73DA93386182CCD7C254DC3E3504AC091;
+APK8B8F19C6ACABBDB31384044BAD389B0EC804BC6FD87ECE88ACFE3911DB7381F2,
+instrumentation327EC0D32B7F7E428019F353946BEC9C477FCBC39010F2DFDD5C6FE65CE11826.
+HEADaff70df5 plus uncommitted membership83 inputs, captured by the source hash.
+Root freeze finished; no installation or repeated controller37. Later activity87
+changes shared policy/worker/web inputs and requires its own acceptance identity.
+
 ## Native73: current assembly identity
 
 Assembly73 SUCCESS1m30s, wrapper98.48s, source commit049fefb2. Source hash

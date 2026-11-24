@@ -1,5 +1,64 @@
 # Продолжение24 ноября: выпуск3.3.6 и отдельный сайт
 
+## Текущее: исходящий activity87 и три отдельные приёмки
+
+HEADaff70df562d7b89ba12be9d91ec2d3eab4afa58b pushed. Exact CI45455359422/
+45455346904 ещё RUNNING; не пушить статусы и не отменять их. Working diff после
+aff: membership83 UI/readiness, Drive77-05 process restart QA, rich tab selector,
+activity87 transport boundary и read-only canary86. Не считать aff CI проверкой
+этих последующих input changes. Production7964526b/APK149 неизменны.
+
+Backup80 на immutable78 PASS13/13,2 recovery42 notRepeated, cleanup PASS,
+bundle unchanged.46entries/6sections/483340bytes; independent decryption,
+wrong-key deny, inert import/cold history и current task сохранены. Changed-
+capture branch не возникал, его новый текст не объявлен runtime-tested.
+Files79/session51258 теперь PASS14/14: actual multi-chunk attachment1331200bytes
+и image byte-exact через normal task UI, legacy/anonymous download deny.
+Окончательный run.json cleanup/hash проверить при закрытии session, не повторять.
+
+Membership73 FAIL12/1: proposal не загрузился, ack был enabled/checked, Confirm
+disabled/generic alert;2IDB abort не устанавливают причину. В73 diagnostics не
+были включены (поля отсутствуют).83 запрещает ack без proposal и даёт explicit
+reload прежнего intent. Types/scoped lint/build PASS. Immutable83:
+abda808fcef7f8a6bf2f7a6f343be4412cc03b0130d5f009f3aa1820a44dc983,8983files.
+НЕ менять. Full82/session70553 на нём реально имеет1failure +4phase non-pausing
+logpoints и preserve-failure; actual owner approvals/apply/cold team ещё нужны.
+
+Rich75-02 FAIL12/1: comment уже decrypted в DOM, но tab Comments не был открыт.
+Helper исправляет именно tab, без product/storage changes. Rich85/session64997
+на83 с исправленным selector/20min bound ждёт нормальный scope readback. Не
+читать retained client-state/*.private.json ради диагностики/возобновления.
+
+Native84/session40679 завершён SUCCESS2m32s, wrapper162.8977s, no JVM.
+Source428C9DB0F1117019307B63EFC947A7E73DA93386182CCD7C254DC3E3504AC091;
+APK8B8F19C6ACABBDB31384044BAD389B0EC804BC6FD87ECE88ACFE3911DB7381F2;
+test APK327EC0D3…11826. Freeze84 снят, ничего не устанавливалось. Он предшествует
+activity87 policy/worker. Controller37/PIN acceptance не повторять.
+
+Drive77-05 дополнительно PASS16/16/cleanup:2real backend process restarts после
+prepare и partial resumable сохранили connection/file/session и exact offset.
+Это modeled Google, не real OAuth/native death/SAF. Canary86 на retained75
+прочитал только25 e2ee_* tables/624rows/866703bytes: точного marker нет. Не whole
+plaintext/crypto proof; old legacy tables/client private files не читались.
+
+Activity87 — новый подтверждённый security defect:73 отправлял70metrics и
+26feature-usage POSTs, сервер409 не предотвращал получение plaintext bodies.
+Shared contract JS/PHP/Android теперь защищает prefixes/aliases, server resource
+exact copied, worker regenerated. Web suppresses optional aggregate uploads for
+private/locked identities; common fence сохраняет activation race protection,
+metrics timer проверяет captured session. История/unique content не удалены.
+Focused JS/fence/worker20/20; дополнительный deployed-PHP52vectors3/3; actual
+Chromium/IDB/SW activity87-04 PASS5/5. Types/scoped lint PASS. Initial Node call
+был strip-only prerequisite FAIL; browser01–03 только setup (worker attestation,
+new POST route below GET-only guard). Full browser proof не считать fake auth/
+vault unlock: supplied only ordinary synthetic session metadata. Build:web87/
+session34878 RUNNING. Затем нужны immutable87 и focused native52-vector policy
+test + новая assembly identity (не full JVM/controller repetition).
+
+Остаток без переименования failed вPASS: full82 owner flow, rich85 readers,
+new activity87 final artifact/CI bindings, сводные20/48, final AI review,
+signed149→150 и release. Formal source acceptance9/20 не повышался суммой checks.
+
 ## Последнее: Drive77, отказ backup76 и feedback78
 
 Exact049 CI45445304778/45445288477 завершены SUCCESS обоих jobs. Первый

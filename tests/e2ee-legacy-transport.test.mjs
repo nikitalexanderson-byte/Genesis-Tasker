@@ -27,8 +27,10 @@ test('the PHP loader runs with only the deployed server package',async()=>{
     // Mirror src/ -> ../resources/ while keeping unrelated app/config files absent.
     cpSync(new URL('../server/src/e2ee-legacy-transport.php',import.meta.url),join(directory,'src','policy.php'),{recursive:true});
     cpSync(new URL('../server/resources/e2ee-legacy-transport-v1.json',import.meta.url),join(directory,'resources','e2ee-legacy-transport-v1.json'),{recursive:true});
+    cpSync(new URL('./fixtures/e2ee/legacy-transport-v1.json',import.meta.url),join(directory,'cases.json'));
     const php=await resolveBackendPhp();
-    const result=spawnSync(php,['-r',"require $argv[1];if(!genesisE2eePersonalTransportProtected('GET','billing/modeling/results/id'))exit(2);",join(directory,'src','policy.php')],{encoding:'utf8',env:{...process.env,...backendPhpEnvironment(php)}});
+    const result=spawnSync(php,['-r',"require $argv[1];if(!genesisE2eePersonalTransportProtected('GET','billing/modeling/results/id'))exit(2);$fixture=json_decode(file_get_contents($argv[2]),true,32,JSON_THROW_ON_ERROR);foreach($fixture['cases'] as $case)if(genesisE2eePersonalTransportProtected($case['method'],$case['path'],$case['body']??null)!==$case['protected'])throw new RuntimeException('Cross-platform route mismatch');echo count($fixture['cases']);",join(directory,'src','policy.php'),join(directory,'cases.json')],{encoding:'utf8',env:{...process.env,...backendPhpEnvironment(php)}});
     assert.equal(result.status,0,result.error?.message??result.stderr);
+    assert.equal(Number(result.stdout),fixture.cases.length);
   }finally{rmSync(directory,{recursive:true,force:true});}
 });
