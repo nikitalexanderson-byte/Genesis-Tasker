@@ -920,7 +920,8 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         val secret=recoverySecret?.copyOf()
         val transport=object:ru.genesis.calendar.security.E2eeAccountTransport{
             private fun call(path:String,body:JSONObject?=null):JSONObject{current();check(!offline){"E2EE_REFRESH_REQUIRED"};val requestGeneration=if(adopted.get())client.currentGeneration()else generation
-                return client.e2ee(requestGeneration,path,body).also{current();check(client.isCurrent(requestGeneration)){"E2EE_ACCOUNT_CHANGED"}}}
+                fun requestCurrent(){current();opened?.device?.requireOpen();check(client.isCurrent(requestGeneration)){"E2EE_ACCOUNT_CHANGED"}}
+                return e2eePrivateRequestWithRateRetry(path,body,::requestCurrent){submitted->client.e2ee(requestGeneration,path,submitted)}}
             override fun status()=call("/status")
             override fun directory(scopeId:String)=call("/directory",JSONObject().put("scopeId",scopeId))
             override fun command(packet:JSONObject)=call("/command",packet)

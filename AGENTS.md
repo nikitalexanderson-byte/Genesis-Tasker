@@ -1,5 +1,22 @@
 # Genesis Tasker: действующие правила
 
+## Продолжение24 ноября: Android normal-read retry56
+
+- У normal account transport Android обнаружен тот же пробел: bounded retry
+  был только в migration read, а активный account делал read/status/directory
+  напрямую. Новый e2eePrivateRequestWithRateRetry сохраняет submitted JSON и
+  повторяет только эти3 readonly routes через прежнюю bounded policy. Любые
+  command/challenge/membership mutations не повторяются. Current/device и
+  captured request generation проверяются на каждом ожидании/ответе.
+- Новые3 JVM cases: реальные отказ/ожидание, изменения внешнего JSONObject,
+  закрытие владельца, смена generation и отсутствие retry writes. Нужны
+  компиляция/проверка. Build56 будет focused6 JVM (new3+existing3) + QA assembly;
+  не называть его full1453. После старта не менять app/android/contracts/public
+  до identity/runtime56. Native37 migration не повторять: следующий UI56
+  использует retained37; основной signed149 на emulator5580 не трогать до150.
+- Web54/session24674 продолжает на immutable df8d904f…d2b05c9. Его web inputs
+  не изменились из-за native56. No subagents/Daybreak, gates/floors off.
+
 ## Продолжение24 ноября: bounded directory/status ожидание
 
 - Mounted49 завершён FAIL12PASS/1FAIL,2notRepeated; personal и3shared scopes
@@ -11,8 +28,10 @@
   scopeSummaries используют retryE2eeRead с прежним owner/device/lifecycle guard.
   Ни mutation retry, ни stale-authority fallback, ни larger budget не добавлены.
   RED3/3, GREEN65/65 +close1/1, types/scoped lint/build:web PASS. Immutable54
-  копируется только после completion build54; не запускать browser на copy race.
-  Новый mounted54 впереди. Native inputs Android не менялись; старый native41
+  полностью скопирован ПОСЛЕ completion build54. Mounted54/session24674 RUNNING
+  на df8d904f…d2b05c9; args — runtime/membership-ui54-input-identity.json.
+  Нельзя менять этот bundle. Source dab6eb7a pushed; CI45400562946/45400549205
+  выполняются. Native inputs Android не менялись; старый native41
   не выдавать за runtime этой web correction. CI12ef45392523518/11880 SUCCESS
   обоих jobs, но не проверяет последующий54 diff.
 - Component53 accepted112/112,49before=49after=53after hash5af34101…df9506.
