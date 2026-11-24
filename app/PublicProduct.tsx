@@ -2,15 +2,13 @@
 import {useEffect,useState} from 'react';
 import {publicFeatureIntroHtml,publicFooterHtml,publicPricingCardsHtml,publicPricingTermsHtml,publicProductCopy} from './public-product';
 import {PublicGallery} from './PublicGallery';
-import {PUBLIC_CURRENCY_KEY,publicCurrency,resolvePublicCurrency,type PublicCurrency} from './public-currency';
+import {PUBLIC_CURRENCY_KEY,publicCurrency,resolvePublicCurrency,savedPublicCurrency,savePublicCurrency,type PublicCurrency} from './public-currency';
 import pricingCopy from './public-pricing-copy.json';
 import {currentPublicEdition,type PublicEdition} from './public-route';
 
 export function PublicProduct({language,edition=currentPublicEdition()}:{language:string;edition?:PublicEdition}) {
   const c=publicProductCopy(language,edition),p=pricingCopy[language as keyof typeof pricingCopy]??pricingCopy.en;
-  const [manual,setManual]=useState<PublicCurrency|null>(()=>{
-    try {return publicCurrency(localStorage.getItem(PUBLIC_CURRENCY_KEY));} catch {return null;}
-  });
+  const [manual,setManual]=useState(savedPublicCurrency);
   useEffect(()=>{
     const storage=(event:StorageEvent)=>{if(event.key===PUBLIC_CURRENCY_KEY)setManual(publicCurrency(event.newValue));};
     window.addEventListener('storage',storage);
@@ -19,7 +17,7 @@ export function PublicProduct({language,edition=currentPublicEdition()}:{languag
   const selection=resolvePublicCurrency({manual,language});
   const choose=(currency:PublicCurrency|null)=>{
     setManual(currency);
-    try {if(currency)localStorage.setItem(PUBLIC_CURRENCY_KEY,currency);else localStorage.removeItem(PUBLIC_CURRENCY_KEY);} catch { /* Keep this visit's choice even without persistence. */ }
+    savePublicCurrency(currency);
   };
   return <div className="public-product" data-no-translate>
     <section className="public-section" id="features" aria-labelledby="public-features-title">
@@ -32,7 +30,7 @@ export function PublicProduct({language,edition=currentPublicEdition()}:{languag
       <div className="public-currency-controls">
         <span id="public-currency-label">{p.currency}</span>
         <div className="public-currency-switch" role="group" aria-labelledby="public-currency-label">
-          {(['USD','RUB'] as const).map(currency=><button key={currency} type="button" aria-pressed={selection.currency===currency} onClick={()=>choose(currency)}>{currency}</button>)}
+          {(['RUB','USD'] as const).map(currency=><button key={currency} type="button" aria-pressed={selection.currency===currency} onClick={()=>choose(currency)}>{currency}</button>)}
         </div>
         <button className="public-currency-auto" type="button" aria-pressed={manual===null} onClick={()=>choose(null)}>{p.auto}</button>
       </div>

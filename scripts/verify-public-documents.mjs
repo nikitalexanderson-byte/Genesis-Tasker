@@ -8,6 +8,7 @@ const legalSource = await readFile(new URL("../app/legal-content.ts", import.met
 const revision = legalSource.match(/export const LEGAL_UPDATED = "([^"]+)"/)?.[1];
 assert.ok(revision, "legal source revision is required");
 const publicCopy=JSON.parse(await readFile(new URL('../app/public-product-copy.json',import.meta.url),'utf8'));
+const refundCopy=JSON.parse(await readFile(new URL('../app/refund-contact-copy.json',import.meta.url),'utf8'));
 const pages = {
   privacy: "Политика конфиденциальности",
   terms: "Пользовательское соглашение",
@@ -63,4 +64,12 @@ assert.ok(homepage.includes("demiurge.soft@gmail.com") && homepage.includes('hre
 assert.ok(homepage.includes("AI NCII") && homepage.includes("Google Calendar") && homepage.includes("Google Tasks"));
 assert.doesNotMatch(homepage, /%GENESIS_SERVICE_IDENTITY%/, "public identity must resolve at build time");
 await verifyPublicLocales(output);
+assert.deepEqual(Object.keys(refundCopy).sort(),Object.keys(publicCopy).sort());
+for(const language of Object.keys(refundCopy)){
+  const html=await readFile(new URL(language==='en'?'refund.html':`_public-locales/${language}/refund.html`,output),'utf8');
+  const contact=html.match(/<div data-refund-contacts>(.*?)<\/div>/s)?.[1];
+  assert.ok(contact?.includes(refundCopy[language]),`${language}: localized refund instructions are required`);
+  for(const address of ['nikitalexanderson@gmail.com','demiurge.soft@gmail.com'])
+    assert.ok(contact.includes(`href="mailto:${address}"`),`${language}: refund contact ${address} is required`);
+}
 console.log("Unified Russian documents and English homepage preserve all existing disclosures; localized public HTML and Google-only .com references verified.");

@@ -55,9 +55,12 @@ html[data-genesis-theme] .genesis-app dialog.upgrade-dialog button.dialog-close-
 html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-access-reason { margin-bottom:20px; color:#e5ccff; max-width:72ch; }
 .upgrade-dialog fieldset { min-width:0; margin:0; padding:0; border:0; }
 .upgrade-dialog legend { padding:0; color:var(--ink-soft); font-weight:500; }
+.upgrade-price-options { display:flex; flex-wrap:wrap; align-items:flex-end; gap:16px 24px; }
 .upgrade-period-options { display:flex; flex-wrap:wrap; gap:8px; }
+.upgrade-currency-options { flex-wrap:nowrap; }
 .upgrade-period-options legend { margin-bottom:8px; }
 .upgrade-period-options label { position:relative; display:grid; place-items:center; min-width:96px; min-height:44px; padding:8px 16px; border:1px solid var(--line); border-radius:10px; background:var(--palette-recessed, #2e1b40); color:var(--ink-soft); cursor:pointer; }
+.upgrade-currency-options label { min-width:64px; font-variant-numeric:tabular-nums; }
 .upgrade-period-options label:has(input:checked) { color:#fff7ff; border-color:#bb8ff4; background:#5e318e; }
 .upgrade-period-options input,.upgrade-plan-option > input { position:absolute; z-index:1; inset:0; width:100%; height:100%; margin:0; padding:0; opacity:0; cursor:pointer; }
 .upgrade-period-options span,.upgrade-plan-option > :not(input) { pointer-events:none; }
@@ -83,13 +86,6 @@ html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-feature-list { di
 .upgrade-feature-list li[data-included="false"] > .experimental-icon { color:#ff8a94; }
 html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-policy-note { margin-top:16px; color:var(--ink-soft); font-size:12px; line-height:1.6; max-width:75ch; }
 html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-checkout { margin-top:28px; padding-top:24px; border-top:1px solid var(--line); }
-.upgrade-provider-options { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px!important; }
-.upgrade-provider-options label { display:flex; flex:1 1 180px; align-items:center; gap:10px; min-width:0; min-height:60px; padding:10px 12px; background:var(--palette-recessed, #2b1a3c); border:1px solid var(--line); border-radius:10px; cursor:pointer; }
-.upgrade-provider-options label > input { width:18px; height:18px; margin:0; padding:0; flex:0 0 18px; accent-color:#b991ef; }
-.upgrade-provider-options label > span { display:grid; gap:2px; }
-.upgrade-provider-options label:has(input:checked):not([aria-disabled="true"]) { border-color:#bd93ed; background:var(--palette-surface, #47265e); }
-.upgrade-provider-options label[aria-disabled="true"] { cursor:default; color:#bfaecc; }
-html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-provider-options small { color:#bfaecc; font-size:12px; }
 html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-payment-status { color:var(--ink-soft); margin-top:16px; max-width:75ch; }
 .upgrade-payment-status:has(> button) { display:grid; justify-items:start; gap:12px; }
 html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-credit { display:grid; gap:8px; margin-top:20px; }
@@ -114,7 +110,6 @@ html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-free-selected { m
   .upgrade-plan-premium4life .upgrade-plan-name { grid-column:1; }.upgrade-plan-premium4life .upgrade-plan-price { grid-column:2; grid-row:1/3; }.upgrade-plan-premium4life small { grid-column:1; }
   html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-quota-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px 12px; }
   html[data-genesis-theme] .genesis-app .upgrade-dialog .upgrade-feature-list { grid-template-columns:minmax(0,1fr); gap:10px; }
-  .upgrade-provider-options label { flex-basis:100%; }
 }
 @media(prefers-reduced-motion:reduce) { .upgrade-open-button,.upgrade-plan-option { transition:none!important; }.upgrade-open-button::before { background:none; }.upgrade-spark-glowing { animation:none; opacity:1; filter:drop-shadow(0 0 3px #d7b8ff88); } }
 @media(forced-colors:active) { .upgrade-open-button,.upgrade-dialog,.upgrade-plan-option { forced-color-adjust:auto; }.upgrade-plan-option.is-selected { outline:2px solid Highlight; }.upgrade-open-button::before { display:none; } }

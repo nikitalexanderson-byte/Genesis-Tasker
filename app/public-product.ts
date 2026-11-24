@@ -8,13 +8,18 @@ import type {PublicCurrency} from './public-currency';
 import {publicGalleryItems} from './public-gallery';
 import {publicPagePath,currentPublicEdition,type PublicPage,type PublicEdition} from './public-route';
 import type {RegionLanguage} from './region-language';
-import {SERVICE_CONTACT} from './public-service';
+import {REFUND_CONTACTS,refundContactLabel,SERVICE_CONTACT} from './public-service';
 
 const APP_BASE=(process.env.NEXT_PUBLIC_GENESIS_BASE_PATH?.trim()||'').replace(/\/$/,'');
 const publicLink=(language:string,page:PublicPage,base=APP_BASE,edition:PublicEdition=currentPublicEdition())=>publicPagePath(Object.hasOwn(copy,language)?language as RegionLanguage:'en',page,base,edition);
 
 export const publicProductCopy = (language:string,_edition:PublicEdition=currentPublicEdition())=>{void _edition;return {...(copy[language as keyof typeof copy]??copy.en),...(domesticCopy[language as keyof typeof domesticCopy]??domesticCopy.en)};};
 export const escapePublicText = (value: string | number) => String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]!));
+
+function publicRefundContactsHtml(language:string):string {
+  const emails=REFUND_CONTACTS.map(address=>`<li><a href="mailto:${address}">${address}</a></li>`).join('');
+  return `<div data-refund-contacts><p>${escapePublicText(refundContactLabel(language))}</p><ul>${emails}</ul></div>`;
+}
 
 /** The public page and its no-JavaScript response share the approved price and quota sources. */
 export function publicPricingCardsHtml(language:string,currency:PublicCurrency,base=APP_BASE,edition:PublicEdition=currentPublicEdition()):string {
@@ -51,7 +56,7 @@ export function publicFeaturesHtml(language:string,edition:PublicEdition=current
 
 export function publicPricingTermsHtml(language:string,currency:PublicCurrency,base=APP_BASE,edition:PublicEdition=currentPublicEdition()):string {
   const c=publicProductCopy(language,edition),p=paymentCopy[language as keyof typeof paymentCopy]??paymentCopy.en,escape=escapePublicText;
-  return `<div data-price-currency="${currency}"><p class="public-billing-terms">${escape(p.period)}</p><p>${escape(p.checkout)}</p><p><a href="${publicLink(language,'refund',base,edition)}">${escape(c.refund)}</a> · ${escape(c.refundSummary)}</p></div>`;
+  return `<div data-price-currency="${currency}"><p class="public-billing-terms">${escape(p.period)}</p><p>${escape(p.checkout)}</p><p><a href="${publicLink(language,'refund',base,edition)}">${escape(c.refund)}</a> · ${escape(c.refundSummary)}</p>${publicRefundContactsHtml(language)}</div>`;
 }
 
 export function publicFooterHtml(language:string,base=APP_BASE,edition:PublicEdition=currentPublicEdition()):string {
@@ -73,5 +78,6 @@ export function publicMerchantHtml(language:string,page:string,base=APP_BASE,edi
   if(page==='home')return `<div class="public-merchant" data-no-translate><p>${escape(c.creator)}</p><p>${escape(c.infrastructure)}</p><p>${escape(c.merchant)}</p><p><a href="${publicLink(language,'support',base,edition)}">${escape(c.support)}</a> · <a href="${publicLink(language,'privacy',base,edition)}">${escape(c.privacy)}</a> · <a href="${publicLink(language,'refund',base,edition)}">${escape(c.refund)}</a></p></div>`;
   const r=referralCopy[language as keyof typeof referralCopy]??referralCopy.en;
   const referrals=page==='terms'?`<section data-no-translate><h2>${escape(r.title)}</h2><p>${escape(r.rules)}</p><p>${escape(r.monthlyOnly)}</p></section>`:page==='privacy'?`<section data-no-translate><h2>${escape(r.title)}</h2><p>${escape(r.privacy)}</p></section>`:'';
-  return `${referrals}<section class="public-merchant" data-no-translate><h2>${escape(c.merchantTitle)}</h2>${roles}<p>${escape(c.merchant)}</p><p>${escape(c.pending)}</p><p>${escape(c.merchantPrivacy)}</p>${page === 'terms' || page === 'refund' ? `<p>${escape(c.renew)}</p><p>${escape(c.refundSummary)}</p>` : ''}<p><a href="mailto:${SERVICE_CONTACT}">${SERVICE_CONTACT}</a> · <a href="${publicLink(language,'refund',base,edition)}">${escape(c.refund)}</a></p></section>`;
+  const contact=page==='refund'?publicRefundContactsHtml(language):`<p><a href="mailto:${SERVICE_CONTACT}">${SERVICE_CONTACT}</a> · <a href="${publicLink(language,'refund',base,edition)}">${escape(c.refund)}</a></p>`;
+  return `${referrals}<section class="public-merchant" data-no-translate><h2>${escape(c.merchantTitle)}</h2>${roles}<p>${escape(c.merchant)}</p><p>${escape(c.pending)}</p><p>${escape(c.merchantPrivacy)}</p>${page === 'terms' || page === 'refund' ? `<p>${escape(c.renew)}</p><p>${escape(c.refundSummary)}</p>` : ''}${contact}</section>`;
 }

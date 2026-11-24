@@ -123,10 +123,10 @@ export async function verifyUi317({context,page,tier,output,check,snapshot,origi
           await account.locator('.account-plan-upgrade button').click();await upgrade().waitFor();await freshLocation;
           await upgrade().locator('.upgrade-plan-premium input').check();
           await upgrade().locator('.upgrade-plan-standart .upgrade-plan-price').filter({hasText:scenario.currency==='RUB'?/₽/:/\$/}).waitFor();
-          if(scenario.currency==='RUB')await upgrade().locator('.upgrade-provider-options').waitFor();
-          else assert.equal(await upgrade().locator('.upgrade-provider-options').count(),0,'YooKassa must stay hidden outside positive Russia detection');
+          assert(await upgrade().locator(`input[name="upgrade-currency"][value="${scenario.currency}"]`).isChecked());
+          assert.match(await upgrade().locator('.upgrade-checkout-button').innerText(),scenario.currency==='RUB'?/ЮKassa/:/Paddle/);
           for(const [index,period] of [1,12].entries()){
-            await upgrade().locator('.upgrade-period-options input').nth(index).check();const observed=[];
+            await upgrade().locator('input[name="upgrade-period"]').nth(index).check();const observed=[];
             for(const [planIndex,plan] of ['standart','premium','business','premium4life'].entries()){
               const text=(await upgrade().locator('.upgrade-plan-'+plan+' .upgrade-plan-price').innerText()).trim();
               const amount=Number(text.replace(/[^\d.,-]/g,'').replace(',','.'));assert.equal(amount,scenario.prices[index][planIndex],scenario.currency+' '+plan+' '+period);
@@ -141,6 +141,13 @@ export async function verifyUi317({context,page,tier,output,check,snapshot,origi
             }
             await snapshot('release336-prices-'+scenario.region+'-'+period);records.push({screen:'prices',region:scenario.region,currency:scenario.currency,period,observed,syntheticGeolocation:scenario.coordinates,syntheticIp:scenario.ip});
           }
+          const other=scenario.currency==='RUB'?'USD':'RUB';
+          await upgrade().locator(`input[name="upgrade-currency"][value="${other}"]`).check();
+          assert.match(await upgrade().locator('.upgrade-plan-premium .upgrade-plan-price').innerText(),other==='RUB'?/₽/:/\$/);
+          assert.match(await upgrade().locator('.upgrade-checkout-button').innerText(),other==='RUB'?/ЮKassa/:/Paddle/);
+          assert(await upgrade().locator('.upgrade-checkout-button').isDisabled());
+          assert.equal(await upgrade().locator('[data-refund-contacts] a[href^="mailto:"]').count(),2);
+          await page.evaluate(()=>localStorage.removeItem('genesis.public-pricing-currency.v1'));
           await closeUpgrade();await account.getByRole('button',{name:'Закрыть',exact:true}).click();
         }finally{page.off('request',observe);}
       }
