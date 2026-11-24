@@ -9,6 +9,7 @@ import {upgradeCopy} from './upgrade-copy';
 import {DialogCloseButton} from './DialogCloseButton';
 import {ExperimentalIcon} from './ExperimentalIcon';
 import {useDialogAccessibility} from './use-dialog-accessibility';
+import {RefundContacts} from './RefundContacts';
 
 /** A return URL is only an order reference; all status and account data come from authenticated GETs. */
 export function PaymentReturnDialog({user,orderId,onClose,onUserChange}:{user:GenesisUser;orderId:string;onClose:()=>void;onUserChange?:(user:GenesisUser)=>void}) {
@@ -49,6 +50,7 @@ export function PaymentReturnDialog({user,orderId,onClose,onUserChange}:{user:Ge
     {error?<p role="alert">{text[error]}</p>:null}
     {paused?<p className="payment-return-help">{text.paused}</p>:null}
     <p className="payment-return-help">{text.support}</p>
+    <RefundContacts language={user.language} className="payment-return-help"/>
     <button type="button" className="upgrade-inline-action" disabled={busy} onClick={()=>{setBusy(true);setError(null);setPaused(false);setRevision(value=>value+1);}}><ExperimentalIcon name="map-refresh"/>{busy?shared.loading:text.check}</button>
   </dialog>;
 }

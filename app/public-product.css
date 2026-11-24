@@ -35,6 +35,8 @@
 .public-currency-controls .public-currency-auto[aria-pressed="true"] { color:#e3c98c; }
 .public-section .public-currency-status { margin:12px 0 4px; font-size:14px; }
 .public-section .public-currency-privacy { margin:4px 0 0; font-size:13px; }
+[data-refund-contacts] ul { display:flex; flex-wrap:wrap; gap:0 16px; list-style:none; margin:4px 0 0; padding:0; }
+[data-refund-contacts] a { display:inline-flex; min-height:44px; align-items:center; color:inherit; text-decoration:underline; white-space:nowrap; }
 .public-action { display:inline-flex; min-height:44px; align-items:center; justify-content:center; padding:10px 18px; border:1px solid #c8a45e; border-radius:10px; background:#d9bd83; color:#17272a !important; font-weight:700; text-decoration:none; text-align:center; }
 .public-action:hover { background:#f1d898; }
 .public-action:focus-visible,.public-product a:focus-visible,.welcome-nav a:focus-visible { outline:3px solid #e3c98c; outline-offset:4px; }

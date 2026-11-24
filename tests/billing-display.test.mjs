@@ -62,6 +62,18 @@ test('public display prices never make an unconfigured checkout ready',()=>{
   assert.equal(billingCheckoutReady({...catalog,checkoutEnabled:true,providers:[{id:'yookassa',available:false}]},offer,quote,'yookassa'),false);
 });
 
+test('Paddle checkout requires a USD offer and its own enabled quote',()=>{
+  const offer={id:'premium:1',plan:'premium',periodMonths:1,currency:'RUB',amountMinor:55500,
+    pricesByProvider:{paddle:{currency:'USD',amountMinor:700}},availableProviders:['paddle']};
+  const quote={offerId:offer.id,plan:offer.plan,periodMonths:1,currency:'USD',amountMinor:700,
+    creditMinor:0,listAmountMinor:700,provider:'paddle',availableProviders:['paddle']};
+  const catalog={checkoutEnabled:true,providers:[{id:'paddle',available:true}]};
+  assert.equal(billingCheckoutReady(catalog,offer,quote,'paddle'),true);
+  assert.equal(billingCheckoutReady(catalog,offer,{...quote,currency:'RUB'},'paddle'),false);
+  assert.equal(billingCheckoutReady(catalog,offer,{...quote,provider:'yookassa'},'paddle'),false);
+  assert.equal(billingCheckoutReady({...catalog,providers:[]},offer,quote,'paddle'),false);
+});
+
 test('upgrade events explain blocked growth without changing quotas or upselling free Google sync',()=>{
   const previous=globalThis.window;const target=new EventTarget();globalThis.window=target;const events=[];
   target.addEventListener(UPGRADE_REQUEST_EVENT,event=>events.push(event.detail));
