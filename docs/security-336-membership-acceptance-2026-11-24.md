@@ -1,5 +1,21 @@
 # Общие проекты: приёмка изменения участников 24 ноября
 
+## Mounted60 и staggered read63
+
+60 FAIL12PASS/1FAIL,2notRepeated. Исправленный role selector используется;
+personal и3shared ACTIVE, normal task/legacy-deny readback PASS. После выбора
+guest parent остаётся busy, review не появился за20min; final AX не содержит
+visible error или private review. Ownership cleanup PASS, immutable54 hash до/
+после df8d904f…d2b05c9. Это уже не повтор прежней exact-label ошибки54.
+
+Последующий отдельный RED63 показывает2 fresh observations вместо1, когда
+второй widget приходит во время незавершённого context IO. SharedLiveModel
+теперь допускает coalescing только до settlement той же snapshot promise;
+mutation немедленно отделяет дальнейшие reads. Settled snapshot не кэшируется.
+GREEN9/9 scheduling (3 новых staggered cases), tsc/scoped lint/build:web PASS.
+Это конкретная correction, но не доказанный итоговый repair всего mounted60;
+owner review/apply, новый участник/history и full20/48 ещё открыты.
+
 ## Mounted54: exact selector failure
 
 Mounted54 ended FAIL after personal and three shared scopes became ACTIVE and

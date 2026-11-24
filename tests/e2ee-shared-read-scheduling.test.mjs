@@ -24,6 +24,34 @@ test('overlapping shared queries use one freshly authorized observation and inde
  await f.model.request('GET','tasks');assert.equal(f.observations(),2,'A later read requires a new observation');
 });
 
+test('a widget arriving during unfinished scope IO shares that observation, but a settled read does not',async()=>{
+ const f=liveFixture(),entered=deferred(),finish=deferred(),original=f.ports.context;
+ f.ports.context=async()=>{entered.resolve();await finish.promise;return original();};
+ const first=f.model.request('GET','tasks');await entered.promise;
+ const second=f.model.request('GET','tasks?sort=title');finish.resolve();
+ const results=await Promise.all([first,second]);assert.equal(f.observations(),1);
+ results[0].tasks.push({id:'one-widget-only'});assert.deepEqual(results[1].tasks,[]);
+ await f.model.request('GET','tasks');assert.equal(f.observations(),2);
+});
+
+test('a mutation queued during scope IO separates a later widget from the unfinished read batch',async()=>{
+ const f=liveFixture(),entered=deferred(),finish=deferred(),original=f.ports.context;
+ f.ports.context=async()=>{entered.resolve();await finish.promise;return original();};
+ const first=f.model.request('GET','tasks');await entered.promise;
+ const sibling=f.model.request('GET','tasks?sort=title');
+ const refused=assert.rejects(f.model.request('POST','unsupported',{requestId:'mutation-after-scope-io'}),/E2EE_/);
+ const next=f.model.request('GET','tasks');finish.resolve();await Promise.all([first,sibling,refused,next]);
+ assert.equal(f.observations(),3);assert.deepEqual(f.order,['snapshot','write-load','write-save','snapshot','snapshot']);
+});
+
+test('failed scope IO rejects every staggered selector and the next read acquires a new observation',async()=>{
+ const f=liveFixture(),entered=deferred(),finish=deferred(),original=f.ports.context;let failedObservations=0;
+ f.ports.context=async()=>{failedObservations++;entered.resolve();await finish.promise;throw Error('E2EE_REFRESH_REQUIRED');};
+ const first=assert.rejects(f.model.request('GET','tasks'),/E2EE_REFRESH_REQUIRED/);await entered.promise;
+ const second=assert.rejects(f.model.request('GET','tasks?sort=title'),/E2EE_REFRESH_REQUIRED/);finish.resolve();await Promise.all([first,second]);
+ assert.equal(failedObservations,1);f.ports.context=original;assert.equal((await f.model.request('GET','tasks')).total,0);assert.equal(f.observations(),1);
+});
+
 test('a queued mutation separates shared read observations even when that mutation is refused',async()=>{
  const f=liveFixture(),first=f.model.request('GET','tasks');
  const refused=assert.rejects(f.model.request('POST','unsupported',{requestId:'mutation'}),/E2EE_/);

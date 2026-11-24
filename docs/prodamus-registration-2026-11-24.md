@@ -1,5 +1,19 @@
 # Prodamus: application submitted, email confirmed
 
+## Owner decision later24 November
+
+The owner forwarded Prodamus's request for additional identity/address evidence
+and a signed software-rights guarantee in its specified form, and said these
+requirements do not suit the current situation. Research another provider for a
+Russian self-employed individual (NPD, without IP), foreign cards -> RUB; crypto
+withdrawal is optional. Do not activate Prodamus or invent completed onboarding.
+No cancellation or support message was sent. The submitted application below is
+historical evidence, not an approved merchant account.
+
+Public-source alternatives and unresolved eligibility are recorded in
+web-unified-payments-2026-11-24.md. Do not promise registration without address
+verification or documents based on advertising. No new provider account exists.
+
 24 November2026. The owner uploaded the required passport photographs in the
 existing application. No identity document was read, copied into the repository
 or sent through chat. The application now visibly reports «Анкета успешно

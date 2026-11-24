@@ -142,6 +142,20 @@ try{
    }
   }
   report.diagnosticLogpoint={artifacts:candidates.map(row=>row.file),pauses:false};
+  if(membershipJourney){
+   let points=0;
+   for(const artifact of readdirSync(assets).filter(name=>/^shared-web-live-[\w-]+\.js$/.test(name))){
+    const source=readFileSync(path.join(assets,artifact),'utf8'),start=source.indexOf('membership:async(');if(start<0)continue;
+    const end=source.indexOf(',loadRequest:',start);assert(end>start,'Actual membership callback boundary');const body=source.slice(start,end);
+    const markers=[['callback-enter',/membership:async\([^)]*\)=>\{/],['durable-intent-follow',/let [\w$]+=await [\w$]+\.follow\(/],
+     ['completed-operation-inspection',/let [\w$]+=await [\w$]+\.completedCurrentPrivateMembershipOperation\(/],['modal-request',/await [\w$]+\([\w$]+\.ownerId,[^;]*\.intentId\)/]];
+    for(const [label,pattern]of markers){const match=pattern.exec(body);assert(match,'Actual membership diagnostic marker '+label);let at=start+match.index;if(label==='callback-enter')at+=match[0].length;
+     const preceding=source.slice(0,at),condition=`(()=>{console.info('GENESIS_QA_MEMBERSHIP_PHASE '+${JSON.stringify(JSON.stringify({label,artifact}))});return false;})()`;
+     await debug.send('Debugger.setBreakpointByUrl',{url:baseURL+'/assets/'+artifact,lineNumber:preceding.split('\n').length-1,columnNumber:at-preceding.lastIndexOf('\n')-1,condition});points++;
+    }
+   }
+   assert(points>=4,'Non-pausing membership phase observation required');report.membershipDiagnosticLogpoints=points;
+  }
  }
  debug.on('Debugger.paused',event=>{
   const code=event.data?.description?.match(/E2EE_[A-Z_]+/)?.[0];
@@ -151,6 +165,7 @@ try{
  });
  page.on('pageerror',error=>report.pageErrors.push(redactPrivateText(error.message)));
  page.on('console',message=>{const prefix='GENESIS_QA_KEY_BUNDLE_REFUSAL ';if(message.text().startsWith(prefix)){report.keyBundleRefusals.push(JSON.parse(message.text().slice(prefix.length)));console.log(message.text());save();}});
+ page.on('console',message=>{const prefix='GENESIS_QA_MEMBERSHIP_PHASE ';if(message.text().startsWith(prefix)){const value=JSON.parse(message.text().slice(prefix.length));(report.membershipDiagnostics??=[]).push({...value,observedAt:Date.now()});console.log(message.text());save();}});
  page.on('requestfailed',request=>{const url=new URL(request.url());if(url.origin!==baseURL||!/^\/api\/e2ee\/v1\/[a-z-]+$/.test(url.pathname))return;
   const reason=request.failure()?.errorText??'';const code=/^net::ERR_[A-Z_]+$/.test(reason)?reason:'UNKNOWN_NETWORK_FAILURE';
   report.networkFailures.push({path:url.pathname,code});save();
@@ -162,6 +177,7 @@ try{
    const path=new URL(response.url()).pathname;
    const packet=response.request().postDataJSON();const action=packet?.command?.action;
    console.log('TRANSPORT '+path+' '+(typeof action==='string'?action:'')+' '+response.status());
+   const key=path+':'+(typeof action==='string'?action:'directory-or-status')+':'+response.status();report.transportCounts??={};report.transportCounts[key]=(report.transportCounts[key]??0)+1;
    if(response.status()===429){
     const observedAt=Date.now(),header=await response.headerValue('retry-after'),seconds=/^[0-9]{1,3}$/.test(header??'')?Number(header):600;
     report.rateLimits.push({path,action:typeof action==='string'?action:null,observedAt,retryAfterSeconds:seconds>=1&&seconds<=600?seconds:600});save();
@@ -503,6 +519,7 @@ try{
    });
    const row=await openTeam('normal membership editor');
    await row.getByRole('combobox',{name:'Доступ к пространству',exact:true}).selectOption('guest');
+   (report.membershipSteps??=[]).push({label:'normal role selected',status:'SUBMITTED',observedAt:Date.now()});save();
    const dialog=page.locator('.private-membership-dialog');await waitForMembership(dialog,'plan');
    await dialog.screenshot({path:`${output}/membership-plan-review.png`,animations:'disabled'});
    assert(await dialog.getByRole('button',{name:membershipCopy.confirm,exact:true}).isDisabled());

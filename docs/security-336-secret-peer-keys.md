@@ -93,3 +93,20 @@ on concurrency; it does not repeat the already accepted112 layout cases.
 Its first invocation failed before execution because of a JS-only harness
 syntax mistake; no runtime was created. The corrected invocation used fresh
 owned output. No product guard was weakened and no old failure was renamed.
+# Дополнительная приёмка24 ноября: actual private migration62
+
+Browser62-08 PASS5/5: обычный workspace и task созданы/перечитаны настоящим UI;
+Messenger использует real WebCrypto/IDB с nonempty composition, conflict draft
+и unknown-outcome command. Настоящий mounted personal migration controller и
+full source factory/PHP/SQLite активируют scope. Direct E2eeMessageLocal reader
+до fallback подтверждает все исходные hashes. Cold real vault unlock сохраняет
+device/pin/history/drafts/command и ordinary task; identity alone не показывает
+composer. Migration не отправляет сообщение. Explicit retry повторяет точный
+сохранённый ciphertext POST, без второго message, с пустой принятой composition.
+pageErrors[], sourceUnchanged=true, owned runtime cleanup PASS.
+
+Evidence: output/playwright/security336-messenger-migration62-1124-08/results.json.
+Source79797ddd…93206, entry299a6176…5991. Chat transport modeled, Google delivery
+synthetic; это не server enrollment/whole20-path acceptance/signed upgrade.
+Предыдущие62 failures и harness corrections сохранены и перечислены в handoff;
+продуктовый crypto/storage код ради этой приёмки не менялся. Layout112 не повторён.

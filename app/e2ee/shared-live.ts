@@ -517,12 +517,15 @@ export class SharedLiveModel{
   if(!batch)this.#readBatch=batch={requests:[]};
   const owned=batch,pending=new Promise<ObjectValue>((resolve,reject)=>owned.requests.push({path,body:held,resolve,reject}));
   if(start)void this.#run(async()=>{
-   if(this.#readBatch===owned)this.#readBatch=null;
    let observation:Promise<SharedReadSnapshot>|undefined;
-   const observe=async()=>structuredClone(await(observation??=this.#snapshot()));
-   for(const request of owned.requests)try{
-    this.ports.current();const result=await this.#execute('GET',request.path,request.body,undefined,observe);this.ports.current();request.resolve(structuredClone(result));
-   }catch(error){request.reject(error);}
+   // Widgets can arrive after another widget has started asynchronous scope
+   // IO. They share only that unfinished observation. Close admission as soon
+   // as it settles; later reads and any intervening mutation stay fresh.
+   const observe=async()=>structuredClone(await(observation??=this.#snapshot().finally(()=>{if(this.#readBatch===owned)this.#readBatch=null;})));
+   try{for(const request of owned.requests)try{
+     this.ports.current();const result=await this.#execute('GET',request.path,request.body,undefined,observe);this.ports.current();request.resolve(structuredClone(result));
+    }catch(error){request.reject(error);}
+   }finally{if(this.#readBatch===owned)this.#readBatch=null;}
   }).catch(error=>{if(this.#readBatch===owned)this.#readBatch=null;for(const request of owned.requests)request.reject(error);});
   return pending;
  }

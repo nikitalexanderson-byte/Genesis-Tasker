@@ -1,5 +1,52 @@
 # Продолжение24 ноября: выпуск3.3.6 и отдельный сайт
 
+## Последнее: exact CI4454, migration62 и scheduling63
+
+4454e536 pushed. Source checks45418383374 и45418365896 оба SUCCESS, web/API и
+Android. Первый job log содержит2226 tests/pass2226/fail0; Android BUILD SUCCESS
+15m39s, unit task выполнен, XML totals не извлекались. Logs и summary сохранены
+в runtime/ci4454-45418383374-*. Это не acceptance последующей correction63.
+
+Messenger migration62-08 PASS5/5, source snapshot79797ddd2f1be2c8ef5dc3b848a658d28b898325123cc76fb28ac7cee7f93206,
+entry299a6176441f3f71a4faabff85201b25cc4340f8fb72124c9de61f6207f05991.
+Real ordinary workspace сначала сохранён и перечитан нормальным app UI; actual
+IDB содержит nonempty composition, competing draft и lost-ACK command. Настоящие
+MigrationGate, full personal factory и PHP/SQLite activate personal scope;
+protected direct reader (без lazy fallback) подтверждает те же cell hashes.
+Cold actual vault unlock сохраняет device/pin/history/drafts/command и исходную
+задачу. Migration не отправляет message; explicit retry повторяет тот же POST,
+не дублирует message и очищает принятую composition. pageErrors[], unchanged
+source, cleanup PASS. Chat delivery modeled; не whole20/48 или signed upgrade.
+Ранние failures62 сохранены: unavailable implicit PHP download01; owned02
+interrupted/cleaned после unsupported precache assets;03/04 bounded worker
+refusal и cleanup;05/06 custom fixture не инициализировал canonical workspace;
+07 cold vault использовал фактический RU, а QA искал EN Unlock. Product guards
+не менялись;08 использует normal workspace и фактический lang диалога.
+
+Mounted60 FAIL12PASS/1FAIL,2notRepeated. Personal и3shared ACTIVE, normal task
+и legacy deny PASS; role select найден/использован, parent busy, review не
+открылся за20min. Final AX не содержит review или visible alert. Cleanup PASS,
+before/after bundle df8d904f…d2b05c9 unchanged. Не переименовывать вPASS и не
+повторять с тем же bundle.600-budget fixed windows сохранены; read-only metadata
+подтвердили735 попыток за окно15:20UTC, без изменения rate rows.
+
+RED63 (runtime/shared-read-overlap63-red03.log) показывает2 observations вместо1
+для widget, пришедшего во время незавершённого scope IO. Предшествующие01/02
+не запускали test body из-за Node flags/module resolver. Correction63 закрывает
+batch при settlement именно snapshot promise; mutation немедленно отделяет
+следующие reads. Нет timer cache или использования старого role snapshot после
+settlement. GREEN9/9 (3 staggered cases), tsc/scoped lint/build:web PASS.
+Причинная связь со всем60 ещё не доказана; actual membership остаётся открытым.
+Native59 identity не распространять на новые embedded inputs63. Controller37
+migration не повторять; основной signed149 не трогать.20/48, final whole review,
+signed149→150 и release открыты; floors/cutover/deployAndroid off.
+
+Новая steering задача: владелец отверг требования Prodamus и просит альтернативу
+для самозанятого без ИП, foreign cards с RUB выплатой (crypto необязательна).
+Публичные условия Robokassa/EasyStaff/Lava.top изучены; нет подтверждённого
+no-doc/no-address варианта, новые аккаунты/платежи не создавались. Детали в
+prodamus-registration и web-unified-payments. Безопасность продолжать параллельно.
+
 ## Последнее: competing tabs60 и semantic61
 
 Native59 SUCCESS50s/no JVM, source96BC214A…659DBA, APK byte-identical58

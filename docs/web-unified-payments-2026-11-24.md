@@ -1,5 +1,58 @@
 # Единый сайт, реквизиты Prodamus и способы доната
 
+## Новое решение владельца: альтернативы Prodamus
+
+Позднее24 ноября владелец отверг дополнительные требования Prodamus и поручил
+искать другой сервис для физлица на НПД без ИП: зарубежные карты, зачисление в
+рублях; crypto вывод необязателен. ЮKassa/CloudTips/Boosty и production не менялись.
+Новые кабинеты и checkout не создавались, поддержке сообщения не отправлялись.
+
+Проверены публичные условия24 ноября, не merchant-specific approval:
+
+- Robokassa явно указывает тариф «Самозанятые: Базовый» и foreign cards9,9%,
+  отдельная страница подтверждает рублёвое зачисление. Roboчек СМЗ существует.
+  Подключение конкретного продавца без постоянной регистрации НЕ подтверждено;
+  старое соглашение физлиц предусматривало страницу паспорта с регистрацией.
+  Нельзя обещать, что новый кабинет не запросит её или документы на ПО.
+  https://robokassa.com/payments/tarify/
+  https://robokassa.com/payments/payment-method/inostrannye-karty/
+  https://robokassa.com/blog/articles/kak-prinimat-oplatu-s-inostrannykh-kart/
+- EasyStaff Invoice: public registration требует реальный полный Address;
+  verification описывает фото удостоверения/загранпаспорта и live selfie,
+  возможны portfolio/additional checks. Paylinks доступны только Trusted.
+  Это пока резерв для инвойсов, не подтверждённая полная SaaS subscription/API
+  замена и не обещание отсутствия address checks.
+  https://start.easystaff.io/ru/helpcenter/verification
+  https://easystaff.io/ru/help-center/paylinks
+- Lava.top: public KYC — ID + live selfie;8% successful payment, foreign
+  currency -> RU card возможна по внутреннему conversion rate. Для вывода
+  нужны минимум3 реальные продажи и security review до7 рабочих дней. Terms
+  clauses4.5–4.7 разрешают дополнительные документы/address verification.
+  Кроме того FAQ запрещает гадания/Таро/ритуалы; без прямого одобрения полного
+  GENESIS нельзя объявлять подходящей заменой Paddle или менять описание
+  приложения ради сокрытия функций. API/webhooks наличие подтверждено отдельно.
+  https://faq.lava.top/article/79240
+  https://faq.lava.top/article/68562
+  https://lava.top/docs/terms
+  https://faq.lava.top/article/76098
+  https://faq.lava.top/article/76482
+- Т-Банк: public internet acquiring требует ИП/организацию; самозанятый без ИП
+  не равен ИП на НПД. ЮKassa official accept-methods ограничивает foreign cards
+  конкретными системами; общий приём US/EU Visa/Mastercard не подтверждён.
+  ENOT homepage адресована ИП/ООО, NPD-only onboarding не подтверждён.
+  https://www.tbank.ru/business/help/business-payments/internet-acquiring/how-work/working-conditions/
+  https://yookassa.ru/docs/support/payments/accept-methods
+  https://enot.io/
+
+Подтверждённого сервиса, одновременно принимающего любые зарубежные карты,
+работающего с НПД без ИП и гарантирующего отсутствие всех документов/подтверждения
+адреса, не найдено. Приоритет Robokassa по НПД условен согласием на фактический
+адрес/доступный документ и полный продукт; EasyStaff — запасной invoice route.
+Использование ИИ само по себе не делает проект чужим ПО: OpenAI Terms Content
+assigns Output as between user/OpenAI to extent permitted by law; это не
+заключение о правах на сторонние библиотеки/изображения и не готовое гарантийное
+письмо. https://openai.com/policies/terms-of-use/
+
 ## Опубликовано24 ноября
 
 Main7964526b2e78ce5956cfaf95a1f9df129dc95b1a прошёл собственные Source checks

@@ -1,5 +1,28 @@
 # Genesis Tasker: действующие правила
 
+## Продолжение24 ноября: message migration62 и read scheduling63
+
+- Exact4454e536 Source checks45418383374/45418365896 SUCCESS обоих jobs.
+  В журнале первого run2226/2226 JS; полный Android job SUCCESS, без выдуманных
+  XML totals. Новую correction63 этот CI не проверяет.
+- Actual browser migration62-08 PASS5/5: ordinary nonempty encrypted Messenger
+  cells -> mounted complete personal migration/PHP/SQLite -> direct protected
+  cell hashes -> cold real vault unlock -> explicit byte-exact pending retry.
+  Conflict draft сохранён при cold readback, migration не отправляет сообщение.
+  Chat transport modeled; не whole20/48 и не signed upgrade. Cleanup PASS.
+- Mounted60 FAIL12PASS/1FAIL,2notRepeated:3shared scopes ACTIVE и normal task
+  readback PASS, но role change не открыл review за20min. Runtime cleanup PASS,
+  immutable54 unchanged. Не повторять без конкретного разбора scheduling path.
+- RED63 доказывает лишнее второе observation для widget, пришедшего во время
+  незавершённого scope IO. Batch теперь открыт только до settlement этого IO;
+  mutation закрывает его сразу, поздний read получает новый snapshot. GREEN9/9,
+  types/scoped lint/build:web PASS. Это bounded fix, не доказанный whole60 repair;
+  новый native asset identity и actual membership result ещё нужны.
+- Prodamus более не выбран владельцем: после запроса дополнительных документов
+  поручен поиск другого провайдера для НПД без ИП, foreign cards -> RUB. Анкету
+  не отменяли сообщением сервису, gateway остаётся выключенным. Robokassa,
+  EasyStaff и Lava.top пока только исследованы; новые кабинеты не создавались.
+
 ## Продолжение24 ноября: native59 завершён и tabs60
 
 - Native59 SUCCESS50s/no new JVM; оба APK byte-identical58. Root freeze59 снят,
