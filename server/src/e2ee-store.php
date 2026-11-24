@@ -55,7 +55,7 @@ function genesisE2eeEpochKeys(PDO $db,string $scopeId): array
     while($row=$q->fetch()) {
         $event=json_decode($row['signed_command'],true,512,JSON_THROW_ON_ERROR)['command'];
         if($event['action']==='bootstrap')$epochs[1]=$event['payload']['keyId'];
-        elseif($event['action']==='rotate')$epochs[$event['payload']['cryptoEpoch']]=$event['payload']['keyId'];
+        elseif(in_array($event['action'],['rotate','rotate-membership'],true))$epochs[$event['payload']['cryptoEpoch']]=$event['payload']['keyId'];
     }$q->closeCursor();return $epochs;
 }
 function genesisE2eeCapsule(mixed $source): array

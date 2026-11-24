@@ -1,5 +1,15 @@
 # Продолжение24 ноября: выпуск3.3.6 и отдельный сайт
 
+## Новое: членство и история эпох
+
+Исправлен server genesisE2eeEpochKeys: rotate-membership раньше не входил в
+историю epoch/keyId. RED45-red02 подтверждён; GREEN45-history02,39 assertions
+реальных signed SQLite staging/cancel/complete owner closure/late rollback/
+ACL+rotations/receipt/revoked reader и history/key reuse, cleanup PASS.
+Новые JS planners/wire15/15 и durable stager6/6 PASS. Opaque server fixtures и
+model ports не заменяют клиентскую расшифровку/IDB/UI. App/native inputs не
+менялись. Подробный охват/оставшееся — security-336-membership-acceptance-2026-11-24.md.
+
 ## Опубликованный сайт и retirement41/42
 
 - Срочный сайт завершён: main7964526b, Source checks45364626251 и штатный

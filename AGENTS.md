@@ -1,5 +1,20 @@
 # Genesis Tasker: действующие правила
 
+## Продолжение24 ноября: атомарное изменение участников
+
+- Новая предметная приёмка выявила production defect: genesisE2eeEpochKeys
+  пропускал rotate-membership. Теперь membership epochs входят в историю как
+  обычная rotation; иначе ломалась полнота history grants и проверка key reuse.
+  RED membership-atomic45-1124-red02 сохранён. GREEN history02:39 новых assertions
+  с реальной SQLite/P256/staging/cancel/atomic ACL+3 rotations/late rollback/
+  revoked reader/immutable receipts/history grants/key reuse; cleanup PASS.
+- TS/PHP planner+wire15/15 и production stager lifecycle6/6 PASS. Последний
+  использует synthetic durable CAS ports и ECDSA, не actual IDB/Android.
+  Server opaque capsules не доказывают клиентскую расшифровку. Полные33/34,
+  20-path/48-scenario acceptance, signed149→150 и exact final review ещё нужны.
+  app/android/contracts/public не менялись; native41 повторять ради server fix
+  не нужно. Доказательства — security-336-membership-acceptance-2026-11-24.md.
+
 ## Текущее продолжение24 ноября: старое browser storage
 
 - После загрузки паспортных фото самим владельцем Prodamus прошёл шаг5:
