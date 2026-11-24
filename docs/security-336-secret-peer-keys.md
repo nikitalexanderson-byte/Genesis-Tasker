@@ -78,3 +78,18 @@ last assertion matched edited textarea text before the PATCH finished. The
 corrected59-05 waits for the actual message row. The original failure and cleanup
 remain recorded. Protected private-vault storage, final native asset59 identity,
 complete20-path/48-scenario review and signed149→150 are not claimed here.
+
+## Actual competing tabs60
+
+The follow-up retains a rejected competing composition as a separate encrypted
+inert conflict record. It cannot replace the active draft. Input callbacks also
+check the chat and token captured by their rendered editor before accepting a
+late event. Pure regressions remain8/8 PASS; types/scoped lint PASS.
+`output/playwright/security336-compose-two-tabs60-1124/results.json`: PASS2/2,
+real two-page IndexedDB/Web Locks CAS and encrypted readback of both intents,
+blocked send after save failure, zero message writes/page errors, cleanup PASS.
+Source5c6617dc…2642dcd stayed unchanged; entry0050a39a…17f7495. This run focuses
+on concurrency; it does not repeat the already accepted112 layout cases.
+Its first invocation failed before execution because of a JS-only harness
+syntax mistake; no runtime was created. The corrected invocation used fresh
+owned output. No product guard was weakened and no old failure was renamed.

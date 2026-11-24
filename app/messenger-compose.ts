@@ -22,6 +22,7 @@ export class MessengerCompositions{
  private run<T>(work:(current:Current)=>Promise<T>){const current=this.ports.admit();current();const pending=this.tail.catch(()=>undefined).then(()=>{current();return work(current);});this.tail=pending;return pending;}
  private fresh(chatId:string,content='',edit:MessengerComposeEdit|null=null):MessengerCompose{return parseMessengerCompose({format:'genesis-messenger-compose-v1',ownerId:this.ownerId,chatId,token:crypto.randomUUID(),sequence:1,text:content,edit},this.ownerId,chatId);}
  private async keep(value:MessengerCompose,current:Current){await this.ports.compare('draft:'+value.chatId+':compose-history:'+value.token+':'+value.sequence,null,serializeMessengerCompose(value),current);current();}
+ private async keepConflict(value:MessengerCompose,current:Current){await this.ports.compare('draft:'+value.chatId+':compose-conflict:'+crypto.randomUUID(),null,serializeMessengerCompose(value),current);current();}
  load(chatId:string){return this.run(async current=>{
   if(!uuid.test(chatId))throw new Error('MESSENGER_DRAFT_INVALID');const key=messengerComposeCell(chatId),raw=await this.ports.read(key,current);current();
   if(raw!==null){const value=parseMessengerCompose(JSON.parse(raw),this.ownerId,chatId);this.observed.set(chatId,serializeMessengerCompose(value));return value;}
@@ -32,13 +33,14 @@ export class MessengerCompositions{
  });}
  snapshot(chatId:string){const raw=this.observed.get(chatId);if(raw===undefined)throw new Error('MESSENGER_DRAFT_NOT_READY');return parseMessengerCompose(JSON.parse(raw),this.ownerId,chatId);}
  save(input:MessengerCompose,previousToken=input.token){const submitted=parseMessengerCompose(structuredClone(input),this.ownerId,input.chatId);return this.run(async current=>{
-  const old=this.snapshot(submitted.chatId);if(old.token!==previousToken)throw new Error('MESSENGER_DRAFT_CHANGED');const value=parseMessengerCompose({...submitted,sequence:old.token===submitted.token?old.sequence:1},this.ownerId,submitted.chatId),before=serializeMessengerCompose(old);
+  const old=this.snapshot(submitted.chatId);if(old.token!==previousToken){await this.keepConflict(submitted,current);throw new Error('MESSENGER_DRAFT_CHANGED');}const value=parseMessengerCompose({...submitted,sequence:old.token===submitted.token?old.sequence:1},this.ownerId,submitted.chatId),before=serializeMessengerCompose(old);
   if(before===serializeMessengerCompose(value))return value;
   if(old.token===value.token)value.sequence=old.sequence+1;
   const next=serializeMessengerCompose(value);
   if(before===next)return value;
   if(old.token!==value.token)await this.keep(old,current);
-  await this.ports.compare(messengerComposeCell(value.chatId),before,next,current);current();this.observed.set(value.chatId,next);return value;
+  try{await this.ports.compare(messengerComposeCell(value.chatId),before,next,current);}catch(error){if(error instanceof Error&&error.message==='MESSENGER_DRAFT_CHANGED')await this.keepConflict(value,current);throw error;}
+  current();this.observed.set(value.chatId,next);return value;
  });}
  /** Only an exact accepted command can retire its composition. A revised
   * composition keeps its content with a fresh create token; another edit or

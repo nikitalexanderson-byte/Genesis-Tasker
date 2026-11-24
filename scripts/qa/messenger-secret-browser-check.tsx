@@ -9,7 +9,7 @@ import copy from '../../app/messenger-copy.json';
 
 // Public throwaway fixture metadata only. No private key leaves the real IDB
 // device store; the driver supplies chat replies, not authentication authority.
-declare global {interface Window {genesisSecretQa?:Record<string,unknown>;genesisSecretQaPublic?:Record<string,unknown>;genesisSecretQaDraftRetained?:()=>Promise<boolean>;genesisSecretQaCompositionRetained?:(text:string,editing:boolean)=>Promise<boolean>;}}
+declare global {interface Window {genesisSecretQa?:Record<string,unknown>;genesisSecretQaPublic?:Record<string,unknown>;genesisSecretQaDraftRetained?:()=>Promise<boolean>;genesisSecretQaCompositionRetained?:(text:string,editing:boolean)=>Promise<boolean>;genesisSecretQaConflictRetained?:()=>Promise<boolean>;}}
 const user=await loadGenesisSession();if(!user)throw new Error('Synthetic session required');
 const claimed=await claimMessengerDevice(user.uid,{id:crypto.randomUUID(),identity:await createMessagingIdentity()});
 if(!claimed)throw new Error('Actual device storage required');
@@ -24,5 +24,10 @@ if(!fixture){
 window.genesisSecretQa={...fixture,ownerId:user.uid,deviceId:claimed.id,own:{keyId:claimed.identity.keyId,publicKey:claimed.identity.publicKey}};
 window.genesisSecretQaCompositionRetained=async(text,editing)=>{const chat=String(fixture!.chatId),raw=await messengerPending(user.uid,messengerComposeCell(chat));if(raw===null)return false;const value=parseMessengerCompose(JSON.parse(raw),user.uid,chat);return value.text===text&&(value.edit!==null)===editing;};
 window.genesisSecretQaDraftRetained=()=>window.genesisSecretQaCompositionRetained!('Retained unsent secret draft',false);
+window.genesisSecretQaConflictRetained=async()=>{
+ const keys=await new Promise<IDBValidKey[]>((done,fail)=>{const request=indexedDB.open('genesis-private-messaging-v1',1);request.onerror=()=>fail(request.error);request.onsuccess=()=>{const db=request.result,tx=db.transaction('keys','readonly'),scan=tx.objectStore('keys').getAllKeys();let result:IDBValidKey[]=[];scan.onsuccess=()=>{result=scan.result;};tx.oncomplete=()=>{db.close();done(result);};tx.onerror=tx.onabort=()=>{db.close();fail(new Error('Synthetic key inventory failed'));};};});
+ const prefix='messenger-pending:'+user.uid+':',chat=String(fixture!.chatId);
+ for(const key of keys)if(typeof key==='string'&&key.startsWith(prefix+'draft:'+chat+':compose-conflict:')){const raw=await messengerPending(user.uid,key.slice(prefix.length));if(raw!==null&&parseMessengerCompose(JSON.parse(raw),user.uid,chat).text==='Competing unsent draft')return true;}return false;
+};
 function Fixture(){const[language,setLanguage]=useState('en');return <><label>QA language<select aria-label="QA language" value={language} onChange={event=>setLanguage(event.target.value)}>{Object.keys(copy).map(value=><option key={value}>{value}</option>)}</select></label><Messenger userId={user!.uid} language={language}/></>;}
 createRoot(document.getElementById('root')!).render(<Fixture/>);

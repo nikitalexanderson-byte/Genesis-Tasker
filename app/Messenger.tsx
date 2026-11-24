@@ -71,13 +71,14 @@ function OwnedMessenger({ userId, language, active = true, view = 'contacts', on
     const generation = useRef(0), selection = useRef<string | null>(null), working = useRef(false), alive = useRef(true), device = useRef<LocalMessengerDevice | null>(null), createId = useRef('');
     const list = useRef<HTMLOListElement>(null);
     const composition=useRef<MessengerCompose|null>(null),draftWrites=useRef(0),draftFailed=useRef(false);
+    const renderedComposition=composition.current;
     const compositions=useMemo(()=>new MessengerCompositions(userId,{admit:()=>captureMessagingAccess(userId),
         read:async(key,current)=>{current();const value=await messengerPending(userId,key);current();return value;},
         compare:(key,expected,next,current)=>compareMessengerPending(userId,key,expected,next,current).then(()=>undefined)}),[userId]);
     useEffect(()=>{const beforeUnload=(event:BeforeUnloadEvent)=>{if(draftWrites.current||draftFailed.current){event.preventDefault();event.returnValue='';}};window.addEventListener('beforeunload',beforeUnload);return()=>window.removeEventListener('beforeunload',beforeUnload);},[]);
     function presentComposition(value:MessengerCompose){composition.current=value;setDraft(value.text);setEditing(value.edit?{id:value.edit.id,seq:value.edit.seq,senderId:value.edit.senderId,revision:value.edit.revision,text:value.edit.sourceText,payload:null,createdAt:'1970-01-01T00:00:00Z',updatedAt:'1970-01-01T00:00:00Z',deletedAt:null,displayText:value.edit.sourceText}:null);}
     function changeComposition(text:string,edit:DisplayMessage|null=editing,replace=false){
-        const previous=composition.current;if(!previous||previous.chatId!==selection.current)return;
+        const previous=composition.current;if(!previous||previous.chatId!==selection.current||previous.chatId!==selected?.id||previous.token!==renderedComposition?.token)return;
         const next:MessengerCompose={...previous,text,edit:edit?{id:edit.id,seq:edit.seq,senderId:edit.senderId,revision:edit.revision,sourceText:edit.displayText}:null,...(replace?{token:crypto.randomUUID(),sequence:1}:{})};
         const version=generation.current;
         try{const saving=compositions.save(next,previous.token);presentComposition(next);draftWrites.current++;

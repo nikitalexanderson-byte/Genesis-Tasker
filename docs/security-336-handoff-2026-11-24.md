@@ -1,5 +1,24 @@
 # Продолжение24 ноября: выпуск3.3.6 и отдельный сайт
 
+## Последнее: competing tabs60 и semantic61
+
+Native59 SUCCESS50s/no JVM, source96BC214A…659DBA, APK byte-identical58
+8692F310…5A97D3; root freeze59 снят. Не повторять native37 migration.
+Web conflict60: candidate preserves both encrypted intents on cross-tab CAS
+refusal, and checks original rendered chat/token for input events. JS8/8,
+tsc/scoped lint PASS. Actual two-tabs60 PASS2/2, real IDB/Web Locks, failed-save
+send blocked,0message writes/page errors, cleanup PASS. No repeat112 layouts.
+Modelled chat transport/ordinary synthetic login; private-vault mode not claimed.
+252 further critical values semantically read on14 languages, no contradictions;
+exact18keys/8catalogue hashes in runtime/trust-copy-semantic61-1124.json.
+
+Mounted60/session41588 RUNNING on immutable54 with corrected accessible role
+queries and reused valid startup proof. Input runtime/membership-ui60-input-
+identity.json. First personal stages PASS, real project rate windows ongoing.
+Original54 FAIL/runtime cleanup PASS is retained. Exact CI c24a5803 currently
+45415744064/45415718864; they do not include the uncommitted web conflict60 fix.
+Final20/48, final exact internal review, signed149→150 and release still open.
+
 ## Последнее: web compositions59 PASS
 
 Native58 SUCCESS: focused8/8 JVM, source6D331482…1928C2F, APK8692F310…5A97D3.

@@ -5,7 +5,7 @@ const chat='23000000-0000-0000-0000-000000000001',other='23000000-0000-0000-0000
 function fixture(){const cells=new Map();let active=true,fail=false,changes=0;const ports={
  admit:()=>{const admitted=active;return()=>{assert(admitted&&active,'Retired owner');};},
  read:async(key,current)=>{current();return cells.get(key)??null;},
- compare:async(key,expected,next,current)=>{current();if(fail)throw Error('Storage unavailable');const old=cells.get(key)??null;if(old===next)return;assert.equal(old,expected,'Competing writer');current();cells.set(key,next);changes++;}
+ compare:async(key,expected,next,current)=>{current();if(fail)throw Error('Storage unavailable');const old=cells.get(key)??null;if(old===next)return;if(old!==expected)throw Error('MESSENGER_DRAFT_CHANGED');current();cells.set(key,next);changes++;}
  };return{cells,model:()=>new MessengerCompositions('owner',ports),close:()=>{active=false;},fail:()=>{fail=true;},changes:()=>changes};}
 const edited=value=>({...value,token:crypto.randomUUID(),sequence:1,text:'Edited existing message',edit:{id:other,seq:19,senderId:'owner',revision:7,sourceText:'Original message'}});
 test('cold composition preserves exact legacy text and edit identity without interpreting it as a fresh message',async()=>{
@@ -39,7 +39,8 @@ test('acknowledgement and legacy command cleanup do not clear a different compos
 });
 test('two cold readers cannot overwrite each other and corruption never becomes an empty replacement',async()=>{
  const f=fixture(),a=f.model(),first=await a.load(chat),b=f.model(),second=await b.load(chat);await a.save({...first,text:'Other tab owns this edit'});
- await assert.rejects(b.save({...second,text:'Competing edit'}),/Competing writer/);assert.equal((await f.model().load(chat)).text,'Other tab owns this edit');
+ await assert.rejects(b.save({...second,text:'Competing edit'}),/MESSENGER_DRAFT_CHANGED/);assert.equal((await f.model().load(chat)).text,'Other tab owns this edit');
+ assert([...f.cells].some(([key,raw])=>key.startsWith(`draft:${chat}:compose-conflict:`)&&JSON.parse(raw).text==='Competing edit'));
  f.cells.set(messengerComposeCell(other),'{"format":"corrupt"}');const before=f.changes();await assert.rejects(a.load(other),/MESSENGER_DRAFT_INVALID/);assert.equal(f.changes(),before);
 });
 test('failed saves retain originals and flush refuses before send or navigation; retired owner cannot write',async()=>{

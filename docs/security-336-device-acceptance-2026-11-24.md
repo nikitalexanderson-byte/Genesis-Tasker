@@ -1,5 +1,13 @@
 # 24 November: retained controller and actual device unlocking
 
+## Native59 identity only
+
+Assembly59 SUCCESS50s, source96BC214A…659DBA/commitc24a5803. No JVM task ran
+and no stale XML was counted. Both APKs are byte-identical58: product8692F310…
+5A97D3, instrumentation327EC0D3…11826. Its8 focused JVM cases remain explicitly
+the58 run. The later pure-web composition conflict correction has separate
+inputs; no new native runtime/migration is claimed. Root freeze59 is finished.
+
 ## Current rate correction57
 
 Build57 SUCCESS14m52s, fresh focused6/6 JVM (not the entire suite), source

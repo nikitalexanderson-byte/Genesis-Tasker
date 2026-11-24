@@ -40,7 +40,7 @@ try{
  browser=await chromium.launch({headless:true});const context=await browser.newContext({viewport:{width:390,height:1000}});page=await context.newPage();let fixture,changed=false,loseFirstAck=true;const writes=[],messages=[];
  const pageErrors=report.pageErrors=[];page.on('pageerror',error=>{pageErrors.push({name:error.name,technicalCode:error.message.match(/\b(?:E2EE|MESSENGER|KEY_STORAGE)_[A-Z_]+\b/)?.[0]??null,frames:error.stack?.split('\n').slice(1,5)??[]});});
  await context.route(/https?:\/\//,route=>new URL(route.request().url()).origin===origin?route.continue():route.abort());
- await page.route('**/api/shared/messenger/**',async route=>{
+ await context.route('**/api/shared/messenger/**',async route=>{
   fixture??=await page.evaluate(()=>window.genesisSecretQa);assert(fixture,'Only public fixture metadata');
   const request=route.request(),url=new URL(request.url()),path=url.pathname.slice('/api/shared/messenger'.length),now='2026-11-24T00:00:00Z';
   const peer=changed?fixture.replacement:fixture.peer;
@@ -71,6 +71,14 @@ try{
  assert(await page.getByRole('button',{name:c.security,exact:true}).isVisible());await page.getByRole('textbox',{name:c.message,exact:true}).fill('Retained unsent secret draft');
  const waitForComposition=async(text,editing=false)=>{const deadline=Date.now()+10000;let retained=false;while(!retained&&Date.now()<deadline){retained=await page.evaluate(([value,edit])=>window.genesisSecretQaCompositionRetained?.(value,edit)??false,[text,editing]);if(!retained)await page.waitForTimeout(25);}assert(retained,'The actual encrypted composition must be readable');};
  await waitForComposition('Retained unsent secret draft');report.checks.push({name:'original message decrypts and draft reaches actual encrypted local storage',status:'PASS'});
+ if(process.env.GENESIS_QA_SECRET_FOCUS==='concurrency'){
+  await context.addInitScript(value=>{window.genesisSecretQaPublic=value;},fixture);const second=await context.newPage();await second.goto(origin);await second.getByRole('button',{name:'QA secret peer',exact:false}).first().click();await second.getByRole('textbox',{name:c.message,exact:true}).waitFor();
+  await page.bringToFront();await page.getByRole('textbox',{name:c.message,exact:true}).fill('First tab owns this edit');await waitForComposition('First tab owns this edit');
+  await second.bringToFront();await second.getByRole('textbox',{name:c.message,exact:true}).fill('Competing unsent draft');await second.getByRole('alert').waitFor();
+  assert.equal(await second.getByRole('textbox',{name:c.message,exact:true}).inputValue(),'Competing unsent draft');assert(await second.evaluate(()=>window.genesisSecretQaConflictRetained()));assert(await page.evaluate(()=>window.genesisSecretQaCompositionRetained('First tab owns this edit',false)));
+  await second.getByRole('button',{name:c.send,exact:true}).click();await second.getByRole('alert').waitFor();await second.waitForFunction(()=>!document.querySelector('.messenger-loading'));assert.equal(report.messageWrites,0);assert.equal(report.unexpectedRoutes??0,0);assert.deepEqual(pageErrors,[]);
+  report.checks.push({name:'real two-tab Web Locks CAS retains both encrypted intents and prevents a failed save from sending',status:'PASS'});report.status='PASS';
+ }else{
  const sendingBlocked=async text=>{const send=page.getByRole('button',{name:text.send,exact:true});assert(await send.count()===0||await send.isDisabled(),'Send must be unavailable after a key change');};
  changed=true;await page.getByRole('button',{name:c.refresh,exact:true}).click();await page.getByRole('status').filter({hasText:c.keyChanged}).waitFor();
  assert.equal(await page.getByRole('button',{name:c.security,exact:true}).count(),0);await sendingBlocked(c);assert(await page.evaluate(()=>window.genesisSecretQaDraftRetained()));
@@ -96,6 +104,7 @@ try{
  await page.reload();await page.getByRole('button',{name:'QA secret peer',exact:false}).first().click();await page.getByRole('button',{name:c.save,exact:true}).click();await page.locator('.messenger-messages').getByText('Edited retained message',{exact:true}).waitFor();
  assert.equal(messages.length,1);assert.equal(messages[0].revision,2);assert.equal(writes.length,3);assert.equal(writes[2].method,'PATCH');await waitForComposition('');
  assert.equal(report.unexpectedRoutes??0,0);assert.deepEqual(pageErrors,[]);report.checks.push({name:'cold edit retains the original message ID and base revision and never becomes a new POST',status:'PASS'});report.status='PASS';
+ }
 }catch(error){report.status='FAIL';report.error=error.message;process.exitCode=1;if(page){await page.screenshot({path:resolve(output,'failure.png'),mask:[page.locator('input,textarea')]}).catch(()=>{});writeFileSync(resolve(output,'failure.txt'),await page.locator('body').ariaSnapshot().catch(()=>''));}}
 finally{
  if(browser)await browser.close();server.closeAllConnections();await new Promise(done=>server.close(done));

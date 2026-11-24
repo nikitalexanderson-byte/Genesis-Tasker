@@ -1,5 +1,17 @@
 # Genesis Tasker: действующие правила
 
+## Продолжение24 ноября: native59 завершён и tabs60
+
+- Native59 SUCCESS50s/no new JVM; оба APK byte-identical58. Root freeze59 снят,
+  текущая assembly identity96BC214A…659DBA. Не повторять controller37 migration.
+- Actual browser tabs60 PASS2/2: real IDB/Web Locks сохраняют обе конкурирующие
+  encrypted compositions; отказ local save не отправляет сообщение. Rendered
+  chat/token guard added. JS8/8, tsc/scoped lint PASS; это separate bounded scope,
+  не новый112layout run. Catalogues не менялись ради этой коррекции.
+- Mounted60/session41588 идёт на immutable54/startup proof. Не менять bundle;
+  real600-request windows/600s и все guards сохраняются.252 critical values ещё
+  прочитаны на14 языках (semantic61); whole review20/48/release не завершены.
+
 ## Продолжение24 ноября: compose59 принят в своём охвате
 
 - Web compose59: JS8/8, tsc/scoped lint02/build:web02 PASS. Actual browser59-05
