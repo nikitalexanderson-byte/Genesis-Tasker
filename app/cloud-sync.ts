@@ -13,6 +13,7 @@ import {IndexedDbLegacyTransportMarkers,WebLegacyTransportGate,WebMigrationTrans
 import {requireLegacyTransportWorker} from './e2ee/legacy-worker-client';
 import {assertLegacyLocalWriteAllowed,localMigrationMarker} from './e2ee/web-local-migration-fence';
 import {showPrivateMigration} from './private-migration-ui';
+import {migrationSourceStorage} from './e2ee/legacy-storage-retirement';
 import {closePrivateAccount,requirePrivateAccount,waitForPrivateAccount,unlockPrivateAccount,privateAccountView,subscribePrivateAccount,markPrivateAccountOwner,privateAccountIsRequired,type PrivateAccountTransport} from './e2ee/product-session';
 import {PRIVATE_VAULT_COPY} from './private-vault-copy';
 import {privateUserCacheRequired,privateUserProfile} from './last-user-cache';
@@ -4164,7 +4165,7 @@ export async function createPersonalWorkspaceMigrationSource(userId:string,scope
   const session=captureAccountSessionGuard();
   const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
   const {PersonalWorkspaceSource}=await import('./e2ee/workspace-source');check();
-  return new PersonalWorkspaceSource(userId,scopeId,{storage:localStorage,assertCurrent:check,
+  return new PersonalWorkspaceSource(userId,scopeId,{storage:migrationSourceStorage(userId),assertCurrent:check,
     memory:()=>{check();return{ownerId:workspaceUserId,key:workspaceKey,version:workspaceVersion,generation:backupDataGeneration,reconciliationRequired:backupReconciliationRequired,deviceId:workspaceDeviceId,
       base:workspaceBase,baseMetadata:workspaceBaseMetadata,metadata:workspaceSyncMetadata,current:captureCurrent(),draftSource:workspaceDraftSource};},
     legacyWorkspace:context=>transport.legacyWorkspace(context),review});
@@ -4179,7 +4180,7 @@ export async function createPersonalAuroraMigrationSource(userId:string,scopeId:
   const session=captureAccountSessionGuard();
   const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
   const {PersonalAuroraSource}=await import('./e2ee/aurora-source');check();
-  return new PersonalAuroraSource(userId,scopeId,{storage:localStorage,assertCurrent:check,
+  return new PersonalAuroraSource(userId,scopeId,{storage:migrationSourceStorage(userId),assertCurrent:check,
     memory:()=>{check();return{ownerId:workspaceUserId,legacyKey:workspaceKey,generation:backupDataGeneration,
       reconciliationRequired:backupReconciliationRequired,current:captureCurrent()};},legacyAurora:context=>transport.legacyAurora(context)});
 }
@@ -4194,7 +4195,7 @@ export async function createPersonalTasksMigrationSource(userId:string,scopeId:s
   const session=captureAccountSessionGuard();
   const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
   const {PersonalTasksSource}=await import('./e2ee/tasks-source');check();
-  return new PersonalTasksSource(userId,scopeId,{storage:localStorage,assertCurrent:check,
+  return new PersonalTasksSource(userId,scopeId,{storage:migrationSourceStorage(userId),assertCurrent:check,
     memory:()=>{check();return{...captureCurrent(),ownerId:workspaceUserId,legacyKey:workspaceKey,generation:backupDataGeneration,
       reconciliationRequired:backupReconciliationRequired};},legacyTasks:context=>transport.legacyTasks(context),review,reviewProviderHistory});
 }
@@ -4208,7 +4209,7 @@ export async function createPersonalDiaryMigrationSource(userId:string,scopeId:s
   const session=captureAccountSessionGuard();
   const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
   const {PersonalDiarySource}=await import('./e2ee/diary-source');check();
-  return new PersonalDiarySource(userId,scopeId,{storage:localStorage,assertCurrent:check,
+  return new PersonalDiarySource(userId,scopeId,{storage:migrationSourceStorage(userId),assertCurrent:check,
     memory:()=>{check();return{...captureCurrent(),ownerId:workspaceUserId,legacyKey:workspaceKey,generation:backupDataGeneration,
       reconciliationRequired:backupReconciliationRequired};},legacyDiary:context=>transport.legacyDiary(context),review});
 }
@@ -4220,7 +4221,7 @@ export async function createPersonalMindmapsMigrationSource(userId:string,scopeI
   const session=captureAccountSessionGuard();
   const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
   const [{PersonalMindmapsSource},{collectLegacyPersonalPages}]=await Promise.all([import('./e2ee/mindmaps-source'),import('./e2ee/legacy-pages')]);check();
-  return new PersonalMindmapsSource(userId,scopeId,{storage:localStorage,assertCurrent:check,
+  return new PersonalMindmapsSource(userId,scopeId,{storage:migrationSourceStorage(userId),assertCurrent:check,
     memory:()=>{check();return{...captureCurrent(),ownerId:workspaceUserId,legacyKey:workspaceKey,generation:backupDataGeneration,reconciliationRequired:backupReconciliationRequired};},
     legacyMindmaps:context=>collectLegacyPersonalPages(context,'mindmaps',{assertCurrent:check,readPage:(value,table,offset)=>transport.legacyMindmapsPage(value,table,offset)}),review});
 }
@@ -4252,7 +4253,7 @@ export async function createPersonalRemindersMigrationSource(userId:string,scope
     import('./e2ee/reminders-source'),import('./e2ee/reminders-web-source'),import('./e2ee/legacy-pages')]);check();
   return new PersonalRemindersSource(userId,scopeId,{assertCurrent:check,memory:async()=>{
     check();const generation=backupDataGeneration,projectionWanted=habitReminderProjectionWanted;
-    const local=await captureWebReminderInventory(userId,{storage:localStorage,assertCurrent:check,caches:typeof caches==='undefined'?null:caches,projectionWanted,
+    const local=await captureWebReminderInventory(userId,{storage:migrationSourceStorage(userId),assertCurrent:check,caches:typeof caches==='undefined'?null:caches,projectionWanted,
       notifications:async()=>{
         if(typeof navigator==='undefined'||!navigator.serviceWorker)return[];const registration=await navigator.serviceWorker.getRegistration();check();
         return(await registration?.getNotifications()??[]).map(({title,body,tag,lang,data,silent})=>({title,body,tag,lang,data,silent}));
@@ -4269,7 +4270,7 @@ export async function createPersonalArchivesLocalCapture(userId:string,scopeId:s
   const [{captureWebArchiveInventory},{captureBackupMemorySafety},{capturePhysisSessionMemory}]=await Promise.all([import('./e2ee/archives-web-source'),import('./backup-device'),import('./physis/session-memory')]);check();
   return{captureLocal:async()=>{
     check();const generation=backupDataGeneration,reconciliationRequired=backupReconciliationRequired,legacyKey=workspaceKey;
-    const local=await captureWebArchiveInventory(userId,{storage:localStorage,memorySafety:()=>captureBackupMemorySafety(userId),assertCurrent:check}),physis=await capturePhysisSessionMemory(userId);check();
+    const local=await captureWebArchiveInventory(userId,{storage:migrationSourceStorage(userId),memorySafety:()=>captureBackupMemorySafety(userId),assertCurrent:check}),physis=await capturePhysisSessionMemory(userId);check();
     if(generation!==backupDataGeneration||reconciliationRequired!==backupReconciliationRequired||legacyKey!==workspaceKey)throw new Error('E2EE_ARCHIVE_CAPTURE_CHANGED');
     const bytes=new TextEncoder().encode(JSON.stringify({protocol:1,ownerId:userId,scopeId,capturedAt:new Date().toISOString(),
       memory:{ownerId:userId,generation,reconciliationRequired,legacyKey,local,physis}}));
@@ -4314,7 +4315,7 @@ export async function createRelationalMigrationSources(userId:string,directory:i
   return requiredPrivatePaths(directory.kind).filter(path=>directory.kind!=='personal'||path.id==='personal.local-work').map(path=>{
     const target={ownerId:userId,scopeId:directory.scopeId,kind:directory.kind,resourceId:directory.resourceId,pathId:path.id};
     return new RelationalPrivatePathSource(target,{assertCurrent:check,
-      capture:()=>path.id.endsWith('.local-work')?captureWebPrivatePathLocal(target,{storage:localStorage,assertCurrent:check,open})
+      capture:()=>path.id.endsWith('.local-work')?captureWebPrivatePathLocal(target,{storage:migrationSourceStorage(userId),assertCurrent:check,open})
         :Promise.resolve({platform:'web' as const,inventoryVersion:1 as const,entries:[],editors:[]}),
       read:context=>collectPrivatePathFragments(context,target,{assertCurrent:check,
         read:(value,pathId,table,offset,byteOffset)=>transport.legacyPrivatePathFragment(value,pathId,table,offset,byteOffset),readBatch:transport.legacyPrivatePathBatch?.bind(transport)})});
@@ -4410,7 +4411,7 @@ export async function createPersonalStoicheionMigrationSource(userId:string,scop
   const session=captureAccountSessionGuard();
   const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
   const {PersonalStoicheionSource}=await import('./e2ee/stoicheion-source');check();
-  return new PersonalStoicheionSource(userId,scopeId,{storage:localStorage,assertCurrent:check,
+  return new PersonalStoicheionSource(userId,scopeId,{storage:migrationSourceStorage(userId),assertCurrent:check,
     memory:()=>{check();return{...captureCurrent(),ownerId:workspaceUserId,legacyKey:workspaceKey,generation:backupDataGeneration,
       reconciliationRequired:backupReconciliationRequired,nativeDraws:null};},legacyStoicheion:context=>transport.legacyStoicheion(context)});
 }
@@ -4426,7 +4427,7 @@ export async function createPersonalAdviceMigrationSource(userId:string,scopeId:
   if(publicBase.origin!==window.location.origin)throw new Error('E2EE_ORIGIN_MISMATCH');
   const [{PersonalAdviceSource},{PublicAdviceCatalogues,publicAdviceCatalogueReader}]=await Promise.all([import('./e2ee/advice-source'),import('./e2ee/advice-catalogue')]);check();
   const catalogues=new PublicAdviceCatalogues(publicAdviceCatalogueReader(publicBase,check),check);
-  return new PersonalAdviceSource(userId,scopeId,{storage:localStorage,assertCurrent:check,catalogues,
+  return new PersonalAdviceSource(userId,scopeId,{storage:migrationSourceStorage(userId),assertCurrent:check,catalogues,
     memory:()=>{check();return{...captureCurrent(),ownerId:workspaceUserId,generation:backupDataGeneration,
       reconciliationRequired:backupReconciliationRequired,rendered:[],seen:[],unassignedLegacy:false};},legacyAdvice:context=>transport.legacyAdvice(context)});
 }

@@ -1,5 +1,37 @@
 # Продолжение24 ноября: выпуск3.3.6 и отдельный сайт
 
+## Опубликованный сайт и retirement41/42
+
+- Срочный сайт завершён: main7964526b, Source checks45364626251 и штатный
+  Deploy45373264770 SUCCESS. Live commit/6public pages/old ru redirects и
+  unchanged Android149 manifest подтверждены. Anonymous donation endpoint
+  возвращает Boosty available=true с https://boosty.to/genesiscalendar/donate.
+  Basic KYC подтверждён; текущий лимит EUR500/year. Реального платежа не было.
+  Main уже включён в root merge de33c2b3; повторный перенос не требуется.
+- Root WIP добавляет encrypted retirement старых localStorage originals/key
+  с cold resume, scope-bound cancel, compare-and-remove и typed custody. Важная
+  правка: cancelled history не воскрешает позднее удалённые values. Focused19/19,
+  tsc/lint/build:web PASS. Full JS41:2182/2184,2 PHP prerequisites; с заданным
+  прежним PHP обе suites PASS11/11. Actual browser42 PASS13/13, immutable
+  cb84fedf…87216, cleanup PASS. Initial41 FAIL сохранён: actual connection-failed
+  при /e2ee/v1/read, не product validator; existing bounded explicit retry теперь
+  распознаёт этот код. Приватный client-state не создавался после PASS42.
+- Native41/session7053 SUCCESS21m52s, inputs hashBEA956EA…230308; fresh JVM
+  1453:1445PASS/0fail/8old opt-in skips. Product95995C54…982D8C/test327EC0D3…11826.
+  UI41/session71896 PASS4/4 на retained37 без новой migration/data reset.
+  Backend newBAAD5E68…E4518C — только6reviewed payment files; сравнение с old37
+  явно false. Services stopped/reverse removed; root inputs разморожены.
+- Prodamus: владелец загрузил фото паспорта, существующая /terms?lang=ru offer
+  прикреплена, application «Анкета успешно отправлена!». Email подтверждён по
+  кнопке из ожидаемого письма; result «Почта подтверждена». Await review1–3working
+  days и issued merchant credentials; checkout не активировать. Паспорт/коды не
+  копировались в репозиторий или чат. Details prodamus-registration-2026-11-24.md.
+- Pending: сохранить41 result, финальная20paths/48scenarios приёмка/внутренний
+  exact-candidate review, signed149→150, release workflows и owner-checked cleanup.
+  No subagents/Daybreak; demo-output и client-state/*.private.json не читать/stage.
+
+Ниже — прежние срезы; текущий опубликованный статус выше имеет приоритет.
+
 ## Новейший срез: Boosty подтверждён, UI40 принят
 
 Это дополнение заменяет старые статусы процессов и KYC ниже.

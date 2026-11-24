@@ -17,6 +17,7 @@ import {exactKeys} from './keys.ts';
 import {E2EE_CHUNK_BYTES} from './files.ts';
 import {validateRetainedProfileOriginal,retainedProfilePreferenceHistory} from './user-cache-retention.ts';
 import {NATIVE_UI_PREFERENCES_ID,validateNativeUiPreferences} from './native-ui-preferences.ts';
+import {LEGACY_STORAGE_INDEX,LEGACY_STORAGE_ORIGINAL_PREFIX,validateLegacyStorageIndex,validateLegacyStorageOriginal,legacyStorageOriginalId} from './legacy-storage-retirement.ts';
 
 /** Read-only typed retention. No marker/receipt is imported as enrollment,
  * membership, retry, restored device keys or an executable archive command. */
@@ -39,6 +40,18 @@ export async function inspectDeviceControlCustody(options:{device:Pick<UnlockedW
  const ui=await vault.listLocal('draft',NATIVE_UI_PREFERENCES_ID);current();if(ui.some(id=>id!==NATIVE_UI_PREFERENCES_ID))throw new Error('E2EE_PRIVATE_DOCUMENT_CORRUPT');
  if(ui.length){if(!options.personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');await document(NATIVE_UI_PREFERENCES_ID,value=>validateNativeUiPreferences(value,device.ownerId),()=>options.personalScopeId!);}
  const markers=await vault.listLocal('draft',PERSONAL_DEVICE_ENTRY_ID);current();if(markers.some(id=>id!==PERSONAL_DEVICE_ENTRY_ID))throw new Error('E2EE_DEVICE_ACCESS_INVALID');
+ const retiredIndexes=await vault.listLocal('draft',LEGACY_STORAGE_INDEX);current();if(retiredIndexes.some(id=>id!==LEGACY_STORAGE_INDEX))throw new Error('E2EE_LEGACY_STORAGE_CORRUPT');
+ const retiredOriginals=new Set(await vault.listLocal('draft',LEGACY_STORAGE_ORIGINAL_PREFIX));current();
+ if(retiredIndexes.length||retiredOriginals.size){
+  if(!options.personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+  if(retiredOriginals.size>10000)throw new Error('E2EE_SOURCE_HISTORY_CAPACITY');
+  if(retiredIndexes.length){const index=await document(LEGACY_STORAGE_INDEX,value=>validateLegacyStorageIndex(value,device.ownerId),()=>options.personalScopeId!);
+   for(const row of index.entries)for(const id of row.originals)if(!retiredOriginals.has(id))throw new Error('E2EE_LEGACY_STORAGE_CORRUPT');
+  }
+  for(const id of retiredOriginals){const original=await document(id,value=>validateLegacyStorageOriginal(value,device.ownerId),()=>options.personalScopeId!);
+   if(await legacyStorageOriginalId(original)!==id)throw new Error('E2EE_LEGACY_STORAGE_CORRUPT');current();
+  }
+ }
  for(const id of await vault.listLocal('draft','profile-original:')){
   current();if(!options.personalScopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
   const original=await document(id,value=>validateRetainedProfileOriginal(value,device.ownerId),()=>options.personalScopeId!);

@@ -1,5 +1,37 @@
 # 3.3.6: незакрытые системные критерии приёмки
 
+## Текущий код и проверка24 ноября
+
+Старая таблица ниже — историческая карта системной приёмки20 ноября, а не
+перечень кода, который следует писать заново. Текущие web/native factories
+подключают все20 обязательных paths через registerIntegrated:11personal,
+6project,3space. Полнота проверяется до snapshot/lease, пустая замена отсутствующего
+адаптера запрещена. Cloud-sync createCompleteMigrationSourceRegistry и native
+AuthController.e2eeCompleteSources содержат действующую композицию.
+
+Это подтверждает подключение кода, но не повышает формальное9/20 по сумме unit
+tests. Для полного системного заключения ещё нужны сводные evidence каждой
+категории,48scenario coverage, signed149→150 и exact-candidate crypto review.
+Девять прежних personal adapter приёмок не заменяют populated shared/archives/
+local-work lifecycle. Уже реализованные writers/capture/restore не переделывать
+по старым строкам без конкретного воспроизводимого дефекта.
+
+Последний новый блок: encrypted legacy browser originals/key retirement,
+focused19/19 и actual mounted web42 PASS13/13 (включая cold/offline/clean recovery).
+Full JS41:2182/2184,2PHP prerequisites; affected suites повторены11/11 с прежним
+PHP. Native41: fresh1453JVM,1445PASS/0failures/8 existing opt-in skips; assembled
+QA APK95995C54…982D8C, sourceBEA956EA…230308. Прежний controller37/PIN/UI40,
+API26/API34 и restore evidence сохраняет собственные source/artifact bindings.
+Новый UI41 PASS4/4 на retained37 без повторной миграции/очистки данных; exact
+current backend после просмотренного6-file payment patch указан отдельно.
+Ни один старый failed/skipped не переименован вPASS.
+
+Операционные подробности: security-336-handoff-2026-11-24.md и
+security-336-legacy-storage-retirement.md. Production website7964526b/Deploy
+45373264770 — отдельная принятая публикация без security3.3.6 и с APK149.
+
+## Историческая системная матрица
+
 Последнее решение владельца21 ноября: итоговое крипторевью выполняет сам
 исполнитель после завершения кода, общей приёмки и исправлений. Отдельное
 внешнее заключение больше не является gate выпуска/активации. Результат остаётся

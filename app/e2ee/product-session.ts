@@ -10,6 +10,7 @@ import {webMembershipAtomicStager} from './membership-atomic-web-stage.ts';
 import type {MembershipAtomicStager} from './membership-atomic-stager.ts';
 import type {E2eeSharedRecords} from './shared-records.ts';
 import type {E2eeSharedBootstrap} from './shared-bootstrap.ts';
+import {finishPreparedLegacyStorageRetirement} from './legacy-storage-retirement.ts';
 
 export type PrivateScopeSummary={scopeId:string;kind:'personal'|'project'|'space';resourceId:string;state:'preparing'|'uploading'|'verified'|'active'|'retirement'};
 export type PrivateAccountStatus={pilotAllowed:boolean;cryptoProtocol:1;scopes:PrivateScopeSummary[]};
@@ -99,6 +100,7 @@ export class WebPrivateAccount{
    const prior=await device.vault.read('key-check','product-account-index-v1');current();
    const index=new TextEncoder().encode(JSON.stringify({protocol:1,ownerId,personal:personal[0]}));
    try{await device.vault.write([{domain:'key-check',objectId:'product-account-index-v1',value:index,expected:prior?.serial??null}]);current();}finally{index.fill(0);prior?.value.fill(0);}
+   await finishPreparedLegacyStorageRetirement(device,current);current();
    return account;
   }catch(error){account?.close();device?.lock();throw error;}finally{held.fill(0);}
  }

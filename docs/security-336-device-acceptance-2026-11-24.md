@@ -1,5 +1,29 @@
 # 24 November: retained controller and actual device unlocking
 
+## Current candidate41
+
+Native41 rebuilt the accepted unified website/payment changes and browser
+retirement modules with a fresh JVM task:1453 tests,1445 passed,0 failed,
+8 existing opt-in skips. Build SUCCESS21m52s; source
+BEA956EAAE847329A0C221CF5B14E491E156B6EC4C173F4E1B7D4D504D230308.
+Product QA APK95995C54F331E9943FC4EF6A89DCE8F70B7C022C864AC0D8775CA8B4BC982D8C;
+instrumentation remained327EC0D32B7F7E428019F353946BEC9C477FCBC39010F2DFDD5C6FE65CE11826.
+
+UI41 PASS_LOCAL_SCOPE4/4 reuses the retained accepted controller37 fixture
+without repeating migration, resetting keys or clearing app data. Genuine
+platform PIN/fingerprint/cancel/background cases passed on the new product APK.
+Evidence: output/qa/security336-native150-ui41-launcher-driver-preserved37/results.json.
+
+The current backend differs from controller37 only by six explicitly reviewed
+unified billing/donation files. The runner rejects any other path or dirty
+backend; E2EE guards/transports and fixture sources are unchanged. It records
+backendUnchanged=false and the full new hash
+BAAD5E689DD2FF7E585BE84874FB1BDFB83010B3708F51D5CA764010C1E4518C.
+It does not claim a byte-identical backend. Services stopped and reverse mapping
+removed; retained owned fixture remains for cleanup before release.
+
+The following section preserves the older accepted product37/40 evidence.
+
 The production QA APK remains byte-identical to build37:
 `7A7AF1CFB732BF00726E5B8B49DD050CE205E86C872D6B61B4D33A81A9F44D8F`.
 Build37 executed the JVM suite:1452 cases,1444 passed,0 failures,8 existing

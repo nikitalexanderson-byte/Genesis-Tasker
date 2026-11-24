@@ -19,6 +19,7 @@ import type {E2eeMigrationSources} from './migration-sources.ts';
 import type {WebProductMigrationFence} from './legacy-transport-fence.ts';
 import {retainEncryptedUserCache} from './user-cache-retention.ts';
 import {holdPrivateProductMutations} from './product-mutation-fence.ts';
+import {LegacyStorageRetirement} from './legacy-storage-retirement.ts';
 
 type Target={ownerId:string;scopeId:string;kind:'personal'|'space'|'project';resourceId:string};
 export type WebSharedMigrationTarget=Pick<Target,'scopeId'|'resourceId'>&{kind:'space'|'project'};
@@ -109,18 +110,22 @@ export class WebProductMigration{
   const current=()=>{this.#current();if(abort.signal.aborted)throw new Error('E2EE_OPERATION_STOPPED');};
   if(this.#running){held.fill(0);throw new Error('E2EE_MIGRATION_BUSY');}this.#running=true;
   let drained!:()=>void;const operation={abort,drained:new Promise<void>(resolve=>{drained=resolve;})};this.#operation=operation;
-  let releaseMutations:(()=>void)|undefined;
+  let releaseMutations:(()=>void)|undefined,retirement:LegacyStorageRetirement|undefined;
   try{
    const kit=snapshotE2eeValue(savedKit);
    current();releaseMutations=holdPrivateProductMutations(this.device.ownerId);
    const directory=structuredClone(this.directory),router=new MigrationSourceReadRouter();
+   if(typeof localStorage!=='undefined')retirement=await LegacyStorageRetirement.open(this.device,localStorage,current,true,this.target.scopeId);current();
    const sources=await this.ports.sources(this.device,directory,router.port);current();
    const own=directory.devices.get(this.device.deviceId);if(!own||own.revoked||own.userId!==this.device.ownerId||own.role!=='owner')throw new Error('E2EE_REVOKED_DEVICE');
    const root=await openRoot(own.capsule,this.device.keys().receiving.privateKey,{ownerId:directory.ownerId,scopeId:directory.scopeId,
     cryptoEpoch:directory.cryptoEpoch,keyId:directory.keyId,recipientId:this.device.deviceId});current();
    await verifyScopeRecovery(this.device,directory,root,held,kit,current);current();
    const fence=this.ports.fence(this.device,directory),request:E2eeMigrationRequest=async(path,body,observation,signal)=>{
-    current();if(path==='/command'&&(body as {command?:{action?:string}})?.command?.action==='migration-commit')await requireExclusiveMigrationWindow();current();
+    current();if(path==='/command'&&(body as {command?:{action?:string}})?.command?.action==='migration-commit'){
+     await requireExclusiveMigrationWindow();current();await retirement?.retire();current();
+     if(this.target.kind==='personal'){await retainEncryptedUserCache(this.device,current);current();}
+    }current();
     const linked=new AbortController(),stop=()=>linked.abort();
     abort.signal.addEventListener('abort',stop,{once:true});signal?.addEventListener('abort',stop,{once:true});
     try{if(abort.signal.aborted||signal?.aborted)stop();current();const result=await this.ports.request(path,body,observation,linked.signal);current();return result;}
@@ -151,6 +156,7 @@ export class WebProductMigration{
     const cancelled=await this.device.rememberDirectory(this.target.scopeId,this.device.authorityPin,response.events,this.target.ownerId);current();
     if(cancelled.state!=='preparing'||cancelled.kind!==this.target.kind||cancelled.resourceId!==this.target.resourceId)throw new Error('E2EE_DOWNGRADE_FORBIDDEN');
     const token=await fence.token();current();if(!token)throw new Error('E2EE_LOCAL_FENCE_REQUIRED');
+    await retirement?.restoreCancelled();current();
     await fence.releaseCancelled(token,cancelled,()=>migration.status());current();
     if(this.target.kind==='personal')releaseCancelledLocalMigrationFence(this.target.ownerId,this.target.scopeId,token);current();this.directory=cancelled;return;
    }
@@ -162,12 +168,13 @@ export class WebProductMigration{
      current();const response=await this.ports.setup.directory(this.target.scopeId);current();
      const active=await this.device.rememberDirectory(this.target.scopeId,this.device.authorityPin,response.events,this.target.ownerId);current();
      if(active.state!=='active'||active.kind!==this.target.kind||active.resourceId!==this.target.resourceId)throw new Error('E2EE_MIGRATION_UNVERIFIED');
+     await retirement?.finishPrepared();current();
      await fence.activate(active);current();const token=await fence.token();if(!token)throw new Error('E2EE_LOCAL_FENCE_REQUIRED');
      if(this.target.kind==='personal'){
       retainLocalMigrationFence(this.target.ownerId,this.target.scopeId,token,'active');
       await retainEncryptedUserCache(this.device,current);current();
      }this.directory=active;
     }});current();
-  }finally{held.fill(0);releaseMutations?.();this.#running=false;if(this.#operation===operation)this.#operation=null;drained();}
+  }finally{held.fill(0);retirement?.close();releaseMutations?.();this.#running=false;if(this.#operation===operation)this.#operation=null;drained();}
  }
 }

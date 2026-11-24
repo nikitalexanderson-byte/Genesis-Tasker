@@ -23,6 +23,7 @@ const sharedJourney=['shared','shared-locales','content'].includes(process.env.G
 const sharedFilesJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='content';
 const localeJourney=['locales','shared-locales'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
 const backupJourney=['backup','content'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
+const legacyStorageJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='legacy-storage';
 const sharedCopy=JSON.parse(readFileSync('contracts/e2ee/shared-security-copy-v1.json','utf8')).ru;
 const sharedMigration=JSON.parse(readFileSync('contracts/e2ee/shared-migration-copy-v1.json','utf8')).ru;
 const canary='PRIVATE-PRODUCT-'+crypto.randomUUID();
@@ -62,7 +63,7 @@ const continueMigration=async(dialog,button,label)=>{
   if(outcome==='active')return outcome;
   await page.waitForTimeout(100);const failure=report.networkFailures.at(-1),refusal=report.migrationRefusals.at(-1);
   if(attempt===2||report.networkFailures.length===failures||!failure||refusal&&refusal!=='NON_TECHNICAL_ERROR'
-    ||!['net::ERR_NETWORK_CHANGED','net::ERR_INTERNET_DISCONNECTED','net::ERR_CONNECTION_RESET','net::ERR_CONNECTION_CLOSED','net::ERR_CONNECTION_REFUSED','net::ERR_FAILED'].includes(failure.code))return outcome;
+    ||!['net::ERR_NETWORK_CHANGED','net::ERR_INTERNET_DISCONNECTED','net::ERR_CONNECTION_RESET','net::ERR_CONNECTION_CLOSED','net::ERR_CONNECTION_REFUSED','net::ERR_CONNECTION_FAILED','net::ERR_FAILED'].includes(failure.code))return outcome;
   report.networkRetries.push({label,attempt:attempt+1,code:failure.code,policy:'Explicit retry through the existing form with the same saved recovery kit; no scope, journal or request reset'});save();
   await page.waitForTimeout(1000);
   button=await dialog.getByRole('button',{name:migration.resume,exact:true}).count()?migration.resume:migration.begin;
@@ -250,6 +251,13 @@ try{
   // deliberately not an independent cryptographic authority or key export.
   const bootstrap=await context.request.get('/api/bootstrap');assert.equal(bootstrap.status(),409);
   assert.equal((await bootstrap.json()).error,'E2EE_UPGRADE_REQUIRED');
+ });
+ if(legacyStorageJourney)await check('activated account leaves neither its legacy raw key nor original private task in ordinary browser storage',async()=>{
+  const result=await page.evaluate(({ownerId,marker})=>({
+   rawKeyPresent:localStorage.getItem('genesis-workspace-device-key-v2:'+ownerId)!==null,
+   privateTextPresent:Object.values(localStorage).some(value=>value.includes(marker))
+  }),{ownerId:fixtureOwnerId,marker:canary});
+  assert.deepEqual(result,{rawKeyPresent:false,privateTextPresent:false});
  });
  await check('activated account keeps private preferences out of the ordinary profile cache',async()=>{
   const result=await page.evaluate(marker=>{

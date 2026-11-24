@@ -1,5 +1,42 @@
 # Genesis Tasker: действующие правила
 
+## Текущее продолжение24 ноября: старое browser storage
+
+- После загрузки паспортных фото самим владельцем Prodamus прошёл шаг5:
+  application «Анкета успешно отправлена!», email link «Почта подтверждена».
+  Оферта — опубликованные /terms?lang=ru. Заявлены российские/зарубежные карты,
+  внешняя интеграция; кредиты/рассрочки и рекурренты выключены. Ожидается внешняя
+  проверка1–3рабочих дня; кабинета/ключей/checkout ещё нет. Не активировать wire
+  contract5216f0dc по одному факту подачи. Документы в репозиторий не копировались.
+- Повторно наблюдался Boosty Basic VERIFICATION COMPLETED, up to EUR500/year.
+  Main7964526b принят как новая опубликованная база: exact Source checks
+  45364626251 и штатный Deploy45373264770 SUCCESS. Live anonymous donations
+  endpoint возвращает Boosty available=true и /genesiscalendar/donate; шесть
+  public routes200 с верными реквизитами, /ru/ redirects и неизменный manifest149
+  подтверждены. Это не security3.3.6 и не проверка настоящего платежа/выплаты.
+- В root добавлен owner-bound legacy-storage retirement: byte-exact старые
+  localStorage originals и raw legacy workspace key сначала запечатываются
+  independent device vault и перечитываются, потом compare-and-remove под
+  действующим migration fence. Resume читает encrypted originals; signed cancel
+  восстанавливает только свой незавершённый scope. История отменённого scope не
+  воскрешает позже удалённые values. Public profile имеет отдельную retention.
+- Focused19/19, tsc/scoped lint и build:web PASS. Actual mounted browser42
+  PASS13/13, immutable cb84fedf…87216, owned runtime cleaned. Initial41 FAIL
+  сохранён: net::ERR_CONNECTION_FAILED, этот код добавлен в прежний bounded
+  explicit form retry без reset. Full JS41:2182/2184 PASS,2 PHP prerequisites;
+  с прежним PHP обе затронутые suites PASS11/11. Native41 build SUCCESS21m52s,
+  fresh JVM1453:1445PASS/0fail/8old opt-in skips. SourceBEA956EA…230308,
+  APK95995C54…982D8C; instrumentation тот же327EC0D3…11826.
+- UI41/session71896 завершён PASS_LOCAL_SCOPE4/4 на retained37 без новой миграции.
+  Backend изменён только шестью просмотренными payment/donation файлами main49;
+  runner проверяет exact allowlist, clean backend и фиксирует новый полный hash,
+  не claim-ит byte-identical backend. Backend hashBAAD5E68…E4518C, services
+  stopped/reverse removed, owned runtime preserved до release cleanup. Root
+  inputs разморожены. Документы и отдельная Prodamus-ветка не native inputs.
+  Не повторять принятую native controller37 migration ради нового UI evidence.
+  Сохраняются no subagents/Daybreak, запрет чтения client-state/*.private.json и
+  demo-output, данные/подпись, cutover/floors off, deployAndroid=false.
+
 ## Последнее дополнение24 ноября: Boosty и принятый native40
 
 - Boosty Basic фактически подтверждён в UI (VERIFICATION COMPLETED, до EUR500/год).
