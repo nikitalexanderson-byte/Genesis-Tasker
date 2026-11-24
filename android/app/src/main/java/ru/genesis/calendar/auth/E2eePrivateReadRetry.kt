@@ -1,6 +1,5 @@
 package ru.genesis.calendar.auth
 
-import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 
 /** The account transport is synchronous and is called on its existing IO path.
@@ -21,7 +20,14 @@ internal fun e2eePrivateRequestWithRateRetry(
         send(submitted?.let(::JSONObject)).also { current() }
     }
     if (path !in setOf("/read", "/directory", "/status")) return request()
-    return runBlocking {
-        e2eeReadWithRateRetry(current = current, wait = { wait(it) }, request = { request() })
+    var retries = 0
+    while (true) {
+        current()
+        try { return request() }
+        catch (failure: AuthFailure) {
+            val seconds = e2eeReadRetrySeconds(failure, retries) ?: throw failure
+            retries++
+            repeat(seconds) { current(); wait(1000); current() }
+        }
     }
 }

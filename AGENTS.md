@@ -9,10 +9,13 @@
   command/challenge/membership mutations не повторяются. Current/device и
   captured request generation проверяются на каждом ожидании/ответе.
 - Новые3 JVM cases: реальные отказ/ожидание, изменения внешнего JSONObject,
-  закрытие владельца, смена generation и отсутствие retry writes. Нужны
-  компиляция/проверка. Build56 будет focused6 JVM (new3+existing3) + QA assembly;
+  закрытие владельца, смена generation и отсутствие retry writes. Build56 FAIL:
+  Kotlin IR/AddContinuation internal compiler error, unitExecuted=false. Не
+  выдавать старые XML/APK за56. Sync adapter теперь имеет собственный IO wait
+  с ОБЩИМ e2eeReadRetrySeconds для suspend/sync policies; runBlocking bridge
+  убран без смены budgets. Build57 проверяет focused6 JVM + QA assembly;
   не называть его full1453. После старта не менять app/android/contracts/public
-  до identity/runtime56. Native37 migration не повторять: следующий UI56
+  до identity/runtime57. Native37 migration не повторять: следующий UI57
   использует retained37; основной signed149 на emulator5580 не трогать до150.
 - Web54/session24674 продолжает на immutable df8d904f…d2b05c9. Его web inputs
   не изменились из-за native56. No subagents/Daybreak, gates/floors off.
