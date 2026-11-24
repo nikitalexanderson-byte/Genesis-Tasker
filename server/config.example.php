@@ -20,6 +20,8 @@ return [
         'webhook_secret' => '', // Issued by CloudTips; private config.php only.
         'history_reconciled' => false,
     ],
+    // Enable only the owner's verified GENESIS donation page after Boosty onboarding.
+    'boosty' => ['enabled'=>false,'profile_verified'=>false,'profile_url'=>''],
     // 3.2.2 preparation. Activate only after acceptance, legal review and an approved release.
     'backup_v1_enabled' => false,
     'google_identity_management_enabled' => false,

@@ -7331,9 +7331,9 @@ export function GenesisCalendar() {
                 <span aria-hidden="true">✦</span>
                 <span><strong>{genesisTelegramLabel(language)}</strong><small>Telegram</small></span>
               </a>
-              <DonationLink language={language} authenticated={Boolean(cloudUser)}>{available=><>
+              <DonationLink language={language} authenticated={Boolean(cloudUser)}>{(_available,methodLabel)=><>
                 <span aria-hidden="true">♡</span>
-                <span><strong>{release319Copy[language].donation}</strong>{available?<small>CloudTips</small>:null}</span>
+                <span><strong>{release319Copy[language].donation}</strong><small>{methodLabel}</small></span>
               </>}</DonationLink>
             </footer>
           </div>

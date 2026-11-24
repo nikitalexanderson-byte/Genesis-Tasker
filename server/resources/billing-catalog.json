@@ -46,7 +46,7 @@
     }
   ],
   "foreignPricing": {
-    "provider": "paddle",
+    "provider": null,
     "currency": "USD",
     "pricingModel": "fixed",
     "prices": {

@@ -2,10 +2,10 @@ import type { FeatureAccess } from './feature-access';
 import {resolvedFeatureAccess, type BillingTrial} from './billing-trial.ts';
 import approvedPolicy from '../server/resources/feature-access-policy.json' with {type:'json'};
 import approvedCatalog from '../server/resources/billing-catalog.json' with {type:'json'};
-export type BillingProvider = 'google-play' | 'paddle' | 'lemon-squeezy' | 'yookassa';
+export type BillingProvider = 'google-play' | 'lemon-squeezy' | 'yookassa';
 export type BillingPrice={amountMinor:number;currency:string};
 export type BillingForeignRate={quotePerBase:string;effectiveDate:string;source?:string};
-export type BillingOffer = {id:string;plan:string;periodMonths:number;amountMinor:number|null;currency:string|null;availableProviders:BillingProvider[];seatLimit?:number;pricesByProvider?:Partial<Record<BillingProvider,BillingPrice>>};
+export type BillingOffer = {id:string;plan:string;periodMonths:number;amountMinor:number|null;currency:string|null;availableProviders:BillingProvider[];seatLimit?:number;pricesByProvider?:Partial<Record<BillingProvider,BillingPrice>>;pricesByCurrency?:Partial<Record<'RUB'|'USD',BillingPrice>>};
 export type BillingPolicy = {features:Record<string,string[]>;limits:Record<string,Record<string,number|null>>;disabledFeatures:string[]};
 export type BillingCatalog = {schemaVersion:1;checkoutEnabled:boolean;providers:{id:BillingProvider;name:string;available:boolean;reason:string|null}[];
   offers:BillingOffer[];lifetimeSeats:{total:number;remaining:number};policy:BillingPolicy;
@@ -54,11 +54,14 @@ export function billingOfferPrice(offer:BillingOffer,provider:BillingProvider):B
   return offer.amountMinor!==null&&offer.currency?{amountMinor:offer.amountMinor,currency:offer.currency}:null;
 }
 /** Display-only fallback uses the same fixed USD catalog as the server; API prices take precedence. */
-export function billingDisplayPrice(plan:BillingPlan,months:number,catalog:BillingCatalog|null,provider:BillingProvider):BillingPrice|null {
-  if(plan==='free')return {amountMinor:0,currency:(provider==='paddle'||provider==='lemon-squeezy')?'USD':'RUB'};
+export function billingDisplayPrice(plan:BillingPlan,months:number,catalog:BillingCatalog|null,display:BillingProvider|'RUB'|'USD'):BillingPrice|null {
+  if(!['USD','RUB','google-play','lemon-squeezy','yookassa'].includes(display))return null;
+  const currency=display==='USD'||display==='lemon-squeezy'?'USD':'RUB';
+  if(plan==='free')return {amountMinor:0,currency};
   const offer=catalog?.offers.find(value=>value.plan===plan&&value.periodMonths===(plan==='premium4life'?0:months));
-  if(offer?.pricesByProvider?.[provider])return offer.pricesByProvider[provider]!;
-  if((provider==='paddle'||provider==='lemon-squeezy')){
+  const price=display==='USD'||display==='RUB'?offer?.pricesByCurrency?.[display]:offer?.pricesByProvider?.[display];
+  if(price)return price;
+  if(currency==='USD'){
     const foreign=approvedCatalog.foreignPricing;
     const amount=plan==='premium4life'?foreign.lifetimeAmountMinor:(foreign.prices as Record<string,Record<string,number>>)[plan]?.[String(months)];
     return typeof amount==='number'?{amountMinor:amount,currency:foreign.currency}:null;
