@@ -1,7 +1,7 @@
 import {UnlockedWebDevice,IndexedDbDeviceKeyStorage} from './device-vault.ts';
 import {IndexedDbE2eeStorage} from './storage.ts';
 import {E2eeScopeClient,type ScopeTransport} from './scope-client.ts';
-import {assertTechnical,exactKeys,recoverAuthority,publicDeviceKeys,forwardRoot,type RecoveryKit} from './keys.ts';
+import {assertTechnical,exactKeys,recoverAuthority,publicDeviceKeys,forwardRoot,retainE2eeSecret,type RecoveryKit} from './keys.ts';
 import {canonicalE2eeValue,signE2eeCommand,snapshotE2eeValue,type SignedE2eeCommand,type WireValue} from './commands.ts';
 import {verifyDeviceDirectory,type VerifiedDirectory} from './directory.ts';
 import {encodeE2eeBytes,decodeE2eeBytes} from './envelope.ts';
@@ -72,26 +72,27 @@ export class WebPrivateAccount{
   this.ownerId=ownerId;this.device=device;this.#transport=transport;this.#current=current;this.mode=mode;
  }
  static async open(ownerId:string,secret:Uint8Array,transport:PrivateAccountTransport,current:()=>void,recoveryKit?:RecoveryKit){
-  assertTechnical(ownerId);if(secret.length!==32)throw new Error('E2EE_UNLOCK_REQUIRED');const held=new Uint8Array(secret),storage=new IndexedDbE2eeStorage(),keys=new IndexedDbDeviceKeyStorage();
+  assertTechnical(ownerId);const held=retainE2eeSecret(secret);
   let device:UnlockedWebDevice|undefined,account:WebPrivateAccount|undefined;
   try{
+   const kit=recoveryKit===undefined?undefined:snapshotE2eeValue(recoveryKit),storage=new IndexedDbE2eeStorage(),keys=new IndexedDbDeviceKeyStorage();
    current();const status=validateStatus(await transport.status());current();
    const personal=status.scopes.filter(scope=>scope.kind==='personal'&&scope.resourceId===ownerId);if(personal.length!==1)throw new Error('E2EE_PERSONAL_SCOPE_REQUIRED');
    const record=await keys.get(ownerId);current();
    if(record)device=await UnlockedWebDevice.unlock(ownerId,held,storage,keys);
    else{
-    if(!recoveryKit)throw new Error('E2EE_RECOVERY_KIT_REQUIRED');
+    if(!kit)throw new Error('E2EE_RECOVERY_KIT_REQUIRED');
     // Pin comes from the user's saved kit. The server's kit is never a trust anchor.
-    await recoverAuthority(ownerId,held,recoveryKit);current();
-    device=await UnlockedWebDevice.provision(ownerId,held,recoveryKit,storage,keys);
+    await recoverAuthority(ownerId,held,kit);current();
+    device=await UnlockedWebDevice.provision(ownerId,held,kit,storage,keys);
    }
    current();account=new WebPrivateAccount(ownerId,device,transport,current);
-   if(!record)await account.#recoverEnrollment(personal[0].scopeId,held,recoveryKit!);
+   if(!record)await account.#recoverEnrollment(personal[0].scopeId,held,kit!);
    else{
     // A previous enrollment may have died after provisioning. Retrying uses
     // its durable packet, not a new identity or a replacement local root.
     const saved=await device.savedDirectory(personal[0].scopeId);current();
-    if(!saved){if(!recoveryKit)throw new Error('E2EE_RECOVERY_KIT_REQUIRED');await account.#recoverEnrollment(personal[0].scopeId,held,recoveryKit);}
+    if(!saved){if(!kit)throw new Error('E2EE_RECOVERY_KIT_REQUIRED');await account.#recoverEnrollment(personal[0].scopeId,held,kit);}
    }
    const personalClient=await account.openScope(personal[0],device.authorityPin,ownerId);current();
    if(personalClient.directory.state!=='active')throw new Error('E2EE_MIGRATION_RESUME_REQUIRED');
@@ -102,7 +103,7 @@ export class WebPrivateAccount{
   }catch(error){account?.close();device?.lock();throw error;}finally{held.fill(0);}
  }
  static async openOffline(ownerId:string,secret:Uint8Array,transport:PrivateAccountTransport,current:()=>void){
-  assertTechnical(ownerId);const held=new Uint8Array(secret);let device:UnlockedWebDevice|undefined;
+  assertTechnical(ownerId);const held=retainE2eeSecret(secret);let device:UnlockedWebDevice|undefined;
   try{
    current();device=await UnlockedWebDevice.unlock(ownerId,held,new IndexedDbE2eeStorage(),new IndexedDbDeviceKeyStorage());current();
    const row=await device.vault.read('key-check','product-account-index-v1');current();if(!row)throw new Error('E2EE_OFFLINE_CONTENT_UNAVAILABLE');

@@ -7,7 +7,7 @@ import {validateDeviceAccessTarget,type DeviceAccessTarget} from './device-acces
 import {E2eeScopeClient,type ScopeTransport} from './scope-client.ts';
 import {verifyDeviceDirectory} from './directory.ts';
 import {samePrivateJson as same} from './product-json.ts';
-import {assertTechnical,exactKeys,type publicDeviceKeys} from './keys.ts';
+import {assertTechnical,exactKeys,retainE2eeSecret,type publicDeviceKeys} from './keys.ts';
 import type {SignedE2eeCommand} from './commands.ts';
 
 export const PERSONAL_DEVICE_ENTRY_ID='personal-device-entry:v1';
@@ -33,13 +33,13 @@ export class WebPersonalDeviceEntry{
  current(){this.guard();if(this.#closed)throw new Error('E2EE_UNLOCK_REQUIRED');this.device.requireOpen();}
  #run<T>(work:()=>Promise<T>){const task=this.#serial.catch(()=>undefined).then(async()=>{this.current();return work();});this.#serial=task;return task;}
  static async begin(compared:ComparedPersonalDeviceTarget,localSecret:Uint8Array,ports:PersonalDeviceEntryPorts,current:()=>void){
-  const target=ComparedPersonalDeviceTarget.require(compared),storage=new IndexedDbE2eeStorage(),keys=new IndexedDbDeviceKeyStorage();let device:UnlockedWebDevice|undefined;
-  try{current();const response=await ports.transport.directory(target.scopeId);current();const directory=await verifyDeviceDirectory(target.ownerId,target.scopeId,target.authority,response.events);current();
+  const target=ComparedPersonalDeviceTarget.require(compared),held=retainE2eeSecret(localSecret);let device:UnlockedWebDevice|undefined;
+  try{const storage=new IndexedDbE2eeStorage(),keys=new IndexedDbDeviceKeyStorage();current();const response=await ports.transport.directory(target.scopeId);current();const directory=await verifyDeviceDirectory(target.ownerId,target.scopeId,target.authority,response.events);current();
    if(directory.kind!=='personal'||directory.resourceId!==target.ownerId||directory.state!=='active')throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
-   device=await keys.get(target.ownerId)?await UnlockedWebDevice.unlock(target.ownerId,localSecret,storage,keys):await UnlockedWebDevice.provisionCandidate(compared,localSecret,storage,keys);current();
+   device=await keys.get(target.ownerId)?await UnlockedWebDevice.unlock(target.ownerId,held,storage,keys):await UnlockedWebDevice.provisionCandidate(compared,held,storage,keys);current();
    if(!same(device.authorityPin,target.authority))throw new Error('E2EE_AUTHORITY_CHANGED');const entry=new WebPersonalDeviceEntry(device,target,ports,current),saved=await entry.#document.load();entry.current();
    if(!saved){if(await device.savedDirectory(target.scopeId))throw new Error('E2EE_DEVICE_ALREADY_ENROLLED');await entry.#document.save({format:'genesis-personal-device-entry-v1',ownerId:target.ownerId,target,attemptIds:[crypto.randomUUID()]},null);entry.current();}return entry;
-  }catch(error){device?.lock();throw error;}
+  }catch(error){device?.lock();throw error;}finally{held.fill(0);}
  }
  static async resume(ownerId:string,localSecret:Uint8Array,ports:PersonalDeviceEntryPorts,current:()=>void){let device:UnlockedWebDevice|undefined;
   try{current();device=await UnlockedWebDevice.unlock(ownerId,localSecret,new IndexedDbE2eeStorage(),new IndexedDbDeviceKeyStorage());current();const row=await new E2eeDeviceDocument<Marker>(device,markerId,value=>validatePersonalDeviceEntryMarker(value,ownerId),()=>{current();device!.requireOpen();}).load();current();if(!row)throw new Error('E2EE_DEVICE_ACCESS_REQUIRED');const target=row.value.target;
@@ -47,7 +47,9 @@ export class WebPersonalDeviceEntry{
   }catch(error){device?.lock();throw error;}
  }
  static async replaceRevoked(compared:ComparedPersonalDeviceTarget,oldSecret:Uint8Array,newSecret:Uint8Array,ports:PersonalDeviceEntryPorts,current:()=>void){
-  const target=ComparedPersonalDeviceTarget.require(compared);current();const response=await ports.transport.directory(target.scopeId);current();const candidate=await UnlockedWebDevice.replaceRevoked(compared,oldSecret,newSecret,response.events,new IndexedDbE2eeStorage(),new IndexedDbDeviceKeyStorage(),current);candidate.lock();current();return this.begin(compared,newSecret,ports,current);
+  const target=ComparedPersonalDeviceTarget.require(compared),priorSecret=retainE2eeSecret(oldSecret);let nextSecret:Uint8Array|undefined;
+  try{nextSecret=retainE2eeSecret(newSecret);current();const response=await ports.transport.directory(target.scopeId);current();const candidate=await UnlockedWebDevice.replaceRevoked(compared,priorSecret,nextSecret,response.events,new IndexedDbE2eeStorage(),new IndexedDbDeviceKeyStorage(),current);candidate.lock();current();return await this.begin(compared,nextSecret,ports,current);}
+  finally{priorSecret.fill(0);nextSecret?.fill(0);}
  }
  async #active(){const marker=await this.#document.load();this.current();if(!marker)throw new Error('E2EE_DEVICE_ACCESS_REQUIRED');const id=marker.value.attemptIds.at(-1)!;await this.#access.create(this.target.scopeId,id);this.current();return{id,marker};}
  request(){return this.#run(async()=>{const {id}=await this.#active();return this.#access.request(id);});}

@@ -45,6 +45,8 @@ function ownedBytes(source: Uint8Array, minimum: number, maximum: number): Uint8
   return copy;
 }
 export function freshSecret(): Uint8Array<ArrayBuffer> { return crypto.getRandomValues(new Uint8Array(32)); }
+/** Own a validated secret before any asynchronous product or key operation. */
+export function retainE2eeSecret(source:Uint8Array):Uint8Array<ArrayBuffer>{return ownedBytes(source,32,32);}
 
 export type PublicDeviceKeys = { signingKey: string; receivingKey: string };
 export type DeviceKeys = { signing: CryptoKeyPair; receiving: CryptoKeyPair };

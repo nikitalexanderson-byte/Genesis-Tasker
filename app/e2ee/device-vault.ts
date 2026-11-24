@@ -1,7 +1,7 @@
 import { encodeE2eeBytes, decodeE2eeBytes, importE2eeRoot } from './envelope.ts';
 import { snapshotE2eeValue, type SignedE2eeCommand } from './commands.ts';
 import { assertTechnical, exactKeys, freshSecret, generateDeviceKeys, exportPrivateDeviceKeys, importDeviceKeys,
-  openBundle, protectBundle, recoverAuthority,publicDeviceKeys, type DeviceKeys, type ProtectedBundle, type PublicDeviceKeys, type RecoveryKit } from './keys.ts';
+  openBundle, protectBundle, recoverAuthority,publicDeviceKeys,retainE2eeSecret as retainedSecret, type DeviceKeys, type ProtectedBundle, type PublicDeviceKeys, type RecoveryKit } from './keys.ts';
 import { verifyDeviceDirectory, type VerifiedDirectory } from './directory.ts';
 import { openE2eeDatabase, IndexedDbE2eeStorage, UnlockedE2eeVault, type E2eeRecordStorage } from './storage.ts';
 import {ComparedPersonalDeviceTarget} from './personal-device-target.ts';
@@ -39,10 +39,6 @@ export class IndexedDbDeviceKeyStorage implements DeviceKeyStorage {
 }
 type PrivateDeviceBundle = {protocol:1|2;ownerId:string;deviceId:string;localKeyId:string;localRoot:string;deviceKeys:Awaited<ReturnType<typeof exportPrivateDeviceKeys>>;authorityPin:PublicDeviceKeys;previous?:{serial:number;deviceId:string;bundleHash:string}};
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
-function retainedSecret(source:Uint8Array){
-  if(!(source instanceof Uint8Array)||source.length!==32)throw new Error('E2EE_INVALID_KEY_BUNDLE');
-  const copy=new Uint8Array(source);if(copy.length!==32){copy.fill(0);throw new Error('E2EE_INVALID_KEY_BUNDLE');}return copy;
-}
 
 /** Google login never constructs this capability. It needs a separately held secret. */
 export class UnlockedWebDevice {
@@ -107,12 +103,12 @@ export class UnlockedWebDevice {
   /** Explicit revoked-identity replacement, never an unlock-error fallback.
    * New keys stay a candidate until the ordinary enrollment is approved. */
   static async replaceRevoked(compared:ComparedPersonalDeviceTarget,oldSecret:Uint8Array,newSecret:Uint8Array,events:SignedE2eeCommand[],storage:E2eeRecordStorage,keys:IndexedDbDeviceKeyStorage,current:()=>void){
-    const target=ComparedPersonalDeviceTarget.require(compared),old=await this.unlock(target.ownerId,oldSecret,storage,keys),held=retainedSecret(newSecret);let raw:Uint8Array|undefined,bytes:Uint8Array|undefined;
-    try{current();if(JSON.stringify(old.authorityPin)!==JSON.stringify(target.authority))throw new Error('E2EE_AUTHORITY_CHANGED');const saved=await old.savedDirectory(target.scopeId);current();const directory=await verifyDeviceDirectory(target.ownerId,target.scopeId,target.authority,events,saved?.checkpoint);current();const prior=directory.devices.get(old.deviceId),publicKeys=await publicDeviceKeys(old.keys());current();
+    const target=ComparedPersonalDeviceTarget.require(compared),priorSecret=retainedSecret(oldSecret);let old:UnlockedWebDevice|undefined,held:Uint8Array|undefined,raw:Uint8Array|undefined,bytes:Uint8Array|undefined;
+    try{held=retainedSecret(newSecret);const history=snapshotE2eeValue(events);current();old=await this.unlock(target.ownerId,priorSecret,storage,keys);current();if(JSON.stringify(old.authorityPin)!==JSON.stringify(target.authority))throw new Error('E2EE_AUTHORITY_CHANGED');const saved=await old.savedDirectory(target.scopeId);current();const directory=await verifyDeviceDirectory(target.ownerId,target.scopeId,target.authority,history,saved?.checkpoint);current();const prior=directory.devices.get(old.deviceId),publicKeys=await publicDeviceKeys(old.keys());current();
       if(directory.kind!=='personal'||directory.resourceId!==target.ownerId||directory.state!=='active'||!prior?.revoked||prior.userId!==target.ownerId||prior.signingKey!==publicKeys.signingKey||prior.receivingKey!==publicKeys.receivingKey)throw new Error('E2EE_REVOKED_REPLACEMENT_REQUIRED');await old.ensureDurableKeys();current();
       const deviceKeys=await generateDeviceKeys(),deviceId=crypto.randomUUID();raw=freshSecret();const bundle:PrivateDeviceBundle={protocol:2,ownerId:target.ownerId,deviceId,localKeyId:'local:'+deviceId,localRoot:encodeE2eeBytes(raw),deviceKeys:await exportPrivateDeviceKeys(deviceKeys),authorityPin:target.authority,previous:{serial:old.#record.serial,deviceId:old.deviceId,bundleHash:await protectedDeviceHash(old.#record.bundle)}};
       bytes=encoder.encode(JSON.stringify(bundle));const sealed=await protectBundle(target.ownerId,'device-vault',held,bytes);current();await old.ensureDurableKeys();current();await keys.appendReplacement(target.ownerId,old.#record,sealed,current);if(typeof BroadcastChannel!=='undefined'){const channel=new BroadcastChannel('genesis-e2ee-lock:'+target.ownerId);channel.postMessage({locked:true});channel.close();}return await this.unlock(target.ownerId,held,storage,keys);
-    }finally{old.lock();held.fill(0);raw?.fill(0);bytes?.fill(0);}
+    }finally{old?.lock();priorSecret.fill(0);held?.fill(0);raw?.fill(0);bytes?.fill(0);}
   }
   lock(){this.#closed=true;this.vault.lock();this.#keys=null;}
   async ensureDurableKeys(){

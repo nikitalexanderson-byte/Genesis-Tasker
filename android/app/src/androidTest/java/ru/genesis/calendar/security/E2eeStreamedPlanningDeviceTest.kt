@@ -163,7 +163,7 @@ class E2eeStreamedPlanningDeviceTest {
         override fun close(){client.begin();device.lock();recovery.secret.fill(0);for(store in stores)check(app.deleteSharedPreferences(store));check(folder.canonicalFile.parentFile==app.noBackupFilesDir.canonicalFile);check(folder.deleteRecursively())}
     }
     private suspend fun refused(code:String,alternative:String?=null,operation:suspend()->Unit){try{operation();fail("Unprotected continuation accepted")}catch(error:Exception){val message=error.message.orEmpty();assertTrue(message,message.contains(code)||alternative!=null&&message.contains(alternative))}}
-    private fun response(f:Rig,large:Boolean=false):ByteArray=("\uFEFF {\r\n\"checkpointHash\":\"${f.directory.checkpoint.hash}\",\"directoryRevision\":${f.directory.checkpoint.revision},\"rows\":[],\"private\":\"SYNTHETIC ORIGINAL α😀"+
+    private fun response(f:Rig,large:Boolean=false):ByteArray=("\uFEFF {\r\n\"protocol\":1,\"ownerId\":\"${f.owner}\",\"scopeId\":\"${f.scope}\",\"migrationId\":\"${f.state().getString("migrationId")}\",\"sourceHash\":\"${f.sourceHash}\",\"fence\":${f.fence},\"checkpointHash\":\"${f.directory.checkpoint.hash}\",\"directoryRevision\":${f.directory.checkpoint.revision},\"rows\":[],\"private\":\"SYNTHETIC ORIGINAL α😀"+
         "a".repeat(if(large)512*1024+7 else 17)+"\"}\r\n").toByteArray()
     private fun consumeLocal(session:E2eeContentPlanningSession){
         val buffer=ByteArray(65536);try{for(source in listOf(session.sources.current)+session.sources.previous)for(path in source.paths){

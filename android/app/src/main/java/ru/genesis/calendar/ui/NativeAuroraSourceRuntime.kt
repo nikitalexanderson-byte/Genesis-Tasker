@@ -163,7 +163,7 @@ internal class NativePersonalSourceRuntime(private val context:Context,private v
 }
 
 @Keep
-private class AuroraSourceBridge(private val job:String,private val source:PersonalSourceKind,private val active:AtomicBoolean,private val operations:CoroutineScope,
+internal class AuroraSourceBridge(private val job:String,private val source:PersonalSourceKind,private val active:AtomicBoolean,private val operations:CoroutineScope,
     private val result:CompletableDeferred<E2eePathReconciliation>,private val completed:AtomicReference<E2eePathReconciliation?>,private val assertCurrent:()->Unit,
     private val openLegacy:suspend (JSONObject,String)->Any,private val publicBytes:(suspend (String,()->Unit)->ByteArray)?,
     private val deliver:suspend (String,JSONObject)->Unit){
@@ -179,6 +179,17 @@ private class AuroraSourceBridge(private val job:String,private val source:Perso
         if(!active.get()||result.isCompleted)return
         if(raw.length>24*1024*1024){fail("E2EE_AURORA_BRIDGE_INVALID");return}
         if(inflight.incrementAndGet()>2){inflight.decrementAndGet();fail("E2EE_AURORA_BRIDGE_INVALID");return}
+        val counted=AtomicBoolean(true)
+        fun release(){if(counted.compareAndSet(true,false))inflight.decrementAndGet()}
+        suspend fun reply(id:String,value:JSONObject){
+            assertCurrent()
+            if(active.get()&&!result.isCompleted){
+                // Javascript may synchronously submit its next request while
+                // receiving this acknowledgement. Native work has finished;
+                // release its bounded permit before crossing that boundary.
+                release();deliver(id,value)
+            }
+        }
         operations.launch{
             try{
                 assertCurrent();check(active.get()&&!result.isCompleted){"E2EE_AURORA_RUNTIME_CLOSED"}
@@ -190,7 +201,7 @@ private class AuroraSourceBridge(private val job:String,private val source:Perso
                         check(id.matches(Regex("[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))){"E2EE_AURORA_BRIDGE_INVALID"}
                         val envelope=value.getJSONObject("envelope");E2eeKeys.exact(envelope,setOf("iv","ciphertext"))
                         val response=try{JSONObject().put("value",openLegacy(envelope,value.getString("purpose")))}catch(error:Throwable){JSONObject().put("error",sourceCode(error))}
-                        assertCurrent();if(active.get()&&!result.isCompleted)deliver(id,response)
+                        reply(id,response)
                     }
                     "public-catalogue"->{
                         check(source==PersonalSourceKind.ADVICE&&publicBytes!=null){"E2EE_AURORA_BRIDGE_INVALID"}
@@ -200,12 +211,12 @@ private class AuroraSourceBridge(private val job:String,private val source:Perso
                             val bytes=publicBytes.invoke(path,assertCurrent)
                             try{assertCurrent();check(bytes.size in 2..8*1024*1024){"E2EE_ADVICE_CATALOGUE_INVALID"};JSONObject().put("value",E2eeEnvelope.encode(bytes))}finally{bytes.fill(0)}
                         }catch(error:Throwable){JSONObject().put("error",sourceCode(error))}
-                        assertCurrent();if(active.get()&&!result.isCompleted)deliver(id,response)
+                        reply(id,response)
                     }
                     "result-part"->{
                         E2eeKeys.exact(value,setOf("job","id","kind","part"));val id=value.getString("id")
                         check(id.matches(Regex("[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"))){"E2EE_AURORA_BRIDGE_INVALID"}
-                        stream.part(value.getJSONObject("part"));assertCurrent();if(active.get()&&!result.isCompleted)deliver(id,JSONObject().put("value",true))
+                        stream.part(value.getJSONObject("part"));reply(id,JSONObject().put("value",true))
                     }
                     "complete-stream"->{
                         E2eeKeys.exact(value,setOf("job","kind","protocol","complete","remoteCount","localCount"))
@@ -235,7 +246,7 @@ private class AuroraSourceBridge(private val job:String,private val source:Perso
                     "error"->{E2eeKeys.exact(value,setOf("job","kind","code"));val code=value.getString("code");fail(if(code.matches(Regex("E2EE_[A-Z_]{1,100}")))code else "E2EE_AURORA_RECONCILIATION_FAILED")}
                     else->fail("E2EE_AURORA_BRIDGE_INVALID")
                 }
-            }catch(error:Throwable){fail(sourceCode(error))}finally{inflight.decrementAndGet()}
+            }catch(error:Throwable){fail(sourceCode(error))}finally{release()}
         }
     }
     private fun fail(code:String){result.completeExceptionally(IllegalStateException(code))}

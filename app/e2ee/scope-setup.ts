@@ -61,14 +61,14 @@ export class E2eeScopeSetup{
  * original creation object or a successful-download checkbox. The root is
  * returned as an opaque CryptoKey only for the migration's local verification. */
 export async function recoverScopeRoot(directory:VerifiedDirectory,secret:Uint8Array,kit:RecoveryKit,current:()=>void){
- const held=new Uint8Array(secret);try{current();const authority=await recoverAuthority(directory.ownerId,held,kit);current();if(!samePrivateJson(kit.authority,directory.recoveryKit.authority))throw new Error('E2EE_AUTHORITY_CHANGED');
+ const held=new Uint8Array(secret);try{directory=structuredClone(directory);kit=snapshotE2eeValue(kit);current();const authority=await recoverAuthority(directory.ownerId,held,kit);current();if(!samePrivateJson(kit.authority,directory.recoveryKit.authority))throw new Error('E2EE_AUTHORITY_CHANGED');
   const root=await openRoot(directory.recoveryCapsule,authority.receiving.privateKey,{ownerId:directory.ownerId,scopeId:directory.scopeId,cryptoEpoch:directory.cryptoEpoch,keyId:directory.keyId,recipientId:'recovery'});current();return root;
  }finally{held.fill(0);}
 }
 /** A recovery checkbox is insufficient. Independently re-entered material must
  * open an actual AEAD object sealed by the exact root about to be activated. */
 export async function verifyScopeRecovery(device:UnlockedWebDevice,directory:VerifiedDirectory,root:CryptoKey,secret:Uint8Array,kit:RecoveryKit,current:()=>void){
- const probe=freshSecret();let opened:Uint8Array|undefined;
+ directory=structuredClone(directory);const probe=freshSecret();let opened:Uint8Array|undefined;
  try{
   device.requireOpen();current();const recoveryRoot=await recoverScopeRoot(directory,secret,kit,current);device.requireOpen();current();
   const context:E2eeContext={cryptoProtocol:1,suite:E2EE_SUITE,ownerId:directory.ownerId,scopeId:directory.scopeId,domain:'key-check',
