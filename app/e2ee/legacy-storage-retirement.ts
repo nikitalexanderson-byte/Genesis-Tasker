@@ -35,6 +35,11 @@ export async function legacyStorageOriginalId(value:Original){
 export function migrationSourceStorage(ownerId:string):ReadStorage{
  const capture=captures.get(ownerId);return capture?capture.storage:localStorage;
 }
+/** Later shared transfers open only the key already sealed by the owner's
+ * migration. Ordinary storage cannot supply a replacement for that key. */
+export function retiredMigrationWorkspaceKey(ownerId:string,scopeId:string):string|null{
+ return captures.get(ownerId)?.workspaceKey(scopeId)??null;
+}
 export class LegacyStorageRetirement{
  #closed=false;#index:Index;#serial:number|null=null;#captured=new Map<string,{raw:string;live:string|null}>();#previous=new Map<string,string>();#removed=new Set<string>();
  readonly storage:ReadStorage;
@@ -45,6 +50,18 @@ export class LegacyStorageRetirement{
   this.storage={get length(){return keys().length;},key:index=>keys()[index]??null,getItem:key=>this.#read(key)};
  }
  #check(){if(this.#closed)throw new Error('E2EE_UNLOCK_REQUIRED');this.current();this.device.requireOpen();}
+ workspaceKey(scopeId:string){
+  this.#check();
+  if(scopeId!==this.scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+  const raw=this.#previous.get(`genesis-workspace-device-key-v2:${this.device.ownerId}`);
+  if(raw===undefined)return null;
+  if(raw.length>256)invalid();
+  let value:unknown;
+  try{value=JSON.parse(raw);}catch{invalid();}
+  exactKeys(value,['key','recoveryCode']);
+  if(typeof value.key!=='string'||!/^[A-Za-z0-9+/]{43}=$/.test(value.key))invalid();
+  return value.key;
+ }
  #keys(){this.#check();const keys=new Set(this.#previous.keys());for(let index=0;index<this.physical.length;index++){const key=this.physical.key(index);if(key!==null)keys.add(key);}return [...keys];}
  #read(key:string){
   this.#check();const live=this.physical.getItem(key),raw=live??this.#previous.get(key)??null;

@@ -13,7 +13,7 @@ import {IndexedDbLegacyTransportMarkers,WebLegacyTransportGate,WebMigrationTrans
 import {requireLegacyTransportWorker} from './e2ee/legacy-worker-client';
 import {assertLegacyLocalWriteAllowed,localMigrationMarker} from './e2ee/web-local-migration-fence';
 import {showPrivateMigration} from './private-migration-ui';
-import {migrationSourceStorage} from './e2ee/legacy-storage-retirement';
+import {migrationSourceStorage,retiredMigrationWorkspaceKey} from './e2ee/legacy-storage-retirement';
 import {closePrivateAccount,requirePrivateAccount,waitForPrivateAccount,unlockPrivateAccount,privateAccountView,subscribePrivateAccount,markPrivateAccountOwner,privateAccountIsRequired,type PrivateAccountTransport} from './e2ee/product-session';
 import {PRIVATE_VAULT_COPY} from './private-vault-copy';
 import {privateUserCacheRequired,privateUserProfile} from './last-user-cache';
@@ -4315,8 +4315,9 @@ export async function createRelationalMigrationSources(userId:string,directory:i
   const open=async(envelope:{iv:string;ciphertext:string},purpose:string)=>{
     check();if(!/^shared-work-draft:[A-Za-z0-9_-]+:[a-z-]+:[A-Za-z0-9_-]+$/.test(purpose)
       &&!/^shared:[A-Za-z0-9_-]+:(?:map|view|conversion):[A-Za-z0-9_:-]+$/.test(purpose))throw new Error('E2EE_LOCAL_WORK_SOURCE_INVALID');
-    if(!legacy)throw new Error('E2EE_LEGACY_KEY_UNAVAILABLE');
-    const raw=base64ToBytes(legacy),iv=base64ToBytes(envelope.iv),cipher=base64ToBytes(envelope.ciphertext);let plain:Uint8Array|undefined;
+    const legacyKey=directory.kind==='personal'?legacy:retiredMigrationWorkspaceKey(userId,directory.scopeId);
+    if(!legacyKey)throw new Error('E2EE_LEGACY_KEY_UNAVAILABLE');
+    const raw=base64ToBytes(legacyKey),iv=base64ToBytes(envelope.iv),cipher=base64ToBytes(envelope.ciphertext);let plain:Uint8Array|undefined;
     try{if(raw.length!==32||iv.length!==12||cipher.length<16||cipher.length>64*1024*1024)throw new Error('E2EE_LOCAL_WORK_SOURCE_INVALID');
       const key=await crypto.subtle.importKey('raw',new Uint8Array(raw),'AES-GCM',false,['decrypt']);check();
       plain=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(iv),additionalData:new TextEncoder().encode(`genesis-mindmap-v1:${userId}:${purpose}`)},key,new Uint8Array(cipher)));check();

@@ -4,7 +4,7 @@ import {createRecoveryKit} from '../app/e2ee/keys.ts';
 import {UnlockedWebDevice} from '../app/e2ee/device-vault.ts';
 import {E2eeDeviceDocument} from '../app/e2ee/device-document.ts';
 import {inspectDeviceControlCustody} from '../app/e2ee/device-control-custody.ts';
-import {LegacyStorageRetirement,LEGACY_STORAGE_INDEX,LEGACY_STORAGE_ORIGINAL_PREFIX,migrationSourceStorage,validateLegacyStorageIndex,validateLegacyStorageOriginal} from '../app/e2ee/legacy-storage-retirement.ts';
+import {LegacyStorageRetirement,LEGACY_STORAGE_INDEX,LEGACY_STORAGE_ORIGINAL_PREFIX,migrationSourceStorage,retiredMigrationWorkspaceKey,validateLegacyStorageIndex,validateLegacyStorageOriginal} from '../app/e2ee/legacy-storage-retirement.ts';
 
 class Records{
  rows=new Map();fail=false;afterCommit;
@@ -53,6 +53,27 @@ test('retirement seals exact key and content bytes before removal; cold vault re
   const original=await new E2eeDeviceDocument(cold,row.originals[0],v=>validateLegacyStorageOriginal(v,f.owner),()=>cold.requireOpen()).load();
   assert.equal(original.value.execution,'history-only');assert.equal(original.value.raw,row.key===key?'LEGACY-KEY-CANARY':text);
  }
+});
+
+test('a cold shared transfer can use only its own sealed legacy workspace key',async t=>{
+ const f=await fixture(t),storageKey='genesis-workspace-device-key-v2:'+f.owner,scope='scope:project';
+ const original=Buffer.alloc(32,42).toString('base64'),replacement=Buffer.alloc(32,43).toString('base64');
+ f.physical.setItem(storageKey,JSON.stringify({key:original,recoveryCode:original}));
+ const first=await f.open();
+ assert.equal(retiredMigrationWorkspaceKey(f.owner,'scope:personal'),null);
+ first.storage.getItem(storageKey);
+ await first.retire();first.close();f.device.lock();
+ assert.equal(f.physical.getItem(storageKey),null);
+ const cold=await UnlockedWebDevice.unlock(f.owner,f.recovery.secret,f.records,f.keys);t.after(()=>cold.lock());
+ const second=await LegacyStorageRetirement.open(cold,f.physical,()=>cold.requireOpen(),true,scope);t.after(()=>second.close());
+ f.physical.setItem(storageKey,JSON.stringify({key:replacement,recoveryCode:replacement}));
+ assert.equal(retiredMigrationWorkspaceKey(f.owner,scope),original);
+ assert.equal(retiredMigrationWorkspaceKey('foreign-owner',scope),null);
+ assert.throws(()=>retiredMigrationWorkspaceKey(f.owner,'scope:other'),/SCOPE_BINDING_MISMATCH/);
+ cold.lock();
+ assert.throws(()=>retiredMigrationWorkspaceKey(f.owner,scope),/E2EE_/);
+ second.close();
+ assert.equal(retiredMigrationWorkspaceKey(f.owner,scope),null);
 });
 
 test('failed sealed write, lock and changed owner never remove a live original',async t=>{
