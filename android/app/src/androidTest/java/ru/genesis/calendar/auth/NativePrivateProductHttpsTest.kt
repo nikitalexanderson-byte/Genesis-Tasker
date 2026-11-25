@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Before
@@ -26,8 +27,13 @@ import org.junit.Test
 import ru.genesis.calendar.BuildConfig
 import ru.genesis.calendar.GenesisApplication
 import ru.genesis.calendar.PagerTestActivity
+import ru.genesis.calendar.data.GenesisBackupContainer
 import ru.genesis.calendar.data.GenesisProject
 import ru.genesis.calendar.data.LocalCipher
+import ru.genesis.calendar.data.MindmapDocument
+import ru.genesis.calendar.data.MindmapRepository
+import ru.genesis.calendar.data.PrivateSharedMapBinding
+import ru.genesis.calendar.data.SharedMindmapTransport
 import ru.genesis.calendar.data.WorkspaceStructureRepository
 import ru.genesis.calendar.security.*
 import ru.genesis.calendar.ui.LocalGenesisLanguage
@@ -91,15 +97,44 @@ class NativePrivateProductHttpsTest {
             val saved=JSONObject().put("cookie",cookie).put("csrf",csrf).put("expiresAt",System.currentTimeMillis()+3600000)
             check(app.getSharedPreferences("genesis.native.auth.v1",Context.MODE_PRIVATE).edit().putString("session",LocalCipher().encrypt(saved.toString(),"genesis.native.auth.v2")).commit())
             val canary="NATIVE PRIVATE ${UUID.randomUUID()}"
+            val verifySharedRecords = args.getString("genesisVerifyRetainedSharedRecords") == "true"
+            val fixtureFile = if (verifySharedRecords) ByteArray(1300 * 1024) { (32 + it % 90).toByte() } else null
+            val fixtureImage = if (verifySharedRecords) Base64.getDecoder().decode(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6lWQAAAAASUVORK5CYII="
+            ) else null
             val space=request("/api/shared/spaces","POST",JSONObject().put("title","SPACE $canary"),expected=201).getJSONObject("space")
             val project=request("/api/shared/spaces/${space.getString("id")}/projects","POST",JSONObject().put("title","PROJECT $canary").put("layout","board"),expected=201).getJSONObject("project")
             val detail=request("/api/shared/projects/${project.getString("id")}")
             val statuses=detail.getJSONArray("statuses");val status=(0 until statuses.length()).map{statuses.getJSONObject(it)}.first{it.getInt("isDone")==0}
-            val sharedTask=request("/api/shared/projects/${project.getString("id")}/tasks","POST",JSONObject().put("title","TASK $canary").put("description","Private shared body $canary")
-                .put("statusId",status.getString("id")).put("requestId",UUID.randomUUID().toString()),expected=201).getJSONObject("task")
+            val taskInput = JSONObject().put("title", "TASK $canary").put("description", "Private shared body $canary")
+                .put("statusId", status.getString("id")).put("requestId", UUID.randomUUID().toString())
+            if (fixtureFile != null && fixtureImage != null) {
+                taskInput.put("attachments", JSONArray().put(JSONObject().put("name", "retained-private-file.txt")
+                    .put("data", "data:text/plain;base64," + Base64.getEncoder().encodeToString(fixtureFile))))
+                taskInput.put("imageData", "data:image/png;base64," + Base64.getEncoder().encodeToString(fixtureImage))
+            }
+            val sharedTask = request("/api/shared/projects/${project.getString("id")}/tasks", "POST", taskInput,
+                expected = 201).getJSONObject("task")
+            val fixtureMaps = if (verifySharedRecords) seedSharedMaps(space.getString("id"), project.getString("id"), canary)
+                else emptyList()
             val auth=AuthController.get(app);controller=auth;auth.onTrialForeground();auth.checkSession()
             withTimeout(120000){auth.state.first{it.user?.uid==owner&&it.ready&&!it.busy&&!it.requiresSignIn}}
             val accountScope=CloudAccountSnapshot.scopeFor(owner);assertEquals(accountScope,app.workspaceScope)
+            val projectId = project.getString("id")
+            val spaceId = space.getString("id")
+            val savedDrafts = if (args.getString("genesisVerifySharedDraftArchive") == "true") {
+                val workflow = WorkflowLifecycle.newEdit(auth.sharedWorkflow(projectId))
+                workflow.getJSONObject("draft").getJSONArray("statuses").getJSONObject(0).put("wipLimit", 7)
+                val access = ProjectAccessProtocol.newEdit(auth.sharedProjectAccess(spaceId, owner))
+                access.getJSONObject("draft").put("allProjects", false).put("grants", JSONArray().put(
+                    JSONObject().put("projectId", projectId).put("role", "viewer").put("includeDescendants", false)
+                ))
+                val savedWorkflow = auth.saveSharedWorkflowDraft(projectId, null, workflow)
+                val savedAccess = auth.saveSharedProjectAccessDraft(spaceId, owner, null, access)
+                assertTrue(E2eeProductJson.same(savedWorkflow, auth.sharedWorkflowDraft(projectId)))
+                assertTrue(E2eeProductJson.same(savedAccess, auth.sharedProjectAccessDraft(spaceId, owner)))
+                mapOf("project.local-work" to savedWorkflow, "space.local-work" to savedAccess)
+            } else emptyMap()
             val repository=WorkspaceStructureRepository(app)
             val localProject=GenesisProject(UUID.randomUUID().toString(),null,"personal","LOCAL $canary","Retained offline input",emptyList(),"active",0)
             repository.saveProject(localProject)
@@ -242,9 +277,118 @@ class NativePrivateProductHttpsTest {
             assertEquals("E2EE_UPGRADE_REQUIRED",request("/api/shared/projects/${project.getString("id")}",expected=409).getString("error"))
             val opened=withContext(Dispatchers.IO){auth.sharedProject(project.getString("id"))}.getJSONArray("tasks")
             assertTrue((0 until opened.length()).any{opened.getJSONObject(it).getString("id")==sharedTask.getString("id")&&opened.getJSONObject(it).getString("title")==sharedTask.getString("title")})
+            if (savedDrafts.isNotEmpty() || verifySharedRecords) {
+                auth.onTrialBackground()
+                assertFalse(NativePrivateProducts.isOpen(accountScope))
+                auth.onTrialForeground()
+                coldUnlock()
+                withContext(Dispatchers.IO) {
+                    val spaces = auth.sharedSpaces().getJSONArray("spaces")
+                    assertTrue((0 until spaces.length()).any { spaces.getJSONObject(it).getString("id") == spaceId })
+                    val snapshot = auth.sharedProject(projectId)
+                    assertEquals(projectId, snapshot.getJSONObject("project").getString("id"))
+                    if (savedDrafts.isNotEmpty()) {
+                        val archive = E2eeContentArchive(NativePrivateProducts.account(accountScope, owner)).capture()
+                        val recoveryKey = GenesisBackupContainer.newRecoveryKey()
+                        val reopened = GenesisBackupContainer.open(GenesisBackupContainer.seal(archive, recoveryKey), recoveryKey)
+                        assertRetainedDrafts(reopened, owner, mapOf("project" to projectId, "space" to spaceId), savedDrafts)
+                    }
+                    if (fixtureFile != null && fixtureImage != null) {
+                        val tasks = snapshot.getJSONArray("tasks")
+                        val retained = (0 until tasks.length()).map(tasks::getJSONObject)
+                            .single { it.getString("id") == sharedTask.getString("id") }
+                        val attachment = retained.getJSONArray("attachments").getJSONObject(0)
+                        assertEquals("retained-private-file.txt", attachment.getString("name"))
+                        assertArrayEquals(fixtureFile, auth.sharedTaskFile(retained.getString("id"), attachment.getString("id")))
+                        val image = NativePrivateProducts.sharedRequest(accountScope, "GET", "/shared/tasks/${retained.getString("id")}/image", null)
+                        assertArrayEquals(fixtureImage, E2eeEnvelope.decode(image.getString("data"), image.getInt("size")))
+                        verifySharedMaps(auth, accountScope, owner, spaceId, fixtureMaps)
+                        val created = auth.createSharedTask(projectId, JSONObject().put("title", "NEW $canary").put("statusId", ""))
+                        assertEquals("chaos-open:$projectId", created.getJSONObject("task").getString("statusId"))
+                    }
+                }
+            }
         } finally {
             NativeMigrationUiState.state.value?.let{NativeMigrationUiState.close(it.id)}
             controller?.onTrialBackground();recovery?.secret?.fill(0);HttpsURLConnection.setDefaultSSLSocketFactory(previous)
         }
+    }
+
+    private fun seedSharedMaps(spaceId: String, projectId: String, canary: String): List<Pair<MindmapDocument, MindmapDocument>> =
+        listOf(projectId, null).map { project ->
+            val first = MindmapDocument.new("MAP ${if (project == null) "SPACE" else "PROJECT"} $canary", project)
+            val second = first.copy(nodes = first.nodes.map { it.copy(text = "Edited ${it.text}") })
+            for ((revision, map) in listOf(first, second).withIndex()) {
+                val result = request("/api/shared/spaces/$spaceId/mindmaps/${map.id}", "PUT", JSONObject()
+                    .put("expectedRevision", revision).put("schemaVersion", 1)
+                    .put("operationId", UUID.randomUUID().toString()).put("document", map.json()))
+                assertEquals(revision + 1, result.getInt("revision"))
+            }
+            first to second
+        }
+
+    private suspend fun verifySharedMaps(
+        auth: AuthController,
+        accountScope: String,
+        owner: String,
+        spaceId: String,
+        expected: List<Pair<MindmapDocument, MindmapDocument>>,
+    ) {
+        val maps = MindmapRepository(app.database, SharedMindmapProtocol.scope(accountScope, spaceId),
+            SharedMindmapProtocol.uid(owner, spaceId), SharedMindmapTransport(auth, owner, spaceId),
+            privateShared = PrivateSharedMapBinding(accountScope, owner, spaceId))
+        maps.refresh()
+        for ((first, second) in expected) {
+            val opened = maps.records.value.single { it.document.id == second.id }
+            assertTrue(E2eeProductJson.same(second.json(), opened.document.json()))
+            val history = maps.history(second.id).associateBy { it.revision }
+            assertEquals(setOf(1L, 2L), history.keys)
+            assertTrue(E2eeProductJson.same(first.json(), history.getValue(1L).document.json()))
+            assertTrue(E2eeProductJson.same(second.json(), history.getValue(2L).document.json()))
+            val edited = second.copy(nodes = second.nodes.map { it.copy(note = "Edited after migration") })
+            maps.save(edited)
+            assertTrue(E2eeProductJson.same(edited.json(), maps.serverVersion(edited.id).document.json()))
+        }
+    }
+
+    private fun assertRetainedDrafts(
+        archive: JSONObject,
+        owner: String,
+        resources: Map<String, String>,
+        savedDrafts: Map<String, JSONObject>,
+    ) {
+        fun rows(array: JSONArray) = (0 until array.length()).map(array::getJSONObject)
+        val section = rows(archive.getJSONArray("sections")).single { it.getString("id") == "shared-drafts" }
+        val data = section.getJSONObject("data")
+        assertEquals("history-only", data.getString("execution"))
+        val appearances = mutableListOf<Pair<String, String>>()
+        for (entry in rows(data.getJSONArray("entries"))) {
+            val scope = entry.optJSONObject("scope") ?: continue
+            val snapshot = entry.getJSONObject("current")
+            if (snapshot.getString("mediaType") != "application/json" || snapshot.getInt("size") == 0) continue
+            val bytes = E2eeEnvelope.decode(snapshot.getString("bytes"), snapshot.getInt("size"))
+            try {
+                val document = org.json.JSONTokener(bytes.toString(Charsets.UTF_8)).nextValue() as? JSONObject ?: continue
+                if (document.optString("format") != "genesis-private-local-work-v1") continue
+                val path = document.getString("pathId")
+                assertEquals("history-only", document.getString("execution"))
+                val kind = path.substringBefore('.')
+                assertEquals(owner, scope.getString("ownerId"))
+                assertEquals(kind, scope.getString("kind"))
+                assertEquals(resources.getValue(kind), scope.getString("resourceId"))
+                for (row in rows(document.getJSONArray("entries"))) {
+                    val value = row.getJSONObject("content")
+                    assertEquals("history-only", value.getString("execution"))
+                    val record = org.json.JSONTokener(value.getString("rawDocument")).nextValue() as? JSONObject ?: continue
+                    for ((expectedPath, expectedRecord) in savedDrafts) {
+                        if (E2eeProductJson.same(expectedRecord, record)) appearances.add(expectedPath to path)
+                    }
+                }
+            } finally {
+                bytes.fill(0)
+            }
+        }
+        assertEquals(savedDrafts.keys.map { it to it }.toSet(), appearances.toSet())
+        assertEquals("Each unsent record must occur exactly once in its own scope", savedDrafts.size, appearances.size)
     }
 }
