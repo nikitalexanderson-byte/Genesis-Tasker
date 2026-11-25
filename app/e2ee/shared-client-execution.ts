@@ -13,6 +13,7 @@ type Plan={edits:ProductEdit[];result:ExecutionRow};
 type AutomationCandidate={definition:AutomationDefinition;task:ExecutionRow|null;key:string;id:string;date:string};
 export interface SharedClientExecutionPorts{
  binding:SharedDomainBinding;actorId:string;context:SharedLiveContext;versions:ProductVersion[];
+ bootstrapTaskIds?:ReadonlySet<string>;
  row:(version:ProductVersion)=>ExecutionRow;
  body:(kind:ProductKind,table:string,record:SharedContentRecord)=>SharedRecordBody;
  newRecord:(table:string,input:ExecutionRow,time:string,id:string)=>SharedContentRecord;
@@ -79,7 +80,8 @@ export class SharedClientExecution{
    if(task&&!(Date.parse(String(type==='created'?task.createdAt:task.updatedAt))>=ruleSince))continue;let coordinates:string|number=date;
    if(type==='due'||type==='dueSoon'){if(!task||task.completedAt!==null||typeof task.dueDate!=='string'||(type==='dueSoon'?addCivilDays(task.dueDate,-(definition.trigger.leadDays??1))!==date:task.dueDate>date))continue;coordinates=String(task.dueDate);}
    if(taskEvent){
-    if(!task)continue;coordinates=Number(task.revision);if(type==='created'&&task.revision!==1)continue;
+    if(!task)continue;coordinates=Number(task.revision);
+    if(type==='created'&&(task.revision!==1||this.ports.bootstrapTaskIds?.has(`task:${task.id}`)))continue;
     if(type!=='created'){if(!this.ports.history)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');const current=this.#version('task',String(task.id)),page=await this.ports.history(current.entityId,current.revision),previous=page.versions.find(v=>v.revision===current.revision-1&&!v.deleted);if(!previous)continue;
      const before=this.ports.row(previous);if(type==='status'&&before.statusId===task.statusId||type==='assignee'&&before.assigneeId===task.assigneeId||type==='completed'&&(before.completedAt!==null||task.completedAt===null))continue;
     }

@@ -3,7 +3,7 @@ import {sharedBodyMetadata,sharedBodyParent,sharedRecordKey,sharedRestoreContent
 import {samePrivateJson} from './product-json.ts';
 import {assertTechnical,exactKeys} from './keys.ts';
 import {parseLegacyMigrationJson} from './legacy-json.ts';
-import type {ProductEdit,ProductVersion,PendingProductVersion} from './shared-product.ts';
+import type {ProductEdit,ProductVersion,ProductVersionSnapshot,PendingProductVersion} from './shared-product.ts';
 import type {ProductKind} from './product-contract.ts';
 import {overlayPendingSharedVersions} from './shared-local-overlay.ts';
 import {calendarContext,isCivilDate} from '../calendar-context.ts';
@@ -22,11 +22,11 @@ type ObjectValue=Record<string,unknown>;
 export type SharedLiveContext={ownerId:string;spaceId:string;role:string;spaceRole:string;permissions:Record<string,boolean>;members:ObjectValue[];invitations:ObjectValue[]};
 export type SavedSharedRequest={protocol:1;scopeId:string;id:string;method:string;path:string;body:ObjectValue;createdAt:string;edits:ProductEdit[]|null;result:ObjectValue|null;complete:boolean};
 type SavedRequest=SavedSharedRequest;
-type SharedReadSnapshot={context:SharedLiveContext;versions:ProductVersion[]};
+type SharedReadSnapshot={context:SharedLiveContext;versions:ProductVersion[];bootstrapTaskIds:ReadonlySet<string>};
 type SharedReadBatch={requests:{path:string;body:ObjectValue;resolve:(value:ObjectValue)=>void;reject:(reason:unknown)=>void}[]};
 export interface SharedLivePorts{
  binding:SharedDomainBinding;actorId:string;online:boolean;current:()=>void;
- context:()=>Promise<SharedLiveContext>;versions:()=>Promise<ProductVersion[]>;
+ context:()=>Promise<SharedLiveContext>;versions:()=>Promise<ProductVersion[]|ProductVersionSnapshot>;
  localVersions?:()=>Promise<PendingProductVersion[]>;
  history?:(entityId:string,before:number)=>Promise<{versions:ProductVersion[];origins:VerifiedProductOrigin[];nextBefore:number|null}>;
  sourceTable?:(table:string)=>Promise<ObjectValue[]>;
@@ -99,13 +99,14 @@ export class SharedLiveModel{
  #pendingEntities=new Set<string>();
  constructor(private readonly ports:SharedLivePorts){}
  #run<T>(work:()=>Promise<T>){const task=this.#serial.catch(()=>undefined).then(async()=>{this.ports.current();return work();});this.#serial=task;return task;}
- async #snapshot(){const context=await this.ports.context();this.ports.current();const versions=await this.ports.versions();this.ports.current();
+ async #snapshot():Promise<SharedReadSnapshot>{const context=await this.ports.context();this.ports.current();const snapshot=await this.ports.versions();this.ports.current();
+  const versions=Array.isArray(snapshot)?snapshot:snapshot.versions,bootstrapTaskIds=new Set(Array.isArray(snapshot)?[]:snapshot.bootstrapTaskIds);
   if(context.ownerId.length<1||context.spaceId.length<1||!Array.isArray(context.members)||!Array.isArray(context.invitations))throw new Error('E2EE_SHARED_CONTEXT_INVALID');
   for(const row of versions){if(row.scopeId!==this.ports.binding.scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');if(!row.deleted)validateSharedRecordBody(this.ports.binding,row.kind,row.body,row);}
   const local=this.ports.localVersions?await this.ports.localVersions():[];this.ports.current();
   this.#pendingEntities=new Set(local.map(row=>row.version.entityId));
   this.#completion=this.ports.completionProposals?await this.ports.completionProposals():[];this.ports.current();
-  return{context,versions:overlayPendingSharedVersions(this.ports.binding,versions,local)};
+  return{context,versions:overlayPendingSharedVersions(this.ports.binding,versions,local),bootstrapTaskIds};
  }
  #row(version:ProductVersion,context:SharedLiveContext):ObjectValue{
   const body=plain(version),source=body.record,result:ObjectValue={};
@@ -402,9 +403,9 @@ export class SharedLiveModel{
   const page=runs.slice(start,start+51);
   return{runs:page.slice(0,50),nextCursor:page.length>50?page[49].id:null};
  }
- async #get(path:string,observe?:()=>Promise<SharedReadSnapshot>){const url=new URL(path,'https://private.invalid'),{context,versions}=await(observe?observe():this.#snapshot()),segments=url.pathname.split('/').filter(Boolean),live=versions.filter(row=>!row.deleted);
+ async #get(path:string,observe?:()=>Promise<SharedReadSnapshot>){const url=new URL(path,'https://private.invalid'),{context,versions,bootstrapTaskIds}=await(observe?observe():this.#snapshot()),segments=url.pathname.split('/').filter(Boolean),live=versions.filter(row=>!row.deleted);
   if(segments[0]==='execution'&&segments[1]==='capture'&&segments.length===2){if(this.#pendingEntities.size)throw new Error('E2EE_PENDING_REVIEW_REQUIRED');return{binding:structuredClone(this.ports.binding),context:structuredClone(context),versions:structuredClone(versions)};}
-  if(segments[0]==='execution'&&segments[1]==='ready'&&segments.length===2)return this.#execution(context,versions).ready(url.searchParams.get('now')??new Date().toISOString());
+  if(segments[0]==='execution'&&segments[1]==='ready'&&segments.length===2)return this.#execution(context,versions,bootstrapTaskIds).ready(url.searchParams.get('now')??new Date().toISOString());
   if(segments[0]==='tasks'&&segments[2]==='series'&&segments.length===3)return{series:this.#execution(context,versions).seriesForTask(segments[1])};
   if(segments[0]==='automations'&&segments[2]==='runs'&&segments.length===3)return this.#automationHistory(segments[1],versions,context,url.searchParams.get('cursor'));
   const list=(kind:ProductKind,table?:string)=>live.filter(row=>row.kind===kind&&(!table||plain(row).table===table)).map(row=>this.#row(row,context));
@@ -469,10 +470,10 @@ export class SharedLiveModel{
    if(Object.hasOwn(input,name))value=input[name];row[key]=value as SharedContentRecord[string];
   }return row;
  }
- #execution(context:SharedLiveContext,versions:ProductVersion[]):SharedClientExecution{return new SharedClientExecution({binding:this.ports.binding,actorId:this.ports.actorId,context,versions,row:version=>this.#taskOrRow(version,versions,context),body:(kind,table,record)=>this.#body(kind,table,record),newRecord:(table,input,time,id)=>this.#newRecord(table,input,context,time,id),history:this.ports.history,task:(input,id,expected,request,rows)=>this.#prepare({...request,method:expected===null?'POST':'PATCH',path:expected===null?'tasks':`tasks/${id}`,body:input},{context,versions:rows},expected===null?id??undefined:undefined)});}
+ #execution(context:SharedLiveContext,versions:ProductVersion[],bootstrapTaskIds:ReadonlySet<string>=new Set()):SharedClientExecution{return new SharedClientExecution({binding:this.ports.binding,actorId:this.ports.actorId,context,versions,bootstrapTaskIds,row:version=>this.#taskOrRow(version,versions,context),body:(kind,table,record)=>this.#body(kind,table,record),newRecord:(table,input,time,id)=>this.#newRecord(table,input,context,time,id),history:this.ports.history,task:(input,id,expected,request,rows)=>this.#prepare({...request,method:expected===null?'POST':'PATCH',path:expected===null?'tasks':`tasks/${id}`,body:input},{context,versions:rows,bootstrapTaskIds},expected===null?id??undefined:undefined)});}
  #taskOrRow(version:ProductVersion,versions:ProductVersion[],context:SharedLiveContext){return version.kind==='task'?this.#task(version,versions,context):this.#row(version,context);}
- async #prepare(request:SavedRequest,observed?:{context:SharedLiveContext;versions:ProductVersion[]},forcedTaskId?:string):Promise<{edits:ProductEdit[];result:ObjectValue}>{
-  const {context,versions}=observed??await this.#snapshot(),parts=request.path.split('?')[0].split('/').filter(Boolean),input=request.body,edits:ProductEdit[]=[];let output:ObjectValue;
+ async #prepare(request:SavedRequest,observed?:SharedReadSnapshot,forcedTaskId?:string):Promise<{edits:ProductEdit[];result:ObjectValue}>{
+  const {context,versions,bootstrapTaskIds}=observed??await this.#snapshot(),parts=request.path.split('?')[0].split('/').filter(Boolean),input=request.body,edits:ProductEdit[]=[];let output:ObjectValue;
   if(request.method==='POST'&&request.path==='content-restore/records'){
    if(!this.ports.online)throw new Error('E2EE_ONLINE_REQUIRED');exactKeys(input,['requestId','records']);if(!Array.isArray(input.records)||input.records.length<1||input.records.length>100)throw new Error('E2EE_RESTORE_CONTENT_INVALID');
    const seen=new Set<string>();for(const raw of input.records){object(raw);const content=validateSharedRecordBody(this.ports.binding,raw.kind as ProductKind,raw),id=sharedRecordKey(content.kind,content.record);
@@ -488,10 +489,10 @@ export class SharedLiveModel{
    const extras=['startDate','dueDate','startTime','endTime'].filter(key=>Object.hasOwn(input,key));exactKeys(input,['destinationProjectId','statusId','expectedRevision','position','requestId',...extras]);
    if(input.destinationProjectId!==this.ports.binding.resourceId)throw new Error('E2EE_SHARED_CROSS_SCOPE_REVIEW_REQUIRED');if(!context.permissions.editTasks||!context.permissions.organizeTasks)throw new Error('BULK_NOT_ALLOWED');
    const old=this.#find(versions,'task',parts[1]),status=input.statusId===''?plain(old).record.status_id:input.statusId;
-   return this.#prepare({...request,method:'PATCH',path:`tasks/${parts[1]}`,body:{expectedRevision:input.expectedRevision,requestId:input.requestId,statusId:status,position:input.position,...Object.fromEntries(extras.map(key=>[key,input[key]]))}},{context,versions});
+   return this.#prepare({...request,method:'PATCH',path:`tasks/${parts[1]}`,body:{expectedRevision:input.expectedRevision,requestId:input.requestId,statusId:status,position:input.position,...Object.fromEntries(extras.map(key=>[key,input[key]]))}},{context,versions,bootstrapTaskIds});
   }
   if(parts[0]==='automations'&&parts.length===2&&parts[1]==='preview'&&request.method==='POST')return this.#execution(context,versions).preview(input,request);
-  if(parts[0]==='automations'&&request.method==='POST'&&(parts.length===2&&parts[1]==='advance'||parts.length===5&&parts[2]==='runs'&&parts[4]==='retry'))return this.#execution(context,versions).automation(request);
+  if(parts[0]==='automations'&&request.method==='POST'&&(parts.length===2&&parts[1]==='advance'||parts.length===5&&parts[2]==='runs'&&parts[4]==='retry'))return this.#execution(context,versions,bootstrapTaskIds).automation(request);
   if(parts[0]==='series'&&parts[1]==='advance'&&parts.length===2&&request.method==='POST')return this.#execution(context,versions).advanceSeries(request);
   if(parts[0]==='tasks'&&parts[2]==='series'&&parts.length===3&&request.method==='POST')return this.#execution(context,versions).series(request,parts[1]);
   if(parts[0]==='mindmaps'&&parts.length===2&&['PUT','DELETE'].includes(request.method)){

@@ -10,6 +10,7 @@ import type {E2eeScopeClient} from './scope-client.ts';
 import type {UnlockedWebDevice} from './device-vault.ts';
 
 export type ProductVersion={protocol:1;scopeId:string;entityId:string;kind:ProductKind;revision:number;parentId:string|null;deleted:boolean;metadata:ProductMetadata;body:unknown};
+export type ProductVersionSnapshot={versions:ProductVersion[];bootstrapTaskIds:string[]};
 type Draft={operation:Omit<ProductMutation,'payloadHash'>;version:ProductVersion;payloadHash:string|null};
 type Transaction={format:'genesis-product-transaction-v1';scopeId:string;intentId:string;membershipIntentId?:string;drafts:Draft[];acknowledged:boolean;receipt:Record<string,WireValue>|null};
 type Index={protocol:1;scopeId:string;entities:ProductEntity[]};
@@ -27,6 +28,7 @@ export class E2eeSharedProduct{
  #serial:Promise<unknown>=Promise.resolve();#prefix:Promise<string>;#index:E2eeDeviceDocument<Index>;
  #proposals=new Map<string,VerifiedProductProposal>();
  #headProofs=new Map<string,string>();
+ #bootstrapTaskIds=new Set<string>();
  constructor(private readonly options:SharedProductOptions){assertTechnical(options.scopeId);options.client.assertBinding(options.device,options.scopeId);
   this.#prefix=crypto.subtle.digest('SHA-256',encoder.encode(options.scopeId)).then(bytes=>`product-tx:${encodeE2eeBytes(new Uint8Array(bytes))}:`);
   this.#index=new E2eeDeviceDocument(options.device,`product-index:${options.scopeId}`,value=>{exactKeys(value,['protocol','scopeId','entities']);
@@ -56,19 +58,20 @@ export class E2eeSharedProduct{
   }return value as Transaction;
  },()=>this.#current());}
  async #readIndex(offline:boolean){const local=await this.#index.load();this.#current();if(offline){if(!local)throw new Error('E2EE_OFFLINE_CONTENT_UNAVAILABLE');return local.value.entities;}
-  await this.options.client.refresh();this.#current();const entities:ProductEntity[]=[];let after='',limit=50,bootstrap:{proofHash:string;expectedCount:number}|null=null;const seen=new Set<string>(),proposals=new Map<string,VerifiedProductProposal>(),headProofs=new Map<string,string>();
+  await this.options.client.refresh();this.#current();const entities:ProductEntity[]=[];let after='',limit=50,bootstrap:{proofHash:string;expectedCount:number}|null=null;const seen=new Set<string>(),proposals=new Map<string,VerifiedProductProposal>(),headProofs=new Map<string,string>(),bootstrapTaskIds=new Set<string>();
   for(let page=0;page<=100032;page++){
    let response;try{response=await this.options.client.readProductIndex(after,limit);}catch(error){if(limit>1&&error instanceof Error&&error.message==='E2EE_PRODUCT_PAGE_TOO_LARGE'){limit=Math.max(1,Math.floor(limit/2));continue;}throw error;}
    this.#current();const verified=await verifyProductPage(response,packet=>this.options.client.verifyServiceProof(packet));this.#current();if(verified.entities.length>limit)throw new Error('E2EE_PRODUCT_INDEX_INVALID');
    if(bootstrap&&bootstrap.proofHash!==verified.bootstrap.proofHash)throw new Error('E2EE_PRODUCT_PROOF_INVALID');bootstrap=verified.bootstrap;
    if(!Array.isArray(response.heads))throw new Error('E2EE_PRODUCT_PROOF_INVALID');for(const head of response.heads){exactKeys(head,['entityId','revision','proofHash']);headProofs.set(head.entityId as string,head.proofHash as string);}
    for(const row of verified.entities){if(row.entityId<=after||seen.has(row.entityId))throw new Error('E2EE_PRODUCT_INDEX_INVALID');seen.add(row.entityId);entities.push(row);if(entities.length>100000)throw new Error('E2EE_SCOPE_OBJECT_LIMIT');}
+   for(const origin of verified.origins)if(origin.bootstrap&&origin.entityId.startsWith('task:'))bootstrapTaskIds.add(origin.entityId);
    for(const proposal of verified.proposals){if(proposals.has(proposal.proposalId))throw new Error('E2EE_PRODUCT_PROOF_INVALID');proposals.set(proposal.proposalId,proposal);}
    if(verified.entities.length<limit)break;after=entities.at(-1)!.entityId;if(page===100032)throw new Error('E2EE_PRODUCT_INDEX_INVALID');
   }
   if(!bootstrap||entities.length<bootstrap.expectedCount)throw new Error('E2EE_PRODUCT_BOOTSTRAP_INCOMPLETE');
   const byId=new Map(entities.map(row=>[row.entityId,row]));for(const old of local?.value.entities??[]){const row=byId.get(old.entityId);if(!row||row.revision<old.revision||row.revision===old.revision&&!same(row,old))throw new Error('E2EE_REMOTE_ROLLBACK');}
-  if(!same(entities,local?.value.entities))await this.#index.save({protocol:1,scopeId:this.options.scopeId,entities},local?.serial??null);this.#current();this.#proposals=proposals;this.#headProofs=headProofs;return entities;
+  if(!same(entities,local?.value.entities))await this.#index.save({protocol:1,scopeId:this.options.scopeId,entities},local?.serial??null);this.#current();this.#proposals=proposals;this.#headProofs=headProofs;this.#bootstrapTaskIds=bootstrapTaskIds;return entities;
  }
  index(offline=false){return this.#operation(()=>this.#readIndex(offline));}
  async #versionCache(entity:ProductEntity){
@@ -101,10 +104,12 @@ export class E2eeSharedProduct{
   this.#current();return structuredClone(value);
  }
  read(entity:ProductEntity,offline=false){const held=productEntity(structuredClone(entity));return this.#operation(()=>this.#read(held,offline));}
- versions(offline=false){return this.#operation(async()=>{
+ versionSnapshot(offline=false):Promise<ProductVersionSnapshot>{return this.#operation(async()=>{
   const entities=await this.#readIndex(offline),versions:ProductVersion[]=[];this.#current();
-  for(const entity of entities){versions.push(await this.#read(entity,offline,true));this.#current();}return versions;
+  for(const entity of entities){versions.push(await this.#read(entity,offline,true));this.#current();}
+  return{versions,bootstrapTaskIds:offline?[]:[...this.#bootstrapTaskIds]};
  });}
+ async versions(offline=false){return(await this.versionSnapshot(offline)).versions;}
  history(entityId:string,before=Number.MAX_SAFE_INTEGER,limit=5){assertTechnical(entityId);return this.#operation(async()=>{
   await this.options.client.refresh();this.#current();let response;
   for(;;){try{response=await this.options.client.readProductHistory(entityId,before,limit);break;}catch(error){if(limit>1&&error instanceof Error&&error.message==='E2EE_PRODUCT_PAGE_TOO_LARGE'){limit=Math.max(1,Math.floor(limit/2));continue;}throw error;}}

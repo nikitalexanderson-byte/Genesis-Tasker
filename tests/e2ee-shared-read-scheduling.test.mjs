@@ -114,6 +114,20 @@ test('enabling a retained creation rule does not process tasks saved while it wa
  assert.equal((await ready({...target,body:{...target.body,enabled:false}},[whileEnabled])).automation,false);
 });
 
+test('a signed bootstrap task head is not a new creation for a retained active rule',async()=>{
+ const definition={schemaVersion:1,trigger:{type:'created'},conditions:[],actions:[{type:'priority',value:2}],
+  calendarMode:'profane',calendarContext:{version:2,timeZone:'UTC',gregorianYearStart:'march'}};
+ const rule={kind:'automation',deleted:false,body:{id:'rule',ownerId:'owner',revision:1,enabled:true,deleted:false,
+  definition,createdAt:'2026-11-25T10:00:00Z',updatedAt:'2026-11-25T10:00:00Z'}};
+ const task=id=>({kind:'task',entityId:'task:'+id,deleted:false,body:{id,revision:1,archivedAt:null,
+  createdAt:'2026-11-25T10:05:00Z',updatedAt:'2026-11-25T10:05:00Z'}});
+ const migrated=task('migrated'),fresh=task('fresh');
+ const read=tasks=>new SharedClientExecution({binding,actorId:'owner',context,versions:[rule,...tasks],
+  bootstrapTaskIds:new Set([migrated.entityId]),row:version=>version.body}).ready('2026-11-25T10:06:00Z');
+ assert.equal((await read([migrated])).automation,false);
+ assert.equal((await read([migrated,fresh])).automation,true);
+});
+
 test('shared automation history displays migrated runs without making them executable',async()=>{
  const fixture=liveFixture(),at='2026-11-25T10:00:00Z';
  const columns=sourceCatalogue.tables.find(row=>row.table==='shared_automation_rules').columns;
