@@ -70,6 +70,11 @@ class SharedAutomationProtocolTest {
         val run = automationRunFixture().put("taskId", JSONObject.NULL).put("taskTitle", JSONObject.NULL)
         val page = JSONObject().put("runs", JSONArray().put(run)).put("nextCursor", JSONObject.NULL)
         assertTrue(SharedAutomationProtocol.runs(page, "rule").getJSONArray("runs").getJSONObject(0).isNull("taskTitle"))
+        run.put("historyOnly", true)
+        assertTrue(SharedAutomationProtocol.runs(page, "rule").getJSONArray("runs").getJSONObject(0).getBoolean("historyOnly"))
+        run.put("historyOnly", "true")
+        assertThrows(Exception::class.java) { SharedAutomationProtocol.runs(page, "rule") }
+        run.put("historyOnly", true)
         run.put("taskTitle", "Old private title"); assertThrows(Exception::class.java) { SharedAutomationProtocol.runs(page, "rule") }
     }
     @Test fun transportAcceptsOnlyTheExactLibraryHistoryAndManagementRoutes() {

@@ -136,7 +136,9 @@ internal object SharedAutomationProtocol {
     fun runs(raw: JSONObject, ruleId: String): JSONObject {
         keys(raw, setOf("runs", "nextCursor")); val values = rows(raw.getJSONArray("runs"), 50)
         values.forEach { run ->
-            keys(run, setOf("id", "ruleId", "revision", "taskId", "taskTitle", "state", "attempts", "retryCount", "errorCode", "result", "createdAt", "finishedAt"))
+            keys(run, setOf("id", "ruleId", "revision", "taskId", "taskTitle", "state", "attempts", "retryCount", "errorCode", "result", "createdAt", "finishedAt") +
+                if (run.has("historyOnly")) setOf("historyOnly") else emptySet())
+            if (run.has("historyOnly")) valid(bool(run, "historyOnly"))
             id(text(run, "id")); valid(id(text(run, "ruleId")) == ruleId); number(run, "revision", 1)
             nullable(run, "taskId", ::id); nullable(run, "taskTitle"); valid(!run.isNull("taskId") || run.isNull("taskTitle"))
             valid(text(run, "state") in runStates); number(run, "attempts"); number(run, "retryCount", 0, 3)

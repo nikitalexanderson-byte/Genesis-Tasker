@@ -114,6 +114,30 @@ test('enabling a retained creation rule does not process tasks saved while it wa
  assert.equal((await ready({...target,body:{...target.body,enabled:false}},[whileEnabled])).automation,false);
 });
 
+test('shared automation history displays migrated runs without making them executable',async()=>{
+ const fixture=liveFixture(),at='2026-11-25T10:00:00Z';
+ const columns=sourceCatalogue.tables.find(row=>row.table==='shared_automation_rules').columns;
+ const record={...Object.fromEntries(columns.map(column=>[column,null])),id:'rule',project_id:'project',owner_id:'owner',
+  title:'Retained rule',enabled:0,revision:3,created_at:at,updated_at:at,
+  definition_json:JSON.stringify({schemaVersion:1,trigger:{type:'created'},conditions:[],actions:[{type:'priority',value:2}],
+   calendarMode:'profane',calendarContext:{version:2,timeZone:'UTC',gregorianYearStart:'march'}})};
+ const body={format:'genesis-shared-record-v1',kind:'automation',scopeId:binding.scopeId,scopeKind:binding.kind,
+  resourceId:binding.resourceId,table:'shared_automation_rules',record,related:{},execution:'live'};
+ fixture.ports.versions=async()=>[{protocol:1,scopeId:binding.scopeId,entityId:'automation:rule',kind:'automation',
+  revision:1,parentId:sharedBodyParent(body),metadata:sharedBodyMetadata(body),deleted:false,body}];
+ const run={id:'old-run',rule_id:'rule',rule_revision:3,task_id:null,state:'failed',attempts:1,retry_count:0,
+  error_code:'AUTOMATION_ACTION_REJECTED',result_json:null,created_at:at,finished_at:at};
+ fixture.ports.sourceTable=async table=>{
+  assert.equal(table,'shared_automation_runs');
+  return [run,{...run,id:'other-run',rule_id:'other-rule'}];
+ };
+ const history=await fixture.model.request('GET','automations/rule/runs');
+ assert.deepEqual(history.runs.map(row=>[row.id,row.state,row.historyOnly]),[['old-run','failed',true]]);
+ assert.equal(history.nextCursor,null);
+ await assert.rejects(fixture.model.request('POST','automations/rule/runs/old-run/retry',
+  {operationId:'retry-old-run',expectedRevision:1}),/E2EE_PRODUCT_ENTITY_MISSING/);
+});
+
 const state=()=>({protocol:1,ownerId:'owner',views:[],requests:[],readFlags:{},watching:{}});
 function aggregateFixture(){
  let document=state(),seedReads=0,writes=0;const project={id:'project',spaceId:'space',archivedAt:null};

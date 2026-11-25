@@ -364,11 +364,49 @@ export class SharedLiveModel{
    return{id,action,objectId,taskId,boardId,createdAt,actorName:members.get(row.actorId)??'',details:activityDetails(row.details,title)};
   }),nextCursor:page.length>50?page[49].id:null};
  }
+ async #automationHistory(ruleId:string,versions:ProductVersion[],context:SharedLiveContext,cursor:string|null){
+  this.#find(versions,'automation',ruleId);if(cursor!==null)assertTechnical(cursor);
+  const current=this.#execution(context,versions).automationRuns(ruleId).runs;
+  const archived:ObjectValue[]=[];
+  if(this.ports.online){
+   if(!this.ports.sourceTable)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');
+   const rows=await this.ports.sourceTable('shared_automation_runs');this.ports.current();
+   if(rows.length>100000)throw new Error('E2EE_SHARED_QUERY_TOO_LARGE');
+   const titles=new Map(versions.filter(row=>row.kind==='task'&&!row.deleted).map(row=>[plain(row).record.id,plain(row).record.title]));
+   for(const row of rows){
+    if(row.rule_id!==ruleId)continue;
+    const {id,state,task_id:taskId,created_at:createdAt,finished_at:finishedAt,error_code:errorCode}=row;
+    assertTechnical(id);if(taskId!==null)assertTechnical(taskId);
+    if(!['pending','succeeded','skipped','cancelled','failed'].includes(String(state))||
+      typeof createdAt!=='string'||!Number.isFinite(Date.parse(createdAt))||
+      finishedAt!==null&&(typeof finishedAt!=='string'||!Number.isFinite(Date.parse(finishedAt)))||
+      errorCode!==null&&(typeof errorCode!=='string'||!/^[A-Z][A-Z0-9_]{0,99}$/.test(errorCode)))throw new Error('E2EE_SHARED_DOMAIN_INVALID');
+    let result:ObjectValue|null=null;
+    if(row.result_json!==null){
+     const value=parse(row.result_json);object(value);
+     if(!Array.isArray(value.notices)||value.notices.length>100||
+       value.notices.some(notice=>typeof notice!=='string'||notice.length>5000))throw new Error('E2EE_SHARED_DOMAIN_INVALID');
+     result={createdTaskCount:number(value.createdTaskCount),notifications:number(value.notifications),
+      notices:value.notices,updated:value.updated===true,patch:{}};
+    }
+    const taskTitle=titles.get(taskId)??null;
+    archived.push({id,ruleId,revision:number(row.rule_revision),taskId:taskTitle===null?null:taskId,taskTitle,state,
+     attempts:number(row.attempts),retryCount:number(row.retry_count),errorCode,result,createdAt,finishedAt,historyOnly:true});
+   }
+  }
+  const runs=[...current,...archived].sort((left,right)=>Date.parse(String(right.createdAt))-Date.parse(String(left.createdAt))||
+   String(right.id).localeCompare(String(left.id),'en'));
+  if(new Set(runs.map(run=>run.id)).size!==runs.length)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
+  const start=cursor===null?0:runs.findIndex(run=>run.id===cursor)+1;
+  if(cursor!==null&&start===0)throw new Error('AUTOMATION_INVALID');
+  const page=runs.slice(start,start+51);
+  return{runs:page.slice(0,50),nextCursor:page.length>50?page[49].id:null};
+ }
  async #get(path:string,observe?:()=>Promise<SharedReadSnapshot>){const url=new URL(path,'https://private.invalid'),{context,versions}=await(observe?observe():this.#snapshot()),segments=url.pathname.split('/').filter(Boolean),live=versions.filter(row=>!row.deleted);
   if(segments[0]==='execution'&&segments[1]==='capture'&&segments.length===2){if(this.#pendingEntities.size)throw new Error('E2EE_PENDING_REVIEW_REQUIRED');return{binding:structuredClone(this.ports.binding),context:structuredClone(context),versions:structuredClone(versions)};}
   if(segments[0]==='execution'&&segments[1]==='ready'&&segments.length===2)return this.#execution(context,versions).ready(url.searchParams.get('now')??new Date().toISOString());
   if(segments[0]==='tasks'&&segments[2]==='series'&&segments.length===3)return{series:this.#execution(context,versions).seriesForTask(segments[1])};
-  if(segments[0]==='automations'&&segments[2]==='runs'&&segments.length===3)return this.#execution(context,versions).automationRuns(segments[1]);
+  if(segments[0]==='automations'&&segments[2]==='runs'&&segments.length===3)return this.#automationHistory(segments[1],versions,context,url.searchParams.get('cursor'));
   const list=(kind:ProductKind,table?:string)=>live.filter(row=>row.kind===kind&&(!table||plain(row).table===table)).map(row=>this.#row(row,context));
   if(segments.length===0){const root=this.#find(versions,this.ports.binding.kind,this.ports.binding.resourceId);
    if(this.ports.binding.kind==='space')return{space:this.#row(root,context),members:context.members,invitations:context.invitations};
