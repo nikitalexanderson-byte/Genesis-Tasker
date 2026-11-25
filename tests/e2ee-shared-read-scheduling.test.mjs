@@ -198,3 +198,27 @@ test('private project import history pages only previously visible records withi
  rows[2].project_id='project';delete rows[2].visibleInHistory;
  await assert.rejects(f.model.request('GET','data-history'),/E2EE_SHARED_HISTORY_READER_REQUIRED/);
 });
+
+test('private activity pages project events and preserves role changes without cross-project labels',async()=>{
+ const f=liveFixture();
+ f.ports.context=async()=>({...context,members:[{userId:'owner',displayName:'Test owner'}]});
+ f.ports.eventCache={load:async()=>null,save:async()=>{}};
+ f.ports.history=async()=>{throw Error('No live entities in this fixture');};
+ const rows=Array.from({length:51},(_,index)=>({
+  id:'event-'+index,project_id:'project',actor_id:'owner',action:'member.role_changed',object_id:'member',
+  created_at:new Date(1795500000000+index*1000).toISOString(),task_id:null,board_id:null,
+  details_json:JSON.stringify({changes:{role:{from:'manager',to:'viewer'},projectId:{from:'foreign title',to:'project'}}}),
+ }));
+ rows.push({...rows[0],id:'observed',action:'task.observed'});
+ f.ports.sourceTable=async table=>{assert.equal(table,'shared_audit_events');return rows;};
+ const first=await f.model.request('GET','activity');
+ assert.equal(first.events.length,50);
+ assert.equal(first.events[0].actorName,'Test owner');
+ assert.deepEqual(first.events[0].details,{changes:{role:{from:'manager',to:'viewer'}}});
+ const last=await f.model.request('GET','activity?before='+first.nextCursor);
+ assert.deepEqual(last.events.map(event=>event.id),['event-0']);
+ assert.equal(last.nextCursor,null);
+ await assert.rejects(f.model.request('GET','activity?before=missing'),/INVALID_ACTIVITY_CURSOR/);
+ rows[0].project_id='foreign-project';
+ await assert.rejects(f.model.request('GET','activity'),/E2EE_SCOPE_BINDING_MISMATCH/);
+});

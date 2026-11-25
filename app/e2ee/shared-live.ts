@@ -44,6 +44,24 @@ export interface SharedLivePorts{
  invitationService?:(plan:SharedInvitationService)=>Promise<{result:unknown;state:unknown}>;
 }
 const camel=(key:string)=>key.replace(/_([a-z])/g,(_,letter:string)=>letter.toUpperCase());
+const activityValueFields=new Set(['title','description','priority','dueDate','startDate','startTime','endTime','isDone','role','layout','color','calendarMode','storyPoints','estimateHours','enabled']);
+const activityValue=(value:unknown)=>value===null||typeof value==='boolean'||typeof value==='number'||typeof value==='string'&&value.length<=2000;
+function activityDetails(value:unknown,objectTitle:unknown){
+ const details:ObjectValue={};
+ if(typeof objectTitle==='string')details.objectTitle=objectTitle;
+ if(!value||typeof value!=='object'||Array.isArray(value))return details;
+ const {changes,imageChanged}=value as ObjectValue;
+ if(imageChanged===true)details.imageChanged=true;
+ if(!changes||typeof changes!=='object'||Array.isArray(changes))return details;
+ const safe:ObjectValue={};
+ for(const [field,change]of Object.entries(changes)){
+  if(!activityValueFields.has(field)||!change||typeof change!=='object'||Array.isArray(change))continue;
+  const {from,to}=change as ObjectValue;
+  if(activityValue(from)&&activityValue(to))safe[field]={from,to};
+ }
+ if(Object.keys(safe).length)details.changes=safe;
+ return details;
+}
 function object(value:unknown):asserts value is ObjectValue{if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('E2EE_SHARED_DOMAIN_INVALID');}
 function parse(value:unknown){if(typeof value!=='string')throw new Error('E2EE_SHARED_DOMAIN_INVALID');return parseLegacyMigrationJson(value,'E2EE_SHARED_DOMAIN_INVALID',16*1024*1024);}
 function number(value:unknown){if(!Number.isSafeInteger(value)||Number(value)<0)throw new Error('E2EE_INVALID_REVISION');return value as number;}
@@ -294,7 +312,11 @@ export class SharedLiveModel{
   if(this.ports.binding.kind!=='project'||!this.ports.eventCache)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');
   if(!this.ports.online){const saved=await this.ports.eventCache.load();this.ports.current();if(!saved)throw new Error('E2EE_OFFLINE_CONTENT_UNAVAILABLE');return saved;}
   if(!this.ports.history||!this.ports.sourceTable)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');
-  const old=await this.ports.sourceTable('shared_audit_events');this.ports.current();if(old.length>10000)throw new Error('E2EE_SHARED_QUERY_TOO_LARGE');const events:ObjectValue[]=old.map(row=>({id:row.id,action:row.action,objectId:row.object_id,actorId:row.actor_id,createdAt:row.created_at,taskId:row.task_id,boardId:row.board_id,legacy:true}));
+  const old=await this.ports.sourceTable('shared_audit_events');this.ports.current();if(old.length>10000)throw new Error('E2EE_SHARED_QUERY_TOO_LARGE');
+  const events:ObjectValue[]=old.map(row=>{
+   if(row.project_id!==this.ports.binding.resourceId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+   return{id:row.id,action:row.action,objectId:row.object_id,actorId:row.actor_id,createdAt:row.created_at,taskId:row.task_id,boardId:row.board_id,legacy:true,details:activityDetails(row.details_json===null?null:parse(row.details_json),null)};
+  });
   for(const entity of versions){if(!['project','task','comment','project-comment','history'].includes(entity.kind))continue;let before=Number.MAX_SAFE_INTEGER,last=before;
    do{const page=await this.ports.history(entity.entityId,before);this.ports.current();if(page.origins.length!==page.versions.length)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
     for(const [at,version]of page.versions.entries()){const origin=page.origins[at];if(origin.entityId!==version.entityId||origin.revision!==version.revision||version.revision>=last)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');last=version.revision;
@@ -304,11 +326,11 @@ export class SharedLiveModel{
      if(version.deleted)continue;if(typeof time!=='string'||!Number.isFinite(Date.parse(time)))throw new Error('E2EE_SHARED_DOMAIN_INVALID');
      if(version.kind==='history'){
       if(origin.action!=='create'||version.revision!==1||body?.table!=='shared_audit_events'||!['member.removed','member.role_changed'].includes(String(source!.action)))throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
-      events.push({id:source!.id,action:source!.action,objectId:source!.object_id,actorId:origin.actorId,initiatorId:source!.actor_id,createdAt:time,taskId:null,boardId:null,details:parse(source!.details_json),legacy:false});
+      events.push({id:source!.id,action:source!.action,objectId:source!.object_id,actorId:origin.actorId,initiatorId:source!.actor_id,createdAt:time,taskId:null,boardId:null,details:activityDetails(parse(source!.details_json),null),legacy:false});
       if(events.length>10000)throw new Error('E2EE_SHARED_QUERY_TOO_LARGE');continue;
      }
      const bytes=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(`${this.ports.binding.scopeId}\0${version.entityId}\0${version.revision}\0${origin.operationId}`)));bytes[6]=(bytes[6]&15)|80;bytes[8]=(bytes[8]&63)|128;const hex=Array.from(bytes.subarray(0,16),value=>value.toString(16).padStart(2,'0')).join(''),id=`${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
-     events.push({id,action:version.kind==='comment'?'comment.created':version.kind==='project-comment'?'project.comment_created':`${version.kind}.${origin.action==='create'?'created':origin.action==='complete'?'completed':'updated'}`,objectId:source!.id,actorId:origin.actorId,createdAt:time,taskId:version.kind==='task'?source!.id:source!.task_id??null,boardId:source!.board_id??null,legacy:false});
+     events.push({id,action:version.kind==='comment'?'comment.created':version.kind==='project-comment'?'project.comment_created':`${version.kind}.${origin.action==='create'?'created':origin.action==='complete'?'completed':'updated'}`,objectId:source!.id,actorId:origin.actorId,createdAt:time,taskId:version.kind==='task'?source!.id:source!.task_id??null,boardId:source!.status_id??source!.board_id??null,legacy:false});
      if(events.length>10000)throw new Error('E2EE_SHARED_QUERY_TOO_LARGE');
     }
     before=page.nextBefore??0;if(before&&before!==last)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
@@ -316,6 +338,31 @@ export class SharedLiveModel{
   }
   const ids=new Set<string>();for(const event of events){assertTechnical(event.id);assertTechnical(event.objectId);if(event.actorId!==null)assertTechnical(event.actorId);if(ids.has(String(event.id))||typeof event.action!=='string'||typeof event.createdAt!=='string'||!Number.isFinite(Date.parse(event.createdAt)))throw new Error('E2EE_SHARED_DOMAIN_INVALID');ids.add(String(event.id));}
   await this.ports.eventCache.save(events);this.ports.current();return events;
+ }
+ async #activity(versions:ProductVersion[],context:SharedLiveContext,query:URLSearchParams){
+  const taskId=query.get('taskId'),boardId=query.get('boardId'),before=query.get('before');
+  if(taskId!==null){assertTechnical(taskId);this.#find(versions,'task',taskId);}
+  if(boardId!==null){assertTechnical(boardId);this.#find(versions,'status',boardId);}
+  if(before!==null)assertTechnical(before);
+  const events=(await this.#events(versions,context)).sort((left,right)=>
+   Date.parse(String(right.createdAt))-Date.parse(String(left.createdAt))||String(right.id).localeCompare(String(left.id),'en'));
+  this.ports.current();
+  const start=before===null?0:events.findIndex(row=>row.id===before)+1;
+  if(before!==null&&start===0)throw new Error('INVALID_ACTIVITY_CURSOR');
+  const live=versions.filter(row=>!row.deleted);
+  const titles=new Map(live.map(row=>[row.entityId,plain(row).record.title]));
+  const members=new Map(context.members.map(row=>[row.userId,row.displayName]));
+  const page=events.slice(start).filter(row=>{
+   const action=String(row.action);
+   return action!=='task.observed'&&
+    (taskId===null||((action.startsWith('task.')||action==='series.instance.created')&&(row.taskId===taskId||row.objectId===taskId)))&&
+    (boardId===null||row.boardId===boardId||row.objectId===boardId);
+  }).slice(0,51);
+  return{events:page.slice(0,50).map(row=>{
+   const {id,action,objectId,taskId,boardId,createdAt}=row;
+   const title=titles.get(`task:${taskId??objectId}`)??titles.get(`status:${objectId}`)??titles.get(`project:${objectId}`);
+   return{id,action,objectId,taskId,boardId,createdAt,actorName:members.get(row.actorId)??'',details:activityDetails(row.details,title)};
+  }),nextCursor:page.length>50?page[49].id:null};
  }
  async #get(path:string,observe?:()=>Promise<SharedReadSnapshot>){const url=new URL(path,'https://private.invalid'),{context,versions}=await(observe?observe():this.#snapshot()),segments=url.pathname.split('/').filter(Boolean),live=versions.filter(row=>!row.deleted);
   if(segments[0]==='execution'&&segments[1]==='capture'&&segments.length===2){if(this.#pendingEntities.size)throw new Error('E2EE_PENDING_REVIEW_REQUIRED');return{binding:structuredClone(this.ports.binding),context:structuredClone(context),versions:structuredClone(versions)};}
@@ -329,6 +376,7 @@ export class SharedLiveModel{
    return{project:this.#row(root,context),statuses:list('status').filter(row=>row.isChaos!==1),categories:list('category','shared_project_categories'),tasks:page.tasks,taskPage:{total:page.total,hasMore:false,nextCursor:null},members:context.members,customFieldDefinitions:list('custom-field')};
   }
   if(segments[0]==='events'&&segments.length===1){const events=await this.#events(versions,context),project=this.#row(this.#find(versions,'project',this.ports.binding.resourceId),context),tasks=live.filter(row=>row.kind==='task').map(row=>this.#task(row,versions,context)),comments=live.filter(row=>row.kind==='comment').map(row=>this.#row(row,context));return{events,project,tasks,comments,members:context.members};}
+  if(segments[0]==='activity'&&segments.length===1)return this.#activity(versions,context,url.searchParams);
   if(segments[0]==='data-history'&&segments.length===1)return this.#importedHistory(live,url.searchParams);
   if(segments[0]==='tasks'){
    if(segments.length===1){const filter=parse(url.searchParams.get('filter')??'{}');object(filter);return this.#page(this.#tasks(versions,context,filter),url);}
