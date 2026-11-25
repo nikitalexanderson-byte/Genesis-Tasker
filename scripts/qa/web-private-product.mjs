@@ -23,15 +23,16 @@ const browser=await chromium.launch({headless:true});report.browser=browser.vers
 let page,secret,kit,backupKey,deviceLocalCode,fixtureOwnerId;
 const diagnostics=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='diagnostics';
 const profileOnly=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='profile';
-const sharedJourney=['shared','shared-locales','content','files','membership','shared-records','import-history'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
+const sharedJourney=['shared','shared-locales','content','files','membership','shared-records','import-history','shared-local-work'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
 const sharedRecordsJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='shared-records';
 const importHistoryJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='import-history';
-const localWorkJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='local-work';
+const sharedLocalWorkJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='shared-local-work';
+const localWorkJourney=sharedLocalWorkJourney||process.env.GENESIS_QA_FOLLOWUP_SCOPE==='local-work';
 const membershipJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='membership';
 const membershipCopy=JSON.parse(readFileSync('contracts/e2ee/membership-review-copy-v2.json','utf8')).ru;
 const sharedFilesJourney=['content','files'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
 const localeJourney=['locales','shared-locales'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
-const backupJourney=['backup','content','local-work'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
+const backupJourney=localWorkJourney||['backup','content'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
 const legacyStorageJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='legacy-storage';
 const sharedCopy=JSON.parse(readFileSync('contracts/e2ee/shared-security-copy-v1.json','utf8')).ru;
 const sharedMigration=JSON.parse(readFileSync('contracts/e2ee/shared-migration-copy-v1.json','utf8')).ru;
@@ -232,7 +233,7 @@ try{
   const space=(await post('shared/spaces',{title:'PRIVATE SHARED SPACE '+canary})).space;
   const project=(await post(`shared/spaces/${space.id}/projects`,{title:'PRIVATE SHARED PROJECT '+canary,layout:'board'})).project;
   let member,inbox;
-  if(membershipJourney){
+  if(membershipJourney||sharedLocalWorkJourney){
    const guest=await browser.newContext({baseURL});
    try{
     await guest.route(/https?:\/\//,route=>new URL(route.request().url()).origin===baseURL?route.continue():route.abort());
@@ -277,6 +278,20 @@ try{
   await page.waitForFunction(prefix=>Object.keys(localStorage).some(key=>key.startsWith(prefix)),prefix);
   await planning.getByRole('button',{name:'Закрыть',exact:true}).click();
   await planning.waitFor({state:'hidden'});
+  if(sharedLocalWorkJourney){
+   await page.getByRole('button',{name:'Команда и приглашения',exact:true}).click();
+   const access=page.locator('.shared-team-permissions').locator(`[data-project-access-user-id="${sharedFixture.member.uid}"]`);
+   await access.locator(':scope > summary').click();
+   const allProjects=access.getByRole('checkbox',{name:'Все проекты пространства, включая будущие',exact:true});
+   await allProjects.waitFor();
+   if(await allProjects.isChecked())await allProjects.uncheck();
+   const rule=access.locator(`[data-access-project-id="${project.id}"]`).getByRole('combobox',{name:'Правило доступа',exact:true});
+   await rule.selectOption('viewer');
+   const draftCopy=JSON.parse(readFileSync('app/workflow-draft-translations.json','utf8')).ru;
+   await access.getByRole('status').filter({hasText:draftCopy.saved}).waitFor();
+   await page.waitForFunction(prefix=>Object.keys(localStorage).some(key=>key.startsWith(prefix)),
+    `genesis-shared-work-drafts-v1:${fixtureOwnerId}:${space.id}:project-access:`);
+  }
   await page.goto('/?lang=ru#today');
   const workflowState=await (await context.request.get(`/api/shared/projects/${project.id}/workflow`)).json();
   assert(!workflowState.config.statuses.some(status=>status.wipLimit===value));
@@ -393,7 +408,7 @@ try{
   }finally{await clean.close();}
  });
  if(process.env.GENESIS_QA_FOLLOWUP_SCOPE==='devices')await checkPrivateDeviceAccess({browser,page,baseURL,output,login,check,report,canary,rememberSecret:value=>{deviceLocalCode=value;},withRateRetry,ownerRecoveryInput:recoveryInput});
- if(backupJourney){
+ const checkBackup=async()=>{
   const copy=JSON.parse(readFileSync('contracts/e2ee/content-archive-copy-v1.json','utf8')).ru;
   let archive,selection;
   const openBackups=async()=>{await page.getByRole('button',{name:'Открыть личный кабинет и настройки',exact:true}).click();await page.locator('[data-settings-tab=backups]').click();};
@@ -437,6 +452,27 @@ try{
     assert(recovered,'Closed workflow draft was missing from encrypted device backup');
     report.localWorkDraft.retainedContentOnly=true;
    }
+   if(sharedLocalWorkJourney){
+    const {project,space,member}=sharedFixture;
+    const scopedDrafts=entries(payload).flatMap(({entry})=>{
+     if(!entry.scope||!['project','space'].includes(entry.scope.kind))return [];
+     const raw=Buffer.from(entry.current.bytes,'base64url').toString('utf8');
+     if(!raw.includes('genesis-private-local-work-v1'))return [];
+     const value=JSON.parse(raw);
+     return value.format==='genesis-private-local-work-v1'?[{scope:entry.scope,value}]:[];
+    });
+    const projectDraft=scopedDrafts.some(({scope,value})=>scope.kind==='project'&&scope.resourceId===project.id&&
+     value.pathId==='project.local-work'&&value.execution==='history-only'&&value.entries.some(entry=>
+      entry.projectId===project.id&&entry.content?.purpose==='workflow'&&
+      Object.values(entry.content.value?.numberInputs??{}).some(input=>JSON.stringify(input).includes(String(report.localWorkDraft.value)))));
+    const spaceDraft=scopedDrafts.some(({scope,value})=>scope.kind==='space'&&scope.resourceId===space.id&&
+     value.pathId==='space.local-work'&&value.execution==='history-only'&&value.entries.some(entry=>
+      entry.spaceId===space.id&&entry.content?.purpose==='project-access'&&entry.content.value?.editor?.targetUserId===member.uid&&
+      entry.content.value.editor.draft?.grants.some(grant=>grant.projectId===project.id&&grant.role==='viewer')));
+    assert(projectDraft,'The project workflow draft must be in the encrypted project history');
+    assert(spaceDraft,'The workspace project-access draft must be in the encrypted workspace history');
+    report.sharedLocalWorkReadback={projectDraft,spaceDraft};
+   }
    report.contentBackup={backupId:payload.backupId,sections:payload.sections.length,entries:entries(payload).length,byteLength:Buffer.byteLength(archive),execution:'history-only'};
    writeFileSync(`${output}/private-device-content.genesisbackup`,archive);
   });
@@ -461,7 +497,8 @@ try{
    await panel.getByRole('combobox',{name:copy.history,exact:true}).selectOption(`${selection.section}:${selection.index}:current`);assert((await panel.locator('pre').innerText()).includes(canary));
    await page.screenshot({path:`${output}/retained-private-backup.png`,fullPage:true,animations:'disabled',mask:[page.locator('input[type=password],textarea')]});
   });
- }
+ };
+ if(backupJourney&&!sharedLocalWorkJourney)await checkBackup();
  if(localeJourney)await check('real locked vault renders all fourteen languages in both themes at all required widths',async()=>{
   const locales=JSON.parse(readFileSync('contracts/e2ee/vault-copy-v1.json','utf8'));
   report.visualCases=[];
@@ -527,7 +564,7 @@ try{
    };
    // Return from the deliberately offline capability to an online unlocked one.
    await withRateRetry('shared account entry',restoreOnlineAccount);
-   for(const [index,[kind,resource]]of [['project',sharedFixture.project],...(membershipJourney?[['project',sharedFixture.inbox]]:[]),['space',sharedFixture.space]].entries()){
+   for(const [index,[kind,resource]]of [['project',sharedFixture.project],...((membershipJourney||sharedLocalWorkJourney)?[['project',sharedFixture.inbox]]:[]),['space',sharedFixture.space]].entries()){
     let dialog=await openTransfer(kind,resource);
     if(index===0){
      await withRateRetry('expired project identity check',async()=>{
@@ -661,6 +698,7 @@ try{
    await dialog.screenshot({path:`${output}/private-task-files.png`,animations:'disabled'});
   });
  }
+ if(sharedLocalWorkJourney)await checkBackup();
  }
  await check('no unhandled product errors',async()=>assert.deepEqual(report.pageErrors,[]));
  report.status='PASS';
