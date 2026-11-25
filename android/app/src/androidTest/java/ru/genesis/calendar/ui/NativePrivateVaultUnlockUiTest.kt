@@ -7,9 +7,11 @@ import androidx.test.runner.lifecycle.Stage
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.json.JSONObject
 import org.junit.Assert.*
@@ -23,6 +25,7 @@ import ru.genesis.calendar.GenesisApplication
 import ru.genesis.calendar.MainActivity
 import ru.genesis.calendar.auth.AuthController
 import ru.genesis.calendar.data.WorkspaceStructureRepository
+import ru.genesis.calendar.security.E2eeContentArchive
 import ru.genesis.calendar.security.NativePrivateProducts
 import java.io.ByteArrayInputStream
 import java.security.KeyStore
@@ -111,9 +114,44 @@ class NativePrivateVaultUnlockUiTest {
         device.dumpWindowHierarchy(File(app.getExternalFilesDir(null),"genesis-owned-unlock-prompt.xml"))
         instrumentation.sendStatus(2,Bundle().apply{putString("stream","GENESIS_UNLOCK_UI_WAIT:$mode\n")})
     }
-    private fun retainedContentAndBackgroundLock(){
+    private fun retainedContentAndBackgroundLock(verifyArchive: Boolean = false){
         waitFor{NativePrivateProducts.isOpen(app.workspaceScope)}
         runBlocking{withTimeout(60000){WorkspaceStructureRepository(app).workspace.first{row->row.projects.any{it.title.startsWith("EDITED NATIVE PRIVATE ")}}}}
+        if (verifyArchive) {
+            val owner = requireNotNull(auth.state.value.user).uid
+            val archive = runBlocking {
+                withContext(Dispatchers.IO) {
+                    val scopes = auth.privateMigrationStatus().getJSONArray("scopes")
+                    auth.sharedSpaces()
+                    for (index in 0 until scopes.length()) {
+                        val scope = scopes.getJSONObject(index)
+                        if (scope.getString("kind") == "project" && scope.getString("state") == "active") {
+                            auth.sharedProject(scope.getString("resourceId"))
+                        }
+                    }
+                    stage("retained-shared-scopes-open")
+                    E2eeContentArchive(NativePrivateProducts.account(app.workspaceScope, owner)).capture()
+                }
+            }
+            assertEquals(owner, archive.getString("ownerId"))
+            assertEquals("device_snapshot", archive.getString("source"))
+            assertTrue(archive.isNull("billingEvidence"))
+            val sections = archive.getJSONArray("sections")
+            val retainedScopes = mutableSetOf<String>()
+            for (index in 0 until sections.length()) {
+                val data = sections.getJSONObject(index).getJSONObject("data")
+                assertEquals("history-only", data.getString("execution"))
+                val entries = data.getJSONArray("entries")
+                for (entryIndex in 0 until entries.length()) {
+                    val entry = entries.getJSONObject(entryIndex)
+                    val scope = entry.optJSONObject("scope") ?: continue
+                    assertEquals(owner, scope.getString("ownerId"))
+                    if (entry.getString("placement") == "remote") retainedScopes.add(scope.getString("kind"))
+                }
+            }
+            assertEquals(setOf("personal", "project", "space"), retainedScopes)
+            stage("retained-archive-verified")
+        }
         backgroundMain()
     }
     private fun backgroundMain(){
@@ -131,7 +169,7 @@ class NativePrivateVaultUnlockUiTest {
     }
     @Test fun b_systemPinOpensRetainedContentAndBackgroundRelocks(){
         val copy=showLock();prompt(copy);requireNotNull(device.findObject(screenLock(copy))).click();signal("pin")
-        retainedContentAndBackgroundLock()
+        retainedContentAndBackgroundLock(verifyArchive = InstrumentationRegistry.getArguments().getString("genesisVerifyRetainedArchive") == "true")
     }
     @Test fun c_backgroundCannotAdmitAPendingFingerprint(){
         val copy=showLock();prompt(copy);backgroundMain()

@@ -30,8 +30,8 @@ class NativeRetainedQaIdentityDeliveryTest {
         val app=InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as GenesisApplication
         check(args.getString("genesisFullQaHttps")=="true"&&BuildConfig.DEBUG&&app.packageName=="ru.genesis.calendar.qa1103.debug"&&AUTH_ORIGIN=="https://localhost:4443")
         withContext(Dispatchers.IO){
-            val expected=requireNotNull(CachedAccountEntry(app).read(app.workspaceScope)).identity
-            check(expected.privateVault&&expected.uid.startsWith("qa-")&&expected.email.endsWith("@example.invalid"))
+            val restoreRetainedScope = args.getString("genesisRestoreRetainedScope") == "true"
+            val cache = CachedAccountEntry(app)
             val certificate=CertificateFactory.getInstance("X.509").generateCertificate(ByteArrayInputStream(Base64.getDecoder().decode(requireNotNull(args.getString("genesisFixtureCa")))))
             val trust=KeyStore.getInstance(KeyStore.getDefaultType()).apply{load(null);setCertificateEntry("owned-loopback",certificate)}
             val managers=TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).apply{init(trust)}
@@ -55,7 +55,12 @@ class NativeRetainedQaIdentityDeliveryTest {
                     }finally{connection.disconnect()}
                 }
                 val delivered=get("/api/qa/login?tier=business")
-                check(delivered.getBoolean("synthetic")&&delivered.getString("userId")==expected.uid)
+                check(delivered.getBoolean("synthetic"))
+                val deliveredOwner = delivered.getString("userId")
+                val retainedScope = if (restoreRetainedScope) CloudAccountSnapshot.scopeFor(deliveredOwner) else app.workspaceScope
+                val expected = requireNotNull(cache.read(retainedScope)).identity
+                check(expected.privateVault && expected.uid == deliveredOwner && expected.uid.startsWith("qa-") &&
+                    expected.email.endsWith("@example.invalid"))
                 val cookie=requireNotNull(sessionCookie).also{check(it.present&&it.value.isNotBlank())}
                 val response=get("/api/session",cookie.value)
                 val identity=requireNotNull(AuthProtocol.identity(response))
@@ -64,6 +69,7 @@ class NativeRetainedQaIdentityDeliveryTest {
                 val payload=JSONObject().put("cookie",current.value).put("csrf",AuthProtocol.csrf(response.getString("csrf"))).put("expiresAt",current.expiresAt)
                 check(app.getSharedPreferences("genesis.native.auth.v1",Context.MODE_PRIVATE).edit()
                     .putString("session",LocalCipher().encrypt(payload.toString(),"genesis.native.auth.v2")).commit())
+                if (restoreRetainedScope && app.workspaceScope != retainedScope) app.activateAccount(expected.uid)
             }finally{HttpsURLConnection.setDefaultSSLSocketFactory(previous)}
         }
     }
