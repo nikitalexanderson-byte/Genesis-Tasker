@@ -26,7 +26,7 @@ export async function seedProjectImportHistory({context,baseURL,space,project,ta
  return{taskId,title,actorTitle};
 }
 
-export async function readProjectImportHistory({page,context,fixture,output}){
+export async function readProjectImportHistory({page,context,fixture,output,withRateRetry}){
  const {taskId,title,actorTitle}=fixture.importHistory;
  const historyPath=`/api/shared/projects/${fixture.project.id}/data-history?taskId=${taskId}`;
  assert.equal((await context.request.get(historyPath)).status(),409);
@@ -34,9 +34,16 @@ export async function readProjectImportHistory({page,context,fixture,output}){
  const task=page.getByRole('dialog',{name:title,exact:true});
  await task.getByRole('tab',{name:/^Комментарии · \d+$/}).click();
  const activity=task.locator('.shared-activity');
- await activity.locator(':scope > summary').click();
+ const summary=activity.locator(':scope > summary');
  const imported=activity.locator('.shared-imported-history');
- await imported.getByText(actorTitle,{exact:true}).waitFor({timeout:1200000});
+ const author=imported.getByText(actorTitle,{exact:true});
+ const error=imported.getByRole('alert');
+ await withRateRetry('imported task history',async()=>{
+  if(await error.isVisible())await imported.getByRole('button',{name:'Обновить',exact:true}).click();
+  else await summary.click();
+  await author.or(error).first().waitFor({timeout:1200000});
+  if(!await author.isVisible())throw new Error('The imported history reader refused the request.');
+ });
  await imported.getByText('1 → 2',{exact:true}).waitFor();
  assert.equal(await imported.getByRole('listitem').count(),1);
  await task.screenshot({path:`${output}/shared-import-history-readback.png`,animations:'disabled'});

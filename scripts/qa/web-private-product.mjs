@@ -638,7 +638,9 @@ try{
    report.sharedRecordsReadback=await readSharedRecords({page,fixture:sharedFixture,output});save();
   });
   if(importHistoryJourney)await check('imported task history remains visible in the authorized task after migration',async()=>{
-   report.importHistoryReadback=await readProjectImportHistory({page,context,fixture:sharedFixture,output});save();
+   if(process.env.GENESIS_QA_IMPORT_HISTORY_DIAGNOSTICS==='true')await debug.send('Debugger.setPauseOnExceptions',{state:'all'});
+   try{report.importHistoryReadback=await readProjectImportHistory({page,context,fixture:sharedFixture,output,withRateRetry});save();}
+   finally{await debug.send('Debugger.setPauseOnExceptions',{state:'none'});}
   });
   if(sharedFilesJourney)await check('migrated multi-chunk attachment and photo open through the normal authorized task interface',async()=>{
    await page.locator(`[data-shared-task-id="${sharedFixture.task.id}"]`).getByText(sharedFixture.task.title,{exact:true}).click();

@@ -545,13 +545,18 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
   }, [taskProjectId, taskId]);
   useEffect(() => {
     if (!taskProjectId || !taskId) return;
-    let live = true;
+    let live = true, refreshing = false;
     const refresh = () => {
-      if (privateMembershipUi() || !navigator.onLine || document.visibilityState !== "visible") return;
-      void Promise.all([loadSharedProject(taskProjectId), loadSharedTask(taskProjectId, taskId, true)]).then(([result, task]) => {
+      if (refreshing || privateMembershipUi() || !navigator.onLine || document.visibilityState !== "visible") return;
+      refreshing = true;
+      const projectRead = loadSharedProject(taskProjectId);
+      const taskRead = loadSharedTask(taskProjectId, taskId, true);
+      const detailRead = Promise.all([projectRead, taskRead]).then(([result, task]) => {
         if (live) setTaskSnapshot({ ...result, tasks: [...result.tasks.filter(item => item.id !== task.id), task] });
       }).catch(error => { if(live && error && typeof error==="object" && "status" in error && [401,403,404].includes(Number(error.status))) {setTaskSnapshot(null);setTaskId("");setComments([]);setMessage(translateText("Эта задача больше недоступна."));} });
-      void listSharedComments(taskProjectId,taskId).then(items=>{if(live)setComments(items);}).catch(()=>undefined);
+      const commentsRead = listSharedComments(taskProjectId,taskId).then(items=>{if(live)setComments(items);}).catch(()=>undefined);
+      // One failed detail request can settle before its sibling finishes.
+      void Promise.allSettled([projectRead, taskRead, detailRead, commentsRead]).then(() => { refreshing = false; });
     };
     const timer = window.setInterval(refresh, 5_000);
     return () => { live = false; window.clearInterval(timer); };
