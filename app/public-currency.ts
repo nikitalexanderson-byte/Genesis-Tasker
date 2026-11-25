@@ -13,6 +13,10 @@ export function savedPublicCurrency():PublicCurrency|null {
   try {return publicCurrency(localStorage.getItem(PUBLIC_CURRENCY_KEY));} catch {return null;}
 }
 
+export function requestedPublicCurrency():PublicCurrency|null {
+  return typeof location==='undefined'?null:publicCurrency(new URLSearchParams(location.search).get('currency'));
+}
+
 export function savePublicCurrency(currency:PublicCurrency|null):void {
   try {
     if(currency)localStorage.setItem(PUBLIC_CURRENCY_KEY,currency);

@@ -158,6 +158,7 @@ function genesisBillingPlayReceipt(array $verified, array $order, string $purcha
     if(array_key_exists('purchaseType',$verified))throw new DomainException('BILLING_TEST_PAYMENT_UNSUPPORTED');
     if (($verified['obfuscatedExternalAccountId']??null)!==$order['owner_hash']
         || ($verified['obfuscatedExternalProfileId']??null)!==hash('sha256',$order['id'])
+        || ($verified['quantity']??1)!==1
         || !in_array($verified['purchaseState']??null,[0,1],true) || !ctype_digit((string)($verified['purchaseTimeMillis']??'')))
         throw new DomainException('BILLING_RECEIPT_MISMATCH');
     return new GenesisVerifiedBillingReceipt('google-play',$purchaseToken,$order['id'],$verified['purchaseState']===0?'paid':'refunded',

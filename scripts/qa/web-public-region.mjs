@@ -12,6 +12,7 @@ export async function verifyPublicRegions({browser,baseURL,output}) {
     {id:'unknown-region',ip:'unknown',path:'/?lang=en',destination:'/?lang=en',donation:true},
     {id:'suggestion-from-gps',ip:'outside-RU',gps:{latitude:56.8389,longitude:60.6057},path:'/',destination:'/',suggested:'ru'},
     {id:'suggestion-from-ip',ip:'RU',path:'/',destination:'/',suggested:'ru'},
+    {id:'android-dollar-link',ip:'RU',path:'/?lang=ru&currency=USD#pricing',destination:'/?lang=ru&currency=USD#pricing',currency:'USD'},
   ];
   const results=[];
   for(const scenario of cases){
@@ -51,7 +52,8 @@ export async function verifyPublicRegions({browser,baseURL,output}) {
       assert.match(await merchant.innerText(),/Iurii Logvinov/);
       assert.match(await merchant.innerText(),/772495179010/);
       if(scenario.path.includes('lang=')){
-        await page.locator(`.public-plans[data-currency="${scenario.path.includes('lang=ru')?'RUB':'USD'}"]`).waitFor();
+        const currency=scenario.currency??(scenario.path.includes('lang=ru')?'RUB':'USD');
+        await page.locator(`.public-plans[data-currency="${currency}"]`).waitFor();
         assert.equal(await page.getByRole('radio').count(),14);
       }
       if(scenario.id==='gps-ru-vpn'){

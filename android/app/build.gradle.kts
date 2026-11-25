@@ -86,6 +86,7 @@ android {
         create("play") {
             initWith(getByName("release"))
             buildConfigField("boolean", "PLAY_DISTRIBUTION", "true")
+            buildConfigField("boolean", "PLAY_BILLING_ENABLED", "true")
         }
         // Local QA uses release R8/resource packaging under its own package and
         // a disposable debug certificate, so it cannot replace a user's release.

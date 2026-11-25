@@ -80,20 +80,24 @@ internal fun nativeBillingProviderPrice(offer: JSONObject?, provider: String): P
     if (provider !in setOf("google-play","yookassa","lemon-squeezy") || amount !in 1L..9_007_199_254_740_991L || currency != if (provider == "lemon-squeezy") "USD" else "RUB") return null
     return amount to currency
 }
-internal fun nativeBillingProviderChoices(catalog: JSONObject?, offer: JSONObject?, playDistribution: Boolean): List<String> {
+internal fun nativeBillingProviderChoices(catalog: JSONObject?, offer: JSONObject?, playDistribution: Boolean,
+    playBillingEnabled: Boolean = false): List<String> {
     val preferred = catalog?.optJSONObject("routing")?.optString("preferredProvider")
     val providers = catalog?.optJSONArray("providers") ?: return emptyList()
     return (0 until providers.length()).mapNotNull { providers.optJSONObject(it) }.filter {
         val id = it.optString("id")
-        id == "yookassa" && !playDistribution &&
-            it.optString("reason") != "client-unavailable" && nativeBillingProviderPrice(offer,id) != null
+        val forDistribution = if (playDistribution) {
+            id == "google-play" && playBillingEnabled && it.optBoolean("available") &&
+                id in offer?.optJSONArray("availableProviders").strings()
+        } else id == "yookassa"
+        forDistribution && it.optString("reason") != "client-unavailable" && nativeBillingProviderPrice(offer,id) != null
     }.map { it.getString("id") }.distinct().sortedBy { if (it == preferred) 0 else 1 }
 }
 
 internal fun nativePaddleWebsiteUrl(playDistribution: Boolean, origin: String, language: String): String? {
     if (playDistribution || origin != "https://genesiscalendar.com") return null
     val locale = language.takeIf { it.matches(Regex("[a-z]{2}")) } ?: "en"
-    return "$origin/?lang=$locale#pricing"
+    return "$origin/?lang=$locale&currency=USD#pricing"
 }
 
 internal fun nativeBillingMoney(amount: Long, language: String, currency: String = "RUB"): String {
@@ -378,7 +382,7 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
         finally { loading = false }
     }
     val offer = nativeBillingOffer(catalog, selected, months)
-    val providerChoices = nativeBillingProviderChoices(catalog,offer,BuildConfig.PLAY_DISTRIBUTION)
+    val providerChoices = nativeBillingProviderChoices(catalog,offer,BuildConfig.PLAY_DISTRIBUTION,BuildConfig.PLAY_BILLING_ENABLED)
     // Keep a still-valid manual choice when routing or plan data refreshes.
     LaunchedEffect(providerChoices) { if (provider !in providerChoices) provider = providerChoices.firstOrNull().orEmpty() }
     val selectedPrice = nativeBillingProviderPrice(offer,provider)
@@ -498,7 +502,8 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                                 NativeUpgradeTier(plan, months, selected == plan, expanded == plan,
                                     access.source != "trial" && (access.lifetimePremium && plan == "premium4life" ||
                                         !access.lifetimePremium && access.currentPlan() == plan),
-                                    policy, language, featureCopy, !busy, nativeBillingProviderPrice(tierOffer,provider)) {
+                                    policy, language, featureCopy, !busy,
+                                    nativeBillingProviderPrice(tierOffer,provider), playPricing = BuildConfig.PLAY_DISTRIBUTION) {
                                     expanded = if (expanded == plan) null else plan; selected = plan; error = false; quoteChanged = false
                                 }
                             }
@@ -535,7 +540,9 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                                     }
                                     if (total.referralDiscount > 0L) UpgradeText(referralCopy(language).getString("discount") + ": −" +
                                         nativeBillingMoney(total.referralDiscount, language, total.currency), color = upgradeScheme.primary)
-                                    UpgradeText(copy("К оплате: ", "Total: ") + nativeBillingMoney(total.amount, language, total.currency), style = MaterialTheme.typography.titleMedium)
+                                    if (provider != "google-play") {
+                                        UpgradeText(copy("К оплате: ", "Total: ") + nativeBillingMoney(total.amount, language, total.currency), style = MaterialTheme.typography.titleMedium)
+                                    }
                                     total.validUntil?.let { expiry -> UpgradeText(copy("Новый срок доступа до: ", "New access period ends: ") +
                                         expiry.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.forLanguageTag(language))),
                                         style = MaterialTheme.typography.bodySmall, color = upgradeScheme.onSurfaceVariant) }
@@ -636,7 +643,8 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                                 }
                                 finally { busy = false }
                             } }, Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("billing-checkout"), enabled = canPay) {
-                                UpgradeText(if (busy) copy("Подготавливаем оплату…", "Preparing payment…") else copy("Перейти к оплате", "Continue to payment"),
+                                UpgradeText(if (busy) copy("Подготавливаем оплату…", "Preparing payment…")
+                                    else if (provider == "google-play") "Google Play" else copy("Перейти к оплате", "Continue to payment"),
                                     color = if (canPay) upgradeScheme.onPrimary else upgradeScheme.onSurfaceVariant)
                             }
                             }
@@ -658,7 +666,8 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
 }
 
 @Composable internal fun NativeUpgradeTier(plan: String, months: Int, selected: Boolean, expanded: Boolean, current: Boolean,
-    policy: JSONObject?, language: String, featureCopy: JSONObject, enabled: Boolean, displayPrice: Pair<Long,String>?, onClick: () -> Unit) {
+    policy: JSONObject?, language: String, featureCopy: JSONObject, enabled: Boolean, displayPrice: Pair<Long,String>?,
+    playPricing: Boolean = false, onClick: () -> Unit) {
     val en = language == "en"
     val tint = when (plan) { "free" -> Color(0xff373268); "standart" -> Color(0xff6623a1); "premium" -> Color(0xff8c245f); "business" -> Color(0xff3e42a8); else -> Color(0xff6c286e) }
     androidx.compose.material3.Surface(onClick = onClick, enabled = enabled, shape = AffairsLayout.shape,
@@ -672,7 +681,11 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                     if (current) UpgradeText(if (en) "Current plan" else "Ваш тариф", style = MaterialTheme.typography.labelSmall, color = Color(0xffecd9ff))
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    UpgradeText(nativeBillingMoney(displayPrice?.first ?: nativePlanListAmount(plan, months), language, displayPrice?.second ?: "RUB"), style = MaterialTheme.typography.titleMedium, color = Color.White)
+                    if (playPricing && plan != "free") {
+                        UpgradeText("Google Play", style = MaterialTheme.typography.titleMedium, color = Color.White)
+                    } else {
+                        UpgradeText(nativeBillingMoney(displayPrice?.first ?: nativePlanListAmount(plan, months), language, displayPrice?.second ?: "RUB"), style = MaterialTheme.typography.titleMedium, color = Color.White)
+                    }
                     UpgradeText(when (plan) { "free" -> if (en) "free" else "бесплатно"; "premium4life" -> if (en) "one payment" else "один раз"; else -> if (months == 12) (if (en) "per year" else "за год") else (if (en) "per month" else "за месяц") },
                         style = MaterialTheme.typography.labelSmall, color = Color(0xffecd9ff))
                 }

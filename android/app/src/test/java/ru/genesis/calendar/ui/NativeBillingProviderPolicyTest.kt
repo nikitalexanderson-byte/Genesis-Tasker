@@ -121,11 +121,20 @@ class NativeBillingProviderPolicyTest {
 
     @Test fun paddleWebsiteOnlyOpensFromTheDirectAppForTheProductionOrigin() {
         val origin = "https://genesiscalendar.com"
-        assertEquals("$origin/?lang=ru#pricing", nativePaddleWebsiteUrl(false, origin, "ru"))
-        assertEquals("$origin/?lang=en#pricing", nativePaddleWebsiteUrl(false, origin, "ru&ref=external"))
+        assertEquals("$origin/?lang=ru&currency=USD#pricing", nativePaddleWebsiteUrl(false, origin, "ru"))
+        assertEquals("$origin/?lang=en&currency=USD#pricing", nativePaddleWebsiteUrl(false, origin, "ru&ref=external"))
         assertNull(nativePaddleWebsiteUrl(true, origin, "en"))
         assertNull(nativePaddleWebsiteUrl(false, "https://localhost:4443", "en"))
         assertNull(nativePaddleWebsiteUrl(false, "$origin.invalid", "en"))
+    }
+
+    @Test fun playButtonRequiresThePlayBuildAndVerifiedProduct() {
+        val playCatalog = JSONObject("""{"providers":[{"id":"google-play","available":true},{"id":"yookassa","available":true}]}""")
+        val playOffer = offer().put("availableProviders", org.json.JSONArray().put("google-play"))
+        assertEquals(listOf("google-play"), nativeBillingProviderChoices(playCatalog, playOffer, true, true))
+        assertEquals(emptyList<String>(), nativeBillingProviderChoices(playCatalog, playOffer, true, false))
+        assertEquals(emptyList<String>(), nativeBillingProviderChoices(playCatalog, offer(), true, true))
+        assertEquals(listOf("yookassa"), nativeBillingProviderChoices(playCatalog, playOffer, false, true))
     }
     @Test fun quoteAmountsAreIntegerAndPendingAuthorizationKeepsItsOriginalPrice() {
         val value = offer().put("amountMinor",700).put("currency","USD")
