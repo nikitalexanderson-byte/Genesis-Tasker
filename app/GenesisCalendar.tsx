@@ -7116,6 +7116,7 @@ export function GenesisCalendar() {
         error={authResolved ? authError || syncError : ""}
         language={language}
         onLanguageChange={selectLanguage}
+        onLanguageSuggestion={setLanguage}
         onGoogle={() => void handleGoogleSignIn()}
       />
       </Suspense>
