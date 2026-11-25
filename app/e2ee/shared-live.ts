@@ -48,6 +48,14 @@ function object(value:unknown):asserts value is ObjectValue{if(!value||typeof va
 function parse(value:unknown){if(typeof value!=='string')throw new Error('E2EE_SHARED_DOMAIN_INVALID');return parseLegacyMigrationJson(value,'E2EE_SHARED_DOMAIN_INVALID',16*1024*1024);}
 function number(value:unknown){if(!Number.isSafeInteger(value)||Number(value)<0)throw new Error('E2EE_INVALID_REVISION');return value as number;}
 function plain(version:ProductVersion):SharedRecordBody{if(version.deleted||!version.body)throw new Error('E2EE_PRODUCT_DELETED');return version.body as SharedRecordBody;}
+function workflowVersion(record:ObjectValue,revision:number,createdAt:unknown,actorId:unknown){
+ const definition=parse(record.definition_json);exactKeys(definition,['statuses','transitions']);
+ if(!Array.isArray(definition.statuses)||!Array.isArray(definition.transitions)||revision<1||
+   (record.enabled!==0&&record.enabled!==1)||typeof createdAt!=='string'||!Number.isFinite(Date.parse(createdAt)))
+  throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
+ if(actorId!==null)assertTechnical(actorId);
+ return{statuses:definition.statuses,transitions:definition.transitions,enabled:record.enabled===1,revision,createdAt,actorId};
+}
 export function validateSharedLiveRequest(binding:SharedDomainBinding,input:unknown):SavedRequest{
  exactKeys(input,['protocol','scopeId','id','method','path','body','createdAt','edits','result','complete']);assertTechnical(input.id);
  if(input.protocol!==1||input.scopeId!==binding.scopeId||!['POST','PATCH','PUT','DELETE'].includes(String(input.method))||typeof input.path!=='string'||input.path.length>2048
@@ -182,6 +190,79 @@ export class SharedLiveModel{
   // change under an unrelated plaintext query/index or leak private filters.
   return privateSharedTaskPage(tasks,url.searchParams.get('sort')??'position');
  }
+ async #workflowHistory(entity:ProductVersion,before:number){
+  if(this.ports.binding.kind!=='project'||!this.ports.history)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');
+  const page=await this.ports.history(entity.entityId,before);this.ports.current();
+  if(page.versions.length!==page.origins.length)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
+  const versions:ReturnType<typeof workflowVersion>[]=[],archivedVersions:ReturnType<typeof workflowVersion>[]=[];
+  let bootstrap:ReturnType<typeof workflowVersion>|null=null;
+  for(const [at,version] of page.versions.entries()){
+   const origin=page.origins[at];
+   if(version.kind!=='workflow'||version.entityId!==entity.entityId||origin.entityId!==version.entityId||origin.revision!==version.revision)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
+   if(version.deleted)continue;
+   const record=plain(version).record;
+   if(origin.bootstrap){
+    if(bootstrap||version.revision!==1)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
+    bootstrap=workflowVersion(record,number(record.revision),record.updated_at,record.updated_by);
+   }else versions.push(workflowVersion(record,version.revision,record.updated_at,record.updated_by));
+  }
+  if(bootstrap){
+   const baseline=bootstrap;
+   if(!this.ports.sourceTable)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');
+   const rows=await this.ports.sourceTable('shared_project_workflow_versions');this.ports.current();
+   if(rows.length>10000)throw new Error('E2EE_SHARED_QUERY_TOO_LARGE');
+   const seen=new Set<number>();
+   for(const row of rows){
+    if(row.project_id!==this.ports.binding.resourceId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+    const revision=number(row.revision);
+    if(seen.has(revision)||revision>baseline.revision)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
+    seen.add(revision);
+    archivedVersions.push(workflowVersion(row,revision,row.created_at,row.actor_id));
+   }
+   const original=archivedVersions.find(row=>row.revision===baseline.revision);
+   if(!original)archivedVersions.push(baseline);
+   else if(original.enabled!==baseline.enabled||!samePrivateJson(original.statuses,baseline.statuses)||
+     !samePrivateJson(original.transitions,baseline.transitions))throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
+   archivedVersions.sort((left,right)=>right.revision-left.revision);
+  }
+  return{versions,archivedVersions,nextCursor:bootstrap?null:page.nextBefore};
+ }
+ async #mapHistory(entity:ProductVersion,before:number,context:SharedLiveContext){
+  if(!this.ports.history)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');
+  const page=await this.ports.history(entity.entityId,before);this.ports.current();
+  if(page.versions.length!==page.origins.length)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
+  const versions:ObjectValue[]=[];
+  let bootstrap:ProductVersion|undefined;
+  for(const [index,version] of page.versions.entries()){
+   const origin=page.origins[index];
+   if(version.kind!=='mindmap'||version.entityId!==entity.entityId||origin.entityId!==version.entityId||origin.revision!==version.revision)
+    throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
+   if(version.deleted)continue;
+   if(origin.bootstrap){
+    if(bootstrap||version.revision!==1)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
+    bootstrap=version;
+   }else versions.push(this.#row(version,context));
+  }
+  if(!bootstrap)return{versions,nextCursor:page.nextBefore};
+  if(!this.ports.sourceTable)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');
+  const baseline=plain(bootstrap).record,id=baseline.id,baselineRevision=number(baseline.revision);
+  const baselineDocument=validateMindmap(parse(baseline.content));
+  if(baselineRevision<1||baselineDocument.id!==id)throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
+  const source=await this.ports.sourceTable('shared_mindmap_versions');this.ports.current();
+  const archived=new Map<number,ObjectValue>();
+  for(const row of source){
+   if(row.map_id!==id)continue;
+   if(row.space_id!==baseline.space_id||row.project_id!==baseline.project_id)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+   const revision=number(row.revision),document=validateMindmap(parse(row.content));
+   if(revision<1||revision>baselineRevision||archived.has(revision)||document.id!==id||document.projectId!==baselineDocument.projectId||
+     typeof row.updated_at!=='string'||!Number.isFinite(Date.parse(row.updated_at))||
+     revision===baselineRevision&&!samePrivateJson(document,baselineDocument))
+    throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
+   archived.set(revision,{id,revision,document,updatedAt:row.updated_at,schemaVersion:1,historyOrigin:'migration'});
+  }
+  if(!archived.has(baselineRevision))archived.set(baselineRevision,{id,revision:baselineRevision,document:baselineDocument,updatedAt:baseline.updated_at,schemaVersion:1,historyOrigin:'migration'});
+  return{versions:[...versions,...[...archived.values()].sort((left,right)=>Number(right.revision)-Number(left.revision))],nextCursor:null};
+ }
  async #events(versions:ProductVersion[],context:SharedLiveContext){void context;
   if(this.ports.binding.kind!=='project'||!this.ports.eventCache)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');
   if(!this.ports.online){const saved=await this.ports.eventCache.load();this.ports.current();if(!saved)throw new Error('E2EE_OFFLINE_CONTENT_UNAVAILABLE');return saved;}
@@ -234,8 +315,9 @@ export class SharedLiveModel{
   if(segments[0]==='workflow'){
    const saved=live.find(row=>row.kind==='workflow'),definition=saved?parse(plain(saved).record.definition_json):{statuses:[],transitions:[]};object(definition);
    if(segments[1]==='history'){
-    if(!saved||!this.ports.history)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');const before=url.searchParams.has('before')?number(Number(url.searchParams.get('before'))):Number.MAX_SAFE_INTEGER;
-    const page=await this.ports.history(saved.entityId,before);this.ports.current();return{versions:page.versions.filter(row=>!row.deleted).map(row=>{const body=plain(row),definition=parse(body.record.definition_json);object(definition);return{...definition,enabled:body.record.enabled===1,revision:row.revision,createdAt:body.record.updated_at,actorId:body.record.updated_by};}),nextCursor:page.nextBefore};
+    if(!saved)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');
+    const before=url.searchParams.has('before')?number(Number(url.searchParams.get('before'))):Number.MAX_SAFE_INTEGER;
+    return this.#workflowHistory(saved,before);
    }
    const statuses=list('status'),counts=Object.fromEntries(statuses.map(status=>[String(status.id),live.filter(row=>row.kind==='task'&&plain(row).record.status_id===status.id).length]));
    return{config:{...definition,enabled:saved?plain(saved).record.enabled===1:false,revision:saved?.revision??0},counts,context:{project:this.#row(this.#find(versions,'project',this.ports.binding.resourceId),context),statuses,customFieldDefinitions:list('custom-field')}};
@@ -251,9 +333,10 @@ export class SharedLiveModel{
   }
   if(segments.length===3&&segments[2]==='history'&&['mindmaps','custom-fields','templates','tasks'].includes(segments[0])){
    if(!this.ports.history)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');const kinds:Record<string,ProductKind>={mindmaps:'mindmap','custom-fields':'custom-field',templates:'template',tasks:'task'},kind=kinds[segments[0]],entity=this.#find(versions,kind,segments[1]);
-   const before=url.searchParams.has('before')?number(Number(url.searchParams.get('before'))):Number.MAX_SAFE_INTEGER,page=await this.ports.history(entity.entityId,before);this.ports.current();
+   const before=url.searchParams.has('before')?number(Number(url.searchParams.get('before'))):Number.MAX_SAFE_INTEGER;
+   if(kind==='mindmap')return this.#mapHistory(entity,before,context);
+   const page=await this.ports.history(entity.entityId,before);this.ports.current();
    const history:ObjectValue[]=page.versions.map(row=>row.deleted?{id:segments[1],revision:row.revision,deleted:true}:{...(kind==='custom-field'?{field:this.#row(row,context)}:this.#row(row,context)),revision:row.revision});
-   if(kind==='mindmap'&&page.nextBefore===null){if(!this.ports.sourceTable)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');const original=await this.ports.sourceTable('shared_mindmap_versions');this.ports.current();for(const row of original.filter(row=>row.map_id===segments[1]))history.push({id:segments[1],revision:Number(row.revision),document:validateMindmap(parse(row.content)),updatedAt:row.updated_at,schemaVersion:1,historyOrigin:'migration'});}
    return{versions:history,nextCursor:page.nextBefore};
   }
   if(segments[0]==='mindmaps'&&segments.length===1)return{maps:list('mindmap').map(row=>({...row,schemaVersion:1}))};

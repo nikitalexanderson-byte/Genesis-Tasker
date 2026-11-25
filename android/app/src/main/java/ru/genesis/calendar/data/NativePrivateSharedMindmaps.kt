@@ -16,7 +16,8 @@ internal class NativePrivateSharedMindmaps(private val storageScope:String,priva
         E2eeKeys.exact(value,setOf("protocol","ownerId","spaceId","id","document","expectedRevision","staged","complete","createdAt"));check(value.getInt("protocol")==1&&value.getString("ownerId")==owner&&value.getString("spaceId")==space&&value.getString("id")==id&&value.get("staged") is Boolean&&value.get("complete") is Boolean){"E2EE_MINDMAPS_SOURCE_INVALID"}
         E2eeCommands.integer(value.get("expectedRevision"));MindmapDocument.parse(value.getJSONObject("document"));Instant.parse(value.getString("createdAt"));JSONObject(value.toString())},::check)
     private fun drafts()=account.device.vault.listLocal("draft","shared-map-draft:$space:").map{key->draft(key.removePrefix("shared-map-draft:$space:")).load()?:error("E2EE_PRIVATE_DOCUMENT_CORRUPT")}.sortedWith(compareBy({it.value.getString("createdAt")},{it.value.getString("id")}))
-    private fun record(value:JSONObject)=NativeMapRecord(MindmapDocument.parse(value.getJSONObject("document")),E2eeCommands.integer(value.get("revision"),1))
+    private fun record(value:JSONObject)=NativeMapRecord(MindmapDocument.parse(value.getJSONObject("document")),
+        E2eeCommands.integer(value.get("revision"),1),migratedHistory=value.optString("historyOrigin")=="migration")
     override suspend fun load(refresh:Boolean){check();if(records!=null&&!refresh)return;val response=request("");val current=rows(response.getJSONArray("maps")).map(::record)
         val pending=drafts().filter{!it.value.getBoolean("complete")}.map{saved->val value=saved.value;NativeMapRecord(MindmapDocument.parse(value.getJSONObject("document")),value.getLong("expectedRevision")+if(value.getBoolean("staged"))1L else 0L,pending=JSONObject().put("id",value.get("id")),dirty=true)}
         records=(current+pending).associateBy{it.document.id}.values.toList();check()

@@ -6,7 +6,7 @@ import { currentFeatureAccess, requireQuotaGrowth } from './feature-access';
 
 type Sealed = { iv: string; ciphertext: string };
 type Envelope = Sealed & { id: string; schemaVersion: number; revision: number; updatedAt: string };
-export type MapRecord = { document: Mindmap; revision: number; updatedAt: string; pending?: boolean; draftKey?: string };
+export type MapRecord = { document: Mindmap; revision: number; updatedAt: string; pending?: boolean; draftKey?: string; historyOrigin?: "migration" };
 type PendingMap = { schemaVersion: 1 | 2; expectedRevision: number; operationId: string } & Sealed;
 type Access = ReturnType<typeof sharedMindmapDocumentAccess>;
 export type Conversion = { mapId: string; nodeId: string; taskId: string; task?: GenesisTask; applied?: boolean };

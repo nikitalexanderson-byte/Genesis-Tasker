@@ -183,6 +183,8 @@ internal object WorkflowLifecycle {
         }
         return sorted(a) == sorted(b)
     }
+    fun historyKey(version: JSONObject): String = "${version.optString("historyOrigin", "current")}:${version.getLong("revision")}"
+
     fun history(previous: JSONObject?, page: JSONObject, before: Long?, ceiling: Long): JSONObject {
         val versions = rows(page.getJSONArray("versions")); require(versions.size <= 50) { "WORKFLOW_HISTORY_INVALID" }
         var last = before ?: (ceiling + 1)
@@ -193,10 +195,21 @@ internal object WorkflowLifecycle {
             config.put("createdAt", version.getString("createdAt"))
         }
         val cursor = page.get("nextCursor")
-        require(cursor == JSONObject.NULL || versions.size == 50 && integer(cursor, 1) == last) { "WORKFLOW_HISTORY_INVALID" }
+        val privateHistory = page.has("archivedVersions")
+        val fullPage = if (privateHistory) versions.isNotEmpty() else versions.size == 50
+        require(cursor == JSONObject.NULL || fullPage && integer(cursor, 1) == last) { "WORKFLOW_HISTORY_INVALID" }
         if (previous != null) require(previous.get("nextCursor") != JSONObject.NULL && previous.getLong("nextCursor") == before) { "WORKFLOW_HISTORY_INVALID" }
-        val combined = (previous?.let { rows(it.getJSONArray("versions")) } ?: emptyList()) + safe
-        require(combined.size <= 10000 && combined.map { it.getLong("revision") }.toSet().size == combined.size) { "WORKFLOW_HISTORY_INVALID" }
+        val archived = if (privateHistory) rows(page.getJSONArray("archivedVersions")) else emptyList()
+        require(archived.isEmpty() || cursor == JSONObject.NULL) { "WORKFLOW_HISTORY_INVALID" }
+        var archivedBefore = Int.MAX_VALUE.toLong() + 1
+        val safeArchived = archived.map { version ->
+            val config = config(version); val revision = config.getLong("revision")
+            require(revision in 1 until archivedBefore) { "WORKFLOW_HISTORY_INVALID" }; archivedBefore = revision
+            val createdAt = version.getString("createdAt"); Instant.parse(createdAt)
+            config.put("createdAt", createdAt).put("historyOrigin", "migration")
+        }
+        val combined = (previous?.let { rows(it.getJSONArray("versions")) } ?: emptyList()) + safe + safeArchived
+        require(combined.size <= 10000 && combined.map(::historyKey).toSet().size == combined.size) { "WORKFLOW_HISTORY_INVALID" }
         return JSONObject().put("versions", JSONArray(combined)).put("nextCursor", cursor)
     }
 }

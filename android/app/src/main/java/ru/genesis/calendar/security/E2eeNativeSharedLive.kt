@@ -46,7 +46,7 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
                 "version"->{E2eeKeys.exact(payload,setOf("entityId"));JSONObject((heads[payload.getString("entityId")]?:error("E2EE_PRODUCT_ENTITY_MISSING")).toString())}
                 "localVersions"->{E2eeKeys.exact(payload,emptySet());records.product.localVersions()}
                 "history"->{E2eeKeys.exact(payload,setOf("entityId","before"));check(!account.offline){"E2EE_ONLINE_REQUIRED"};records.product.history(payload.getString("entityId"),E2eeCommands.integer(payload.get("before"),1))}
-                "sourceTable"->{E2eeKeys.exact(payload,setOf("table"));check(payload.getString("table") in setOf("shared_audit_events","shared_mindmap_versions")){"E2EE_SOURCE_PATH_FORBIDDEN"};records.sourceTable(payload.getString("table"))}
+                "sourceTable"->{E2eeKeys.exact(payload,setOf("table"));check(payload.getString("table") in setOf("shared_audit_events","shared_mindmap_versions","shared_project_workflow_versions")){"E2EE_SOURCE_PATH_FORBIDDEN"};records.sourceTable(payload.getString("table"))}
                 "eventLoad"->{E2eeKeys.exact(payload,emptySet());eventStore.load()?.value?.getJSONArray("events")?:JSONObject.NULL}
                 "eventSave"->{E2eeKeys.exact(payload,setOf("events"));val old=eventStore.load();eventStore.save(JSONObject().put("scopeId",binding.scopeId).put("events",payload.getJSONArray("events")),old?.serial);JSONObject().put("saved",true)}
                 "completionProposals"->{E2eeKeys.exact(payload,emptySet());records.product.completionProposals()}

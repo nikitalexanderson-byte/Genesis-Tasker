@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {setImmediate} from 'node:timers/promises';
 import {SharedLiveModel} from '../app/e2ee/shared-live.ts';
+import {sharedBodyMetadata,sharedBodyParent} from '../app/e2ee/shared-domain.ts';
 import {SharedAggregateModel,seedPersonalSharedLayouts,validatePersonalSharedState} from '../app/e2ee/shared-aggregate.ts';
 
 const deferred=()=>{let resolve;const promise=new Promise(done=>{resolve=done;});return{promise,resolve};};
@@ -106,4 +107,75 @@ test('foreign or malformed layout history refuses without manufacturing an empty
  assert.throws(()=>seedPersonalSharedLayouts([{user_id:'owner',space_id:'space',expanded_json:'["project","project"]',updated_at:'2026-11-23'}],'owner'),/INVALID_SHARED_UI_STATE/);
  assert.throws(()=>validatePersonalSharedState({...state(),layouts:{space:['project','project']}},'owner'),/INVALID_SHARED_UI_STATE/);
  assert.throws(()=>validatePersonalSharedState(null,'owner'));
+});
+
+function workflowPageFixture() {
+ const f=liveFixture(),entityId='workflow:project';
+ const createdAt='2026-11-25T06:00:00Z';
+ const definition=limit=>JSON.stringify({statuses:[{statusId:'open',wipLimit:limit,requiredFields:[]}],transitions:[]});
+ const version=(revision,originalRevision,limit)=>{
+  const record={project_id:'project',enabled:0,revision:originalRevision,definition_json:definition(limit),updated_at:createdAt,updated_by:'owner'};
+  const body={format:'genesis-shared-record-v1',kind:'workflow',scopeId:binding.scopeId,scopeKind:binding.kind,resourceId:binding.resourceId,
+   table:'shared_project_workflows',record,related:{},execution:'live'};
+  return{protocol:1,scopeId:binding.scopeId,entityId,kind:'workflow',revision,deleted:false,parentId:sharedBodyParent(body),metadata:sharedBodyMetadata(body),body};
+ };
+ const origin=(row,bootstrap=false)=>({entityId:row.entityId,revision:row.revision,bootstrap});
+ const current=version(3,3,9),older=version(2,2,8),bootstrap=version(1,2,5);
+ f.ports.versions=async()=>[current];
+ f.ports.history=async(id,before)=>{
+  assert.equal(id,entityId);
+  if(before===2)return{versions:[bootstrap],origins:[origin(bootstrap,true)],nextBefore:1};
+  assert.equal(before,Number.MAX_SAFE_INTEGER);
+  return{versions:[current,older],origins:[origin(current),origin(older)],nextBefore:2};
+ };
+ const archived=[{project_id:'project',revision:1,enabled:0,definition_json:definition(2),created_at:createdAt,actor_id:null},
+  {project_id:'project',revision:2,enabled:0,definition_json:definition(5),created_at:createdAt,actor_id:'owner'}];
+ f.ports.sourceTable=async table=>{assert.equal(table,'shared_project_workflow_versions');return archived;};
+ return{...f,archived};
+}
+
+test('workflow history preserves both migrated revisions after the live pages and omits the repeated bootstrap',async()=>{
+ const f=workflowPageFixture();let sourceReads=0;
+ const sourceTable=f.ports.sourceTable;f.ports.sourceTable=table=>{sourceReads++;return sourceTable(table);};
+ const live=await f.model.request('GET','workflow/history');
+ assert.deepEqual(live.versions.map(row=>row.revision),[3,2]);
+ assert.deepEqual(live.archivedVersions,[]);assert.equal(sourceReads,0);assert.equal(live.nextCursor,2);
+ const archived=await f.model.request('GET','workflow/history?before='+live.nextCursor);
+ assert.deepEqual(archived.versions,[]);assert.equal(archived.nextCursor,null);
+ assert.deepEqual(archived.archivedVersions.map(row=>[row.revision,row.statuses[0].wipLimit]),[[2,5],[1,2]]);
+ assert.equal(archived.archivedVersions[1].actorId,null);
+ assert.equal(sourceReads,1);
+});
+
+test('workflow history refuses a foreign project row and conflicting archived revision',async()=>{
+ const foreign=workflowPageFixture();foreign.archived[0].project_id='another-project';
+ await assert.rejects(foreign.model.request('GET','workflow/history?before=2'),/E2EE_SCOPE_BINDING_MISMATCH/);
+ const conflict=workflowPageFixture();conflict.archived[1].definition_json=conflict.archived[0].definition_json;
+ await assert.rejects(conflict.model.request('GET','workflow/history?before=2'),/E2EE_PRODUCT_HISTORY_INVALID/);
+});
+
+test('map history returns each archived version once and retains later edits with overlapping revision numbers',async()=>{
+ const f=liveFixture(),id='map',entityId='mindmap:map',updatedAt='2026-11-25T06:00:00Z';
+ const document=label=>({schemaVersion:1,id,title:'Map',pinned:false,archived:false,projectId:'project',
+  nodes:[{id:'root',parentId:null,kind:'idea',text:label,note:''}],links:[]});
+ const entity=(revision,content)=>{
+  const body={format:'genesis-shared-record-v1',kind:'mindmap',scopeId:binding.scopeId,scopeKind:binding.kind,resourceId:binding.resourceId,
+   table:'shared_mindmaps',record:{id,space_id:'space',project_id:'project',revision:2,updated_at:updatedAt,content:JSON.stringify(document(content))},
+   related:{},execution:'live'};
+  return{scopeId:binding.scopeId,entityId,revision,kind:'mindmap',deleted:false,parentId:sharedBodyParent(body),metadata:sharedBodyMetadata(body),body};
+ };
+ const migrated=entity(1,'Migrated latest'),current=entity(2,'Edited after migration');
+ f.ports.versions=async()=>[current];
+ f.ports.history=async()=>({versions:[current,migrated],nextBefore:1,
+  origins:[{entityId,revision:2,bootstrap:false},{entityId,revision:1,bootstrap:true}]});
+ const versions=[{map_id:id,space_id:'space',project_id:'project',revision:1,updated_at:updatedAt,content:JSON.stringify(document('Migrated earlier'))},
+  {map_id:id,space_id:'space',project_id:'project',revision:2,updated_at:updatedAt,content:JSON.stringify(document('Migrated latest'))}];
+ f.ports.sourceTable=async table=>{assert.equal(table,'shared_mindmap_versions');return versions;};
+ const result=await f.model.request('GET','mindmaps/map/history');
+ assert.equal(result.nextCursor,null);
+ assert.deepEqual(result.versions.map(row=>[row.revision,row.historyOrigin??'current',row.document.nodes[0].text]),[
+  [2,'current','Edited after migration'],[2,'migration','Migrated latest'],[1,'migration','Migrated earlier'],
+ ]);
+ versions[1].content=versions[0].content;
+ await assert.rejects(f.model.request('GET','mindmaps/map/history'),/E2EE_PRODUCT_HISTORY_INVALID/);
 });

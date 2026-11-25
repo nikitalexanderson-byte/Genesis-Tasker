@@ -69,6 +69,9 @@ export async function readSharedRecords({page,fixture,output}){
  const workflowHistory=workflow.locator('.shared-workflow-history');
  await workflowHistory.locator(':scope > summary').click({timeout:1200000});
  await workflowHistory.getByRole('button',{name:'Загрузить',exact:true}).click();
+ const workflowVersions=workflowHistory.locator(':scope > details');
+ await workflowVersions.nth(fixture.records.workflowVersions-1).waitFor({timeout:1200000});
+ assert.equal(await workflowVersions.count(),fixture.records.workflowVersions);
  for(const [index,limit] of fixture.records.workflowLimits.entries()){
   const version=workflowHistory.locator(':scope > details').filter({hasText:new RegExp('^Версия '+(index+1)+' ·')});
   await version.locator(':scope > summary').click({timeout:1200000});
@@ -87,6 +90,9 @@ export async function readSharedRecords({page,fixture,output}){
   await page.getByRole('button',{name:'Настройка карты',exact:true}).click();
   await page.getByRole('dialog',{name:'Настройка карты',exact:true}).getByRole('button',{name:'История',exact:true}).click();
   const history=page.getByRole('dialog',{name:'История карты',exact:true});
+  const mapVersions=history.getByRole('article');
+  await mapVersions.nth(map.versions-1).waitFor({timeout:1200000});
+  assert.equal(await mapVersions.count(),map.versions);
   for(const [index,node] of [map.previousNode,map.node].entries()){
    const heading=page.getByRole('heading',{name:'Версия '+(index+1),exact:true});
    const version=history.getByRole('article').filter({has:heading});

@@ -17,7 +17,7 @@ internal interface MindmapTransport {
     suspend fun workspace():JSONObject;suspend fun request(path:String,body:JSONObject?=null):JSONObject;fun check()
     suspend fun <T> withLegacyOperation(operation:suspend ()->T):T {check();return operation().also{check()}}
 }
-internal data class NativeMapRecord(val document:MindmapDocument,val revision:Long,val pending:JSONObject?=null,val pendingDocument:MindmapDocument?=null,val dirty:Boolean=false) {
+internal data class NativeMapRecord(val document:MindmapDocument,val revision:Long,val pending:JSONObject?=null,val pendingDocument:MindmapDocument?=null,val dirty:Boolean=false,val migratedHistory:Boolean=false) {
     val unsynced get()=dirty || pending!=null || revision==0L
     fun json()=JSONObject().put("document",document.json()).put("revision",revision).put("pending",pending ?: JSONObject.NULL).put("pendingDocument",pendingDocument?.json() ?: JSONObject.NULL).put("dirty",dirty)
 }
