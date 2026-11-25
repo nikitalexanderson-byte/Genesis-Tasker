@@ -68,17 +68,17 @@ export async function captureLocalContentArchive(account:WebPrivateAccount):Prom
  // their original requests/capsules and partial encrypted suffixes stay local.
  const retained=await openDeviceRetainedMigrationHistory(account.device,()=>account.requireOpen());
  try{
-  for(const item of retained.contents){
+  await retained.captureContents(async (item,read)=>{
    account.requireOpen();if(used+item.size*4/3+8192>BACKUP_MAX_PLAIN-65536)throw new Error('BACKUP_TOO_LARGE');
    const bytes=new Uint8Array(item.size);let at=0;
    try{
-    const metadata=await retained.readContent(item.id,async chunk=>{account.requireOpen();if(chunk.length>bytes.length-at)throw new Error('BACKUP_INVALID');bytes.set(chunk,at);at+=chunk.length;});account.requireOpen();
+    const metadata=await read(async chunk=>{account.requireOpen();if(chunk.length>bytes.length-at)throw new Error('BACKUP_INVALID');bytes.set(chunk,at);at+=chunk.length;});account.requireOpen();
     if(at!==bytes.length)throw new Error('BACKUP_INVALID');const content=await value(item.id,bytes,metadata);account.requireOpen();
     if(content.sha256!==item.sha256)throw new Error('BACKUP_INVALID');
     append({placement:'remote',scope:{scopeId:item.scope.scopeId,ownerId:item.scope.ownerId,kind:item.scope.kind,resourceId:item.scope.resourceId},domain:item.domain,objectId:item.id,pending:true,current:content,history:[]});
    }finally{bytes.fill(0);}
-  }
-  await retained.assertUnchanged();account.requireOpen();
+  });
+  account.requireOpen();
  }finally{retained.close();}
  const at=new Date().toISOString(),payload:BackupPayload={schema:1,backupId:crypto.randomUUID(),source:'device_snapshot',ownerId:account.ownerId,createdAt:at,client:'web',billingEvidence:null,sections:[]};
  for(const id of ['workspace','mindmaps','diary','stoicheion','aurora','physis','shared-drafts'] as BackupModuleId[]){const rows=entries.filter(row=>contentArchiveModuleFor(row.domain,row.scope)===id);if(!rows.length)continue;

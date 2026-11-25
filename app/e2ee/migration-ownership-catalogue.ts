@@ -15,7 +15,7 @@ import {authenticateRetainedMigrationControls,inspectRetainedLegacyPlan,type Ret
 import {E2EE_PROVIDER_STORAGE_BUDGET} from './storage-capacity.ts';
 import {inspectDeviceControlCustody} from './device-control-custody.ts';
 import {inspectRetainedProductCustody} from './retained-product-custody.ts';
-import {retainedMigrationValueCollector} from './retained-migration-values.ts';
+import {retainedMigrationValueCollector,type RetainedMigrationValue} from './retained-migration-values.ts';
 import type {UnlockedWebDevice} from './device-vault.ts';
 import type {UnlockedE2eeVault,E2eeDeviceReadVault} from './storage.ts';
 import type {MigrationState} from './migration.ts';
@@ -270,9 +270,25 @@ export async function openMigrationOwnershipCatalogue(source:Options){
   if(!same(afterCopies,copyIds)||!same(afterSources,[...sourceParts].sort())||!same(afterStates,[...stateRoles].sort())||!same(afterJobs,[...jobHistory].sort())||!same(afterControls,[...controlHistory].sort())||!same([...afterOutputs.remote].sort(),[...outputs.remote].sort())||!same([...afterOutputs.local].sort(),[...outputs.local].sort()))throw new Error('E2EE_SOURCE_HISTORY_CHANGED');
  };
  await assertUnchanged();current();
+ const contents=values.list();
+ type ReadContent=(write:(bytes:Uint8Array)=>Promise<void>)=>Promise<{filename:string;mediaType:string}>;
  return Object.freeze({scopes:Object.freeze(scopes.map(scope=>Object.freeze({scopeId:scope.target.scopeId,ownerId:scope.target.ownerId,kind:scope.target.kind,resourceId:scope.resourceId,migrationId:scope.root?.migrationId??null,phase:scope.root?.phase??null}))),
   scope(scopeId:string){current();const scope=scopes.find(row=>row.target.scopeId===scopeId);if(!scope)invalid();return structuredClone(scope);},
-  contents:values.list(),async readContent(id:string,write:(bytes:Uint8Array)=>Promise<void>){current();await assertUnchanged();const metadata=await values.read(id,write);await assertUnchanged();current();return metadata;},
+  contents,async readContent(id:string,write:(bytes:Uint8Array)=>Promise<void>){current();await assertUnchanged();const metadata=await values.read(id,write);await assertUnchanged();current();return metadata;},
+  // The archive collects verified entries in memory and publishes only once the
+  // entire catalogue still matches. Rescanning it around every entry makes
+  // capture time grow with the product of the row and entry counts.
+  async captureContents(visit:(item:RetainedMigrationValue,read:ReadContent)=>Promise<void>){
+   await assertUnchanged();
+   for(const item of contents){
+    current();let active=true;
+    try{await visit(item,async write=>{
+     if(!active)throw new Error('E2EE_MIGRATION_HISTORY_CLOSED');
+     return values.read(item.id,write);
+    });}finally{active=false;}
+   }
+   await assertUnchanged();current();
+  },
   role(domain:E2eeContext['domain'],id:string){current();const role=roles.get(key(domain,id));if(!role)invalid();return role;},assertUnchanged,
   usage:Object.freeze({bytes:totalBytes,records:rows.size,metadataBytes,scopes:scopes.length}),close});
  }catch(error){close();throw error;}

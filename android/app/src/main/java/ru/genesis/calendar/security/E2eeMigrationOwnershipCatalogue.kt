@@ -193,6 +193,24 @@ internal object E2eeMigrationOwnershipCatalogue {
         fun scope(id:String):Scope {current();val value=scopeRows[id]?:invalid();return Scope(value.target.copy(),value.resourceId,value.stateId,value.root?.let{JSONObject(it.toString())},value.ancestors.map{JSONObject(it.toString())},value.serial,value.hash)}
         fun contents():List<JSONObject>{current();return values.contents()}
         fun readContent(id:String,write:(ByteArray)->Unit):JSONObject {current();assertUnchanged();val metadata=values.read(id,write);assertUnchanged();current();return metadata}
+        fun captureContents(visit: (JSONObject, ((ByteArray) -> Unit) -> JSONObject) -> Unit) {
+            assertUnchanged()
+            for (item in values.contents()) {
+                current()
+                val id = item.getString("id")
+                var active = true
+                try {
+                    visit(item) { write ->
+                        check(active) { "E2EE_MIGRATION_HISTORY_CLOSED" }
+                        values.read(id, write)
+                    }
+                } finally {
+                    active = false
+                }
+            }
+            assertUnchanged()
+            current()
+        }
         fun assertUnchanged(){
             current();for(row in records.values){val actual=base.read(row.domain,row.id);try{current();if(actual==null||actual.serial!=row.serial||actual.bytes.size!=row.bytes||hash(actual.bytes)!=row.hash)error("E2EE_SOURCE_HISTORY_CHANGED")}finally{actual?.bytes?.fill(0)}}
             for((key,expected)in lists){val actual=base.listLocal(key.first,key.second).sorted();current();if(actual!=expected)error("E2EE_SOURCE_HISTORY_CHANGED")}

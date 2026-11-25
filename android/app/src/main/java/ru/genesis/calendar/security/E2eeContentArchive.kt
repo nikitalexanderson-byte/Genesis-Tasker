@@ -90,13 +90,14 @@ internal class E2eeContentArchive(private val account:E2eeProductAccount){
         E2eeMigrationOwnershipCatalogue.open(E2eeMigrationOwnershipCatalogue.Options(account.device,account.inventory,
             E2eeRemoteOriginal.readCapacity(),::current,
             {current();E2eeStorageAdmission.admit(E2eeStorageAdmission.measure(account.device,::current),E2eeStorageAdmission.Growth(0,0,0,0),E2eeStorageAdmission.providerBudget)})).use{retained->
-            for(item in retained.contents()){
+            retained.captureContents { item, read ->
                 current();val size=E2eeCommands.integer(item.get("size")).toInt();check(usage.toLong()+size.toLong()*4/3+8192<=MAX-65536){"BACKUP_TOO_LARGE"};val bytes=ByteArray(size);var offset=0
-                try{val metadata=retained.readContent(item.getString("id")){chunk->current();check(chunk.size<=bytes.size-offset){"BACKUP_INVALID"};chunk.copyInto(bytes,offset);offset+=chunk.size};current();check(offset==bytes.size&&hash(bytes)==item.get("sha256")){"BACKUP_INVALID"}
+                try{val metadata=read{chunk->current();check(chunk.size<=bytes.size-offset){"BACKUP_INVALID"};chunk.copyInto(bytes,offset);offset+=chunk.size};current();check(offset==bytes.size&&hash(bytes)==item.get("sha256")){"BACKUP_INVALID"}
                     val content=snapshot(item.getString("id"),bytes,metadata.getString("filename"),metadata.getString("mediaType"))
                     append(JSONObject().put("placement","remote").put("scope",item.getJSONObject("scope")).put("domain",item.get("domain")).put("objectId",item.get("id")).put("pending",true).put("current",content).put("history",JSONArray()))
                 }finally{bytes.fill(0)}
-            };retained.assertUnchanged();current()
+            }
+            current()
         }
         val at=Instant.now().toString();val sections=JSONArray();for(module in modules){val selected=entries.filter{group(it)==module};if(selected.isEmpty())continue
             sections.put(JSONObject().put("id",module).put("source","device").put("completeness","partial").put("capturedAt",at).put("revision",JSONObject.NULL).put("count",selected.size).put("pending",selected.count{it.getBoolean("pending")}).put("notices",JSONArray(listOf("CONTENT_ONLY_HISTORY_NOT_EXECUTABLE","LOCAL_OPENED_CONTENT_ONLY"))).put("data",JSONObject().put("format","genesis-content-only-v1").put("execution","history-only").put("entries",JSONArray(selected))))}
