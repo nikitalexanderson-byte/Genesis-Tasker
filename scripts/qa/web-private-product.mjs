@@ -8,7 +8,7 @@ import {fileURLToPath} from 'node:url';
 import {chromium} from 'playwright';
 import {openBackup} from '../../app/backup-format.ts';
 import {checkPrivateDeviceAccess} from './web-private-device-access.mjs';
-import {seedSharedRecords,readSharedRecords} from './web-private-shared-records.mjs';
+import {seedSharedRecords,readSharedRecords,seedProjectImportHistory,readProjectImportHistory} from './web-private-shared-records.mjs';
 
 const baseURL=process.env.GENESIS_QA_WEB_ORIGIN;
 assert(/^http:\/\/127\.0\.0\.1:\d+$/.test(baseURL??''));
@@ -23,8 +23,9 @@ const browser=await chromium.launch({headless:true});report.browser=browser.vers
 let page,secret,kit,backupKey,deviceLocalCode,fixtureOwnerId;
 const diagnostics=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='diagnostics';
 const profileOnly=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='profile';
-const sharedJourney=['shared','shared-locales','content','files','membership','shared-records'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
+const sharedJourney=['shared','shared-locales','content','files','membership','shared-records','import-history'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
 const sharedRecordsJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='shared-records';
+const importHistoryJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='import-history';
 const membershipJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='membership';
 const membershipCopy=JSON.parse(readFileSync('contracts/e2ee/membership-review-copy-v2.json','utf8')).ru;
 const sharedFilesJourney=['content','files'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
@@ -39,7 +40,7 @@ let sharedFixture;
 const redactPrivateText=value=>[secret,backupKey,deviceLocalCode].filter(Boolean).reduce((text,key)=>text.replaceAll(key,'[redacted synthetic secret]'),String(value));
 const save=()=>writeFileSync(`${output}/private-product-results.json`,JSON.stringify(report,null,2)+'\n');
 const check=async(name,operation)=>{
- if((membershipJourney||sharedFilesJourney||sharedRecordsJourney||backupJourney)&&['offline unlock restores encrypted preferences and the edited task','clean browser cannot open content using identity alone or a wrong secret'].includes(name)){
+ if((membershipJourney||sharedFilesJourney||sharedRecordsJourney||importHistoryJourney||backupJourney)&&['offline unlock restores encrypted preferences and the edited task','clean browser cannot open content using identity alone or a wrong secret'].includes(name)){
   (report.notRepeated??=[]).push({name,acceptedEvidence:'output/playwright/security336-legacy-retirement42-1124',reason:'Unchanged personal recovery path; this focused run covers shared membership or content and preserves its live owner context.'});save();return;
  }
  try{await operation();report.checks.push({name,status:'PASS'});console.log('PASS private-product '+name);save();}
@@ -244,6 +245,7 @@ try{
   const task=(await post(`shared/projects/${project.id}/tasks`,{title:'PRIVATE SHARED TASK '+canary,description:'Retained shared task body '+canary,statusId:status.id,requestId:crypto.randomUUID(),
    ...file?{attachments:[{name:'retained-private-file.txt',data:'data:text/plain;base64,'+file.toString('base64')}],imageData:'data:image/png;base64,'+image.toString('base64')}:{}})).task;
   sharedFixture={space,project,task,file,image,member,inbox};
+  if(importHistoryJourney){sharedFixture.importHistory=await seedProjectImportHistory({context,baseURL,space,project,task,canary});report.importHistorySeed=true;}
   if(sharedRecordsJourney){sharedFixture.records=await seedSharedRecords({context,baseURL,space,project,task,canary});report.sharedRecordsSeed={maps:2,mapVersions:4,disabledAutomation:true,workflowVersions:2,comments:2};}
   if(file){
    assert.equal(task.attachments.length,1);const source=new URL(task.attachments[0].url,baseURL);assert.equal(source.origin,baseURL);
@@ -586,6 +588,9 @@ try{
   });
   if(sharedRecordsJourney)await check('populated shared comments rules and map titles survive cold normal product entry',async()=>{
    report.sharedRecordsReadback=await readSharedRecords({page,fixture:sharedFixture,output});save();
+  });
+  if(importHistoryJourney)await check('imported task history remains visible in the authorized task after migration',async()=>{
+   report.importHistoryReadback=await readProjectImportHistory({page,context,fixture:sharedFixture,output});save();
   });
   if(sharedFilesJourney)await check('migrated multi-chunk attachment and photo open through the normal authorized task interface',async()=>{
    await page.locator(`[data-shared-task-id="${sharedFixture.task.id}"]`).getByText(sharedFixture.task.title,{exact:true}).click();

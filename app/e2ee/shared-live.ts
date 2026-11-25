@@ -263,6 +263,33 @@ export class SharedLiveModel{
   if(!archived.has(baselineRevision))archived.set(baselineRevision,{id,revision:baselineRevision,document:baselineDocument,updatedAt:baseline.updated_at,schemaVersion:1,historyOrigin:'migration'});
   return{versions:[...versions,...[...archived.values()].sort((left,right)=>Number(right.revision)-Number(left.revision))],nextCursor:null};
  }
+ async #importedHistory(versions:ProductVersion[],query:URLSearchParams){
+  if(this.ports.binding.kind!=='project'||!this.ports.sourceTable)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');
+  if(!this.ports.online)throw new Error('E2EE_ONLINE_REQUIRED');
+  const taskId=query.get('taskId'),cursor=query.get('cursor');
+  if(taskId!==null){assertTechnical(taskId);this.#find(versions,'task',taskId);}
+  if(cursor!==null&&!/^[1-9][0-9]{0,6}$/.test(cursor))throw new Error('DATA_CURSOR_INVALID');
+  const rows=await this.ports.sourceTable('shared_data_import_records');this.ports.current();
+  const start=Number(cursor??0);
+  if(start>rows.length)throw new Error('DATA_CURSOR_INVALID');
+  const tasks=new Set(versions.filter(version=>version.kind==='task').map(version=>plain(version).record.id));
+  const records:ObjectValue[]=[];
+  for(let index=start;index<rows.length;index++){
+   const row=rows[index];
+   if(row.project_id!==this.ports.binding.resourceId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+   if(!['task','history','series','templates','attachments'].includes(String(row.kind)))continue;
+   if(row.visibleInHistory!==true&&row.visibleInHistory!==false)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');
+   if(!row.visibleInHistory||taskId!==null&&row.target_id!==taskId||row.target_id!==null&&!tasks.has(row.target_id as string))continue;
+   const source=parse(row.payload_json);object(source);
+   if(row.kind==='task'){
+    if(!Array.isArray(source.approvals))throw new Error('E2EE_PRODUCT_HISTORY_INVALID');
+    if(!source.approvals.length)continue;
+   }
+   if(records.length===50)return{records,nextCursor:String(index)};
+   records.push({id:String(index+1),kind:row.kind,source});
+  }
+  return{records,nextCursor:null};
+ }
  async #events(versions:ProductVersion[],context:SharedLiveContext){void context;
   if(this.ports.binding.kind!=='project'||!this.ports.eventCache)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');
   if(!this.ports.online){const saved=await this.ports.eventCache.load();this.ports.current();if(!saved)throw new Error('E2EE_OFFLINE_CONTENT_UNAVAILABLE');return saved;}
@@ -302,6 +329,7 @@ export class SharedLiveModel{
    return{project:this.#row(root,context),statuses:list('status').filter(row=>row.isChaos!==1),categories:list('category','shared_project_categories'),tasks:page.tasks,taskPage:{total:page.total,hasMore:false,nextCursor:null},members:context.members,customFieldDefinitions:list('custom-field')};
   }
   if(segments[0]==='events'&&segments.length===1){const events=await this.#events(versions,context),project=this.#row(this.#find(versions,'project',this.ports.binding.resourceId),context),tasks=live.filter(row=>row.kind==='task').map(row=>this.#task(row,versions,context)),comments=live.filter(row=>row.kind==='comment').map(row=>this.#row(row,context));return{events,project,tasks,comments,members:context.members};}
+  if(segments[0]==='data-history'&&segments.length===1)return this.#importedHistory(live,url.searchParams);
   if(segments[0]==='tasks'){
    if(segments.length===1){const filter=parse(url.searchParams.get('filter')??'{}');object(filter);return this.#page(this.#tasks(versions,context,filter),url);}
    const task=this.#find(versions,'task',segments[1]);if(segments.length===2)return{task:this.#task(task,versions,context)};

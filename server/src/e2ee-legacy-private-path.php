@@ -152,9 +152,14 @@ function genesisE2eeLegacyPrivatePath(PDO $db,string $actor,array $scope,array $
     if($totals[$p['table']]===0){if($offset!==0||$byteOffset!==0)genesisE2eeInvalid();return$result;}
     if($offset===$totals[$p['table']])genesisE2eeInvalid();
     [$table,$columns,$where,$parameters,$positional]=$queries[$p['table']];
+    $projectImport=$scope['kind']==='project'&&$table==='shared_data_import_records';
+    if($projectImport)$columns.=','.genesisE2eeProjectImportVisibleSql().' AS migration_import_visible';
     $q=$db->prepare('SELECT '.$columns.' FROM '.$table.' r WHERE '.$where.' ORDER BY r.rowid LIMIT 1 OFFSET '.(string)$offset);$q->execute($parameters);
     try{$row=$q->fetch();}finally{$q->closeCursor();}if(!$row)throw new DomainException('E2EE_SOURCE_CHANGED');
-    $bytes=genesisE2eeJson(genesisE2eePrivatePathRow($table,$row));$length=strlen($bytes);
+    $visible=$projectImport&&(bool)$row['migration_import_visible'];unset($row['migration_import_visible']);
+    $value=genesisE2eePrivatePathRow($table,$row);
+    if($projectImport)$value['content']['visibleInHistory']=$visible;
+    $bytes=genesisE2eeJson($value);$length=strlen($bytes);
     if($length<1||$length>64*1024*1024)throw new GenesisResourceLimitException(413,'E2EE_SOURCE_TOO_LARGE');
     if($byteOffset>=$length)genesisE2eeInvalid();$chunk=substr($bytes,$byteOffset,1024*1024);$next=$byteOffset+strlen($chunk);
     return array_replace($result,['rowBytes'=>$length,'rowHash'=>genesisE2eePrivateSourceEncode(hash('sha256',$bytes,true)),'chunk'=>genesisE2eePrivateSourceEncode($chunk),

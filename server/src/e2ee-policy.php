@@ -249,6 +249,12 @@ function genesisE2eeInitializeGuards(PDO $db): void
     } catch(Throwable $error) {if($db->inTransaction())$db->rollBack();throw$error;}
 }
 
+/** The project read may preserve the visibility bit without capturing the parent import receipt. */
+function genesisE2eeProjectImportVisibleSql(): string
+{
+    return "EXISTS(SELECT 1 FROM shared_data_imports i JOIN shared_projects p ON p.space_id=i.space_id WHERE i.id=r.import_id AND i.state='active' AND p.id=r.project_id)";
+}
+
 function genesisE2eeSourceHash(PDO $db,array $scope): string
 {
     if($scope['kind']==='personal')return genesisE2eeWithPersonalIo($scope['resource_id'],true,static fn():string=>genesisE2eeSourceHashLocked($db,$scope));
@@ -268,6 +274,14 @@ function genesisE2eeSourceHashLocked(PDO $db,array $scope): string
             $q=$db->prepare('SELECT space_id FROM shared_projects WHERE id=?');$q->execute([$scope['resource_id']]);$space=$q->fetchColumn();$q->closeCursor();
             $q=$db->prepare('SELECT * FROM shared_project_members WHERE project_id=? ORDER BY user_id');$q->execute([$scope['resource_id']]);
             hash_update($hash,'project-acl'."\0".serialize($q->fetchAll()));$q->closeCursor();
+            $q=$db->prepare('SELECT r.import_id,r.kind,r.source_key,'.genesisE2eeProjectImportVisibleSql()
+                .' AS visible FROM shared_data_import_records r WHERE r.project_id=? ORDER BY r.import_id,r.kind,r.source_key');
+            $q->execute([$scope['resource_id']]);
+            try{while($row=$q->fetch()){
+                $encoded=serialize($row);$bytes+=strlen($encoded);
+                if($bytes>128*1024*1024)throw new GenesisResourceLimitException(413,'E2EE_SOURCE_TOO_LARGE');
+                hash_update($hash,'project-import-visibility'."\0".pack('N',strlen($encoded)).$encoded);
+            }}finally{$q->closeCursor();}
         }
         foreach(['shared_space_members','shared_member_project_grants','shared_member_categories'] as $table) {
             $q=$db->prepare('SELECT * FROM "'.$table.'" WHERE space_id=?');$q->execute([$space]);

@@ -179,3 +179,22 @@ test('map history returns each archived version once and retains later edits wit
  versions[1].content=versions[0].content;
  await assert.rejects(f.model.request('GET','mindmaps/map/history'),/E2EE_PRODUCT_HISTORY_INVALID/);
 });
+
+test('private project import history pages only previously visible records within the current project',async()=>{
+ const f=liveFixture();
+ const row=(number,visibleInHistory=true)=>({project_id:'project',kind:'history',target_id:null,visibleInHistory,
+  payload_json:JSON.stringify({actorTitle:'Synthetic importer',number})});
+ const rows=[row(0,false),{...row(0),target_id:'missing-task'},...Array.from({length:51},(_,index)=>row(index+1))];
+ f.ports.sourceTable=async table=>{assert.equal(table,'shared_data_import_records');return rows;};
+ const first=await f.model.request('GET','data-history');
+ assert.deepEqual(first.records.map(value=>value.source.number),Array.from({length:50},(_,index)=>index+1));
+ const last=await f.model.request('GET','data-history?cursor='+first.nextCursor);
+ assert.deepEqual(last.records.map(value=>value.source.number),[51]);
+ assert.equal(last.nextCursor,null);
+ await assert.rejects(f.model.request('GET','data-history?cursor=1000'),/DATA_CURSOR_INVALID/);
+ await assert.rejects(f.model.request('GET','data-history?taskId=missing-task'),/E2EE_PRODUCT_ENTITY_MISSING/);
+ rows[2].project_id='another-project';
+ await assert.rejects(f.model.request('GET','data-history'),/E2EE_SCOPE_BINDING_MISMATCH/);
+ rows[2].project_id='project';delete rows[2].visibleInHistory;
+ await assert.rejects(f.model.request('GET','data-history'),/E2EE_SHARED_HISTORY_READER_REQUIRED/);
+});

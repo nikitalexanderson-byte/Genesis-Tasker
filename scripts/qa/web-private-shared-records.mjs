@@ -1,5 +1,47 @@
 import assert from 'node:assert/strict';
 
+export async function seedProjectImportHistory({context,baseURL,space,project,task,canary}){
+ const session=await(await context.request.get('/api/session')).json();
+ const headers={Origin:baseURL,'X-CSRF-Token':session.csrf};
+ const request=async(path,data)=>{
+  const response=await context.request.fetch('/api/'+path,{method:data===undefined?'GET':'POST',headers,...data===undefined?{}:{data}});
+  const value=await response.json();assert(response.ok(),`${path}: ${response.status()} ${value.error??''}`);return value;
+ };
+ const exported=await request(`shared/spaces/${space.id}/data-export`,{scope:'project',projectId:project.id,format:'json'});
+ const archive=JSON.parse(exported.content),source=archive.tasks.find(row=>row.key===task.id);
+ assert(source);
+ const title=canary+' restored task',actorTitle=canary+' earlier import author';
+ source.title=title;
+ archive.history=[{key:'historical-event',projectKey:project.id,taskKey:task.id,actorTitle,action:'task.updated',
+  createdAt:'2026-01-01T12:00:00Z',details:{changes:{priority:{from:1,to:2}}}}];
+ const statusMap=Object.fromEntries(archive.projects[0].statuses.filter(status=>!status.isChaos).map(status=>[status.key,status.key]));
+ const command={format:'json',content:JSON.stringify(archive),spaceId:space.id,projectId:project.id,statusMap};
+ const preview=await request('shared/data/preview',command);
+ assert(preview.canApply,JSON.stringify(preview.blockers));
+ const applied=await request('shared/data/apply',{...command,operationId:crypto.randomUUID(),fingerprint:preview.fingerprint});
+ const taskId=applied.taskIds[task.id];
+ assert(taskId&&taskId!==task.id);
+ const legacy=await request(`shared/projects/${project.id}/data-history?taskId=${taskId}`);
+ assert(legacy.records.some(row=>row.kind==='history'&&row.source.actorTitle===actorTitle));
+ return{taskId,title,actorTitle};
+}
+
+export async function readProjectImportHistory({page,context,fixture,output}){
+ const {taskId,title,actorTitle}=fixture.importHistory;
+ const historyPath=`/api/shared/projects/${fixture.project.id}/data-history?taskId=${taskId}`;
+ assert.equal((await context.request.get(historyPath)).status(),409);
+ await page.locator(`[data-shared-task-id="${taskId}"]`).getByText(title,{exact:true}).click({timeout:1200000});
+ const task=page.getByRole('dialog',{name:title,exact:true});
+ const activity=task.locator('.shared-activity');
+ await activity.locator(':scope > summary').click();
+ const imported=activity.locator('.shared-imported-history');
+ await imported.getByText(actorTitle,{exact:true}).waitFor({timeout:1200000});
+ await imported.getByText('1 → 2',{exact:true}).waitFor();
+ assert.equal(await imported.getByRole('listitem').count(),1);
+ await task.screenshot({path:`${output}/shared-import-history-readback.png`,animations:'disabled'});
+ return{legacyRefusal:true,coldProjectHistory:true};
+}
+
 // Populate the ordinary legacy APIs before the mounted migration. These are
 // disabled rules and synthetic content, with no external jobs or authority seed.
 export async function seedSharedRecords({context,baseURL,space,project,task,canary}){
