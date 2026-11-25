@@ -6,6 +6,7 @@ import {usesPrivateProductStorage} from './cloud-sync';
 import { SharedBoardColor } from "./SharedBoardColor";
 import { DialogCloseButton } from "./DialogCloseButton";
 import { foregroundRefresh } from "./foreground-refresh";
+import { privateMembershipUi, subscribePrivateMembershipClose } from "./private-membership-ui";
 import { useSacredFeaturesEnabled } from "./sacred-features";
 import { getSolarEvent } from "./calendar-data";
 import { useMobileLayout } from "./use-mobile-layout";
@@ -131,11 +132,13 @@ const SHARED_RETRY_EVENT = "genesis:shared-retry";
 function watchSharedRead(operation: (signal: AbortSignal) => Promise<unknown>, success: () => void,
   failure: (error: unknown) => void, settled?: () => void) {
   // The first visible read may restore the protected cache while already offline.
-  const refresh = foregroundRefresh(operation, { available: initial => (initial || navigator.onLine) && document.visibilityState === "visible", success, failure, settled });
+  // The membership dialog makes the workspace inert while its own reads run.
+  const refresh = foregroundRefresh(operation, { available: initial => !privateMembershipUi() && (initial || navigator.onLine) && document.visibilityState === "visible", success, failure, settled });
   const trigger = () => void refresh.trigger();
+  const resume = subscribePrivateMembershipClose(trigger);
   window.addEventListener("focus", trigger); window.addEventListener("online", trigger);
   window.addEventListener(SHARED_RETRY_EVENT, trigger); document.addEventListener("visibilitychange", trigger);
-  return () => { refresh.stop(); window.removeEventListener("focus", trigger); window.removeEventListener("online", trigger);
+  return () => { refresh.stop(); resume(); window.removeEventListener("focus", trigger); window.removeEventListener("online", trigger);
     window.removeEventListener(SHARED_RETRY_EVENT, trigger); document.removeEventListener("visibilitychange", trigger); };
 }
 import {invitationSecurityCopy} from './invitation-security-copy';
@@ -544,7 +547,7 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
     if (!taskProjectId || !taskId) return;
     let live = true;
     const refresh = () => {
-      if (!navigator.onLine || document.visibilityState !== "visible") return;
+      if (privateMembershipUi() || !navigator.onLine || document.visibilityState !== "visible") return;
       void Promise.all([loadSharedProject(taskProjectId), loadSharedTask(taskProjectId, taskId, true)]).then(([result, task]) => {
         if (live) setTaskSnapshot({ ...result, tasks: [...result.tasks.filter(item => item.id !== task.id), task] });
       }).catch(error => { if(live && error && typeof error==="object" && "status" in error && [401,403,404].includes(Number(error.status))) {setTaskSnapshot(null);setTaskId("");setComments([]);setMessage(translateText("Эта задача больше недоступна."));} });
@@ -1018,18 +1021,13 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
     { id: child.id, title: child.title, kind: "container", project: child }, { projectId, statusId, position: 0 });
   useEffect(() => {
     if (!inboxProjectId) return;
-    let live = true;
-    const refresh = () => void loadSharedProject(inboxProjectId).then((result) => {
-      if (live) setInboxPreview(result);
-    }).catch((error: unknown) => {
-      if (live) {
-        setMessage(error instanceof Error ? error.message : String(error));
-        if(error && typeof error==="object" && "status" in error && [401,403,404].includes(Number(error.status)))setInboxPreview(null);
-      }
+    return watchSharedRead(async signal => {
+      const result = await loadSharedProject(inboxProjectId, undefined, null, "position", signal);
+      if (!signal.aborted) setInboxPreview(result);
+    }, () => {}, error => {
+      setMessage(error instanceof Error ? error.message : String(error));
+      if (error && typeof error === "object" && "status" in error && [401,403,404].includes(Number(error.status))) setInboxPreview(null);
     });
-    refresh();
-    const timer = window.setInterval(refresh, 5_000);
-    return () => { live = false; window.clearInterval(timer); };
   }, [inboxProjectId]);
   const visibleInbox = inboxPreview && inboxPreview.project.id === inboxProjectId ? {...inboxPreview,tasks:[]} : null;
   const { active: activeCalendarTasks } = ganttTaskGroups(snapshot?.tasks ?? [], snapshot?.statuses ?? []);

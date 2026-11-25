@@ -5,6 +5,7 @@ import type {E2eeScopeClient,ReviewedDeviceRole} from './scope-client.ts';
 import type {UnlockedWebDevice} from './device-vault.ts';
 import {MEMBERSHIP_HASH_FORMAT,MEMBERSHIP_SPECS,validateMembershipChanges,membershipChangeHashValue,membershipBeforeHash,membershipGrantReviewRequired,type MembershipChange} from './membership-contract.ts';
 import {samePrivateJson as same} from './product-json.ts';
+import {retryE2eeRead} from './read-rate-retry.ts';
 import {validateMembershipReviewRequest,membershipReviewFingerprint,validateMembershipOwnerApproval,verifyMembershipOwnerApproval,type MembershipReviewRequest,type MembershipOwnerApproval,type MembershipPeerPorts} from './membership-exchange.ts';
 import type {MembershipAtomicTransport} from './membership-atomic-contract.ts';
 import type {MembershipAtomicApplyTransport} from './membership-atomic-receipts.ts';
@@ -56,12 +57,16 @@ export class E2eeMembershipProduct{
  async readState(targets:Pick<MembershipChange,'table'|'key'>[]){
   this.current();if(!Array.isArray(targets)||targets.length<1||targets.length>200)throw new Error('E2EE_MEMBERSHIP_BATCH_INVALID');const held=snapshotE2eeValue(targets);
   for(const row of held){exactKeys(row,['table','key']);if(!Object.hasOwn(MEMBERSHIP_SPECS,row.table))throw new Error('E2EE_MEMBERSHIP_BATCH_INVALID');exactKeys(row.key,MEMBERSHIP_SPECS[row.table].keys);for(const value of Object.values(row.key))assertTechnical(value);}
-  const result=await this.transport.membershipState(held);this.current();exactKeys(result,['rows']);if(!Array.isArray(result.rows)||result.rows.length!==held.length)throw new Error('E2EE_MEMBERSHIP_BATCH_INVALID');
+  const result=await retryE2eeRead(()=>this.transport.membershipState(held),this.current);this.current();exactKeys(result,['rows']);if(!Array.isArray(result.rows)||result.rows.length!==held.length)throw new Error('E2EE_MEMBERSHIP_BATCH_INVALID');
   for(const [at,row]of result.rows.entries()){exactKeys(row,['table','key','before','beforeHash']);if(row.table!==held[at].table||!same(row.key,held[at].key)||row.beforeHash!==membershipBeforeHash(held[at].table,row.before))throw new Error('E2EE_MEMBERSHIP_STALE');
    if(row.before!==null){for(const [key,value]of Object.entries(held[at].key))if((row.before as Record<string,unknown>)[key]!==value)throw new Error('E2EE_MEMBERSHIP_STALE');}}
   return snapshotE2eeValue(result.rows) as {table:MembershipChange['table'];key:Record<string,string>;before:Record<string,WireValue>|null;beforeHash:string}[];
  }
-  async graph(spaceId:string){assertTechnical(spaceId);this.current();if(!this.transport.membershipGraph)throw new Error('E2EE_MEMBERSHIP_GRAPH_REQUIRED');const result=await this.transport.membershipGraph(spaceId);this.current();return result;}
+ async graph(spaceId:string){
+  assertTechnical(spaceId);this.current();const read=this.transport.membershipGraph;
+  if(!read)throw new Error('E2EE_MEMBERSHIP_GRAPH_REQUIRED');
+  return retryE2eeRead(()=>read.call(this.transport,spaceId),this.current);
+ }
  create(changes:MembershipChange[],expectedScopeIds:string[]){const held=validateMembershipChanges(changes),scopes=[...expectedScopeIds].sort();return this.#run(async()=>{
   this.current();if(held.length<1||held.length>200||scopes.length>256||new Set(scopes).size!==scopes.length)throw new Error('E2EE_MEMBERSHIP_BATCH_INVALID');for(const id of scopes)assertTechnical(id);
   const intentId=crypto.randomUUID();await this.#save({protocol:1,hashFormat:MEMBERSHIP_HASH_FORMAT,ownerApprovals:[],ownerId:this.device.ownerId,intentId,scopeIds:scopes,changes:held,preview:null,review:null,batch:null,result:null},null);return intentId;

@@ -391,7 +391,7 @@ export class E2eeScopeClient {
       finally{floorRecord?.value.fill(0);writes.forEach(write=>write.value.fill(0));}
     }
   }
-  async read(domain:E2eeContext['domain'],objectId:string,expected?:{revision:number;payloadHash:string}):Promise<{bytes:Uint8Array;filename:string;mediaType:string;revision:number}|null> {
+  async read(domain:E2eeContext['domain'],objectId:string,expected?:{revision:number;payloadHash:string;currentGeneration?:boolean}):Promise<{bytes:Uint8Array;filename:string;mediaType:string;revision:number}|null> {
     await this.#waitForRefresh();
     this.#open();const id=await this.#id(domain,objectId),floorRecord=await this.#device.vault.read('key-check',`floor:${id}`);
     let floor:{revision:number;hash:string}|null=null;
@@ -401,7 +401,8 @@ export class E2eeScopeClient {
     const context=envelope.context,directory=this.#history.get(epochKey({cryptoEpoch:context.cryptoEpoch,securityEpoch:context.securityEpoch,keyId:context.keyId,generation:context.dataGeneration}));
     if(!directory||context.ownerId!==this.#owner||context.scopeId!==this.#scopeId||context.domain!==domain||context.objectId!==objectId)throw new Error('E2EE_CONTEXT_MISMATCH');
     const payloadHash=await envelopePayloadHash(envelope);
-    if(expected&&(context.revision!==expected.revision||payloadHash!==expected.payloadHash))throw new Error('E2EE_MANIFEST_MISMATCH');
+    if(expected&&(context.revision!==expected.revision||payloadHash!==expected.payloadHash||
+      expected.currentGeneration&&context.dataGeneration!==this.#open().generation))throw new Error('E2EE_MANIFEST_MISMATCH');
     if(floor&&(context.revision<floor.revision||context.revision===floor.revision&&payloadHash!==floor.hash))throw new Error('E2EE_REMOTE_ROLLBACK');
     const root=this.#roots.get(context.keyId);if(!root)throw new Error('E2EE_KEY_UNAVAILABLE');
     await this.#historicalHead(envelope);

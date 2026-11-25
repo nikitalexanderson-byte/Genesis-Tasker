@@ -53,8 +53,8 @@ class E2eeScopeClientTest {
         }
         fun reopen(): Device { vault.lock(); return Device(ownerId, storage, privateKeys, deviceId, localRoot) }
     }
-    private class Fixture(val crashAtWrite: Int = 0, val crashBeforePut: Boolean = false, val crashAfterCancel: Boolean = false) : E2eeScopeTransport {
-        val owner = "native-owner"; val scope = "personal:native-owner"; val storage = Memory()
+    private class Fixture(val crashAtWrite: Int = 0, val crashBeforePut: Boolean = false, val crashAfterCancel: Boolean = false, val kind:String="personal") : E2eeScopeTransport {
+        val owner = "native-owner"; val scope = "$kind:native-owner"; val storage = Memory()
         var device = Device(owner, storage)
         val recovery = E2eeKeys.createRecoveryKit(owner); val root = E2eeKeys.freshSecret(); val events = JSONArray()
         val objects = mutableMapOf<String, E2eeEnvelope.Envelope>(); val receipts = mutableMapOf<String, JSONObject>()
@@ -67,7 +67,7 @@ class E2eeScopeClientTest {
             val keys = E2eeKeys.publicKeys(device.keys())
             val command = JSONObject().put("protocol", 1).put("ownerId", owner).put("scopeId", scope).put("deviceId", device.deviceId)
                 .put("action", "bootstrap").put("expectedRevision", 0).put("checkpointHash", "genesis").put("securityEpoch", 1).put("operationId", "bootstrap")
-                .put("payload", JSONObject().put("kind", "personal").put("resourceId", owner).put("keyId", "root-one").put("generation", 1)
+                .put("payload", JSONObject().put("kind", kind).put("resourceId", owner).put("keyId", "root-one").put("generation", 1)
                     .put("recoveryKit", recovery.kit).put("deviceKeys", keys)
                     .put("deviceCapsule", E2eeKeys.sealRoot(root, keys.getString("receivingKey"), E2eeKeys.RootRecipient(owner, scope, 1, "root-one", device.deviceId)))
                     .put("recoveryCapsule", E2eeKeys.sealRoot(root, recovery.kit.getJSONObject("authority").getString("receivingKey"), E2eeKeys.RootRecipient(owner, scope, 1, "root-one", "recovery"))))
@@ -134,6 +134,86 @@ class E2eeScopeClientTest {
             }
         }
         fun clearFloors() { storage.rows = storage.rows.filterValues { !it.envelope.context.toJson().getString("objectId").startsWith("floor:") }.toMutableMap() }
+    }
+    // Actual native vault/envelope/directory/business-proof crypto; only the
+    // server projection and HTTP delivery are modeled by this component port.
+    private class ImmutableProductFixture {
+        val f=Fixture(kind="project");lateinit var page:JSONObject;var bodyGets=0;var indexReads=0
+        private val transport=object:E2eeScopeTransport by f {
+            override fun read(packet:JSONObject):JSONObject {
+                if(packet.getJSONObject("command").getString("action")=="product-index"){indexReads++;return JSONObject(page.toString())}
+                if(packet.getJSONObject("command").getString("action")=="get")bodyGets++
+                return f.read(packet)
+            }
+        }
+        private fun client()=E2eeScopeClient(f.device,f.owner,f.scope,f.recovery.kit.getJSONObject("authority"),transport)
+        var scopeClient=client();private lateinit var baseline:JSONObject;private lateinit var stage:JSONObject
+        private fun proof(action:String,payload:JSONObject):JSONObject {
+            val directory=scopeClient.refresh()
+            val command=JSONObject().put("protocol",1).put("ownerId",f.owner).put("scopeId",f.scope).put("deviceId",f.device.deviceId)
+                .put("action",action).put("expectedRevision",directory.checkpoint.revision).put("checkpointHash",directory.checkpoint.hash)
+                .put("securityEpoch",directory.securityEpoch).put("operationId",UUID.randomUUID().toString()).put("payload",payload)
+            return JSONObject().put("proofHash",E2eeCommands.hash(command)).put("packet",E2eeCommands.sign(command,f.device.keys().signing.private).toString())
+        }
+        fun model()=E2eeSharedProduct(f.device,scopeClient,f.scope,f.device::requireOpen){_,body,_->body}
+        fun update(title:String,revision:Int=1) {
+            scopeClient.refresh();val objectId="product-version:${UUID.randomUUID()}";val metadata=JSONObject().put("protocol",1)
+            val version=JSONObject().put("protocol",1).put("scopeId",f.scope).put("entityId","label:immutable-cache").put("kind","label").put("revision",revision)
+                .put("parentId",JSONObject.NULL).put("deleted",false).put("metadata",metadata).put("body",JSONObject().put("title",title))
+            val bytes=version.toString().toByteArray();try{scopeClient.prepare("shared-project",objectId,bytes,0);scopeClient.flush("shared-project",objectId)}finally{bytes.fill(0)}
+            val reference=scopeClient.objectReference("shared-project",objectId)
+            val entity=JSONObject().put("entityId","label:immutable-cache").put("kind","label").put("revision",revision).put("domain","shared-project")
+                .put("objectId",objectId).put("payloadHash",reference.get("payloadHash")).put("parentId",JSONObject.NULL).put("authorId",f.owner).put("deleted",false).put("metadata",metadata).put("updatedAt","2026-11-24T00:00:00Z")
+            val operation=JSONObject().put("action",if(revision==1)"create" else "update").put("entityId",entity.get("entityId")).put("kind","label").put("expectedRevision",revision-1)
+                .put("domain","shared-project").put("objectId",objectId).put("payloadHash",entity.get("payloadHash")).put("parentId",JSONObject.NULL).put("metadata",metadata).put("proposalId",JSONObject.NULL)
+            val head=if(revision==1){
+                stage=proof("product-bootstrap-stage",JSONObject().put("intentId","cache-stage").put("bootstrapId","cache-bootstrap").put("partIndex",0).put("items",JSONArray().put(JSONObject().put("operation",operation).put("authorId",f.owner))))
+                baseline=proof("product-bootstrap-complete",JSONObject().put("intentId","cache-complete").put("bootstrapId","cache-bootstrap").put("parts",JSONArray().put(JSONObject().put("partIndex",0).put("proofHash",stage.get("proofHash")))).put("expectedCount",1));stage
+            }else proof("product-commit",JSONObject().put("intentId",UUID.randomUUID().toString()).put("operations",JSONArray().put(operation)))
+            page=JSONObject().put("entities",JSONArray().put(entity)).put("heads",JSONArray().put(JSONObject().put("entityId",entity.get("entityId")).put("revision",revision).put("proofHash",head.get("proofHash"))))
+                .put("proofs",JSONArray().put(baseline).put(head)).put("proposals",JSONArray()).put("attestations",JSONArray()).put("bootstrapProofHash",baseline.get("proofHash"))
+                .put("checkpointHash",f.verified.checkpoint.hash).put("directoryRevision",f.verified.checkpoint.revision)
+        }
+        fun cold():E2eeSharedProduct{f.device=f.device.reopen();scopeClient=client();return model()}
+        init{update("PRIVATE NATIVE IMMUTABLE CANARY")}
+    }
+    @Test fun immutableSnapshotsReuseEncryptedBodiesOnlyAfterFreshAuthorizationAndSurviveRestart() {
+        val f=ImmutableProductFixture();try{
+            val model=f.model();val before=f.bodyGets;val first=model.versions();val gets=f.bodyGets
+            assertEquals("One manifest and one content chunk",2,gets-before)
+            first.getJSONObject(0).getJSONObject("body").put("title","caller mutation")
+            assertEquals("PRIVATE NATIVE IMMUTABLE CANARY",model.versions().getJSONObject(0).getJSONObject("body").getString("title"));assertEquals(gets,f.bodyGets);assertEquals(2,f.indexReads)
+            assertEquals("PRIVATE NATIVE IMMUTABLE CANARY",f.cold().versions().getJSONObject(0).getJSONObject("body").getString("title"));assertEquals(gets,f.bodyGets);assertEquals(3,f.indexReads)
+        }finally{f.f.device.vault.lock()}
+    }
+    @Test fun privateDocumentChecksTheExpectedReferenceBeforeCachingItsContents() {
+        val f=ImmutableProductFixture();try{
+            val entity=f.page.getJSONArray("entities").getJSONObject(0)
+            val document=E2eePrivateDocument(f.f.device,f.scopeClient,f.f.scope,
+                entity.getString("domain"),entity.getString("objectId"),{it},f.f.device::requireOpen,f.f.device::requireOpen)
+            val expected=JSONObject().put("revision",2).put("payloadHash",entity.get("payloadHash")).put("currentGeneration",true)
+            val before=f.bodyGets
+            reject("E2EE_MANIFEST_MISMATCH"){document.load(expected=expected)}
+            assertEquals(1,f.bodyGets-before)
+            reject("E2EE_OFFLINE_CONTENT_UNAVAILABLE"){document.load(offline=true)}
+            val opened=document.load(expected=expected.put("revision",1))
+            assertEquals("PRIVATE NATIVE IMMUTABLE CANARY",opened.value.getJSONObject("body").getString("title"))
+        }finally{f.f.device.vault.lock()}
+    }
+    @Test fun changedSignedHeadsFetchNewBytesAndForgedHeadsCannotSelectTheNativeCache() {
+        val f=ImmutableProductFixture();try{
+            val model=f.model();model.versions();val gets=f.bodyGets;f.update("new native immutable body",2)
+            val next=model.versions().getJSONObject(0);assertEquals(2,next.getInt("revision"));assertEquals("new native immutable body",next.getJSONObject("body").getString("title"));assertTrue(f.bodyGets>gets)
+            val acceptedGets=f.bodyGets;f.page.getJSONArray("entities").getJSONObject(0).put("payloadHash",E2eeEnvelope.encode(E2eeKeys.freshSecret()))
+            reject("E2EE_PRODUCT_PROOF_INVALID"){model.versions()};assertEquals(acceptedGets,f.bodyGets)
+        }finally{f.f.device.vault.lock()}
+    }
+    @Test fun refusedOnlineAuthorizationAndLockNeverReturnCachedNativeContent() {
+        val f=ImmutableProductFixture();try{
+            val model=f.model();model.versions();val gets=f.bodyGets;val reads=f.indexReads;f.f.online=false
+            reject("SYNTHETIC_OFFLINE"){model.versions()};assertEquals(gets,f.bodyGets);assertEquals(reads,f.indexReads)
+            f.f.device.vault.lock();reject("E2EE_UNLOCK_REQUIRED"){model.versions()};assertEquals(gets,f.bodyGets)
+        }finally{f.f.device.vault.lock()}
     }
     private fun reject(message: String, action: () -> Unit) { try { action() } catch (error: Exception) { assertEquals(message, error.message); return }; fail("Forbidden operation accepted") }
     @Test fun retainedSharedTrustUploadIsReadOnlyAndUsesTheNormalDomainRegistry() {

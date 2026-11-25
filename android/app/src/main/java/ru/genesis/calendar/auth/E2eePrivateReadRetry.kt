@@ -4,7 +4,7 @@ import org.json.JSONObject
 
 /** The account transport is synchronous and is called on its existing IO path.
  * Keep the submitted JSON stable across actual bounded rate waits. Only pure
- * scope discovery and signed reads retry; writer/approval journals own mutations.
+ * scope discovery, membership snapshots and signed reads retry. Writers and approvals keep separate journals.
  */
 internal fun e2eePrivateRequestWithRateRetry(
     path: String,
@@ -19,7 +19,7 @@ internal fun e2eePrivateRequestWithRateRetry(
         current()
         send(submitted?.let(::JSONObject)).also { current() }
     }
-    if (path !in setOf("/read", "/directory", "/status")) return request()
+    if (path !in setOf("/read", "/directory", "/status", "/membership-graph", "/membership-state")) return request()
     var retries = 0
     while (true) {
         current()

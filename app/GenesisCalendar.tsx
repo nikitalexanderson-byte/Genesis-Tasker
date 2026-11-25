@@ -2155,10 +2155,14 @@ export function GenesisCalendar() {
 
   const publicPageVisible = Boolean(legalPage || (isGoogleSyncConfigured && (!cloudUser || privateDeviceAccessBlocked())));
   useEffect(() => {
-    if (publicPageVisible) return;
+    if (publicPageVisible || !authResolved) return;
     const initialView = viewFromHash();
-    const initialFrame = window.requestAnimationFrame(() => setView(initialView));
     const initialUrl = new URL(window.location.href);
+    const openPricing = initialUrl.hash === "#pricing";
+    const initialFrame = window.requestAnimationFrame(() => {
+      setView(initialView);
+      if (openPricing) requestUpgrade();
+    });
     if (initialView !== "admin") initialUrl.hash = initialView;
     window.history.replaceState(
       { ...(window.history.state ?? {}), genesisView: initialView },
@@ -2169,6 +2173,7 @@ export function GenesisCalendar() {
       setAccountMenuOpen(false);
       setAccountOpen(false);
       setView(viewFromHash());
+      if (window.location.hash === "#pricing") requestUpgrade();
       window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" }));
     };
     window.addEventListener("popstate", handlePopState);
@@ -2176,7 +2181,7 @@ export function GenesisCalendar() {
       window.cancelAnimationFrame(initialFrame);
       window.removeEventListener("popstate", handlePopState);
     };
-  }, [publicPageVisible]);
+  }, [authResolved, publicPageVisible]);
   useEffect(() => {
     if (!cloudUser || viewIsVisible(view, uiVisibility(cloudUser.uiVisibility)) || invitedWorkspaceOpen) return;
     const frame = window.requestAnimationFrame(() => {

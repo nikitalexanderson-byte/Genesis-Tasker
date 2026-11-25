@@ -17,11 +17,11 @@ internal class E2eePrivateDocument(private val device:E2eeScopeDevice,private va
         val parsed=E2eeFileManifestJson.readPrivateDocument(bytes)
         return validate(parsed)
     }
-    fun load(offline:Boolean=false):Opened{
+    fun load(offline:Boolean=false,expected:JSONObject?=null):Opened{
         assertCurrent();device.requireOpen();if(!offline)try{queue.recoverAcknowledgement()}catch(error:IllegalStateException){if(error.message!="E2EE_CONFLICT_REVIEW_STALE")throw error};assertCurrent();val local=queue.load();assertCurrent()
         try{
             if(offline){check(local!=null){"E2EE_OFFLINE_CONTENT_UNAVAILABLE"};return Opened(decode(local.bytes),local.serial,local.remoteRevision,local.pending)}
-            val remote=client.read(domain,objectId)
+            val remote=client.read(domain,objectId,expected)
             if(remote==null){if(local?.pending==true&&local.remoteRevision==0L)return Opened(decode(local.bytes),local.serial,0,true);error("E2EE_PRIVATE_DOCUMENT_MISSING")};assertCurrent()
             try{val value=decode(remote.bytes);assertCurrent()
                 if(local?.pending==true)return Opened(decode(local.bytes),local.serial,local.remoteRevision,true,

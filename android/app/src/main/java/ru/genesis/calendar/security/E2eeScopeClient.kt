@@ -412,7 +412,8 @@ class E2eeScopeClient(private val device: E2eeScopeDevice, private val ownerId: 
         check(frame != null && context.get("ownerId") == ownerId && context.get("scopeId") == scopeId
             && context.get("domain") == domain && context.get("objectId") == objectId) { "E2EE_CONTEXT_MISMATCH" }
         val payloadHash = E2eeEnvelope.payloadHash(envelope)
-        check(expected==null||context.getLong("revision")==expected.getLong("revision")&&payloadHash==expected.getString("payloadHash")){"E2EE_MANIFEST_MISMATCH"}
+        check(expected==null||context.getLong("revision")==expected.getLong("revision")&&payloadHash==expected.getString("payloadHash")&&
+            (!expected.optBoolean("currentGeneration")||context.getLong("dataGeneration")==current().generation)){"E2EE_MANIFEST_MISMATCH"}
         check(previous == null || context.getLong("revision") > previous.getLong("revision")
             || context.getLong("revision") == previous.getLong("revision") && payloadHash == previous.get("hash")) { "E2EE_REMOTE_ROLLBACK" }
         val root = roots[context.getString("keyId")] ?: throw IllegalStateException("E2EE_KEY_UNAVAILABLE")

@@ -6,7 +6,7 @@ import org.junit.Test
 
 class E2eePrivateReadRetryTest {
     @Test fun allPureDiscoveryRoutesRetryTheSameSubmittedJson() {
-        for (path in listOf("/read", "/directory", "/status")) {
+        for (path in listOf("/read", "/directory", "/status", "/membership-graph", "/membership-state")) {
             val original = if (path == "/status") null else JSONObject().put("scopeId", "owned-scope").put("nonce", "unchanged")
             var calls = 0
             var waited = 0L

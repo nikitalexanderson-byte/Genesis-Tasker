@@ -13,6 +13,7 @@ import {showPrivateMigration,privateMigrationUi,closePrivateMigrationUi} from '.
 import {holdPrivateProductMutations,requirePrivateProductMutation} from '../app/e2ee/product-mutation-fence.ts';
 import {inspectRetainedProductCustody} from '../app/e2ee/retained-product-custody.ts';
 import {WebPrivateAccount} from '../app/e2ee/product-session.ts';
+import {E2eeSharedProduct} from '../app/e2ee/shared-product.ts';
 
 class Records {
   rows=new Map();fail=false;
@@ -29,6 +30,87 @@ class Keys {
   async create(id,bundle){assert.ok(!this.rows.has(id));this.rows.set(id,{serial:1,bundle:structuredClone(bundle)});}
 }
 const bytes=text=>new TextEncoder().encode(text),text=value=>new TextDecoder().decode(value);
+
+// Real device encryption, immutable envelopes, signed business proofs and scope
+// client; only server projection/transport is modeled in this component suite.
+async function immutableProductFixture(){
+ const f=await fixture({kind:'project'});let client=f.make(),page,bodyGets=0,indexReads=0;
+ const transportRead=f.transport.read;
+ f.transport.read=async packet=>{
+  if(packet.command.action==='product-index'){indexReads++;return structuredClone(page);}
+  if(packet.command.action==='get')bodyGets++;
+  return transportRead(packet);
+ };
+ const scopeId=f.rootContext.scopeId,entityId='label:immutable-cache',make=()=>new E2eeSharedProduct({scopeId,kind:'project',device:f.device,client,
+  assertCurrent:()=>f.device.requireOpen(),validateBody:(_kind,body)=>body});
+ const proof=async(action,payload)=>{
+  const directory=await client.refresh(),command={protocol:1,ownerId:f.device.ownerId,scopeId,deviceId:f.device.deviceId,action,
+   expectedRevision:directory.checkpoint.revision,checkpointHash:directory.checkpoint.hash,securityEpoch:directory.securityEpoch,operationId:crypto.randomUUID(),payload};
+  const packet=await signE2eeCommand(command,f.device.keys().signing.privateKey);return{command,proofHash:await e2eeCommandHash(command),packet:JSON.stringify(packet)};
+ };
+ let baseline,stage;
+ const update=async(title,revision=1)=>{
+  await client.refresh();const objectId='product-version:'+crypto.randomUUID(),version={protocol:1,scopeId,entityId,kind:'label',revision,parentId:null,deleted:false,metadata:{protocol:1},body:{title}};
+  await client.prepare('shared-project',objectId,bytes(JSON.stringify(version)),0);await client.flush('shared-project',objectId);
+  const reference=await client.objectReference('shared-project',objectId),entity={entityId,kind:'label',revision,domain:'shared-project',objectId,payloadHash:reference.payloadHash,parentId:null,authorId:f.device.ownerId,deleted:false,metadata:{protocol:1},updatedAt:'2026-11-24T00:00:00Z'};
+  const operation={action:revision===1?'create':'update',entityId,kind:'label',expectedRevision:revision-1,domain:entity.domain,objectId,payloadHash:entity.payloadHash,parentId:null,metadata:entity.metadata,proposalId:null};
+  let head;
+  if(revision===1){
+   stage=await proof('product-bootstrap-stage',{intentId:'cache-stage',bootstrapId:'cache-bootstrap',partIndex:0,items:[{operation,authorId:f.device.ownerId}]});
+   baseline=await proof('product-bootstrap-complete',{intentId:'cache-complete',bootstrapId:'cache-bootstrap',parts:[{partIndex:0,proofHash:stage.proofHash}],expectedCount:1});head=stage;
+  }else head=await proof('product-commit',{intentId:crypto.randomUUID(),operations:[operation]});
+  page={entities:[entity],heads:[{entityId,revision,proofHash:head.proofHash}],proofs:[baseline,head].map(({proofHash,packet})=>({proofHash,packet})),proposals:[],attestations:[],bootstrapProofHash:baseline.proofHash,checkpointHash:baseline.command.checkpointHash,directoryRevision:baseline.command.expectedRevision};
+  return version;
+ };
+ await update('PRIVATE IMMUTABLE CACHE CANARY');
+ return{f,make,update,get page(){return page;},bodyGets:()=>bodyGets,indexReads:()=>indexReads,cold:async()=>{client=await f.reopen();return make();}};
+}
+
+test('fresh authorized snapshots reuse exact immutable content across restart without repeating body requests',async()=>{
+ const f=await immutableProductFixture();try{
+  const model=f.make(),first=await model.versions(),gets=f.bodyGets();assert(gets>0);first[0].body.title='caller mutation';
+  const second=await model.versions();assert.equal(second[0].body.title,'PRIVATE IMMUTABLE CACHE CANARY');assert.equal(f.bodyGets(),gets);assert.equal(f.indexReads(),2);
+  assert(!JSON.stringify([...f.f.storage.rows]).includes('PRIVATE IMMUTABLE CACHE CANARY'));
+  const cold=await f.cold();assert.equal((await cold.versions())[0].body.title,'PRIVATE IMMUTABLE CACHE CANARY');assert.equal(f.bodyGets(),gets);assert.equal(f.indexReads(),3);
+ }finally{f.f.device.lock();}
+});
+
+test('a signed changed head fetches new immutable bytes and a forged head cannot select cached content',async()=>{
+ const f=await immutableProductFixture();try{
+  const model=f.make();await model.versions();const gets=f.bodyGets();await f.update('second immutable body',2);
+  const next=await model.versions();assert.equal(next[0].body.title,'second immutable body');assert.equal(next[0].revision,2);assert(f.bodyGets()>gets);
+  const acceptedGets=f.bodyGets();f.page.entities[0].payloadHash=encodeE2eeBytes(freshSecret());
+  await assert.rejects(model.versions(),/E2EE_PRODUCT_PROOF_INVALID/);assert.equal(f.bodyGets(),acceptedGets);
+ }finally{f.f.device.lock();}
+});
+
+test('cached immutable content never substitutes for a refused online directory or a locked device',async()=>{
+ const f=await immutableProductFixture();try{
+  const model=f.make();await model.versions();const before=structuredClone(f.f.storage.rows),indexReads=f.indexReads(),gets=f.bodyGets();
+  f.f.transport.directory=async()=>{throw Error('E2EE_REVOKED_DEVICE');};
+  await assert.rejects(model.versions(),/E2EE_REVOKED_DEVICE/);assert.equal(f.indexReads(),indexReads);assert.equal(f.bodyGets(),gets);assert.deepEqual(f.f.storage.rows,before);
+  f.f.device.lock();await assert.rejects(model.versions(),/E2EE_UNLOCK_REQUIRED/);assert.equal(f.bodyGets(),gets);
+ }finally{f.f.device.lock();}
+});
+
+test('the signed index reference binds the exact body read before it can enter the immutable cache',async()=>{
+ const f=await immutableProductFixture();try{
+  const entity=f.page.entities[0],original=f.f.server.objects.get(`${entity.domain}\0${entity.objectId}`);
+  const substituted={protocol:1,scopeId:f.f.rootContext.scopeId,entityId:entity.entityId,kind:entity.kind,revision:entity.revision,parentId:entity.parentId,deleted:entity.deleted,metadata:entity.metadata,body:{title:'signed bytes outside the approved index reference'}};
+  const forged=await sealE2eeFile(await importE2eeRoot(f.f.raw),f.f.device.keys().signing.privateKey,{...original.context,operationId:crypto.randomUUID()},bytes(JSON.stringify(substituted)),{filename:'',mediaType:'application/json'});
+  // Empty local content cache on an already trusted device; directory and
+  // signatures remain genuine. The server alternates two signed manifests.
+  f.f.storage.rows.clear();const read=f.f.transport.read;let manifestReads=0;
+  f.f.transport.read=async packet=>{
+   const command=packet.command,base={checkpointHash:command.checkpointHash,directoryRevision:command.expectedRevision};
+   if(command.action==='get'&&command.payload.domain===entity.domain&&command.payload.objectId===entity.objectId&&++manifestReads===1)return{...base,envelopes:[structuredClone(forged.manifest)]};
+   const chunk=command.action==='get'&&forged.chunks.find(row=>row.context.objectId===command.payload.objectId);
+   return chunk?{...base,envelopes:[structuredClone(chunk)]}:read(packet);
+  };
+  const model=f.make();await assert.rejects(model.versions(),/E2EE_MANIFEST_MISMATCH/);assert.equal(manifestReads,1);
+  f.f.transport.read=read;assert.equal((await model.versions())[0].body.title,'PRIVATE IMMUTABLE CACHE CANARY');
+ }finally{f.f.device.lock();}
+});
 
 test('parallel scope readers wait for one verified refresh rather than observing its temporary closed flag',async()=>{
  const f=await fixture(),client=f.make();await client.refresh();

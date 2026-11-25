@@ -12,6 +12,7 @@ internal class E2eeSharedRecords(context:Context,private val account:E2eeProduct
     private val scope=account.sharedScope(scopeId,scopeKind,resourceId)
     val product=E2eeSharedProduct(account.device,scope.client,scopeId,account::requireOpen){kind,body,header->domain.validate(kind,body,header)}
     @Synchronized fun index():JSONArray{account.requireOpen();return product.index(account.offline)}
+    @Synchronized fun versions():JSONArray{account.requireOpen();return product.versions(account.offline)}
     @Synchronized fun read(entity:JSONObject):JSONObject{account.requireOpen();return product.read(entity,account.offline)}
     @Synchronized fun get(kind:String,id:String):JSONObject{val key=domain.entityId(kind,id);val rows=index();val entity=(0 until rows.length()).map{rows.getJSONObject(it)}.singleOrNull{it.getString("kind")==kind&&it.getString("entityId")==key}?:error("E2EE_PRODUCT_ENTITY_MISSING");return read(entity)}
     @Synchronized fun list(kind:String,includeDeleted:Boolean=false):JSONArray{val rows=index();val result=JSONArray();for(at in 0 until rows.length()){val entity=rows.getJSONObject(at);if(entity.getString("kind")==kind&&(includeDeleted||!entity.getBoolean("deleted")))result.put(read(entity))};return result}

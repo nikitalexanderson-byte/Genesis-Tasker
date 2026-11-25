@@ -48,10 +48,33 @@ internal class E2eeSharedProduct(private val device:E2eeScopeDevice,private val 
         if(!E2eeProductJson.same(old,rows))index.save(JSONObject().put("protocol",1).put("scopeId",scopeId).put("entities",rows),prior?.serial);check();proposals.clear();proposals.putAll(reviewed);headProofs.clear();headProofs.putAll(currentProofs);return JSONArray(rows.toString())
     }
     @Synchronized fun read(input:JSONObject,offline:Boolean=false):JSONObject{
-        check();val entity=E2eeProductContract.entity(input);val value=document(entity.getString("objectId"),entity.getString("kind")).load(offline);val body=version(value.value)
-        check(!value.pending&&value.conflict==null&&value.remoteRevision==1L&&body.get("entityId")==entity.get("entityId")&&body.get("kind")==entity.get("kind")&&body.getLong("revision")==entity.getLong("revision")
+        return readVersion(E2eeProductContract.entity(input),offline,false)
+    }
+    private fun versionCache(entity:JSONObject):E2eeDeviceDocument{
+        // Earlier cache entries were populated before the envelope and reference were checked together.
+        val id="product-read-v2:"+E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(E2eeCommands.canonical(JSONObject().put("scopeId",scopeId).put("entity",entity))))
+        return E2eeDeviceDocument(device,id,{input->
+            E2eeKeys.exact(input,setOf("protocol","scopeId","entity","version"));check(input.get("protocol")==1&&input.get("scopeId")==scopeId&&E2eeProductJson.same(E2eeProductContract.entity(input.getJSONObject("entity")),entity)){"E2EE_PRODUCT_VERSION_INVALID"};JSONObject(input.toString())
+        },::check)
+    }
+    private fun readVersion(entity:JSONObject,offline:Boolean,fromFreshIndex:Boolean):JSONObject{
+        check();val cache=if(!offline&&fromFreshIndex)versionCache(entity)else null;val cached=cache?.load();check()
+        val expected=if(offline)null else JSONObject().put("revision",1).put("payloadHash",entity.getString("payloadHash")).put("currentGeneration",true)
+        val value=if(cached==null)document(entity.getString("objectId"),entity.getString("kind")).load(offline,expected)else null;check()
+        if(value!=null)check(!value.pending&&value.conflict==null&&value.remoteRevision==1L){"E2EE_PRODUCT_VERSION_INVALID"}
+        val body=version(cached?.value?.getJSONObject("version")?:value!!.value)
+        check(body.get("entityId")==entity.get("entityId")&&body.get("kind")==entity.get("kind")&&body.getLong("revision")==entity.getLong("revision")
             &&body.get("parentId")==entity.get("parentId")&&body.get("deleted")==entity.get("deleted")&&E2eeProductJson.same(body.get("metadata"),entity.get("metadata"))){"E2EE_PRODUCT_VERSION_INVALID"}
-        if(!offline)client.assertObjectReference(entity.getString("domain"),entity.getString("objectId"),1,entity.getString("payloadHash"));check();return JSONObject(body.toString())
+        check()
+        if(cache!=null&&cached==null){val held=JSONObject().put("protocol",1).put("scopeId",scopeId).put("entity",entity).put("version",body)
+            try{cache.save(held,null)}catch(error:Exception){if(error.message!="E2EE_LOCAL_CONFLICT")throw error;val concurrent=cache.load();check();check(concurrent!=null&&E2eeProductJson.same(concurrent.value,held)){"E2EE_PRODUCT_VERSION_INVALID"}}
+        };check();return JSONObject(body.toString())
+    }
+    /** The current signed index authorizes exact immutable references. Cache
+     * contents alone cannot select a head or survive a failed online refresh. */
+    @Synchronized fun versions(offline:Boolean=false):JSONArray{
+        val entities=index(offline);check();val values=JSONArray()
+        for(at in 0 until entities.length()){values.put(readVersion(entities.getJSONObject(at),offline,true));check()};return values
     }
     @Synchronized fun stage(edits:JSONArray,intentId:String=UUID.randomUUID().toString(),membershipIntentId:String?=null):String{
         check();E2eeKeys.technical(intentId);membershipIntentId?.let(E2eeKeys::technical);check(edits.length() in 1..100){"E2EE_PRODUCT_BATCH_INVALID"};val drafts=JSONArray()
@@ -147,9 +170,10 @@ internal class E2eeSharedProduct(private val device:E2eeScopeDevice,private val 
     }
     @Synchronized fun proposal(id:String,expectedHash:String):JSONObject{
         check();E2eeKeys.technical(id);index();val proposal=proposals[id]?:error("E2EE_PRODUCT_PROPOSAL_STALE");val operation=proposal.getJSONObject("operation");check(operation.get("payloadHash")==expectedHash){"E2EE_PRODUCT_PROPOSAL_STALE"}
-        val opened=document(operation.getString("objectId"),"task").load();val header=version(opened.value);check(!opened.pending&&opened.conflict==null&&opened.remoteRevision==1L&&header.get("entityId")==proposal.get("entityId")&&header.get("kind")=="task"
+        val expected=JSONObject().put("revision",1).put("payloadHash",expectedHash).put("currentGeneration",true)
+        val opened=document(operation.getString("objectId"),"task").load(expected=expected);val header=version(opened.value);check(!opened.pending&&opened.conflict==null&&opened.remoteRevision==1L&&header.get("entityId")==proposal.get("entityId")&&header.get("kind")=="task"
             &&header.getLong("revision")==proposal.getLong("baseRevision")+1&&!header.getBoolean("deleted")&&header.get("parentId")==operation.get("parentId")&&E2eeProductJson.same(header.get("metadata"),operation.get("metadata"))){"E2EE_PRODUCT_PROPOSAL_STALE"}
-        client.assertObjectReference("shared-project",operation.getString("objectId"),1,expectedHash);check();return JSONObject().put("proposal",JSONObject(proposal.toString())).put("version",header)
+        check();return JSONObject().put("proposal",JSONObject(proposal.toString())).put("version",header)
     }
     @Synchronized fun approve(review:JSONObject,intentId:String=UUID.randomUUID().toString()):JSONObject{
         E2eeKeys.exact(review,setOf("proposalId","payloadHash","version"));E2eeKeys.technical(intentId);val held=JSONObject(review.toString())

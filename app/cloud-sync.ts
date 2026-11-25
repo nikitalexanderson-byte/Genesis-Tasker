@@ -4136,7 +4136,7 @@ export async function e2eeRequest<T>(path:'/status'|'/bootstrap'|'/command'|'/re
     if(!isE2eeResponsePath(`/e2ee/v1${path}`)||(path==='/status')!==(body===undefined))throw new Error('E2EE_ROUTE_FORBIDDEN');
     return await api<T>(`/e2ee/v1${path}`,{method:body===undefined?'GET':'POST',cache:'no-store',signal,...(body===undefined?{}:{body:JSON.stringify(body)})},{e2eeObservation:observation});
   }catch(error){
-    if(['/read','/status','/directory'].includes(path)&&!observation&&error instanceof GenesisApiError&&error.status===429&&error.retryAfterSeconds!==null){
+    if(['/read','/status','/directory','/membership-graph','/membership-state'].includes(path)&&!observation&&error instanceof GenesisApiError&&error.status===429&&error.retryAfterSeconds!==null){
       const {E2eeReadRateError}=await import('./e2ee/read-rate-retry');throw new E2eeReadRateError(error.retryAfterSeconds);
     }
     const code=error instanceof GenesisApiError?e2eeHttpErrorCode(error.status,error.payload):null;if(code)throw new Error(code);throw error;

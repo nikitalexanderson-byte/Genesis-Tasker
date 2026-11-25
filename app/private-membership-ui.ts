@@ -7,6 +7,7 @@ let state:PrivateMembershipUi|null=null,listening=false;
 const listeners=new Set<()=>void>(),waiting=new Map<string,{resolve:(value:Record<string,unknown>)=>void;reject:(reason:Error)=>void}>();
 export const privateMembershipUi=()=>state;
 export const subscribePrivateMembershipUi=(listener:()=>void)=>{listeners.add(listener);return()=>{listeners.delete(listener);};};
+export const subscribePrivateMembershipClose=(listener:()=>void)=>subscribePrivateMembershipUi(()=>{if(!state)listener();});
 const notify=()=>{for(const listener of listeners)listener();};
 function listen(){if(listening)return;listening=true;subscribePrivateAccount(()=>{const view=privateAccountView();if(state&&(view.ownerId!==state.ownerId||view.phase!=='ready')){
  for(const value of waiting.values())value.reject(new Error('E2EE_ACCOUNT_CHANGED'));waiting.clear();state=null;notify();

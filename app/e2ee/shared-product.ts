@@ -5,7 +5,7 @@ import {samePrivateJson as same} from './product-json.ts';
 import {verifyProductPage,type VerifiedProductProposal} from './product-proofs.ts';
 import {assertTechnical,exactKeys} from './keys.ts';
 import {encodeE2eeBytes} from './envelope.ts';
-import {type SignedE2eeCommand,type WireValue} from './commands.ts';
+import {canonicalE2eeValue,type SignedE2eeCommand,type WireValue} from './commands.ts';
 import type {E2eeScopeClient} from './scope-client.ts';
 import type {UnlockedWebDevice} from './device-vault.ts';
 
@@ -71,12 +71,40 @@ export class E2eeSharedProduct{
   if(!same(entities,local?.value.entities))await this.#index.save({protocol:1,scopeId:this.options.scopeId,entities},local?.serial??null);this.#current();this.#proposals=proposals;this.#headProofs=headProofs;return entities;
  }
  index(offline=false){return this.#operation(()=>this.#readIndex(offline));}
- async #read(entity:ProductEntity,offline:boolean){const view=await this.#document(entity.objectId,entity.kind).load(offline?'offline':'online');this.#current();
-  const value=await this.#version(view.value);if(view.pending||view.conflict||view.remoteRevision!==1||value.entityId!==entity.entityId||value.kind!==entity.kind||value.revision!==entity.revision
+ async #versionCache(entity:ProductEntity){
+  // Earlier cache entries were populated before the envelope and reference were checked together.
+  const id='product-read-v2:'+encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',canonicalE2eeValue({scopeId:this.options.scopeId,entity}))));this.#current();
+  return new E2eeDeviceDocument(this.options.device,id,input=>{
+   exactKeys(input,['protocol','scopeId','entity','version']);
+   if(input.protocol!==1||input.scopeId!==this.options.scopeId||!same(productEntity(input.entity),entity))throw new Error('E2EE_PRODUCT_VERSION_INVALID');
+   return input as {protocol:1;scopeId:string;entity:ProductEntity;version:unknown};
+  },()=>this.#current());
+ }
+ async #read(entity:ProductEntity,offline:boolean,fromFreshIndex=false){
+  // Only the complete snapshot below may reuse an immutable body. Its index
+  // has just passed online ACL, directory and signed-head verification. A
+  // failed refresh never enters this branch or falls back to cached content.
+  const cache=!offline&&fromFreshIndex?await this.#versionCache(entity):null,cached=await cache?.load();this.#current();
+  const expected=offline?undefined:{revision:1,payloadHash:entity.payloadHash,currentGeneration:true};
+  const view=cached?null:await this.#document(entity.objectId,entity.kind).load(offline?'offline':'online',expected);this.#current();
+  if(view&&(view.pending||view.conflict||view.remoteRevision!==1))throw new Error('E2EE_PRODUCT_VERSION_INVALID');
+  const value=await this.#version(cached?cached.value.version:view!.value);
+  if(value.entityId!==entity.entityId||value.kind!==entity.kind||value.revision!==entity.revision
    ||value.parentId!==entity.parentId||value.deleted!==entity.deleted||!same(value.metadata,entity.metadata))throw new Error('E2EE_PRODUCT_VERSION_INVALID');
-  if(!offline)await this.options.client.assertObjectReference(entity.domain,entity.objectId,1,entity.payloadHash);this.#current();return structuredClone(value);
+  this.#current();
+  if(cache&&!cached){const held={protocol:1 as const,scopeId:this.options.scopeId,entity,version:value};
+   try{await cache.save(held,null);}catch(error){
+    if(!(error instanceof Error)||error.message!=='E2EE_LOCAL_CONFLICT')throw error;
+    const concurrent=await cache.load();this.#current();if(!concurrent||!same(concurrent.value,held))throw new Error('E2EE_PRODUCT_VERSION_INVALID');
+   }
+  }
+  this.#current();return structuredClone(value);
  }
  read(entity:ProductEntity,offline=false){const held=productEntity(structuredClone(entity));return this.#operation(()=>this.#read(held,offline));}
+ versions(offline=false){return this.#operation(async()=>{
+  const entities=await this.#readIndex(offline),versions:ProductVersion[]=[];this.#current();
+  for(const entity of entities){versions.push(await this.#read(entity,offline,true));this.#current();}return versions;
+ });}
  history(entityId:string,before=Number.MAX_SAFE_INTEGER,limit=5){assertTechnical(entityId);return this.#operation(async()=>{
   await this.options.client.refresh();this.#current();let response;
   for(;;){try{response=await this.options.client.readProductHistory(entityId,before,limit);break;}catch(error){if(limit>1&&error instanceof Error&&error.message==='E2EE_PRODUCT_PAGE_TOO_LARGE'){limit=Math.max(1,Math.floor(limit/2));continue;}throw error;}}
@@ -169,10 +197,10 @@ export class E2eeSharedProduct{
  });}
  async #proposal(id:string,expectedHash:string){assertTechnical(id);await this.#readIndex(false);const proposal=this.#proposals.get(id);
   if(!proposal||proposal.operation.payloadHash!==expectedHash)throw new Error('E2EE_PRODUCT_PROPOSAL_STALE');
-  const opened=await this.#document(proposal.operation.objectId,'task').load('online'),version=await this.#version(opened.value);this.#current();
+  const opened=await this.#document(proposal.operation.objectId,'task').load('online',{revision:1,payloadHash:expectedHash,currentGeneration:true}),version=await this.#version(opened.value);this.#current();
   if(opened.pending||opened.conflict||opened.remoteRevision!==1||version.entityId!==proposal.entityId||version.kind!=='task'||version.revision!==proposal.baseRevision+1
    ||version.deleted||version.parentId!==proposal.operation.parentId||!same(version.metadata,proposal.operation.metadata))throw new Error('E2EE_PRODUCT_PROPOSAL_STALE');
-  await this.options.client.assertObjectReference('shared-project',proposal.operation.objectId,1,expectedHash);this.#current();return{proposal,version};
+  return{proposal,version};
  }
  proposal(id:string,expectedHash:string){return this.#operation(()=>this.#proposal(id,expectedHash));}
  completionProposals(){this.#current();return structuredClone([...this.#proposals.values()]);}

@@ -24,7 +24,7 @@ export class E2eePrivateDocument<T>{
   this.#client=options.client;this.#domain=options.domain;this.#id=options.objectId;this.#validate=options.validate;this.#current=options.assertCurrent;this.#write=options.assertWrite;
  }
  async #decode(bytes:Uint8Array){const value=await this.#validate(parseLegacyMigrationJson(decoder.decode(bytes),'E2EE_PRIVATE_DOCUMENT_CORRUPT',64*1024*1024));this.#current();return value;}
- async load(mode:'online'|'offline'='online'):Promise<PrivateDocumentView<T>>{
+ async load(mode:'online'|'offline'='online',expected?:Parameters<E2eeScopeClient['read']>[2]):Promise<PrivateDocumentView<T>>{
   this.#current();if(mode==='online')try{await this.#queue.recoverAcknowledgement();}catch(error){if(!(error instanceof Error)||error.message!=='E2EE_CONFLICT_REVIEW_STALE')throw error;}
   this.#current();const local=await this.#queue.load();this.#current();
   try{
@@ -32,7 +32,7 @@ export class E2eePrivateDocument<T>{
     if(!local)throw new Error('E2EE_OFFLINE_CONTENT_UNAVAILABLE');
     return{value:await this.#decode(local.bytes),serial:local.serial,remoteRevision:local.remoteRevision,pending:local.pending,conflict:null};
    }
-   const remote=await this.#client.read(this.#domain,this.#id);this.#current();
+   const remote=await this.#client.read(this.#domain,this.#id,expected);this.#current();
    if(!remote){
     if(local?.pending&&local.remoteRevision===0)return{value:await this.#decode(local.bytes),serial:local.serial,remoteRevision:0,pending:true,conflict:null};
     throw new Error('E2EE_PRIVATE_DOCUMENT_MISSING');

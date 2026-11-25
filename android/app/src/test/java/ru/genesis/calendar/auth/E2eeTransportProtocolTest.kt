@@ -5,6 +5,15 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class E2eeTransportProtocolTest {
+    @Test fun membershipGraphAndAtomicCallsUseOnlyExplicitAuthenticatedPostRoutes() {
+        val routes=listOf("membership-graph","membership-atomic-begin","membership-atomic-page","membership-atomic-status","membership-atomic-cancel","membership-atomic-seal","membership-atomic-commit","membership-atomic-receipt","membership-atomic-receipt-page","membership-atomic-preview")
+        for(route in routes){
+            val path="/e2ee/v1/$route"
+            assertTrue(allowedAuthSessionRoute("POST",path));assertFalse(allowedAuthSessionRoute("GET",path))
+            for(suffix in listOf("/","?extra=1","-unknown"))assertFalse(allowedAuthSessionRoute("POST",path+suffix))
+        }
+        for(route in listOf("membership-graph","membership-atomic-preview","membership-atomic-receipt-page"))assertEquals(4*1024*1024,E2eeTransportProtocol.responseLimit("/e2ee/v1/$route"))
+    }
     @Test fun onlyExplicitSessionBoundProtocolRoutesAreAllowed() {
         assertTrue(allowedAuthSessionRoute("GET", "/e2ee/v1/status"))
         for (path in listOf("bootstrap", "command", "read", "directory", "challenge", "source")) {

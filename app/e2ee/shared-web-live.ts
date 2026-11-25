@@ -57,7 +57,7 @@ class WebSharedLive{
     const response=await account.shared(binding.scopeId,binding.kind,binding.resourceId).client.readProductContext();account.requireOpen();exactKeys(response,['context','checkpointHash','directoryRevision']);
     const value=validateSharedLiveContext(response.context);await contextStore.save({scopeId:binding.scopeId,context:value},saved?.serial??null);account.requireOpen();return value;
    },
-   versions:async()=>{const entities=await records.index(),versions=[];for(const entity of entities){versions.push(await records.read(entity));account.requireOpen();}return versions;},
+   versions:()=>records.versions(),
    localVersions:()=>records.product.localVersions(),
    history:(entityId,before)=>records.product.history(entityId,before),
    sourceTable:table=>records.sourceTable(table),

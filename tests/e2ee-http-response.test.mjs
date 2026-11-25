@@ -16,6 +16,18 @@ test('E2EE raw response limits match native routes and bound error bodies separa
  assert.equal(e2eeResponseLimit('/e2ee/v1/read',503),8192);assert.equal(isE2eeResponsePath('/e2ee/v1/read'),true);assert.equal(isE2eeResponsePath('/session'),false);
  assert.throws(()=>e2eeResponseLimit('/e2ee/v1/unknown',200),/E2EE_/);
 });
+
+test('all declared membership calls reach authenticated fetch with bounded responses and exact routes',async()=>{
+ const f=await cloudSyncClient(),routes=['membership-graph','membership-atomic-begin','membership-atomic-page','membership-atomic-status','membership-atomic-cancel','membership-atomic-seal','membership-atomic-commit','membership-atomic-receipt','membership-atomic-receipt-page','membership-atomic-preview'];
+ f.respond((_url,init)=>{assert.equal(init.method,'POST');assert(init.headers['X-CSRF-Token']);return Response.json({accepted:true});});
+ for(const route of routes){
+  assert.equal(isE2eeResponsePath('/e2ee/v1/'+route),true);assert.equal(e2eeResponseLimit('/e2ee/v1/'+route,409),8192);
+  assert.equal((await f.client.e2eeRequest('/'+route,{synthetic:true})).accepted,true);
+  for(const suffix of ['/','?extra=1','-unknown'])assert.equal(isE2eeResponsePath('/e2ee/v1/'+route+suffix),false);
+ }
+ assert.equal(f.requests.length,routes.length);
+ for(const route of ['membership-graph','membership-atomic-preview','membership-atomic-receipt-page'])assert.equal(e2eeResponseLimit('/e2ee/v1/'+route,200),4*1024*1024);
+});
 test('split UTF8 and a BOM decode correctly while consumed wire buffers expire',async()=>{
  const bytes=new TextEncoder().encode('\ufeff{"value":"α😀ёж","count":3}'),f=streamed(Array.from({length:bytes.length},(_,index)=>bytes.slice(index,index+1)));
  assert.deepEqual(await readE2eeJsonResponse(f.response,path,()=>{}),{value:'α😀ёж',count:3});assert.ok(f.loans.every(row=>row.every(byte=>byte===0)));assert.equal(f.response.body.locked,false);
@@ -122,8 +134,9 @@ test('invalid E2EE route methods refuse before fetch',async()=>{
 });
 test('read-only scope discovery exposes an actual bounded rate reply without retrying mutations',async()=>{
  const f=await cloudSyncClient();f.respond(()=>Response.json({error:'API_RATE_LIMIT'},{status:429,headers:{'Retry-After':'3'}}));
- for(const [route,body]of [['/status',undefined],['/directory',{scopeId:'personal:fixture'}],['/read',{}]])
+ for(const [route,body]of [['/status',undefined],['/directory',{scopeId:'personal:fixture'}],['/read',{}],['/membership-graph',{}],['/membership-state',{}]])
   await assert.rejects(f.client.e2eeRequest(route,body),error=>error.message==='E2EE_HTTP_ERROR'&&error.seconds===3);
- await assert.rejects(f.client.e2eeRequest('/command',{}),error=>error.seconds===undefined);
- assert.equal(f.requests.length,4);
+ for(const route of ['/command','/membership-atomic-commit'])
+  await assert.rejects(f.client.e2eeRequest(route,{}),error=>error.seconds===undefined);
+ assert.equal(f.requests.length,7);
 });

@@ -1,6 +1,7 @@
 package ru.genesis.calendar.ui
 
 import android.animation.ValueAnimator
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.LocalActivity
@@ -88,6 +89,13 @@ internal fun nativeBillingProviderChoices(catalog: JSONObject?, offer: JSONObjec
             it.optString("reason") != "client-unavailable" && nativeBillingProviderPrice(offer,id) != null
     }.map { it.getString("id") }.distinct().sortedBy { if (it == preferred) 0 else 1 }
 }
+
+internal fun nativePaddleWebsiteUrl(playDistribution: Boolean, origin: String, language: String): String? {
+    if (playDistribution || origin != "https://genesiscalendar.com") return null
+    val locale = language.takeIf { it.matches(Regex("[a-z]{2}")) } ?: "en"
+    return "$origin/?lang=$locale#pricing"
+}
+
 internal fun nativeBillingMoney(amount: Long, language: String, currency: String = "RUB"): String {
     val format = NumberFormat.getNumberInstance(Locale.forLanguageTag(language)).apply {
         minimumFractionDigits = if (amount % 100L == 0L) 0 else 2; maximumFractionDigits = 2
@@ -340,10 +348,19 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
     var observedOrderId by rememberSaveable(userId) { mutableStateOf<String?>(null) }
     var observedOrder by remember(userId) { mutableStateOf<JSONObject?>(null) }
     var orderRefresh by remember { mutableIntStateOf(0) }
+    var paddleWebsiteOpened by rememberSaveable(userId) { mutableStateOf(false) }
+    var paddleWebsiteError by remember(userId) { mutableStateOf(false) }
+    val paddleWebsite = nativePaddleWebsiteUrl(BuildConfig.PLAY_DISTRIBUTION, BuildConfig.GENESIS_ORIGIN, language)
     val billingLifecycle = LocalLifecycleOwner.current.lifecycle
-    DisposableEffect(billingLifecycle, userId, open, observedOrderId) {
+    DisposableEffect(billingLifecycle, controller, userId, open, observedOrderId) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME && open && observedOrderId != null) orderRefresh++
+            if (event == Lifecycle.Event.ON_RESUME && open) {
+                if (observedOrderId != null) orderRefresh++
+                if (paddleWebsiteOpened) {
+                    paddleWebsiteOpened = false
+                    controller.checkSession()
+                }
+            }
         }
         billingLifecycle.addObserver(observer)
         onDispose { billingLifecycle.removeObserver(observer) }
@@ -534,6 +551,27 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                                     else if (quote == null) copy("Итоговую сумму подтвердит платёжная система. Доступ изменится после подтверждения оплаты.", "The payment provider will confirm the final total. Access changes after verified payment.")
                                     else copy("Перерасчёт выполнен сервером по оставшемуся оплаченному сроку. Доступ изменится после подтверждения оплаты.", "The server calculated credit from the remaining paid period. Access changes after verified payment."),
                                     style = MaterialTheme.typography.bodySmall, color = upgradeScheme.onSurfaceVariant)
+                                if (paddleWebsite != null) {
+                                    OutlinedButton(
+                                        onClick = {
+                                            paddleWebsiteError = false
+                                            try {
+                                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(paddleWebsite)))
+                                                paddleWebsiteOpened = true
+                                            } catch (_: ActivityNotFoundException) {
+                                                paddleWebsiteError = true
+                                            }
+                                        },
+                                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("billing-paddle-website"),
+                                        enabled = !busy,
+                                    ) {
+                                        UpgradeText(safetyCopy.getString("paddleWebsiteAction"))
+                                    }
+                                    UpgradeText(safetyCopy.getString("paddleWebsiteHint"),
+                                        style = MaterialTheme.typography.bodySmall, color = upgradeScheme.onSurfaceVariant)
+                                    if (paddleWebsiteError) UpgradeText(safetyCopy.getString("paddleWebsiteError"),
+                                        style = MaterialTheme.typography.bodySmall, color = upgradeScheme.error)
+                                }
                             }
                             if (error) UpgradeText(copy("Не удалось проверить оплату. Проверьте соединение и повторите попытку. Ваш доступ не изменился.",
                                 "Could not verify payment. Check your connection and try again. Your access has not changed."), color = upgradeScheme.error)

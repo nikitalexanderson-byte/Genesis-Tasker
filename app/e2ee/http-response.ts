@@ -1,7 +1,9 @@
 import {parseE2eeTransportJson} from './transport-json.ts';
 import type {E2eeHttpBodyObservation} from './http-observation.ts';
 
-const prefix='/e2ee/v1/',routes=new Set(['status','bootstrap','command','read','challenge','directory','source','membership-state','membership-preview','membership']);
+const prefix='/e2ee/v1/',routes=new Set(['status','bootstrap','command','read','challenge','directory','source','membership-state','membership-preview','membership',
+ 'membership-graph','membership-atomic-begin','membership-atomic-page','membership-atomic-status','membership-atomic-cancel','membership-atomic-seal',
+ 'membership-atomic-commit','membership-atomic-receipt','membership-atomic-receipt-page','membership-atomic-preview']);
 const drivePrefix='/private-drive/v1/',driveRoutes=new Set(['status','connect','web-connect','authorize','disconnect','prepare','commit','list','download']);
 /** Same route budgets as native E2eeTransportProtocol, before JSON parsing. */
 export function isE2eeResponsePath(path:string){return path.startsWith(prefix)&&routes.has(path.slice(prefix.length))||path.startsWith(drivePrefix)&&driveRoutes.has(path.slice(drivePrefix.length));}
@@ -9,7 +11,8 @@ export function e2eeResponseLimit(path:string,status:number){
  if(!isE2eeResponsePath(path))throw new Error('E2EE_ROUTE_FORBIDDEN');
  if(status<200||status>=300)return 8192;
  if(path.startsWith(drivePrefix))return path===drivePrefix+'download'?25*1024*1024:path===drivePrefix+'list'?512*1024:16384;
- return path===prefix+'directory'?32*1024*1024:path===prefix+'read'?16*1024*1024:path===prefix+'command'?8*1024*1024:path===prefix+'membership-preview'?4*1024*1024:256*1024;
+ return path===prefix+'directory'?32*1024*1024:path===prefix+'read'?16*1024*1024:path===prefix+'command'?8*1024*1024:
+  ['membership-preview','membership-graph','membership-atomic-preview','membership-atomic-receipt-page'].some(route=>path===prefix+route)?4*1024*1024:256*1024;
 }
 /** Same bounded technical-code grammar as native E2eeTransportProtocol. Raw
  * error bodies and arbitrary private strings are never exception payloads. */

@@ -113,10 +113,19 @@ class NativeBillingProviderPolicyTest {
         for (preferred in listOf("yookassa", "lemon-squeezy", "paddle", "google-play")) {
             val staleCatalog = catalog(preferred)
             staleCatalog.getJSONArray("providers").getJSONObject(0).put("reason", "not-configured")
-            staleCatalog.getJSONArray("providers").put(JSONObject().put("id", "paddle").put("reason", "not-configured"))
+            staleCatalog.getJSONArray("providers").put(JSONObject().put("id", "paddle").put("available", true))
             assertEquals(listOf("yookassa"), nativeBillingProviderChoices(staleCatalog, offer(), false))
             assertEquals(emptyList<String>(), nativeBillingProviderChoices(staleCatalog, offer(), true))
         }
+    }
+
+    @Test fun paddleWebsiteOnlyOpensFromTheDirectAppForTheProductionOrigin() {
+        val origin = "https://genesiscalendar.com"
+        assertEquals("$origin/?lang=ru#pricing", nativePaddleWebsiteUrl(false, origin, "ru"))
+        assertEquals("$origin/?lang=en#pricing", nativePaddleWebsiteUrl(false, origin, "ru&ref=external"))
+        assertNull(nativePaddleWebsiteUrl(true, origin, "en"))
+        assertNull(nativePaddleWebsiteUrl(false, "https://localhost:4443", "en"))
+        assertNull(nativePaddleWebsiteUrl(false, "$origin.invalid", "en"))
     }
     @Test fun quoteAmountsAreIntegerAndPendingAuthorizationKeepsItsOriginalPrice() {
         val value = offer().put("amountMinor",700).put("currency","USD")

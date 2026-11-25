@@ -22,6 +22,7 @@ export class E2eeSharedRecords{
    assertCurrent:()=>account.requireOpen(),validateBody:(kind,body,header)=>validateSharedRecordBody(binding,kind,body,header)});
  }
  async index(){this.account.requireOpen();return this.product.index(this.account.mode==='offline');}
+ async versions(){this.account.requireOpen();return this.product.versions(this.account.mode==='offline');}
  async read(entity:ProductEntity){this.account.requireOpen();return this.product.read(entity,this.account.mode==='offline');}
  async get(kind:ProductKind,id:string){const key=sharedEntityId(kind,id),entities=await this.index(),entity=entities.find(row=>row.entityId===key&&row.kind===kind);if(!entity)throw new Error('E2EE_PRODUCT_ENTITY_MISSING');return this.read(entity);}
  async list(kind:ProductKind,includeDeleted=false){const entities=await this.index(),records:ProductVersion[]=[];for(const entity of entities)if(entity.kind===kind&&(includeDeleted||!entity.deleted))records.push(await this.read(entity));return records;}

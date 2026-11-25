@@ -106,7 +106,14 @@ test('malformed, duplicate, mixed-owner/generation and missing retained Physis d
   f=>{f.memory.reconciliationRequired=true;},f=>{f.memory.legacyKey='';f.remote.legacyKey={keyMode:'client',key:null};},
  ];
  for(const mutate of variants){const f=await fixture();await f.add();mutate(f);await assert.rejects(f.run());}
- const corrupt=await fixture();await corrupt.add();const envelope=JSON.parse(corrupt.remote.records[0].envelope_json);envelope.ciphertext='A'+envelope.ciphertext.slice(1);corrupt.remote.records[0].envelope_json=JSON.stringify(envelope);await assert.rejects(corrupt.run(),/E2EE_LEGACY_PHYSIS_CORRUPT/);
+ const corrupt=await fixture();
+ await corrupt.add();
+ const record=corrupt.remote.records[0];
+ const envelope=JSON.parse(record.envelope_json);
+ const first=envelope.ciphertext.startsWith('A')?'B':'A';
+ envelope.ciphertext=first+envelope.ciphertext.slice(1);
+ record.envelope_json=JSON.stringify(envelope);
+ await assert.rejects(corrupt.run(),/E2EE_LEGACY_PHYSIS_CORRUPT/);
 });
 
 test('native opening port sees validated originals and raw decrypted duplicates are rejected before schema projection',async()=>{

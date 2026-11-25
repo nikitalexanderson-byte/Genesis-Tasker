@@ -2,6 +2,9 @@ import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {setImmediate} from 'node:timers/promises';
 import {MembershipOperationDrafts} from '../app/e2ee/membership-operation-drafts.ts';
+import {membershipBeforeHash} from '../app/e2ee/membership-contract.ts';
+import {E2eeMembershipProduct} from '../app/e2ee/membership-product.ts';
+import {E2eeReadRateError} from '../app/e2ee/read-rate-retry.ts';
 
 const ownerId='schedule-owner';
 const operation={kind:'space-role',spaceId:'schedule-space',userId:'schedule-member',role:'guest'};
@@ -42,4 +45,26 @@ test('an account change during a read refuses its result before adopting or pars
  const f=fixture(),probe=f.drafts.snapshot(operation),refusal=assert.rejects(probe,/E2EE_ACCOUNT_CHANGED/);
  await f.started.promise;f.close();f.held.resolve({untrusted:'late response'});await refusal;
  assert.equal(f.rows.size,0);
+});
+
+test('membership graph and state retry read quotas with the same validated target',async()=>{
+ const target={table:'shared_space_members',key:{space_id:operation.spaceId,user_id:operation.userId}};
+ const row={...target,before:null,beforeHash:membershipBeforeHash(target.table,null)};
+ let graphReads=0,stateReads=0;
+ const transport={
+  async membershipGraph(spaceId){
+   assert.equal(this,transport);assert.equal(spaceId,operation.spaceId);
+   if(++graphReads===1)throw new E2eeReadRateError(0);
+   return {spaceId};
+  },
+  async membershipState(targets){
+   assert.deepEqual(structuredClone(targets),[target]);
+   if(++stateReads===1)throw new E2eeReadRateError(0);
+   return {rows:[row]};
+  },
+ };
+ const membership=new E2eeMembershipProduct({}, {}, transport, async()=>{}, ()=>{});
+ assert.deepEqual(await membership.graph(operation.spaceId),{spaceId:operation.spaceId});
+ assert.deepEqual(structuredClone(await membership.readState([target])),[row]);
+ assert.equal(graphReads,2);assert.equal(stateReads,2);
 });
