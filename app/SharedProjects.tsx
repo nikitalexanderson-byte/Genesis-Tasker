@@ -1932,6 +1932,9 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
         </article>)}</div>
       </section>
 
+          {teamSnapshot.project.isInbox && ["owner", "admin"].includes(teamSnapshot.project.spaceRole ?? "") ? (
+            <SharedActivity key={teamSnapshot.project.id} projectId={teamSnapshot.project.id} english={english} refreshKey={activityKey}/>
+          ) : null}
           {["owner", "admin"].includes(spaces.find((space) => space.id === spaceId)?.role ?? "") ? <button type="button" className="primary-button" onClick={() => setCreateModal("invite")}>{english ? "Invite to workspace" : "Пригласить в пространство"}</button> : null}
         </> : null}
         {createModal === "board" && editingBoard && snapshot ? <form onSubmit={(event) => {
