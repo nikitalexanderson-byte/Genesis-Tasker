@@ -50,6 +50,13 @@ RewriteRule . index.html [L]
   Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self' https://accounts.google.com; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://get.geojs.io https://geocoding-api.open-meteo.com https://speller.yandex.net; font-src 'self' data:; manifest-src 'self'; worker-src 'self'"
 </IfModule>
 
+# Match the served file so checkout parameters never select the site-wide policy.
+<Files "pay-paddle.html">
+  <IfModule mod_headers.c>
+    Header always set Content-Security-Policy "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'self' https://cdn.paddle.com; style-src 'self' 'unsafe-inline' https://cdn.paddle.com; img-src 'self' data: https://*.paddle.com; connect-src 'self' https://*.paddle.com; frame-src https://*.paddle.com"
+  </IfModule>
+</Files>
+
 <FilesMatch "\.(?:js|css|png|ico|webp|svg|woff2)$">
   <IfModule mod_headers.c>
     Header set Cache-Control "public, max-age=604800, immutable"
@@ -61,6 +68,12 @@ RewriteRule . index.html [L]
     Header set Cache-Control "no-cache, no-store, must-revalidate"
   </IfModule>
 </FilesMatch>
+
+<Files "paddle-checkout.js">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </IfModule>
+</Files>
 
 <FilesMatch "^manifest(?:\.[a-z]{2})?\.webmanifest$">
   <IfModule mod_headers.c>
@@ -76,7 +89,7 @@ RewriteRule . index.html [L]
   </IfModule>
 </FilesMatch>
 
-<FilesMatch "^(?:privacy|terms|refund|support|delete-account)\.html$">
+<FilesMatch "^(?:privacy|terms|refund|support|delete-account|pay-paddle)\.html$">
   <IfModule mod_headers.c>
     Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header set Pragma "no-cache"

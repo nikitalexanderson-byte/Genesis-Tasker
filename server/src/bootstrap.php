@@ -117,6 +117,10 @@ function genesisDb(): PDO
         if ($migration === false) {
             throw new RuntimeException('Database migration is unreadable: ' . $name);
         }
+        if ($name === '141_paddle_billing.sql') {
+            genesisMigratePaddleBilling($db, $migration, $name);
+            continue;
+        }
         $db->beginTransaction();
         try {
             $db->exec($migration);
@@ -136,6 +140,33 @@ function genesisDb(): PDO
     require_once __DIR__ . '/e2ee-policy.php';
     genesisE2eeInitializeGuards($db);
     return $db;
+}
+
+/** Rebuild the checked provider fields while keeping every dependent billing row. */
+function genesisMigratePaddleBilling(PDO $db, string $sql, string $name): void
+{
+    $db->exec('PRAGMA foreign_keys = OFF');
+    try {
+        genesisBeginWriteTransaction($db);
+        try {
+            $check = $db->prepare('SELECT 1 FROM schema_migrations WHERE name=?');
+            $check->execute([$name]);
+            $applied = $check->fetchColumn() !== false;
+            $check->closeCursor();
+            if (!$applied) {
+                $db->exec($sql);
+                if ($db->query('PRAGMA foreign_key_check')->fetch() !== false)
+                    throw new RuntimeException('Billing migration failed the foreign key check');
+                $db->prepare('INSERT INTO schema_migrations(name, applied_at) VALUES(?, ?)')->execute([$name, genesisNow()]);
+            }
+            $db->commit();
+        } catch (Throwable $error) {
+            if ($db->inTransaction()) $db->rollBack();
+            throw $error;
+        }
+    } finally {
+        $db->exec('PRAGMA foreign_keys = ON');
+    }
 }
 
 function genesisJson(array $payload, int $status = 200): never

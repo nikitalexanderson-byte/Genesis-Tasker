@@ -35,6 +35,10 @@ return [
     'backup_signing_public_keys' => [], // Trusted active/retired verification registry; never supplied by a file.
     // Configure a separate provider sandbox in private config.php before integration tests.
     // billing.yookassa_live is disabled until the instance operator explicitly enables it.
+    'billing' => ['paddle_live' => [
+        'schema_version' => 1, 'seller_id' => 476362, 'enabled' => false, 'verified' => false,
+        'api_key' => '', 'client_token' => '', 'webhook_secret' => '',
+    ]],
     // NPD (self-employed) receipts are issued manually in My Tax, not through 54-FZ receipt fields.
     'app_url' => 'https://genesis-test.example.invalid',
     'google_only' => true,

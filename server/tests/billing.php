@@ -100,8 +100,8 @@ billingFailure('BILLING_PERIOD_INVALID',fn()=>genesisBillingPeriodEnd('2028-02-3
 billingFailure('BILLING_PERIOD_INVALID',fn()=>genesisBillingPeriodEnd('2028-01-01T10:00:00Z',2));
 
 $db = billingFixture(); billingOrder($db,'first');
-// A checkout, failure or cancellation never upgrades a Free account, for any provider/offer.
-foreach (GENESIS_BILLING_PROVIDERS as $providerName) {
+// This fixture uses the pre-Paddle tables. billing-paddle.php covers the new schema and adapter.
+foreach (['google-play','lemon-squeezy','yookassa'] as $providerName) {
     foreach (['standart','premium','business','premium4life'] as $planName) {
         $unpaid=billingFixture();$months=$planName==='premium4life'?0:1;
         billingOrder($unpaid,'unpaid','buyer',$months,$providerName,$planName);

@@ -16,10 +16,17 @@ function genesisBillingOrder(PDO $db, string $id): array
 function genesisBillingPublicOrder(array $order,?PDO $db=null): array
 {
     $db??=genesisDb();$settlement=genesisBillingSettlement($db,$order['id']);$blocked=genesisBillingSettlementBlocked($settlement);
+    $checkoutUrl=match($order['provider']){
+        'yookassa'=>$order['checkout_url'],
+        'paddle'=>$order['status']==='pending'&&genesisBillingPaddleId($order['provider_secret'],'txn')
+            &&$order['checkout_url']===genesisBillingPaddleCheckoutUrl($order['id'])?$order['checkout_url']:null,
+        default=>null,
+    };
     return ['id'=>$order['id'],'plan'=>$order['plan'],'periodMonths'=>(int)$order['period_months'],'provider'=>$order['provider'],
         'status'=>$blocked?($settlement['state']==='capture-pending'?'payment-verifying':'settlement-required')
-            :($order['provider']==='yookassa'&&$order['status']==='pending'&&$order['checkout_url']===null?'payment-verifying':$order['status']),
-        'settlement'=>genesisBillingPublicSettlement($settlement,$order),'checkoutUrl'=>$blocked||$order['provider']!=='yookassa'?null:$order['checkout_url'],'productId'=>$order['product_id'],
+            :(in_array($order['provider'],['yookassa','paddle'],true)&&$order['status']==='pending'&&$order['checkout_url']===null?'payment-verifying':$order['status']),
+        'settlement'=>genesisBillingPublicSettlement($settlement,$order),
+        'checkoutUrl'=>$blocked?null:$checkoutUrl,'productId'=>$order['product_id'],
         'amountMinor'=>(int)$order['amount_minor'],'currency'=>$order['currency'],
         'listAmountMinor'=>(int)($order['list_amount_minor'] ?? $order['amount_minor']),
         'creditMinor'=>(int)($order['upgrade_credit_minor'] ?? 0),'referralDiscountMinor'=>(int)($order['referral_discount_minor']??0)];
@@ -93,6 +100,8 @@ function genesisBillingCreateOrder(string $userId, array $input,?array $catalogD
         genesisBillingYooPrepare($db,$order,$settings['providers'][$provider],$returnUrl,time());
         return genesisBillingPublicOrder(genesisBillingYooReconcile($db,$order,$settings['providers'][$provider],null,null,true));
     }
+    if($provider==='paddle'&&$gatewayCheckout===null)
+        return genesisBillingPublicOrder(genesisBillingPaddleCheckout($db,$order,$settings['providers'][$provider]));
     $gatewayCheckout??='genesisBillingGatewayCheckout';
     $result=$gatewayCheckout($order,$settings['providers'][$provider],$returnUrl);
     if ($provider!=='google-play') $db->prepare('UPDATE billing_orders SET checkout_url=?,provider_secret=?,updated_at=? WHERE id=? AND checkout_url IS NULL')
@@ -123,6 +132,9 @@ function genesisBillingVerifyOrder(string $userId, string $id, array $input = []
             $configuration['shop_id'].':'.$configuration['secret_key']);
         $verified=genesisBillingYooSettleUpgrade($db,$verified,$order,$configuration);
         $receipt=genesisBillingYooReceipt($verified,$order,$configuration);
+    } elseif ($provider==='paddle') {
+        $verified=genesisBillingPaddleVerify($db,$order,$configuration,'genesisBillingHttp',true);
+        return [...genesisBillingRefreshEntitlement($db,$userId,time()),'order'=>genesisBillingPublicOrder($verified)];
     } elseif ($provider==='google-play') {
         $token=$input['purchaseToken']??null;
         if (!is_string($token) || strlen($token)<10 || strlen($token)>4096) throw new InvalidArgumentException('BILLING_PURCHASE_TOKEN_REQUIRED');
@@ -145,8 +157,14 @@ function genesisBillingVerifyOrder(string $userId, string $id, array $input = []
 function genesisBillingWebhook(string $provider, string $raw, string $signature,?callable $http=null): void
 {
     $http??='genesisBillingHttp';
-    if($provider!=='yookassa')throw new GenesisResourceLimitException(410,'BILLING_PROVIDER_RETIRED');
+    if(!in_array($provider,['yookassa','paddle'],true))throw new GenesisResourceLimitException(410,'BILLING_PROVIDER_RETIRED');
     $settings=genesisBillingSettings();$config=$settings['providers'][$provider]??[];
+    if($provider==='paddle'&&genesisBillingProviderReady('paddle',$settings)){
+        $event=genesisBillingPaddleEvent($raw,$signature,$config['webhook_secret'],time());
+        genesisBillingPaddleWebhook(genesisDb(),$event,$config,$http);
+        return;
+    }
+    if($provider==='paddle')throw new GenesisResourceLimitException(410,'BILLING_PROVIDER_RETIRED');
     if(!genesisBillingProviderReady($provider,$settings))throw new GenesisResourceLimitException(503,'BILLING_NOT_CONFIGURED');
     if ($provider==='yookassa') {
         $event=json_decode($raw,true,32,JSON_THROW_ON_ERROR);
@@ -198,7 +216,8 @@ function genesisBillingRoute(string $method, array $segments): never
     if (count($segments)===3 && $segments[1]==='webhooks' && $method==='POST') {
         $raw=(string)file_get_contents('php://input',false,null,0,500001);
         if (strlen($raw)>500000) throw new InvalidArgumentException('BILLING_EVENT_INVALID');
-        genesisBillingWebhook($segments[2],$raw,(string)($_SERVER['HTTP_X_SIGNATURE']??''));genesisJson(['ok'=>true]);
+        $header=$segments[2]==='paddle'?'HTTP_PADDLE_SIGNATURE':'HTTP_X_SIGNATURE';
+        genesisBillingWebhook($segments[2],$raw,(string)($_SERVER[$header]??''));genesisJson(['ok'=>true]);
     }
     $userId=genesisRequireUserId();
     if(($segments[1]??'')==='modeling')genesisModelingRoute($method,$segments,$userId);
@@ -233,7 +252,31 @@ function genesisBillingRoute(string $method, array $segments): never
             if($recovery&&($recovery['checked_at']===null||time()-(int)strtotime($recovery['checked_at'])>=5))
                 $order=genesisBillingYooReconcile(genesisDb(),$order,genesisBillingSettings()['providers']['yookassa']??[]);
         }
+        if($order['provider']==='paddle'&&$order['status']==='pending'&&$order['provider_secret']!==null){
+            $settings=genesisBillingSettings();
+            if(genesisBillingProviderReady('paddle',$settings))
+                $order=genesisBillingPaddleVerify(genesisDb(),$order,$settings['providers']['paddle'],'genesisBillingHttp',true);
+        }
         genesisJson(genesisBillingPublicOrder($order));
+    }
+    if ($method==='GET' && $segments===['billing','paddle-checkout']) {
+        $settings=genesisBillingSettings();$db=genesisDb();
+        if(($settings['paddle_live_verified']??false)!==true||!genesisBillingProviderReady('paddle',$settings))
+            throw new GenesisResourceLimitException(503,'BILLING_NOT_CONFIGURED');
+        $orderId=$_GET['billingOrder']??null;$transactionId=$_GET['transactionId']??null;
+        if(is_string($orderId)&&preg_match('/\A[a-zA-Z0-9_-]{16,100}\z/D',$orderId)===1){
+            $lookup=$db->prepare("SELECT * FROM billing_orders WHERE id=? AND user_id=? AND provider='paddle'");
+            $lookup->execute([$orderId,$userId]);
+        }elseif(genesisBillingPaddleId($transactionId,'txn')){
+            $lookup=$db->prepare("SELECT * FROM billing_orders WHERE provider_secret=? AND user_id=? AND provider='paddle'");
+            $lookup->execute([$transactionId,$userId]);
+        }else throw new InvalidArgumentException('BILLING_ORDER_INVALID');
+        $order=$lookup->fetch();
+        if(!$order||!genesisBillingPaddleId($order['provider_secret'],'txn'))
+            throw new GenesisResourceLimitException(404,'BILLING_ORDER_NOT_FOUND');
+        $return=rtrim(genesisConfig()['app_url'],'/').'/?billingOrder='.rawurlencode($order['id']).'#settings/account';
+        if($order['status']!=='pending')genesisJson(['returnUrl'=>$return]);
+        genesisJson(['token'=>$settings['providers']['paddle']['client_token'],'transactionId'=>$order['provider_secret'],'returnUrl'=>$return]);
     }
     genesisRequireCsrf();
     if ($method==='POST' && count($segments)===2 && $segments[1]==='restore') {

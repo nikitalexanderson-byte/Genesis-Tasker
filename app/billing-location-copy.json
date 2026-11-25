@@ -1,5 +1,6 @@
 {
   "ru": {
+    "currency": "Валюта оплаты",
     "region": "Регион оплаты",
     "auto": "Автоматически по IP",
     "russia": "Россия",
@@ -16,6 +17,7 @@
     "oneTime": "Оплата за выбранный срок без автоматического продления."
   },
   "en": {
+    "currency": "Payment currency",
     "region": "Payment region",
     "auto": "Automatic by IP",
     "russia": "Russia",
@@ -32,6 +34,7 @@
     "oneTime": "One payment for the selected period, with no automatic renewal."
   },
   "el": {
+    "currency": "Νόμισμα πληρωμής",
     "region": "Περιοχή πληρωμής",
     "auto": "Αυτόματα μέσω IP",
     "russia": "Ρωσία",
@@ -48,6 +51,7 @@
     "oneTime": "Μία πληρωμή για την επιλεγμένη περίοδο, χωρίς αυτόματη ανανέωση."
   },
   "de": {
+    "currency": "Zahlungswährung",
     "region": "Zahlungsregion",
     "auto": "Automatisch per IP",
     "russia": "Russland",
@@ -64,6 +68,7 @@
     "oneTime": "Einmalige Zahlung für den gewählten Zeitraum, ohne automatische Verlängerung."
   },
   "fr": {
+    "currency": "Devise de paiement",
     "region": "Région de paiement",
     "auto": "Automatique par IP",
     "russia": "Russie",
@@ -80,6 +85,7 @@
     "oneTime": "Un paiement pour la période choisie, sans renouvellement automatique."
   },
   "es": {
+    "currency": "Moneda de pago",
     "region": "Región de pago",
     "auto": "Automática por IP",
     "russia": "Rusia",
@@ -96,6 +102,7 @@
     "oneTime": "Un pago por el período elegido, sin renovación automática."
   },
   "it": {
+    "currency": "Valuta di pagamento",
     "region": "Regione di pagamento",
     "auto": "Automatica tramite IP",
     "russia": "Russia",
@@ -112,6 +119,7 @@
     "oneTime": "Un pagamento per il periodo scelto, senza rinnovo automatico."
   },
   "pt": {
+    "currency": "Moeda de pagamento",
     "region": "Região de pagamento",
     "auto": "Automática por IP",
     "russia": "Rússia",
@@ -128,6 +136,7 @@
     "oneTime": "Um pagamento pelo período escolhido, sem renovação automática."
   },
   "pl": {
+    "currency": "Waluta płatności",
     "region": "Region płatności",
     "auto": "Automatycznie według IP",
     "russia": "Rosja",
@@ -144,6 +153,7 @@
     "oneTime": "Jedna płatność za wybrany okres, bez automatycznego odnowienia."
   },
   "sr": {
+    "currency": "Валута плаћања",
     "region": "Регион плаћања",
     "auto": "Аутоматски према IP адреси",
     "russia": "Русија",
@@ -160,6 +170,7 @@
     "oneTime": "Једна уплата за изабрани период, без аутоматског обнављања."
   },
   "uk": {
+    "currency": "Валюта оплати",
     "region": "Регіон оплати",
     "auto": "Автоматично за IP",
     "russia": "Росія",
@@ -176,6 +187,7 @@
     "oneTime": "Оплата за вибраний строк без автоматичного продовження."
   },
   "zh": {
+    "currency": "支付币种",
     "region": "付款地区",
     "auto": "根据 IP 自动判断",
     "russia": "俄罗斯",
@@ -192,6 +204,7 @@
     "oneTime": "所选期限一次付款，不自动续费。"
   },
   "tr": {
+    "currency": "Ödeme para birimi",
     "region": "Ödeme bölgesi",
     "auto": "IP ile otomatik",
     "russia": "Rusya",
@@ -208,6 +221,7 @@
     "oneTime": "Seçilen süre için tek ödeme, otomatik yenileme yok."
   },
   "ja": {
+    "currency": "支払い通貨",
     "region": "支払い地域",
     "auto": "IPで自動判定",
     "russia": "ロシア",

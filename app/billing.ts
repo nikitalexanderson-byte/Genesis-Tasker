@@ -2,7 +2,7 @@ import type { FeatureAccess } from './feature-access';
 import {resolvedFeatureAccess, type BillingTrial} from './billing-trial.ts';
 import approvedPolicy from '../server/resources/feature-access-policy.json' with {type:'json'};
 import approvedCatalog from '../server/resources/billing-catalog.json' with {type:'json'};
-export type BillingProvider = 'google-play' | 'lemon-squeezy' | 'yookassa';
+export type BillingProvider = 'google-play' | 'lemon-squeezy' | 'paddle' | 'yookassa';
 export type BillingPrice={amountMinor:number;currency:string};
 export type BillingForeignRate={quotePerBase:string;effectiveDate:string;source?:string};
 export type BillingOffer = {id:string;plan:string;periodMonths:number;amountMinor:number|null;currency:string|null;availableProviders:BillingProvider[];seatLimit?:number;pricesByProvider?:Partial<Record<BillingProvider,BillingPrice>>;pricesByCurrency?:Partial<Record<'RUB'|'USD',BillingPrice>>};
@@ -55,8 +55,8 @@ export function billingOfferPrice(offer:BillingOffer,provider:BillingProvider):B
 }
 /** Display-only fallback uses the same fixed USD catalog as the server; API prices take precedence. */
 export function billingDisplayPrice(plan:BillingPlan,months:number,catalog:BillingCatalog|null,display:BillingProvider|'RUB'|'USD'):BillingPrice|null {
-  if(!['USD','RUB','google-play','lemon-squeezy','yookassa'].includes(display))return null;
-  const currency=display==='USD'||display==='lemon-squeezy'?'USD':'RUB';
+  if(!['USD','RUB','google-play','lemon-squeezy','paddle','yookassa'].includes(display))return null;
+  const currency=display==='USD'||display==='lemon-squeezy'||display==='paddle'?'USD':'RUB';
   if(plan==='free')return {amountMinor:0,currency};
   const offer=catalog?.offers.find(value=>value.plan===plan&&value.periodMonths===(plan==='premium4life'?0:months));
   const price=display==='USD'||display==='RUB'?offer?.pricesByCurrency?.[display]:offer?.pricesByProvider?.[display];
@@ -72,9 +72,10 @@ export function billingDisplayPrice(plan:BillingPlan,months:number,catalog:Billi
 export function billingCheckoutReady(catalog:BillingCatalog|null,offer:BillingOffer|undefined,quote:BillingQuote|null|undefined,provider:BillingProvider):boolean {
   const price=offer?billingOfferPrice(offer,provider):null;
   const pending=typeof quote?.pendingOrderId==='string'&&/^[a-zA-Z0-9_-]{16,100}$/.test(quote.pendingOrderId);
-  return Boolean(provider==='yookassa'&&catalog?.checkoutEnabled&&offer&&quote&&!quote.upgradeUnavailableReason&&quote.offerId===offer.id&&quote.plan===offer.plan&&quote.periodMonths===offer.periodMonths
+  const currency=provider==='paddle'?'USD':'RUB';
+  return Boolean((provider==='yookassa'||provider==='paddle')&&catalog?.checkoutEnabled&&offer&&quote&&!quote.upgradeUnavailableReason&&quote.offerId===offer.id&&quote.plan===offer.plan&&quote.periodMonths===offer.periodMonths
     &&[quote.amountMinor,quote.listAmountMinor,quote.creditMinor,quote.referralDiscountMinor??0].every(Number.isSafeInteger)&&quote.amountMinor>0&&quote.creditMinor>=0&&(quote.referralDiscountMinor??0)>=0&&quote.listAmountMinor-quote.creditMinor-(quote.referralDiscountMinor??0)===quote.amountMinor
-    &&/^[A-Z]{3}$/.test(quote.currency)&&(pending||quote.currency===price?.currency&&quote.listAmountMinor===price?.amountMinor)
+    &&quote.currency===currency&&(pending||quote.currency===price?.currency&&quote.listAmountMinor===price?.amountMinor)
     &&(!quote.provider||quote.provider===provider)
     &&quote.availableProviders?.includes(provider)&&offer.availableProviders.includes(provider)&&catalog.providers.some(method=>method.id===provider&&method.available));
 }

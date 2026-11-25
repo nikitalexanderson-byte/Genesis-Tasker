@@ -5,14 +5,16 @@ require_once __DIR__.'/billing-upgrades.php';
 require_once __DIR__.'/billing-settlement.php';
 require_once __DIR__.'/partners.php';
 require_once __DIR__.'/consumer-referrals.php';
+require_once __DIR__.'/billing-paddle.php';
 
-const GENESIS_BILLING_PROVIDERS = ['google-play', 'lemon-squeezy', 'yookassa'];
+const GENESIS_BILLING_PROVIDERS = ['google-play', 'lemon-squeezy', 'yookassa', 'paddle'];
 const GENESIS_BILLING_PLANS = ['standart', 'premium', 'business'];
 
 /** Release policy, separate from credentials and historical receipt verification. */
 function genesisBillingCheckoutAllowed(string $provider,string $client): bool
 {
-    return $provider==='yookassa'&&in_array($client,['web','android'],true);
+    return ($provider==='yookassa'&&in_array($client,['web','android'],true))
+        || ($provider==='paddle'&&$client==='web');
 }
 
 function genesisBillingDefinition(): array
@@ -25,7 +27,8 @@ function genesisBillingSettings(): array
     $settings = genesisConfig()['billing'] ?? [];
     $settings=is_array($settings)?$settings:[];
     // Kept in config.php so the existing protected runtime backup includes the credential.
-    return genesisBillingYooPrivateSettings($settings,$settings['yookassa_live']??null);
+    $settings=genesisBillingYooPrivateSettings($settings,$settings['yookassa_live']??null);
+    return genesisBillingPaddlePrivateSettings($settings,$settings['paddle_live']??null);
 }
 
 function genesisBillingYooPrivateSettings(array $settings,mixed $private): array
@@ -56,11 +59,13 @@ function genesisBillingProviderReady(string $provider, array $settings): bool
         'lemon-squeezy' => ['api_key', 'store_id', 'webhook_secret'],
         'yookassa' => ($configuration['receipt_required']??true)===true?['shop_id', 'secret_key', 'vat_code']:['shop_id', 'secret_key'],
         'google-play' => ['service_account_email', 'service_account_private_key'],
+        'paddle' => ['api_key', 'client_token', 'webhook_secret'],
         default => [],
     };
     if (!$required || !is_array($configuration)) return false;
     foreach ($required as $key) if (!is_scalar($configuration[$key] ?? null) || trim((string)$configuration[$key]) === '') return false;
     if(in_array($provider,['lemon-squeezy','yookassa'],true)&&($configuration['test_mode']??false)!==false)return false;
+    if($provider==='paddle'&&preg_match('/\Apdl_live_apikey_[A-Za-z0-9_-]{24,220}\z/D',(string)$configuration['api_key'])!==1)return false;
     if($provider==='lemon-squeezy'&&(($configuration['currency']??null)!=='USD'||($configuration['tax_inclusive']??false)!==true
         ||($configuration['gross_total_verified']??false)!==true))return false;
     return true;
@@ -85,7 +90,10 @@ function genesisBillingProviderPrices(int $rubMinor,array $foreign,mixed $usdMin
     // Preserve legacy display/receipt prices without exposing a foreign checkout.
     if(in_array($foreign['provider']??null,[null,'lemon-squeezy'],true)&&($foreign['currency']??null)==='USD'&&is_int($usdMinor)&&$usdMinor>0){
         $pricingModel=$foreign['pricingModel']??'fx-snapshot';
-        if($pricingModel==='fixed')$prices['lemon-squeezy']=['amountMinor'=>$usdMinor,'currency'=>'USD'];
+        if($pricingModel==='fixed'){
+            $prices['lemon-squeezy']=['amountMinor'=>$usdMinor,'currency'=>'USD'];
+            $prices['paddle']=['amountMinor'=>$usdMinor,'currency'=>'USD'];
+        }
         elseif($pricingModel==='fx-snapshot'){
             try{if(genesisBillingRubToUsdMinor($rubMinor,$foreign['rate']??[])===$usdMinor)$prices['lemon-squeezy']=['amountMinor'=>$usdMinor,'currency'=>'USD'];}
             catch(InvalidArgumentException){ /* A malformed legacy FX snapshot cannot enable a foreign checkout. */ }
@@ -106,7 +114,7 @@ function genesisBillingDisplayPrices(int $rubMinor,array $foreign,mixed $usdMino
 function genesisBillingProviderOffer(array $offer,string $provider): array
 {
     $price=$offer['pricesByProvider'][$provider]??null;
-    $currency=$provider==='lemon-squeezy'?'USD':'RUB';
+    $currency=in_array($provider,['lemon-squeezy','paddle'],true)?'USD':'RUB';
     if(!in_array($provider,GENESIS_BILLING_PROVIDERS,true)||!is_array($price)||!is_int($price['amountMinor']??null)
         ||$price['amountMinor']<=0||($price['currency']??null)!==$currency)throw new GenesisResourceLimitException(503,'BILLING_PRICE_NOT_CONFIGURED');
     return [...$offer,'amountMinor'=>$price['amountMinor'],'currency'=>$currency,
@@ -123,19 +131,22 @@ function genesisBillingCatalog(array $settings, string $client = 'web', ?array $
     // Sales stay closed until provider-backed pending-order closure is independently verified.
     // Provider readiness is separate so existing verification/webhooks/recovery remain usable.
     $yooEnabled=($definition['yookassaCheckoutEnabled']??false)===true&&($settings['yookassa_live_verified']??false)===true;
-    $enabled = (($definition['checkoutEnabled'] ?? false) === true || $yooEnabled) && ($settings['enabled'] ?? false) === true
+    $legacyEnabled = (($definition['checkoutEnabled'] ?? false) === true || $yooEnabled) && ($settings['enabled'] ?? false) === true
         && ($settings['pending_order_closure_verified'] ?? false) === true;
-    $creditEnabled=$enabled&&($definition['creditCheckoutEnabled']??false)===true&&($settings['credit_settlement_verified']??false)===true;
+    $paddleEnabled=($settings['paddle_live_verified']??false)===true&&genesisBillingCheckoutAllowed('paddle',$client)
+        &&genesisBillingProviderReady('paddle',$settings);
+    $creditEnabled=$legacyEnabled&&($definition['creditCheckoutEnabled']??false)===true&&($settings['credit_settlement_verified']??false)===true;
     $providers = [];
     foreach ($definition['providers'] as $provider) {
         if($provider['id']!=='yookassa')continue;
         $allowed = genesisBillingCheckoutAllowed($provider['id'],$client)&&in_array($client,$provider['clients'],true);
         $released=($definition['checkoutEnabled']??false)===true||($provider['id']==='yookassa'&&$yooEnabled);
-        $ready=$enabled&&$released&&genesisBillingProviderReady($provider['id'],$settings);
+        $ready=$legacyEnabled&&$released&&genesisBillingProviderReady($provider['id'],$settings);
         $providers[] = ['id' => $provider['id'], 'name' => $provider['name'],
             'available' => $ready && $allowed,
             'reason' => !$allowed ? 'client-unavailable' : ($ready ? null : 'not-configured')];
     }
+    if($paddleEnabled)$providers[]=['id'=>'paddle','name'=>'Paddle','available'=>true,'reason'=>null];
     $offers = [];
     foreach ($definition['purchasablePlans'] as $plan) foreach ($definition['periodMonths'] as $months) {
         $id = "$plan:$months";
@@ -164,7 +175,7 @@ function genesisBillingCatalog(array $settings, string $client = 'web', ?array $
         'pricesByCurrency'=>genesisBillingDisplayPrices($life['amountMinor'],$foreign,$foreign['lifetimeAmountMinor']??null)];
     foreach($offers as &$creditOffer)$creditOffer['creditCheckoutEnabled']=$creditEnabled;
     unset($creditOffer);
-    return ['schemaVersion' => 1, 'revision' => $definition['revision'], 'checkoutEnabled' => $enabled,
+    return ['schemaVersion' => 1, 'revision' => $definition['revision'], 'checkoutEnabled' => $legacyEnabled||$paddleEnabled,
         'creditCheckoutEnabled'=>$creditEnabled,
         'providers' => $providers, 'periodMonths' => $definition['periodMonths'], 'offers' => $offers,
         'foreignPricing'=>['provider'=>$foreign['provider']??null,'currency'=>$foreign['currency']??null,

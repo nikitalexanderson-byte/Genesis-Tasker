@@ -3,8 +3,10 @@ import referralCopy from './referral-copy.json';
 import {useEffect,useId,useRef,useState,type PointerEvent} from 'react';
 import {loadBillingCatalog,loadBillingQuote,createBillingOrder,createBillingTrial,loadGenesisSession,captureAccountSessionGuard,GenesisApiError,type GenesisUser} from './cloud-sync';
 import {BILLING_PLANS,BILLING_RESOURCES,BILLING_FALLBACK_POLICY,billingForeignRate,billingMoney,billingPlanAllows,billingPlanLimits,billingResourceCapacity,billingPlanName,billingDisplayPrice,billingCheckoutReady,effectiveBillingPlan,type BillingCatalog,type BillingPlan,type BillingProvider,type BillingQuote} from './billing';
-import {billingPricingCurrency,paymentProviderOrder,preferredPaymentProvider} from './billing-location';
+import {billingPricingCurrency} from './billing-location';
 import {useAutomaticPaymentRegion} from './use-payment-region';
+import {savedPublicCurrency,savePublicCurrency,type PublicCurrency} from './public-currency';
+import {RefundContacts} from './RefundContacts';
 import {PaymentReturnDialog} from './PaymentReturnDialog';
 import {FutureModelingPaymentReturn} from './FutureModelingPayment';
 import {modelingReturnOrderId} from './modeling-service';
@@ -82,7 +84,7 @@ export function UpgradeAccessUI({user,onUserChange}:{user:GenesisUser|null;onUse
 export function UpgradeDialog({user,request=DEFAULT_UPGRADE_REQUEST,onClose,onOrder,onUserChange}:{user:GenesisUser;request?:UpgradeRequest;onClose:()=>void;onOrder?:(id:string)=>void;onUserChange?:(user:GenesisUser)=>void}) {
   const text=upgradeCopy(user.language);const [catalog,setCatalog]=useState<BillingCatalog|null>(null);
   const [selected,setSelected]=useState<BillingPlan>(()=>suggestedPlan(request,user));const [months,setMonths]=useState<1|12>(1);
-  const [provider,setProvider]=useState<BillingProvider|null>(null);const [busy,setBusy]=useState(false);const [error,setError]=useState('');
+  const [currency,setCurrency]=useState(savedPublicCurrency);const [busy,setBusy]=useState(false);const [error,setError]=useState('');
   const [quoteState,setQuoteState]=useState<{offerId:string;provider:BillingProvider;quote:BillingQuote|null;failed:boolean}|null>(null);const [quoteRevision,setQuoteRevision]=useState(0);
   const [trialUpdate,setTrialUpdate]=useState<{base:GenesisUser;profile:GenesisUser}|null>(null);const [trialConfirm,setTrialConfirm]=useState<BillingTrialPlan|null>(null);
   const trialProfile=trialUpdate?.base===user?trialUpdate.profile:user;
@@ -108,15 +110,24 @@ export function UpgradeDialog({user,request=DEFAULT_UPGRADE_REQUEST,onClose,onOr
   const limits=billingPlanLimits(policy,selected);
   const offer=catalog?.offers.find(value=>value.plan===selected&&value.periodMonths===(selected==='premium4life'?0:months));
   const offerId=offer?.id;
-  const region=useAutomaticPaymentRegion(catalog?.routing,user.uid,busy);const methodOrder=paymentProviderOrder(region);
-  const displayCurrency=billingPricingCurrency(region,user.language);
-  const methods=[...(catalog?.providers??[{id:'yookassa' as const,name:'ЮKassa',available:false,reason:null}])].filter(method=>methodOrder.includes(method.id)).sort((a,b)=>methodOrder.indexOf(a.id)-methodOrder.indexOf(b.id));
-  const configuredMethods=methods.filter(method=>method.available&&offer?.availableProviders.includes(method.id));
-  const effectiveProvider=preferredPaymentProvider(region,configuredMethods.map(method=>method.id),provider);
-  useEffect(()=>{if(!offerId||!effectiveProvider)return;let live=true;void loadBillingQuote(offerId,effectiveProvider).then(quote=>{if(live){setQuoteState({offerId,provider:effectiveProvider,quote,failed:false});if(quote.pendingOrderId&&quote.availableProviders.length===1&&!quote.availableProviders.includes(effectiveProvider))setProvider(quote.availableProviders[0]);}}).catch(()=>{if(live)setQuoteState({offerId,provider:effectiveProvider,quote:null,failed:true});});return()=>{live=false;};},[offerId,effectiveProvider,quoteRevision,user.uid]);
+  const region=useAutomaticPaymentRegion(catalog?.routing,user.uid,busy);
+  const displayCurrency=currency??billingPricingCurrency(region,user.language);
+  const paymentProvider=displayCurrency==='USD'?'paddle':'yookassa';
+  const providerName=paymentProvider==='paddle'?'Paddle':'ЮKassa';
+  const method=catalog?.providers.find(method=>method.id===paymentProvider);
+  const canOfferMethod=paymentProvider==='paddle'||region==='RU';
+  const configured=canOfferMethod&&Boolean(catalog?.checkoutEnabled&&method?.available&&offer?.availableProviders.includes(paymentProvider));
+  const effectiveProvider=configured?paymentProvider:null;
+  useEffect(()=>{
+    if(!offerId||!effectiveProvider)return;
+    let live=true;
+    void loadBillingQuote(offerId,effectiveProvider).then(quote=>{
+      if(live)setQuoteState({offerId,provider:effectiveProvider,quote,failed:false});
+    }).catch(()=>{if(live)setQuoteState({offerId,provider:effectiveProvider,quote:null,failed:true});});
+    return()=>{live=false;};
+  },[offerId,effectiveProvider,quoteRevision,user.uid]);
   const quote=quoteState&&quoteState.offerId===offerId&&quoteState.provider===effectiveProvider?quoteState.quote:null;
   const quoteFailed=Boolean(quoteState&&quoteState.offerId===offerId&&quoteState.provider===effectiveProvider&&quoteState.failed);
-  const availableMethods=configuredMethods.filter(method=>!quote||quote.availableProviders.includes(method.id));
   const ready=effectiveProvider!==null&&billingCheckoutReady(catalog,offer,quote,effectiveProvider);
   const currentPlan=user.subscriptionPlan??'free';
   const lifetime=user.featureAccess?.lifetimePremium===true;
@@ -125,6 +136,13 @@ export function UpgradeDialog({user,request=DEFAULT_UPGRADE_REQUEST,onClose,onOr
   const money=(amount:number,currency='RUB')=>billingMoney(amount,user.language,currency);
   const foreignRate=billingForeignRate(catalog);
   const select=(plan:BillingPlan)=>{setSelected(plan);setError('');setTrialError('');setTrialConfirm(null);};
+  const chooseCurrency=(value:PublicCurrency)=>{
+    setCurrency(value);
+    savePublicCurrency(value);
+    setError('');
+    setQuoteState(null);
+    setQuoteRevision(revision=>revision+1);
+  };
   const trialText=trialCopy[user.language];
   const applyTrialProfile=(fresh:GenesisUser)=>{
     setTrialUpdate({base:user,profile:fresh});onUserChange?.(fresh);
@@ -183,10 +201,15 @@ export function UpgradeDialog({user,request=DEFAULT_UPGRADE_REQUEST,onClose,onOr
       <h3>{billingTrialName(selected as BillingTrialPlan)} · {trialText.duration}</h3><p>{trialText.onceOnly}</p><p className="billing-trial-note">{trialText.noCharge}</p>
       <button type="button" className="secondary-button" ref={trialStartRef} data-trial-start={selected} disabled={busy} onClick={()=>{setTrialError('');setTrialConfirm(selected as BillingTrialPlan);}}>{billingTrialText(trialText.start,{trial:billingTrialName(selected as BillingTrialPlan)})}</button>
     </section>:null}
-    <fieldset className="upgrade-period-options"><legend>{upgradeLabel('Срок доступа','Access period',user.language)}</legend>
+    <div className="upgrade-price-options">
+    <fieldset className="upgrade-period-options" disabled={busy}><legend>{upgradeLabel('Срок доступа','Access period',user.language)}</legend>
       {[1,12].map(period=><label key={period}><input type="radio" name="upgrade-period" checked={months===period} onChange={()=>{setMonths(period as 1|12);setError('');}}/><span>{period===1?text.month:text.year}</span></label>)}
     </fieldset>
-    <fieldset className="upgrade-plan-grid"><legend>{text.compare}</legend>
+    <fieldset className="upgrade-period-options upgrade-currency-options" disabled={busy}><legend>{locationText.currency}</legend>
+      {(['RUB','USD'] as const).map(value=><label key={value}><input type="radio" name="upgrade-currency" value={value} checked={displayCurrency===value} onChange={()=>chooseCurrency(value)}/><span>{value}</span></label>)}
+    </fieldset>
+    </div>
+    <fieldset className="upgrade-plan-grid" disabled={busy}><legend>{text.compare}</legend>
       {BILLING_PLANS.map(plan=>{const price=billingDisplayPrice(plan,months,catalog,displayCurrency);return <label key={plan} className={`upgrade-plan-option upgrade-plan-${plan}${selected===plan?' is-selected':''}`}>
         <input type="radio" name="upgrade-plan" checked={selected===plan} onChange={()=>select(plan)}/>
         <span className="upgrade-plan-name">{billingPlanName(plan)}</span><strong className="upgrade-plan-price">{price===null?'—':money(price.amountMinor,price.currency)}</strong>
@@ -203,19 +226,31 @@ export function UpgradeDialog({user,request=DEFAULT_UPGRADE_REQUEST,onClose,onOr
     </section>
     {selected==='free'?<p className="upgrade-free-selected">{text.freeSelected}</p>:<section className="upgrade-checkout" aria-labelledby="upgrade-payment-title">
       <h3 id="upgrade-payment-title">{text.payment}</h3>
-      {methods.length?<fieldset className="upgrade-provider-options" disabled={busy}><legend className="sr-only">{text.payment}</legend>{methods.map(method=>{const connected=Boolean(catalog?.checkoutEnabled&&method.available&&offer?.availableProviders.includes(method.id));const blocked=!connected||effectiveProvider===method.id&&quote&&!quote.availableProviders.includes(method.id);return <label key={method.id} aria-disabled={!connected}><input type="radio" name="upgrade-provider" checked={effectiveProvider===method.id} disabled={!connected} onChange={()=>{setProvider(method.id);setError('');}}/><span>{method.name}{blocked?<small>{connected||method.reason==='client-unavailable'?text.methodUnavailable:text.notConnected}</small>:null}</span></label>;})}</fieldset>:null}
       {displayCurrency==='USD'&&foreignRate?<p className="upgrade-fx-note">{locationText.rate}: 1 USD = {foreignRate.quotePerBase} RUB · {foreignRate.effectiveDate}</p>:null}
       <p className="upgrade-policy-note">{locationText.oneTime}</p>
       {quote&&(quote.creditMinor>0||(quote.referralDiscountMinor??0)>0)?<dl className="upgrade-credit"><div><dt>{text.listPrice}</dt><dd>{money(quote.listAmountMinor,quote.currency)}</dd></div>{quote.creditMinor>0?<div><dt>{text.credit}</dt><dd>−{money(quote.creditMinor,quote.currency)}</dd></div>:null}{(quote.referralDiscountMinor??0)>0?<div><dt>{referralCopy[user.language].discount}</dt><dd>−{money(quote.referralDiscountMinor!,quote.currency)}</dd></div>:null}<div><dt>{text.total}</dt><dd>{money(quote.amountMinor,quote.currency)}</dd></div></dl>:null}
       {quoteFailed?<p className="upgrade-quote-error" role="alert">{text.quoteError}<button type="button" className="upgrade-inline-action" onClick={()=>setQuoteRevision(value=>value+1)}><ExperimentalIcon name="map-refresh"/>{text.retry}</button></p>:null}
       {catalogFailed?<p className="upgrade-quote-error" role="alert">{text.catalogError}<button type="button" className="upgrade-inline-action" onClick={()=>setCatalogRevision(value=>value+1)}><ExperimentalIcon name="map-refresh"/>{text.retry}</button></p>:null}
-      {quoteReason?<p className="upgrade-payment-status" role="status">{quoteReason}{quote?.upgradeUnavailableReason==='shorter-period'&&quote.recommendedPeriodMonths===12?<button type="button" className="upgrade-inline-action" onClick={()=>{setMonths(12);setError('');}}>{text.chooseYear}</button>:null}</p>:!catalogFailed?<p className="upgrade-payment-status" role="status">{lifetime?text.owned:!catalogLoaded||effectiveProvider&&offerId&&!quote&&!quoteFailed?text.loading:!catalog?.checkoutEnabled||!configuredMethods.length?text.noPayment:quote&&!availableMethods.length?text.paymentUnavailable:text.paymentStart}</p>:null}
+      {quoteReason?<p className="upgrade-payment-status" role="status">{quoteReason}{quote?.upgradeUnavailableReason==='shorter-period'&&quote.recommendedPeriodMonths===12?<button type="button" className="upgrade-inline-action" onClick={()=>{setMonths(12);setError('');}}>{text.chooseYear}</button>:null}</p>:!catalogFailed?<p className="upgrade-payment-status" role="status">{lifetime?text.owned:!catalogLoaded||effectiveProvider&&offerId&&!quote&&!quoteFailed?text.loading:!configured?canOfferMethod?text.notConnected:text.noPayment:quote&&!quote.availableProviders.includes(paymentProvider)?text.paymentUnavailable:text.paymentStart}</p>:null}
       {quote&&quote.creditMinor>0?<p className="upgrade-quote-hint">{text.quoteHint}</p>:null}
       {quote?.settlementOrderId&&onOrder?<button type="button" className="upgrade-inline-action" onClick={()=>onOrder(quote.settlementOrderId!)}><ExperimentalIcon name="map-refresh"/>{text.retry}</button>:null}
       <button type="button" className="upgrade-checkout-button" disabled={!ready||busy||lifetime} onClick={async()=>{
-        if(!offer||!quote||!effectiveProvider||region!=='RU')return;setBusy(true);setError('');try{const order=await createBillingOrder(offer.id,effectiveProvider,crypto.randomUUID(),quote.amountMinor,quote.currency);if(order.settlement||order.status!=='pending')onOrder?.(order.id);else if(order.checkoutUrl)window.location.assign(order.checkoutUrl);else setError(text.noCheckout);}catch(error){if(error instanceof GenesisApiError&&error.payload?.error==='BILLING_QUOTE_CHANGED'){setQuoteState(null);setQuoteRevision(value=>value+1);setError(text.quoteChanged);}else setError(text.error);}finally{setBusy(false);}
-      }}><span>{busy?text.opening:text.continue}</span>{quote?<strong>{money(quote.amountMinor,quote.currency)}</strong>:null}<ExperimentalIcon name="chevron"/></button>
+        if(!ready||busy||!offer||!quote||!effectiveProvider)return;
+        setBusy(true);setError('');
+        try {
+          const order=await createBillingOrder(offer.id,effectiveProvider,crypto.randomUUID(),quote.amountMinor,quote.currency);
+          if(order.provider!==effectiveProvider||order.currency!==displayCurrency)throw new Error('BILLING_ORDER_MISMATCH');
+          if(order.settlement||order.status!=='pending')onOrder?.(order.id);
+          else if(order.checkoutUrl)window.location.assign(order.checkoutUrl);
+          else setError(text.noCheckout);
+        } catch(error) {
+          if(error instanceof GenesisApiError&&error.payload?.error==='BILLING_QUOTE_CHANGED'){
+            setQuoteState(null);setQuoteRevision(value=>value+1);setError(text.quoteChanged);
+          }else setError(text.error);
+        }finally{setBusy(false);}
+      }}><span>{busy?text.opening:`${text.continue} · ${providerName}`}</span>{quote?<strong>{money(quote.amountMinor,quote.currency)}</strong>:null}<ExperimentalIcon name="chevron"/></button>
       {error?<p role="alert">{error}</p>:null}
+      <RefundContacts language={user.language} className="upgrade-policy-note"/>
     </section>}
     </>}
   </dialog>;

@@ -83,7 +83,15 @@ export async function verifyPublicRegions({browser,baseURL,output}) {
             assert.equal(await page.locator('html').getAttribute('lang'),language,'Document URL wins over the account language');
             const document=await page.locator('.legal-document').innerText();
             if(language==='en')assert.match(document,/Terms of (?:Use|Service)/i);
-            assert.match(document,/772495179010/);assert.match(document,/RUB|рубл/iu);assert.doesNotMatch(document,/Paddle/i);
+            assert.match(document,/772495179010/);
+            assert.match(document,/RUB|рубл/iu);
+            assert.match(document,language==='en'
+              ? /For purchases through Paddle, Paddle is the Merchant of Record\./
+              : /Для покупок через Paddle продавцом по сделке \(Merchant of Record\) выступает Paddle\./u);
+            assert.match(document,language==='en'
+              ? /Iurii Logvinov is the GENESIS supplier for Paddle sales and the sole recipient of the supplier payouts/
+              : /Юрий Логвинов \(Iurii Logvinov\) — поставщик GENESIS по продажам через Paddle и единственный получатель/u);
+            assert.equal(await page.locator('.legal-document a[href="https://www.paddle.com/legal/buyer-terms"]').count(),1);
           }
         }
       }

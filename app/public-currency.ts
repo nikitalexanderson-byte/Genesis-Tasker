@@ -9,6 +9,17 @@ export function publicCurrency(value:unknown):PublicCurrency|null {
   return value==='RUB'||value==='USD'?value:null;
 }
 
+export function savedPublicCurrency():PublicCurrency|null {
+  try {return publicCurrency(localStorage.getItem(PUBLIC_CURRENCY_KEY));} catch {return null;}
+}
+
+export function savePublicCurrency(currency:PublicCurrency|null):void {
+  try {
+    if(currency)localStorage.setItem(PUBLIC_CURRENCY_KEY,currency);
+    else localStorage.removeItem(PUBLIC_CURRENCY_KEY);
+  } catch { /* Keep the current view's choice when storage is unavailable. */ }
+}
+
 /** A display preference only: it neither identifies a person nor enables a payment provider. */
 export function resolvePublicCurrency(input:{manual?:PublicCurrency|null;deviceRegion?:PaymentRegion|null;ipRegion?:PaymentRegion|null;locales?:readonly string[];timeZone?:string;language?:string}):{currency:PublicCurrency;source:CurrencySource} {
   if(input.manual)return {currency:input.manual,source:'manual'};
