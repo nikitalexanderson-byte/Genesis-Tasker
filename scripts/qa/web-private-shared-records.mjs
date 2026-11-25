@@ -50,6 +50,30 @@ export async function readProjectImportHistory({page,context,fixture,output,with
  return{legacyRefusal:true,coldProjectHistory:true};
 }
 
+export async function readProjectActivity({page,context,fixture,output,withRateRetry}){
+ const {project,task}=fixture;
+ const legacy=await context.request.get(`/api/shared/projects/${project.id}/activity?taskId=${task.id}`);
+ assert.equal(legacy.status(),409);
+ assert.equal((await legacy.json()).error,'E2EE_UPGRADE_REQUIRED');
+
+ await page.locator(`[data-shared-task-id="${task.id}"]`).getByText(task.title,{exact:true}).click({timeout:1200000});
+ const dialog=page.getByRole('dialog',{name:task.title,exact:true});
+ await dialog.getByRole('tab',{name:/^Комментарии · \d+$/}).click();
+ const activity=dialog.locator('.shared-activity');
+ await activity.locator(':scope > summary').click();
+ const refresh=activity.getByRole('button',{name:'Обновить историю',exact:true});
+ const error=activity.locator(':scope > [role=alert]');
+ const event=activity.locator(':scope > ol > li').filter({hasText:'Создал(а) задачу'}).filter({hasText:task.title});
+ await withRateRetry('task activity',async()=>{
+  if(await error.isVisible())await refresh.click();
+  await event.or(error).first().waitFor({timeout:1200000});
+  assert(await event.isVisible(),'The ordinary activity feed did not show the retained task creation.');
+ });
+ assert.equal(await event.count(),1);
+ await dialog.screenshot({path:`${output}/shared-task-activity-readback.png`,animations:'disabled'});
+ return{legacyRefusal:true,coldTaskCreationEvent:true};
+}
+
 // Populate the ordinary legacy APIs before the mounted migration. These are
 // disabled rules and synthetic content, with no external jobs or authority seed.
 export async function seedSharedRecords({context,baseURL,space,project,task,canary}){
