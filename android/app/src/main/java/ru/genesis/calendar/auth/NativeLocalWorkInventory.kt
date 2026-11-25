@@ -11,6 +11,32 @@ import ru.genesis.calendar.data.withTransaction
  * expired team caches and Room's member-owned shared-map stores. No old command
  * is replayed and no authority/session/account-key document enters the result. */
 internal object NativeLocalWorkInventory{
+    private const val PROJECT_ACCESS_STORE = "genesis.shared.project-access.v1"
+
+    private fun projectAccessSpace(owner: String, key: String, record: JSONObject): String? {
+        val slot = record.getString("projectId")
+        val draftKey = "project-access-v1:${owner.length}:$owner:${slot.length}:$slot"
+        check(record.getString("accountId") == owner && key in setOf(draftKey, "copies:$draftKey")) {
+            "E2EE_SCOPE_BINDING_MISMATCH"
+        }
+        val edits = if (key == draftKey) {
+            listOf(record.getJSONObject("edit"))
+        } else {
+            ProjectAccessProtocol.rows(record.getJSONArray("copies"), PlanningJournal.MAX_COPIES)
+                .map { it.getJSONObject("edit") }
+        }
+        val spaces = edits.map { raw ->
+            val edit = ProjectAccessProtocol.edit(raw)
+            val space = edit.getString("spaceId")
+            check(ProjectAccessProtocol.scope(space, edit.getString("userId")) == slot) {
+                "E2EE_SCOPE_BINDING_MISMATCH"
+            }
+            space
+        }.toSet()
+        check(spaces.size <= 1) { "E2EE_SCOPE_BINDING_MISMATCH" }
+        return spaces.singleOrNull()
+    }
+
     suspend fun capture(context:Context,database:GenesisDatabase,owner:String,kind:String,resource:String,
         mounted:JSONObject,assertCurrent:()->Unit):JSONObject{
         val account=CloudAccountSnapshot.scopeFor(owner);val cipher=LocalCipher();assertCurrent()
@@ -27,9 +53,25 @@ internal object NativeLocalWorkInventory{
                 value?.optJSONObject("payload")?.optString(name)?.takeIf{it.isNotEmpty()},value?.optJSONObject("payload")?.optJSONObject(objectName)?.optString("id")?.takeIf{it.isNotEmpty()}).toSet()
             check(candidates.size<=1){"E2EE_SCOPE_BINDING_MISMATCH"};return candidates.firstOrNull()
         }
-        for(row in raw){val plain=row.getString("rawDocument");val parsed=org.json.JSONTokener(plain).nextValue();val value=parsed as? JSONObject
-            val project=identity(value,"projectId","project");val space=identity(value,"spaceId","space")
-            if(kind=="personal"||project==resource||space==resource)add(row.getString("store"),row.getString("key"),row.getString("encrypted"),plain,space,project)
+        for (row in raw) {
+            val plain = row.getString("rawDocument")
+            val value = org.json.JSONTokener(plain).nextValue() as? JSONObject
+            val store = row.getString("store")
+            val key = row.getString("key")
+            val project: String?
+            val space: String?
+            if (store == PROJECT_ACCESS_STORE) {
+                // PlanningJournal's projectId is the storage slot for this editor.
+                // Only its bound settings supply the real workspace coordinate.
+                space = projectAccessSpace(owner, key, requireNotNull(value))
+                project = null
+            } else {
+                project = identity(value, "projectId", "project")
+                space = identity(value, "spaceId", "space")
+            }
+            if (kind == "personal" || project == resource || space == resource) {
+                add(store, key, row.getString("encrypted"), plain, space, project)
+            }
         }
         database.withTransaction{assertCurrent();val dao=database.dao();val scopes=dao.migrationDocumentScopes(account,"$account:shared-mindmaps:")
             check(scopes.size<=10000){"E2EE_SOURCE_TOO_LARGE"}
