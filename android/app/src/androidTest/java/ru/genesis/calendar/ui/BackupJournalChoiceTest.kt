@@ -14,6 +14,7 @@ import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.StaleObjectException
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import kotlinx.coroutines.runBlocking
@@ -127,7 +128,12 @@ class BackupJournalChoiceTest {
             click("Back up this device")
             val device=UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
             val filename="QA336-journal-${UUID.randomUUID()}.genesisbackup"
-            val name=device.wait(Until.findObject(By.clazz("android.widget.EditText")),15000);assertNotNull("Real save picker",name);name.text=filename
+            fun nameFile(){
+                val name=device.wait(Until.findObject(By.clazz("android.widget.EditText")),15000)
+                assertNotNull("Real save picker",name)
+                name.text=filename
+            }
+            try{nameFile()}catch(_:StaleObjectException){nameFile()}
             val save=device.wait(Until.findObject(By.res("android:id/button1")),10000);assertNotNull(save);save.click()
             waitText("Encrypted backup saved.")
             click("Choose file");val exported=device.wait(Until.findObject(By.text(filename)),15000);assertNotNull("Actual encrypted SAF file",exported);exported.click()

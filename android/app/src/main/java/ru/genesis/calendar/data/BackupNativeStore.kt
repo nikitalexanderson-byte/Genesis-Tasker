@@ -56,6 +56,7 @@ internal class BackupNativeStore(private val app: GenesisApplication,private val
       }
     }
     suspend fun seal(value: Any,purpose: String): JSONObject {
+      if (value is CharSequence) require(value.length<=GenesisBackupContainer.MAX_PLAIN) { "BACKUP_TOO_LARGE" }
       val submitted=value.toString()
       return operation {
         check();require(BackupProtocol.allowedScope(purpose)) { "BACKUP_SCOPE" }

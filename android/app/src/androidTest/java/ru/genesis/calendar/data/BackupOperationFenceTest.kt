@@ -128,7 +128,13 @@ class BackupOperationFenceTest {
         val rig=Rig();rig.start();var calls=0
         try{
             val store=BackupNativeStore(rig.app,rig.owner,rig.scope,rig.gateway{_,_,_->calls++;error("No key request is allowed")})
-            try{store.seal("x".repeat(GenesisBackupContainer.MAX_PLAIN+1),"workspace");fail("Oversize backup was accepted")}
+            val oversized=object:CharSequence {
+                override val length=GenesisBackupContainer.MAX_PLAIN+1
+                override fun get(index:Int):Char=error("Oversize text must be refused before reading it")
+                override fun subSequence(startIndex:Int,endIndex:Int):CharSequence=error("Oversize text must be refused before reading it")
+                override fun toString():String=error("Oversize text must be refused before materializing it")
+            }
+            try{store.seal(oversized,"workspace");fail("Oversize backup was accepted")}
             catch(error:IllegalArgumentException){assertEquals("BACKUP_TOO_LARGE",error.message)}
             assertEquals(0,calls);assertFalse(rig.app.database.dao().backupDocuments(rig.scope).any{it.kind.startsWith("backup-safety:")})
         }finally{rig.finish()}
