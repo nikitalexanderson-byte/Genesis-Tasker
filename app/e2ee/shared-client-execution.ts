@@ -68,14 +68,18 @@ export class SharedClientExecution{
  }
  async #candidate(rule:ExecutionRow,now:string):Promise<AutomationCandidate|null>{
   const definition=privateAutomationDefinition(rule.definition,this.#directory()),type=definition.trigger.type,zone=definition.calendarContext.timeZone,date=momentCivilDate(new Date(now),zone),time=new Intl.DateTimeFormat('en-GB',{timeZone:zone,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(now));
+  const taskEvent=['created','status','assignee','completed'].includes(type);
+  // An event belongs to the rule revision in force when the task changed.
+  // The legacy server captured it only for rules enabled at that moment.
+  const ruleSince=Date.parse(String(taskEvent?rule.updatedAt:rule.createdAt));
   if(['schedule','due','dueSoon'].includes(type)&&time<(definition.trigger.time??'09:00'))return null;
   if(type==='schedule'&&!recurrenceMatchesDate(definition.trigger.recurrence!.rangeStart,definition.trigger.recurrence!,date))return null;
   const tasks: (ExecutionRow|null)[]=type==='schedule'&&(definition.trigger.target??'project')==='project'?[null]:this.#rows('task').filter(v=>v.archivedAt===null);
   for(const task of tasks){
-   if(task&&String(task.updatedAt)<String(rule.createdAt))continue;let coordinates:string|number=date;
+   if(task&&!(Date.parse(String(type==='created'?task.createdAt:task.updatedAt))>=ruleSince))continue;let coordinates:string|number=date;
    if(type==='due'||type==='dueSoon'){if(!task||task.completedAt!==null||typeof task.dueDate!=='string'||(type==='dueSoon'?addCivilDays(task.dueDate,-(definition.trigger.leadDays??1))!==date:task.dueDate>date))continue;coordinates=String(task.dueDate);}
-   if(['created','status','assignee','completed'].includes(type)){
-    if(!task)continue;coordinates=Number(task.revision);if(type==='created'&&(task.revision!==1||String(task.createdAt)<String(rule.createdAt)))continue;
+   if(taskEvent){
+    if(!task)continue;coordinates=Number(task.revision);if(type==='created'&&task.revision!==1)continue;
     if(type!=='created'){if(!this.ports.history)throw new Error('E2EE_SHARED_HISTORY_READER_REQUIRED');const current=this.#version('task',String(task.id)),page=await this.ports.history(current.entityId,current.revision),previous=page.versions.find(v=>v.revision===current.revision-1&&!v.deleted);if(!previous)continue;
      const before=this.ports.row(previous);if(type==='status'&&before.statusId===task.statusId||type==='assignee'&&before.assigneeId===task.assigneeId||type==='completed'&&(before.completedAt!==null||task.completedAt===null))continue;
     }

@@ -491,6 +491,7 @@ export class SharedLiveModel{
     const allowed=[...Object.keys(fields),'tags','checklists','labelIds','dependsOnIds','approverIds','approvalRequired','customFields','sprintId','storyPoints','estimateHours','expectedRevision','requestId','completedAt','completedBy','imageData','attachments','removeAttachmentIds',...(create?['mindmapSource']:[])];
     if(Object.keys(input).some(key=>!allowed.includes(key)))throw new Error('E2EE_SHARED_OPERATION_REVIEW_REQUIRED');
     for(const [name,column]of Object.entries(fields))if(Object.hasOwn(input,name))body.record[column]=input[name] as SharedContentRecord[string];
+    if(create&&(input.statusId==null||input.statusId===''))body.record.status_id=`chaos-open:${this.ports.binding.resourceId}`;
     for(const key of ['tags','checklists'] as const)if(Object.hasOwn(input,key))body.record[`${key}_json`]=JSON.stringify(input[key]);
     const taskId=body.record.id;
     for(const [key,table,column]of [['labelIds','shared_task_labels','label_id'],['dependsOnIds','shared_task_dependencies','predecessor_id']] as const)if(Object.hasOwn(input,key)){

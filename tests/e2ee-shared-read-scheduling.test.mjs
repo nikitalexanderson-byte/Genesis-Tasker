@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {setImmediate} from 'node:timers/promises';
 import {SharedLiveModel} from '../app/e2ee/shared-live.ts';
+import {SharedClientExecution} from '../app/e2ee/shared-client-execution.ts';
 import {sharedBodyMetadata,sharedBodyParent} from '../app/e2ee/shared-domain.ts';
 import {SharedAggregateModel,seedPersonalSharedLayouts,validatePersonalSharedState} from '../app/e2ee/shared-aggregate.ts';
+import sourceCatalogue from '../contracts/e2ee/private-path-sources-v1.json' with {type:'json'};
 
 const deferred=()=>{let resolve;const promise=new Promise(done=>{resolve=done;});return{promise,resolve};};
 const binding={scopeId:'project:read-scheduling',kind:'project',resourceId:'project'};
@@ -66,6 +68,50 @@ test('locking during a shared observation rejects every waiting selector',async(
  const first=assert.rejects(f.model.request('GET','tasks'),/E2EE_UNLOCK_REQUIRED/);
  const second=assert.rejects(f.model.request('GET','tasks?sort=title'),/E2EE_UNLOCK_REQUIRED/);
  await entered.promise;f.close();finish.resolve();await Promise.all([first,second]);
+});
+
+test('shared task creation without a board uses the verified project inbox status',async()=>{
+ const fixture=liveFixture();
+ const statusColumns=sourceCatalogue.tables.find(row=>row.table==='shared_project_statuses').columns;
+ const status=(id,position,done,chaos)=>{
+  const record={...Object.fromEntries(statusColumns.map(column=>[column,null])),id,project_id:'project',
+   title:id,position,is_done:done,is_chaos:chaos,revision:1};
+  const body={format:'genesis-shared-record-v1',kind:'status',scopeId:binding.scopeId,scopeKind:binding.kind,
+   resourceId:binding.resourceId,table:'shared_project_statuses',record,related:{},execution:'live'};
+  return{protocol:1,scopeId:binding.scopeId,entityId:'status:'+id,kind:'status',revision:1,
+   parentId:sharedBodyParent(body),metadata:sharedBodyMetadata(body),deleted:false,body};
+ };
+ const board=status('open-board',0,0,0), inbox=status('chaos-open:project',-2,0,1);
+ fixture.ports.versions=async()=>[board,inbox];
+ const staged=[];
+ fixture.ports.stage=async edits=>{staged.push(...edits);};
+ fixture.ports.flush=async()=>{};
+ const create=input=>fixture.model.request('POST','tasks',{title:'Synthetic shared task',...input});
+ for(const input of [{},{statusId:''},{statusId:'open-board'}]){
+  const expected=input.statusId||'chaos-open:project';
+  assert.equal((await create(input)).task.statusId,expected);
+  assert.equal(staged.at(-1).body.record.status_id,expected);
+ }
+ await assert.rejects(create({statusId:'other-project-board'}),/E2EE_PRODUCT_WORKFLOW_STATUS/);
+ fixture.ports.versions=async()=>[board];
+ await assert.rejects(create({statusId:''}),/E2EE_PRODUCT_WORKFLOW_STATUS/);
+ assert.equal(staged.length,3);
+});
+
+test('enabling a retained creation rule does not process tasks saved while it was disabled',async()=>{
+ const definition={schemaVersion:1,trigger:{type:'created'},conditions:[],actions:[{type:'priority',value:2}],
+  calendarMode:'profane',calendarContext:{version:2,timeZone:'UTC',gregorianYearStart:'march'}};
+ const target={kind:'automation',deleted:false,body:{id:'rule',ownerId:'owner',revision:2,enabled:true,deleted:false,
+  definition,createdAt:'2026-11-25T10:00:00Z',updatedAt:'2026-11-25T10:05:00.500Z'}};
+ const task=(id,createdAt)=>({kind:'task',deleted:false,body:{id,createdAt,updatedAt:createdAt,revision:1,archivedAt:null}});
+ const original=task('retained-task','2026-11-25T10:00:00Z');
+ const whileDisabled=task('task-before-enabling','2026-11-25T10:05:00Z');
+ const whileEnabled=task('task-after-enabling','2026-11-25T10:05:00.600Z');
+ const ready=(rule,tasks)=>new SharedClientExecution({binding,actorId:'owner',context,versions:[rule,...tasks],
+  row:version=>version.body}).ready('2026-11-25T10:06:00Z');
+ assert.equal((await ready(target,[original,whileDisabled])).automation,false);
+ assert.equal((await ready(target,[original,whileDisabled,whileEnabled])).automation,true);
+ assert.equal((await ready({...target,body:{...target.body,enabled:false}},[whileEnabled])).automation,false);
 });
 
 const state=()=>({protocol:1,ownerId:'owner',views:[],requests:[],readFlags:{},watching:{}});
