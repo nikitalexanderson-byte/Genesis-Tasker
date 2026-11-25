@@ -81,6 +81,7 @@ internal class E2eeSharedRecordDomain(context:Context,val scopeId:String,val sco
     }
     fun parent(body:JSONObject):Any{val kind=body.getString("kind");val row=body.getJSONObject("record")
         if(kind in setOf("project","space"))return JSONObject.NULL
+        if(kind=="history")return entityId(scopeKind,resourceId)
         if(kind=="task")return if(row.isNull("parent_task_id"))entityId("project",resourceId)else entityId("task",row.get("parent_task_id"))
         if(kind=="automation-run")return entityId("automation",row.get("rule_id"))
         if(kind=="series-instance")return entityId("series",row.get("series_id"))

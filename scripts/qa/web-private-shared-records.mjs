@@ -32,6 +32,7 @@ export async function readProjectImportHistory({page,context,fixture,output}){
  assert.equal((await context.request.get(historyPath)).status(),409);
  await page.locator(`[data-shared-task-id="${taskId}"]`).getByText(title,{exact:true}).click({timeout:1200000});
  const task=page.getByRole('dialog',{name:title,exact:true});
+ await task.getByRole('tab',{name:/^Комментарии · \d+$/}).click();
  const activity=task.locator('.shared-activity');
  await activity.locator(':scope > summary').click();
  const imported=activity.locator('.shared-imported-history');

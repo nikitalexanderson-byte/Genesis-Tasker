@@ -4,6 +4,7 @@ import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {membershipBeforeHash} from '../app/e2ee/membership-contract.ts';
 import {membershipProductIndexHash} from '../app/e2ee/membership-product-index.ts';
+import {membershipOperationEdits} from '../app/e2ee/membership-operation-edits.ts';
 import {planMembershipOperation,membershipOperationFingerprint,membershipOperationWire,validateMembershipOperationSnapshot} from '../app/e2ee/membership-operation-plan.ts';
 import {membershipAtomicOperationPlan,membershipAtomicPlanHash,membershipAtomicChangeHash,validateMembershipAtomicPlan,validateMembershipAtomicPage} from '../app/e2ee/membership-atomic-contract.ts';
 
@@ -42,6 +43,17 @@ test('role changes are exact and an already matching role has no rotation or eff
  const snapshot=fixture(),plan=parity(snapshot,{kind:'project-role',projectId:'project-a',userId:member,role:'viewer'});
  assert.equal(changed(plan,'shared_project_members',r=>r.key.user_id===member)[0].after.role,'viewer');assert.deepEqual(plan.clearAssignments,[]);
  const same=parity(snapshot,{kind:'project-role',projectId:'project-a',userId:member,role:'member'});assert.deepEqual(same.scopeIds,[]);assert.deepEqual(same.changes,[]);assert.deepEqual(same.roleEvents,[]);
+});
+
+test('membership history attaches to the project root and retains the affected user in its content',()=>{
+ const snapshot=fixture(),plan=planMembershipOperation(snapshot,{kind:'project-role',projectId:'project-a',userId:member,role:'viewer'});
+ const [event]=membershipOperationEdits({binding:{scopeId:'project:project-a',kind:'project',resourceId:'project-a'},actorId:actor,
+  intentId:'role-change',createdAt:'2026-11-25T09:00:00Z',plan,snapshot,entities:[],versions:[]});
+ assert.equal(event.kind,'history');
+ assert.equal(event.parentId,'project:project-a');
+ assert.equal(event.body.record.task_id,null);
+ assert.equal(event.body.record.object_id,member);
+ assert.equal(event.body.execution,'history-only');
 });
 test('removing the last project of a guest explicitly removes its space membership and grants',()=>{
  const snapshot=fixture();mutate(snapshot,'shared_space_members',r=>r.key.user_id===member,r=>{r.before.role='guest';r.before.all_projects=0;r.before.member_category_id=null;});

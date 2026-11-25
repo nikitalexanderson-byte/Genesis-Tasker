@@ -26,25 +26,28 @@ const profileOnly=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='profile';
 const sharedJourney=['shared','shared-locales','content','files','membership','shared-records','import-history'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
 const sharedRecordsJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='shared-records';
 const importHistoryJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='import-history';
+const localWorkJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='local-work';
 const membershipJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='membership';
 const membershipCopy=JSON.parse(readFileSync('contracts/e2ee/membership-review-copy-v2.json','utf8')).ru;
 const sharedFilesJourney=['content','files'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
 const localeJourney=['locales','shared-locales'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
-const backupJourney=['backup','content'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
+const backupJourney=['backup','content','local-work'].includes(process.env.GENESIS_QA_FOLLOWUP_SCOPE);
 const legacyStorageJourney=process.env.GENESIS_QA_FOLLOWUP_SCOPE==='legacy-storage';
 const sharedCopy=JSON.parse(readFileSync('contracts/e2ee/shared-security-copy-v1.json','utf8')).ru;
 const sharedMigration=JSON.parse(readFileSync('contracts/e2ee/shared-migration-copy-v1.json','utf8')).ru;
 const canary='PRIVATE-PRODUCT-'+crypto.randomUUID();
 const cacheCanary='PRIVATE-CACHE-'+crypto.randomUUID();
-let sharedFixture;
+let sharedFixture,activeCheck='';
 const redactPrivateText=value=>[secret,backupKey,deviceLocalCode].filter(Boolean).reduce((text,key)=>text.replaceAll(key,'[redacted synthetic secret]'),String(value));
 const save=()=>writeFileSync(`${output}/private-product-results.json`,JSON.stringify(report,null,2)+'\n');
 const check=async(name,operation)=>{
  if((membershipJourney||sharedFilesJourney||sharedRecordsJourney||importHistoryJourney||backupJourney)&&['offline unlock restores encrypted preferences and the edited task','clean browser cannot open content using identity alone or a wrong secret'].includes(name)){
   (report.notRepeated??=[]).push({name,acceptedEvidence:'output/playwright/security336-legacy-retirement42-1124',reason:'Unchanged personal recovery path; this focused run covers shared membership or content and preserves its live owner context.'});save();return;
  }
+ activeCheck=name;
  try{await operation();report.checks.push({name,status:'PASS'});console.log('PASS private-product '+name);save();}
  catch(error){report.checks.push({name,status:'FAIL',error:redactPrivateText(error.message)});throw error;}
+ finally{activeCheck='';}
 };
 const context=await browser.newContext({baseURL,viewport:{width:1440,height:1000},locale:'ru-RU',timezoneId:'Europe/Moscow',acceptDownloads:true});
 await context.route(/https?:\/\//,route=>new URL(route.request().url()).origin===baseURL?route.continue():route.abort());
@@ -174,7 +177,11 @@ try{
   if(!code&&event.data?.description){const message=event.data.description.split('\n')[0].slice(0,160);if(message!=='Promise'&&!message.startsWith('Error: Minified React error #460'))console.log('SYNTHETIC CAUGHT '+redactPrivateText(message));}
   void debug.send('Debugger.resume').catch(()=>{});
  });
- page.on('pageerror',error=>report.pageErrors.push(redactPrivateText(error.message)));
+ page.on('pageerror',error=>{
+  report.pageErrors.push(redactPrivateText(error.message));
+  const frames=String(error.stack??'').match(/\/assets\/[a-zA-Z0-9_-]+\.js:\d+:\d+/g)??[];
+  (report.pageErrorFrames??=[]).push({check:activeCheck,frames:frames.slice(0,12)});
+ });
  page.on('console',message=>{const prefix='GENESIS_QA_KEY_BUNDLE_REFUSAL ';if(message.text().startsWith(prefix)){report.keyBundleRefusals.push(JSON.parse(message.text().slice(prefix.length)));console.log(message.text());save();}});
  page.on('console',message=>{const prefix='GENESIS_QA_MEMBERSHIP_PHASE ';if(message.text().startsWith(prefix)){const value=JSON.parse(message.text().slice(prefix.length));(report.membershipDiagnostics??=[]).push({...value,observedAt:Date.now()});console.log(message.text());save();}});
  page.on('console',message=>{const prefix='GENESIS_QA_MEMBERSHIP_REFUSAL ';if(message.text().startsWith(prefix)){(report.membershipRefusals??=[]).push(JSON.parse(message.text().slice(prefix.length)));console.log(message.text());save();}});
@@ -219,7 +226,7 @@ try{
   const saved=page.waitForResponse(response=>new URL(response.url()).pathname==='/api/workspace'&&response.request().method()==='PUT',{timeout:20000});void saved.catch(()=>{});
   await dialog.getByRole('button',{name:/^(Сохранить|Создать проект)$/}).click();assert((await saved).ok());await debug.send('Debugger.setPauseOnExceptions',{state:'none'});
  });
- if(sharedJourney)await check('ordinary owner has real legacy shared space project and task content before transfer',async()=>{
+ if(sharedJourney||localWorkJourney)await check('ordinary owner has real legacy shared space project and task content before transfer',async()=>{
   const session=await(await context.request.get('/api/session')).json(),headers={Origin:baseURL,'X-CSRF-Token':session.csrf};
   const post=async(path,data)=>{const response=await context.request.post('/api/'+path,{headers,data});assert(response.ok(),path+': '+response.status());return response.json();};
   const space=(await post('shared/spaces',{title:'PRIVATE SHARED SPACE '+canary})).space;
@@ -252,6 +259,26 @@ try{
    const response=await context.request.get(source.href);assert(response.ok());assert.deepEqual(await response.body(),file);
    report.sharedFile={bytes:file.length,legacyReadback:true};
   }
+ });
+ if(localWorkJourney)await check('a closed workflow editor retains its unsent numeric draft in the legacy device journal',async()=>{
+  const {project,space}=sharedFixture;
+  const target=new URL('/',baseURL);
+  for(const [key,value]of Object.entries({lang:'ru',affairs:'shared',space:space.id,project:project.id,projectView:'board'}))target.searchParams.set(key,value);
+  target.hash='projects';
+  await page.goto(target.href);await page.locator('[data-planning-trigger]').click();
+  const planning=page.locator('.shared-planning-dialog'),workflow=planning.locator('[data-workflow-panel]');
+  await workflow.locator(':scope > summary').click();
+  await workflow.getByRole('button',{name:'Настроить',exact:true}).click();
+  const value=713921;
+  await workflow.getByRole('textbox',{name:'Лимит незавершённых задач',exact:true}).first().fill(String(value));
+  const prefix=`genesis-shared-work-drafts-v1:${fixtureOwnerId}:${project.id}:workflow:`;
+  await page.waitForFunction(prefix=>Object.keys(localStorage).some(key=>key.startsWith(prefix)),prefix);
+  await planning.getByRole('button',{name:'Закрыть',exact:true}).click();
+  await planning.waitFor({state:'hidden'});
+  await page.goto('/?lang=ru#today');
+  const workflowState=await (await context.request.get(`/api/shared/projects/${project.id}/workflow`)).json();
+  assert(!workflowState.config.statuses.some(status=>status.wipLimit===value));
+  report.localWorkDraft={legacyJournalPresent:true,liveDefinitionUnchanged:true,value};
  });
  await check('mounted migration creates and requires both recovery downloads',async()=>{
   await page.evaluate(marker=>{
@@ -394,6 +421,20 @@ try{
    for(const section of payload.sections){assert.equal(section.data.format,'genesis-content-only-v1');assert.equal(section.data.execution,'history-only');}
    selection=entries(payload).find(row=>row.entry.objectId==='personal-product-live-v1'&&Buffer.from(row.entry.current.bytes,'base64url').toString('utf8').includes(canary));
    assert(selection,'The actual edited product document belongs to the encrypted archive');
+   if(localWorkJourney){
+    const {value}=report.localWorkDraft,projectId=sharedFixture.project.id;
+    const recovered=entries(payload).some(({entry})=>{
+     if(entry.scope?.kind!=='personal')return false;
+     const raw=Buffer.from(entry.current.bytes,'base64url').toString('utf8');
+     if(!raw.includes('genesis-private-local-work-v1'))return false;
+     const row=JSON.parse(raw);
+     return row.format==='genesis-private-local-work-v1'&&row.pathId==='personal.local-work'&&row.execution==='history-only'&&
+      row.entries.some(entry=>entry.projectId===projectId&&entry.content?.purpose==='workflow'&&
+       Object.values(entry.content?.value?.numberInputs??{}).some(input=>JSON.stringify(input).includes(String(value))));
+    });
+    assert(recovered,'Closed workflow draft was missing from encrypted device backup');
+    report.localWorkDraft.retainedContentOnly=true;
+   }
    report.contentBackup={backupId:payload.backupId,sections:payload.sections.length,entries:entries(payload).length,byteLength:Buffer.byteLength(archive),execution:'history-only'};
    writeFileSync(`${output}/private-device-content.genesisbackup`,archive);
   });
@@ -406,7 +447,12 @@ try{
   });
   await check('imported history survives cold unlock and leaves the current edited task intact',async()=>{
    await withRateRetry('backup cold reader',async()=>{
-    await page.goto('/?lang=ru#today');await page.reload();const gate=page.locator('.private-vault-dialog');await gate.waitFor();await recoveryInput(gate);await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
+    await page.goto('/?lang=ru#today');await page.reload();
+    if(localWorkJourney){
+     const response=await context.request.get('/api/session'),session=await response.json();
+     report.backupColdSession={status:response.status(),sameOwner:session.user?.uid===fixtureOwnerId};save();
+    }
+    const gate=page.locator('.private-vault-dialog');await gate.waitFor({timeout:60000});await recoveryInput(gate);await gate.getByRole('button',{name:vault.unlock,exact:true}).click();await gate.waitFor({state:'hidden'});
     await page.getByRole('button',{name:`Вернуть задачу «${canary}»`,exact:true}).waitFor();
    });
    await openBackups();const panel=importPanel();await panel.getByRole('button',{name:copy.history,exact:true}).click();await panel.getByRole('button',{name:report.contentBackup.backupId,exact:true}).click();

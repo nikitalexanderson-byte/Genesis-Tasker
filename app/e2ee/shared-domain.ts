@@ -104,6 +104,7 @@ export function sharedBodyMetadata(body:SharedRecordBody):ProductMetadata{
 }
 export function sharedBodyParent(body:SharedRecordBody){
  if(body.kind==='project'||body.kind==='space')return null;
+ if(body.kind==='history')return sharedEntityId(body.scopeKind,body.resourceId);
  if(body.kind==='task')return body.record.parent_task_id===null?sharedEntityId('project',body.resourceId):sharedEntityId('task',String(body.record.parent_task_id));
  if(body.kind==='automation-run')return sharedEntityId('automation',String(body.record.rule_id));
  if(body.kind==='series-instance')return sharedEntityId('series',String(body.record.series_id));

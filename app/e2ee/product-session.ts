@@ -29,16 +29,18 @@ let view:PrivateAccountView=Object.freeze({ownerId:null,phase:'closed',reason:'u
 const notify=()=>{for(const listener of listeners)listener();};
 export const privateAccountView=()=>view;
 export const subscribePrivateAccount=(listener:()=>void)=>{listeners.add(listener);return()=>{listeners.delete(listener);};};
-export function privateAccountRequired(ownerId:string,language='en'){
+export function privateAccountRequired(ownerId:string,language?:string){
  assertTechnical(ownerId);privateOwners.add(ownerId);if(active?.ownerId===ownerId){try{active.requireOpen();return;}catch{/* Locked capabilities are retired below. */}}
  if(view.ownerId!==null&&view.ownerId!==ownerId)closePrivateAccount();
- view=Object.freeze({ownerId,phase:'locked',reason:view.ownerId===ownerId?view.reason:'unlock',language});notify();
+ const sameOwner=view.ownerId===ownerId,locale=language??(sameOwner?view.language:'en');
+ if(sameOwner&&(view.phase==='unlocking'||view.phase==='locked'&&view.language===locale))return;
+ view=Object.freeze({ownerId,phase:'locked',reason:sameOwner?view.reason:'unlock',language:locale});notify();
 }
 export function requirePrivateAccount(ownerId:string):WebPrivateAccount{
  if(!active||active.ownerId!==ownerId){privateAccountRequired(ownerId);throw new Error('E2EE_UNLOCK_REQUIRED');}
  active.requireOpen();return active;
 }
-export async function waitForPrivateAccount(ownerId:string,language='en',signal?:AbortSignal){
+export async function waitForPrivateAccount(ownerId:string,language?:string,signal?:AbortSignal){
  privateAccountRequired(ownerId,language);if(active?.ownerId===ownerId&&view.phase==='ready')return;
  await new Promise<void>((resolve,reject)=>{
   const abort=()=>{waiters.delete(waiter);reject(new DOMException('Account unlock cancelled','AbortError'));};
