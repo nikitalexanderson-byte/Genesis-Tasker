@@ -68,8 +68,6 @@
     });
     window.Paddle.Checkout.open({
       transactionId: result.transactionId,
-      // Let Paddle show its Google Pay button when the wallet is enabled and eligible.
-      // Its normal payment methods remain available when a wallet cannot be used.
       settings: {displayMode:'overlay', theme:'dark', showAddDiscounts:false, allowDiscountRemoval:false, successUrl:returnUrl.href},
     });
   }

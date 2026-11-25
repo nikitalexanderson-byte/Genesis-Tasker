@@ -53,7 +53,6 @@ RewriteRule . index.html [L]
 # Match the served file so checkout parameters never select the site-wide policy.
 <Files "pay-paddle.html">
   <IfModule mod_headers.c>
-    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(self \"https://checkout.paddle.com\" \"https://buy.paddle.com\")"
     Header always set Content-Security-Policy "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'self' https://cdn.paddle.com; style-src 'self' 'unsafe-inline' https://cdn.paddle.com; img-src 'self' data: https://*.paddle.com; connect-src 'self' https://*.paddle.com; frame-src https://*.paddle.com"
   </IfModule>
 </Files>
