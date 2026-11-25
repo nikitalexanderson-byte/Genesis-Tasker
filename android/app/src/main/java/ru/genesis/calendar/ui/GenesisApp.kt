@@ -482,11 +482,9 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
     var updateCheckMessage by remember { mutableStateOf<String?>(null) }
     val accountGate = !testWorkspace && (!activeScope.startsWith("account-") || authState.user == null || !authState.ready)
     val welcomeVisible = accountGate && !(authState.busy && authState.user != null)
-    val welcomeRegion = rememberWelcomeIpRegion(welcomeVisible)
-    val welcomeRussianAvailable = welcomeRegion == ru.genesis.calendar.auth.WelcomeIpRegion.RUSSIA
-    val welcomeLanguage = ru.genesis.calendar.data.welcomeLanguageForDevice(explicitWelcomeLanguage, welcomeRussianAvailable)
-    // A stored Russian choice stays on disk, but cannot override the current startup region rule.
-    val acceptedWelcomeLanguage = explicitWelcomeLanguage?.takeIf { it != "ru" || welcomeRussianAvailable }
+    val welcomeRegion = rememberWelcomeIpRegion(welcomeVisible && explicitWelcomeLanguage == null)
+    val welcomeLanguage = ru.genesis.calendar.data.welcomeLanguageForDevice(explicitWelcomeLanguage,
+        suggestRussianByIp = welcomeRegion == ru.genesis.calendar.auth.WelcomeIpRegion.RUSSIA)
     val window = LocalContext.current.activity()?.window
     val changeDisplayCalendar: (CalendarMode) -> Unit = { next ->
         if (!testWorkspace && authState.user != null) authController.updateSharedPreference("display", next.wireValue)
@@ -552,8 +550,8 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
             .testTag(if (eveningTheme) "app-theme-Evening" else "app-theme-Standart"),color=MaterialTheme.colorScheme.background) {
             if (accountGate) {
                 if (authState.busy && authState.user != null) AuthTransitionScreen(authState.message)
-                else WelcomeScreen(authState,authController,welcomeLanguage,acceptedWelcomeLanguage,
-                    languageReady = welcomeSelection != null, russianAvailable = welcomeRussianAvailable) { language ->
+                else WelcomeScreen(authState,authController,welcomeLanguage,explicitWelcomeLanguage,
+                    languageReady = welcomeSelection != null) { language ->
                         preferredWelcomeLanguage = language
                         scope.launch { welcomePrefsStore.set("language",language) }
                     }

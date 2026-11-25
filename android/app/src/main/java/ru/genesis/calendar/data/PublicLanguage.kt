@@ -6,16 +6,16 @@ internal val publicLanguages = setOf("ru", "en", "el", "de", "fr", "es", "it", "
 
 /** Presentation only: this never establishes residence or payment eligibility. */
 internal fun welcomeLanguage(selected: String?, deviceLanguage: String, zoneId: String, country: String,
-    russianAvailable: Boolean = false): String {
-    fun allowed(value: String?) = value?.takeIf { it in publicLanguages && (it != "ru" || russianAvailable) }
-    return allowed(selected) ?: if (russianAvailable) "ru" else
-        allowed(deviceLanguage.substringBefore('-').substringBefore('_').lowercase(Locale.ROOT))
-            ?: allowed(regionalLanguage(zoneId, country)) ?: "en"
-}
+    suggestRussianByIp: Boolean = false): String =
+    selected?.takeIf { it in publicLanguages }
+        ?: "ru".takeIf { suggestRussianByIp }
+        ?: deviceLanguage.substringBefore('-').substringBefore('_').lowercase(Locale.ROOT)
+            .takeIf { it in publicLanguages }
+        ?: regionalLanguage(zoneId, country)
 
-internal fun welcomeLanguageForDevice(selected: String? = null, russianAvailable: Boolean = false): String =
+internal fun welcomeLanguageForDevice(selected: String? = null, suggestRussianByIp: Boolean = false): String =
     welcomeLanguage(selected, Locale.getDefault().language, java.util.TimeZone.getDefault().id,
-        Locale.getDefault().country, russianAvailable)
+        Locale.getDefault().country, suggestRussianByIp)
 
 /** A nullable outer state distinguishes an unread preference from automatic selection. */
 internal data class WelcomeLanguagePreference(val selected: String?)

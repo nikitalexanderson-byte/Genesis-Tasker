@@ -55,7 +55,7 @@ private val welcomeMuted = Color(0xFFB8C9C2)
 /** A single Google entry for the account used throughout GENESIS. */
 @Composable
 fun WelcomeScreen(state: AuthPanelState, controller: AuthController, language: String,
-    preferredLanguage: String? = null, languageReady: Boolean = true, russianAvailable: Boolean = false,
+    preferredLanguage: String? = null, languageReady: Boolean = true,
     onLanguage: (String) -> Unit) {
     val context = LocalContext.current
     val activity = context.activity()
@@ -65,13 +65,12 @@ fun WelcomeScreen(state: AuthPanelState, controller: AuthController, language: S
         signInEnabled = activity != null && !invitationBusy && languageReady, onRetry = controller::checkSession,
         invitation = { NativeReferralInvitation(controller, language) { invitationBusy = it } },
         onWeb = { openWebsite(context, language) },
-        onLegal = { path -> context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.GENESIS_ORIGIN + path))) },
-        russianAvailable = russianAvailable)
+        onLegal = { path -> context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.GENESIS_ORIGIN + path))) })
 }
 
 @Composable internal fun WelcomeContent(state: AuthPanelState, language: String, onLanguage: (String) -> Unit,
     onSignIn: () -> Unit, signInEnabled: Boolean = true, onRetry: () -> Unit, onWeb: () -> Unit,
-    onLegal: (String) -> Unit, invitation: @Composable () -> Unit = {}, russianAvailable: Boolean = true) {
+    onLegal: (String) -> Unit, invitation: @Composable () -> Unit = {}) {
     // The welcome artwork is always dark, independently of the host's selected palette.
     CompositionLocalProvider(LocalPreserveCalendarColors provides true) {
     BoxWithConstraints(Modifier.fillMaxSize().background(Brush.verticalGradient(
@@ -83,8 +82,7 @@ fun WelcomeScreen(state: AuthPanelState, controller: AuthController, language: S
                     style = MaterialTheme.typography.titleLarge.copy(fontFamily = GenesisHeadingFont))
             }
             Text("Выбор языка", color = welcomeMuted, style = MaterialTheme.typography.labelMedium)
-            LanguageChips(language, dark = true, flagsOnly = true, includeRussian = russianAvailable,
-                onLanguage = onLanguage)
+            LanguageChips(language, dark = true, flagsOnly = true, onLanguage = onLanguage)
             HorizontalDivider(color = welcomeGold.copy(alpha = .24f))
             androidx.compose.foundation.text.BasicText(genesisTranslate("Календарь задач и проектов"),
                 Modifier.fillMaxWidth().testTag("welcome-purpose-title"), maxLines = 1, softWrap = false,
@@ -201,7 +199,7 @@ private fun WelcomeTrustLine(symbol: String, text: String) {
 }
 
 @Composable
-fun LanguageChips(language: String, dark: Boolean = false, flagsOnly: Boolean = false, includeRussian: Boolean = true,
+fun LanguageChips(language: String, dark: Boolean = false, flagsOnly: Boolean = false,
     onLanguage: (String) -> Unit) {
     val languages = listOf(Triple("ru", "🇷🇺", "Русский"), Triple("en", "🇬🇧", "English"),
             Triple("el", "🇬🇷", "Ελληνικά"), Triple("de", "🇩🇪", "Deutsch"),
@@ -210,13 +208,12 @@ fun LanguageChips(language: String, dark: Boolean = false, flagsOnly: Boolean = 
             Triple("pl", "🇵🇱", "Polski"), Triple("sr", "🇷🇸", "Српски"),
             Triple("uk", "🇺🇦", "Українська"), Triple("zh", "🇨🇳", "简体中文"),
             Triple("tr", "🇹🇷", "Türkçe"), Triple("ja", "🇯🇵", "日本語"))
-        .filter { includeRussian || it.first != "ru" }
     if (flagsOnly) {
         val night = dark || LocalEveningTheme.current
         val selection = genesisSelectionColors(if (night) eveningPalette(LocalDarkPalette.current) else MaterialTheme.colorScheme,night)
         BoxWithConstraints(Modifier.fillMaxWidth().testTag("welcome-language-grid")) {
             // Keep complete rows as languages are added; compact cells still have a 48 dp height.
-            val columns = balancedLanguageColumns(languages.size + if (includeRussian) 0 else 1,
+            val columns = balancedLanguageColumns(languages.size,
                 ((maxWidth.value + 2f) / 46f).toInt())
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 languages.chunked(columns).forEach { row ->
