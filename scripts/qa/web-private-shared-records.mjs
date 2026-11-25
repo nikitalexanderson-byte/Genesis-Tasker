@@ -94,7 +94,7 @@ export async function readSharedRecords({page,fixture,output}){
    await version.locator('pre').filter({hasText:node}).waitFor();
   }
   await history.screenshot({path:`${output}/shared-records-${map.kind}-map-history.png`,animations:'disabled'});
-  await history.getByRole('button',{name:'Закрыть окно карты',exact:true}).click();await history.waitFor({state:'hidden'});
+  await history.getByRole('button',{name:/^Закрыть(?: окно карты)?$/}).click();await history.waitFor({state:'hidden'});
   await page.getByRole('button',{name:'Все майндмепы',exact:true}).click();
  }
  return{taskComment:true,disabledAutomationEditor:true,projectAndSpaceMapTitles:true,historyReadback:true,workflowReadback:true};

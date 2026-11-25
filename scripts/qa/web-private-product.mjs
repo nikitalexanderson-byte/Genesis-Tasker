@@ -490,12 +490,15 @@ try{
     await debug.send('Debugger.setPauseOnExceptions',{state:diagnostics?'all':'none'});
     await withRateRetry(kind+' transfer',async()=>{
      for(let reauth=0;reauth<2;reauth++){
-      const previous=report.migrationRefusals.length;
       const outcome=await continueMigration(dialog,migration.resume,kind);
       if(outcome==='active')return;
-      await page.waitForTimeout(100);
-      if(report.migrationRefusals.slice(previous).includes('E2EE_REAUTH_REQUIRED')){dialog=await reconfirm(dialog,kind,resource);continue;}
-      throw new Error(kind+' migration refused: '+report.caughtCodes.join(', ')+'; '+await dialog.getByRole('alert').innerText());
+      const alert=dialog.getByRole('alert');
+      if(await alert.filter({hasText:migration.reauthRequired}).isVisible()){
+       dialog=await reconfirm(dialog,kind,resource);
+       report.identityRenewalsAfterRefusal=(report.identityRenewalsAfterRefusal??0)+1;save();
+       continue;
+      }
+      throw new Error(kind+' migration refused: '+report.caughtCodes.join(', ')+'; '+await alert.innerText());
      }
      throw new Error('Owned provider reconfirmation did not admit the transfer');
     },async()=>{await restoreOnlineAccount();dialog=await openTransfer(kind,resource);});
