@@ -265,7 +265,9 @@ try{
   const target=new URL('/',baseURL);
   for(const [key,value]of Object.entries({lang:'ru',affairs:'shared',space:space.id,project:project.id,projectView:'board'}))target.searchParams.set(key,value);
   target.hash='projects';
-  await page.goto(target.href);await page.locator('[data-planning-trigger]').click();
+  await page.goto(target.href);
+  await page.locator('.workspace-startup-gate').waitFor({state:'hidden',timeout:60000});
+  await page.locator('[data-planning-trigger]').click();
   const planning=page.locator('.shared-planning-dialog'),workflow=planning.locator('[data-workflow-panel]');
   await workflow.locator(':scope > summary').click();
   await workflow.getByRole('button',{name:'Настроить',exact:true}).click();
