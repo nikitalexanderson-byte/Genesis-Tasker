@@ -37,12 +37,15 @@ function genesisBillingCreateOrder(string $userId, array $input,?array $catalogD
 {
     $user=genesisFindUser($userId);
     if (!$user || !genesisSessionIsPrimaryGoogleUser($user)) throw new GenesisResourceLimitException(403,'BILLING_PRIMARY_GOOGLE_REQUIRED');
-    if (array_diff(array_keys($input),['offerId','provider','client','idempotencyKey','receiptEmail','expectedAmountMinor','expectedCurrency'])
+    if (array_diff(array_keys($input),['offerId','provider','client','idempotencyKey','receiptEmail','expectedAmountMinor','expectedCurrency','expectedProductId'])
         || !is_string($input['idempotencyKey']??null) || !preg_match('/\A[a-zA-Z0-9_-]{16,100}\z/D',$input['idempotencyKey'])) throw new InvalidArgumentException('BILLING_ORDER_INVALID');
     $settings=genesisBillingSettings();$catalog=genesisBillingCatalog($settings,(string)($input['client']??'web'),$catalogDefinition);
     $offer=null;foreach($catalog['offers'] as $candidate) if ($candidate['id']===($input['offerId']??null)) $offer=$candidate;
     $provider=$input['provider']??'';
     if (!$offer || !in_array($provider,$offer['availableProviders'],true)) throw new GenesisResourceLimitException(503,'BILLING_NOT_CONFIGURED');
+    if($provider!=='google-play'&&array_key_exists('expectedProductId',$input))throw new InvalidArgumentException('BILLING_ORDER_INVALID');
+    if($provider==='google-play'&&($input['expectedProductId']??null)!==$offer['playProductId'])
+        throw new GenesisResourceLimitException(409,'BILLING_PRODUCT_CHANGED');
     $offer=genesisBillingProviderOffer($offer,$provider);
     $db=genesisDb();genesisBeginWriteTransaction($db);
     try {
@@ -84,6 +87,8 @@ function genesisBillingCreateOrder(string $userId, array $input,?array $catalogD
                 $order=genesisBillingOrder($db,$id);
             }
         }
+        if($provider==='google-play'&&$order['product_id']!==$input['expectedProductId'])
+            throw new GenesisResourceLimitException(409,'BILLING_PRODUCT_CHANGED');
         $db->commit();
     } catch(Throwable $e) { if($db->inTransaction())$db->rollBack();throw $e; }
     if ($order['checkout_url']!==null || $order['status']!=='pending') return genesisBillingPublicOrder($order);

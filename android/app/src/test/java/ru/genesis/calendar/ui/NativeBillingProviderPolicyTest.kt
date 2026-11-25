@@ -130,10 +130,12 @@ class NativeBillingProviderPolicyTest {
 
     @Test fun playButtonRequiresThePlayBuildAndVerifiedProduct() {
         val playCatalog = JSONObject("""{"providers":[{"id":"google-play","available":true},{"id":"yookassa","available":true}]}""")
-        val playOffer = offer().put("availableProviders", org.json.JSONArray().put("google-play"))
+        val playOffer = offer().put("availableProviders", org.json.JSONArray().put("google-play")).put("playProductId", "premium.monthly")
         assertEquals(listOf("google-play"), nativeBillingProviderChoices(playCatalog, playOffer, true, true))
         assertEquals(emptyList<String>(), nativeBillingProviderChoices(playCatalog, playOffer, true, false))
         assertEquals(emptyList<String>(), nativeBillingProviderChoices(playCatalog, offer(), true, true))
+        assertEquals(emptyList<String>(), nativeBillingProviderChoices(playCatalog, JSONObject(playOffer.toString()).put("playProductId", "bad/id"), true, true))
+        assertEquals("premium.monthly", nativePlayProductId(playOffer))
         assertEquals(listOf("yookassa"), nativeBillingProviderChoices(playCatalog, playOffer, false, true))
     }
     @Test fun quoteAmountsAreIntegerAndPendingAuthorizationKeepsItsOriginalPrice() {

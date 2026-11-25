@@ -926,6 +926,8 @@ internal class AuthSessionClient(context: Context,
                     if (path == "/billing/trial" && accessCode in setOf("TRIAL_ALREADY_USED", "TRIAL_NOT_AN_UPGRADE", "TRIAL_ACCESS_REVOKED"))
                         throw AuthApiError(accessCode)
                     if (status == 409 && accessCode == "BILLING_QUOTE_CHANGED") throw AuthApiError(accessCode)
+                    if (status == 409 && path == "/billing/orders" && accessCode == "BILLING_PRODUCT_CHANGED")
+                        throw AuthApiError(accessCode)
                     if(accessCode.matches(Regex("BACKUP_[A-Z_]+")))throw AuthApiError(accessCode)
                     if (status == 409 && path == "/billing/modeling/orders" && accessCode == "MODELING_PAYMENT_NOT_REQUIRED")
                         throw AuthApiError(accessCode)

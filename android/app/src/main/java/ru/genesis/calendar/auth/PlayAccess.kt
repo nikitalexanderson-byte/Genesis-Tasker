@@ -78,16 +78,22 @@ internal class GenesisPlayBilling(context:Context,private val controller:AuthCon
         } }
         for(purchase in purchases)if(purchase.purchaseState==Purchase.PurchaseState.PURCHASED)verify(purchase)
     }
-    suspend fun purchase(activity:Activity,order:JSONObject) {
+    data class PreparedPurchase(val productId:String,val params:BillingFlowParams.ProductDetailsParams)
+
+    suspend fun preparePurchase(productId:String):PreparedPurchase {
         connect()
         val details=suspendCancellableCoroutine<ProductDetails> { continuation -> client.queryProductDetailsAsync(QueryProductDetailsParams.newBuilder()
-            .setProductList(listOf(QueryProductDetailsParams.Product.newBuilder().setProductId(order.getString("productId")).setProductType(BillingClient.ProductType.INAPP).build())).build()) { result,products ->
-            if(continuation.isActive) {val found=products.productDetailsList.firstOrNull();if(result.responseCode==BillingClient.BillingResponseCode.OK&&found!=null)continuation.resume(found) else continuation.resumeWithException(IllegalStateException("BILLING_PRODUCT_UNAVAILABLE"))}
+            .setProductList(listOf(QueryProductDetailsParams.Product.newBuilder().setProductId(productId).setProductType(BillingClient.ProductType.INAPP).build())).build()) { result,products ->
+            if(continuation.isActive) {val found=products.productDetailsList.singleOrNull{it.productId==productId};if(result.responseCode==BillingClient.BillingResponseCode.OK&&found!=null)continuation.resume(found) else continuation.resumeWithException(IllegalStateException("BILLING_PRODUCT_UNAVAILABLE"))}
         } }
-        val offer=details.oneTimePurchaseOfferDetailsList?.firstOrNull() ?: throw IllegalStateException("BILLING_PRODUCT_UNAVAILABLE")
+        val offer=details.oneTimePurchaseOfferDetailsList?.singleOrNull() ?: throw IllegalStateException("BILLING_PRODUCT_UNAVAILABLE")
         val offerToken=requireNotNull(offer.offerToken){"BILLING_PRODUCT_UNAVAILABLE"}
+        return PreparedPurchase(productId,BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(details).setOfferToken(offerToken).build())
+    }
+    fun purchase(activity:Activity,order:JSONObject,prepared:PreparedPurchase) {
+        check(client.isReady&&order.getString("productId")==prepared.productId){"BILLING_PRODUCT_UNAVAILABLE"}
         val params=BillingFlowParams.newBuilder().setObfuscatedAccountId(order.getString("obfuscatedAccountId")).setObfuscatedProfileId(order.getString("obfuscatedProfileId"))
-            .setProductDetailsParamsList(listOf(BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(details).setOfferToken(offerToken).build())).build()
+            .setProductDetailsParamsList(listOf(prepared.params)).build()
         check(client.launchBillingFlow(activity,params).responseCode==BillingClient.BillingResponseCode.OK){"BILLING_NOT_AVAILABLE"}
     }
     override fun close(){client.endConnection()}

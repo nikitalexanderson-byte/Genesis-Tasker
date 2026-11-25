@@ -85,7 +85,7 @@ $rubleRetry=genesisBillingCreateOrder('other',orderInput('ruble-dialog-reopened'
 orderCheck($rubleRetry['id']===$rubles['id']&&$checkoutCalls===$rubleCallCount,'Reopened full-price Yoo dialog created a second payable checkout');
 
 // Only a verified private SKU mapping may create a Play order, and Play itself owns checkout.
-$playInput=[...orderInput('play-purchase-key-01','google-play',55500,'RUB'),'client'=>'android-play'];
+$playInput=[...orderInput('play-purchase-key-01','google-play',55500,'RUB'),'client'=>'android-play','expectedProductId'=>'premium.monthly'];
 $GLOBALS['ordersFixtureConfig']['billing']['google_play_live_verified']=true;
 $GLOBALS['ordersFixtureConfig']['billing']['offers']['premium:1']['products']['google-play']='premium.monthly';
 $GLOBALS['ordersFixtureConfig']['billing']['offers']['business:1']['products']['google-play']='premium.monthly';
@@ -94,6 +94,7 @@ unset($GLOBALS['ordersFixtureConfig']['billing']['offers']['business:1']['produc
 foreach(['web','android'] as $client){
     orderReject('BILLING_NOT_CONFIGURED',fn()=>genesisBillingCreateOrder('buyer',[...$playInput,'client'=>$client],$definition,$checkout));
 }
+orderReject('BILLING_PRODUCT_CHANGED',fn()=>genesisBillingCreateOrder('buyer',[...$playInput,'expectedProductId'=>'stale.product'],$definition,$checkout));
 $play=genesisBillingCreateOrder('buyer',$playInput,$definition,$checkout);
 orderCheck($play['status']==='pending'&&$play['checkoutUrl']===null&&$play['productId']==='premium.monthly'
     &&$play['obfuscatedProfileId']===hash('sha256',$play['id'])&&strlen($play['obfuscatedAccountId'])===64,
@@ -103,6 +104,11 @@ orderCheck($playRetry['id']===$play['id']&&$checkoutCalls===$rubleCallCount,'A r
 $playPublic=genesisBillingPublicOrder(genesisBillingOrder($db,$play['id']),$db);
 orderCheck(!isset($playPublic['obfuscatedAccountId'])&&!isset($playPublic['obfuscatedProfileId'])
     &&genesisFindUser('buyer')['subscription_plan']==='free','Unverified Play checkout exposed bindings or granted access');
+$GLOBALS['ordersFixtureConfig']['billing']['offers']['premium:1']['products']['google-play']='premium.replacement';
+orderReject('BILLING_PRODUCT_CHANGED',fn()=>genesisBillingCreateOrder('buyer',
+    [...$playInput,'idempotencyKey'=>'play-replacement-01','expectedProductId'=>'premium.replacement'],$definition,$checkout));
+orderCheck((int)$db->query("SELECT COUNT(*) FROM billing_orders WHERE provider='google-play'")->fetchColumn()===1,
+    'A Play SKU change replaced an unresolved order');
 unset($GLOBALS['ordersFixtureConfig']['billing']['google_play_live_verified']);
 
 // Real create/reserve/pending paths use current account funding, and never fall back to an unconsented price.

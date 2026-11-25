@@ -88,11 +88,14 @@ internal fun nativeBillingProviderChoices(catalog: JSONObject?, offer: JSONObjec
         val id = it.optString("id")
         val forDistribution = if (playDistribution) {
             id == "google-play" && playBillingEnabled && it.optBoolean("available") &&
-                id in offer?.optJSONArray("availableProviders").strings()
+                id in offer?.optJSONArray("availableProviders").strings() && nativePlayProductId(offer) != null
         } else id == "yookassa"
         forDistribution && it.optString("reason") != "client-unavailable" && nativeBillingProviderPrice(offer,id) != null
     }.map { it.getString("id") }.distinct().sortedBy { if (it == preferred) 0 else 1 }
 }
+
+internal fun nativePlayProductId(offer: JSONObject?): String? =
+    (offer?.opt("playProductId") as? String)?.takeIf { it.matches(Regex("[a-z0-9][a-z0-9_.]{0,149}")) }
 
 internal fun nativePaddleWebsiteUrl(playDistribution: Boolean, origin: String, language: String): String? {
     if (playDistribution || origin != "https://genesiscalendar.com") return null
@@ -332,6 +335,7 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
     val bundledPolicy = remember(context) { runCatching { context.assets.open("originals/catalogs/feature-access-policy.json")
         .bufferedReader().use { JSONObject(it.readText()) } }.getOrNull() }
     var catalog by remember(userId) { mutableStateOf<JSONObject?>(null) }
+    var catalogRefresh by remember { mutableIntStateOf(0) }
     val policy = catalog?.optJSONObject("policy") ?: bundledPolicy
     var selected by rememberSaveable(userId) { mutableStateOf(initialPlan?.takeIf { it in nativeBillingPlans }
         ?: suggestedPlan(bundledPolicy, access, initialFeature)) }
@@ -373,7 +377,7 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
     LaunchedEffect(open, initialFeature, initialPlan) {
         if (open) { selected = initialPlan?.takeIf { it in nativeBillingPlans } ?: suggestedPlan(policy, access, initialFeature); expanded = selected; quoteChanged = false }
     }
-    LaunchedEffect(controller, userId, open) {
+    LaunchedEffect(controller, userId, open, catalogRefresh) {
         if (!open) return@LaunchedEffect
         loading = true
         try { catalog = controller.billing("GET", "/billing/catalog?client=$channel") }
@@ -423,7 +427,7 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
     val availableMethods = offer?.optJSONArray("availableProviders").strings().filter { it in providerChoices }
     val billing = remember(controller, userId) { GenesisPlayBilling(context, controller, scope, { controller.checkSession() }, { error = true }) }
     DisposableEffect(billing) { onDispose { billing.close() } }
-    val canPay = !busy && !trialBusy && !quoteLoading && quote != null && quoteProvider == provider && !access.lifetimePremium && selected != "free" &&
+    val canPay = !busy && !trialBusy && !loading && !quoteLoading && quote != null && quoteProvider == provider && !access.lifetimePremium && selected != "free" &&
         catalog?.optBoolean("checkoutEnabled") == true && provider in availableMethods && provider in quote!!.providers &&
         (quote!!.credit == 0L || catalog?.optBoolean("creditCheckoutEnabled") == true) &&
         observedOrder?.optString("status") !in setOf("payment-verifying", "settlement-required") &&
@@ -620,15 +624,25 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                                 if (!canPay) return@launch
                                 busy = true; error = false; quoteChanged = false; serverNotice = null
                                 try {
-                                    val order = controller.billing("POST", "/billing/orders", JSONObject().put("offerId", requireNotNull(offer).getString("id"))
-                                        .put("expectedAmountMinor", requireNotNull(quote).amount)
-                                        .put("expectedCurrency", requireNotNull(quote).currency)
-                                        .put("provider", provider).put("client", channel).put("idempotencyKey", UUID.randomUUID().toString()))
+                                    val method = provider
+                                    val acceptedQuote = requireNotNull(quote)
+                                    val current = if (method == "google-play") controller.privateUiOwnerGuard(userId) else null
+                                    val prepared = if (method == "google-play") {
+                                        billing.preparePurchase(requireNotNull(nativePlayProductId(offer)))
+                                    } else null
+                                    current?.invoke()
+                                    val request = JSONObject().put("offerId", requireNotNull(offer).getString("id"))
+                                        .put("expectedAmountMinor", acceptedQuote.amount)
+                                        .put("expectedCurrency", acceptedQuote.currency)
+                                        .put("provider", method).put("client", channel).put("idempotencyKey", UUID.randomUUID().toString())
+                                    if (prepared != null) request.put("expectedProductId", prepared.productId)
+                                    val order = controller.billing("POST", "/billing/orders", request)
+                                    current?.invoke()
                                     observedOrder = order
                                     observedOrderId = order.optString("id").takeIf { it.matches(Regex("[a-f0-9-]{36}")) }
                                     if (order.optJSONObject("settlement") != null || order.optString("status") != "pending") {
                                         serverNotice = nativeBillingSettlementCopyKey(order)
-                                    } else if (provider == "google-play") billing.purchase(requireNotNull(activity), order)
+                                    } else if (prepared != null) billing.purchase(requireNotNull(activity), order, prepared)
                                     else {
                                         require(!BuildConfig.PLAY_DISTRIBUTION)
                                         val uri = Uri.parse(order.getString("checkoutUrl")); require(uri.scheme == "https" && !uri.host.isNullOrBlank())
@@ -637,6 +651,7 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                                 } catch (cancel: CancellationException) { throw cancel }
                                 catch (failure: Exception) {
                                     if (failure.message == "BILLING_QUOTE_CHANGED") { quoteChanged = true; quoteLoading = true; quoteRefresh++ }
+                                    else if (failure.message == "BILLING_PRODUCT_CHANGED") { error = true; loading = true; catalogRefresh++; quoteRefresh++ }
                                     else if (failure.message == "BILLING_CREDIT_CHECKOUT_DISABLED") { serverNotice = "creditCheckoutUnavailable"; quoteRefresh++ }
                                     else if (failure.message == "BILLING_SETTLEMENT_REQUIRED") { serverNotice = "settlementRequired"; quoteRefresh++ }
                                     else error = true

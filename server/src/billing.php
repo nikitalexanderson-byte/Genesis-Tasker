@@ -175,6 +175,7 @@ function genesisBillingCatalog(array $settings, string $client = 'web', ?array $
         $offers[] = ['id' => $id, 'plan' => $plan, 'periodMonths' => $months,
             'amountMinor' => $priced ? $amount : null, 'currency' => $priced ? $currency : null,
             'availableProviders' => $methods,'pricesByProvider'=>$prices,
+            ...(in_array('google-play',$methods,true)?['playProductId'=>$playProducts[$id]]:[]),
             'pricesByCurrency'=>$priced&&$currency==='RUB'?genesisBillingDisplayPrices($amount,$foreign,$foreign['prices'][$plan][(string)$months]??null):[]];
     }
     $life = $definition['lifetimeOffer'];
@@ -187,6 +188,7 @@ function genesisBillingCatalog(array $settings, string $client = 'web', ?array $
     }
     $offers[] = ['id'=>$life['id'],'plan'=>'premium4life','periodMonths'=>0,'amountMinor'=>$life['amountMinor'],
         'currency'=>$life['currency'],'seatLimit'=>$life['seats'],'availableProviders'=>$methods,'pricesByProvider'=>$prices,
+        ...(in_array('google-play',$methods,true)?['playProductId'=>$playProducts[$life['id']]]:[]),
         'pricesByCurrency'=>genesisBillingDisplayPrices($life['amountMinor'],$foreign,$foreign['lifetimeAmountMinor']??null)];
     foreach($offers as &$creditOffer)$creditOffer['creditCheckoutEnabled']=$creditEnabled;
     unset($creditOffer);
