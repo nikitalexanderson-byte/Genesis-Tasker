@@ -103,8 +103,10 @@ function genesisBackgroundPerform(array $job,?callable $handler=null): string
 function genesisBackgroundRun(int $limit=20): array
 {
     require_once __DIR__.'/billing-yookassa.php';
+    require_once __DIR__.'/billing-play-voids.php';
     genesisBillingYooScan();
     genesisBillingPaddleScan();
+    genesisBillingPlayVoidScan();
     $db=genesisDb();$db->exec("UPDATE background_worker_state SET started_at=strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE id=1");
     genesisSharedSeriesEnqueue();
     genesisAutomationScan();
