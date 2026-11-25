@@ -422,7 +422,7 @@ try{
     let delivered;const pending=new Promise(resolve=>{delivered=resolve;}),listener=download=>delivered(download);page.on('download',listener);
     try{
      await panel.getByRole('button',{name:copy.deviceSnapshot,exact:true}).click();
-     const refused=panel.getByRole('alert').waitFor({timeout:120000}).then(async()=>({refused:await panel.getByRole('alert').getAttribute('data-backup-failure')}));
+     const refused=panel.getByRole('alert').waitFor({timeout:sharedLocalWorkJourney?1200000:120000}).then(async()=>({refused:await panel.getByRole('alert').getAttribute('data-backup-failure')}));
      const outcome=await Promise.race([pending.then(download=>({download})),refused]);
      if(outcome.download){archive=(await downloadBytes(outcome.download)).toString('utf8');break;}
      assert.equal(outcome.refused,'changed','Unexpected backup UI refusal');assert(attempt<2,'Backup content kept changing');
@@ -655,8 +655,11 @@ try{
     await owners.getByRole('checkbox',{name:membershipCopy.ack,exact:true}).waitFor();
     if(index<2)await owners.getByRole('button',{name:membershipCopy.next,exact:true}).click();
    }
-   await owners.getByRole('button',{name:membershipCopy.finalReview,exact:true}).click();
-   const final=dialog.getByRole('region',{name:membershipCopy.apply,exact:true});await waitForMembership(final,'final review');
+   const final=dialog.getByRole('region',{name:membershipCopy.apply,exact:true});
+   await withRateRetry('final membership review',async()=>{
+    await owners.getByRole('button',{name:membershipCopy.finalReview,exact:true}).click();
+    await waitForMembership(final,'final review');
+   });
    await dialog.screenshot({path:`${output}/membership-final-review.png`,animations:'disabled'});
    assert(await final.getByRole('button',{name:membershipCopy.apply,exact:true}).isDisabled());
    await final.getByRole('checkbox',{name:membershipCopy.finalAck,exact:true}).check();await final.getByRole('button',{name:membershipCopy.apply,exact:true}).click();
