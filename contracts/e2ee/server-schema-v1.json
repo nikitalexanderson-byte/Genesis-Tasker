@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "schemaThrough": 141,
+  "schemaThrough": 142,
   "productionEnabled": false,
   "meaning": "Complete schema disposition is not complete E2EE product integration. New tables or columns require deliberate reclassification before acceptance.",
   "groups": [
@@ -89,6 +89,7 @@
     {"table":"billing_lifetime_seats","columns":["seat","owner_hash","order_id","reserved_until","purchased_at","revoked_at"],"disposition":"billing-authority"},
     {"table":"billing_orders","columns":["id","user_id","idempotency_key","provider","plan","period_months","amount_minor","currency","product_id","checkout_url","provider_secret","play_profile_hash","status","created_at","updated_at","list_amount_minor","upgrade_credit_minor","encrypted_receipt","referral_discount_minor","referral_reward_month"],"disposition":"billing-authority"},
     {"table":"billing_paddle_checkout","columns":["order_id","lease_id","lease_until","checked_at"],"disposition":"billing-authority"},
+    {"table":"billing_play_void_scan","columns":["id","checked_through","page_token","window_end","next_attempt_at"],"disposition":"billing-authority"},
     {"table":"billing_payment_claims","columns":["provider","reference_hash","order_id","owner_hash"],"disposition":"billing-authority"},
     {"table":"billing_periods","columns":["provider","reference_hash","user_id","plan","starts_at","ends_at"],"disposition":"billing-authority"},
     {"table":"billing_play_challenges","columns":["id","user_id","request_hash","version_code","created_at","expires_at","consumed_at"],"disposition":"billing-authority"},

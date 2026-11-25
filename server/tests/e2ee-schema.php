@@ -8,7 +8,7 @@ require_once dirname(__DIR__).'/src/e2ee-policy.php';
 /** Acceptance compares the entire actual schema, not only the declared fences. */
 function schemaDisposition(PDO $db,array $contract): array
 {
-    if($contract['version']!==1||$contract['schemaThrough']!==141||$contract['productionEnabled']!==false)throw new RuntimeException('E2EE_INVALID_SCHEMA_CONTRACT');
+    if($contract['version']!==1||$contract['schemaThrough']!==142||$contract['productionEnabled']!==false)throw new RuntimeException('E2EE_INVALID_SCHEMA_CONTRACT');
     $groups=array_column($contract['groups'],'id');$declared=[];$private=0;
     foreach($contract['tables'] as $table) {
         if(isset($declared[$table['table']])||!in_array($table['disposition'],$groups,true))throw new RuntimeException('E2EE_INVALID_SCHEMA_CONTRACT');
