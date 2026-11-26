@@ -7948,15 +7948,6 @@ export function GenesisCalendar() {
           </form>
         </div>
       ) : null}
-      {workspaceRecoveryRequest ? (
-        <WorkspaceRecoveryDialog
-          request={workspaceRecoveryRequest}
-          language={language}
-          onRecovered={confirmWorkspaceRecovery}
-          onCancel={cancelWorkspaceRecovery}
-        />
-      ) : null}
-      {cloudUser ? <Suspense fallback={null}><WorkspaceConflictReview language={language} /></Suspense> : null}
       {accountOpen && cloudUser ? (
         <Suspense fallback={<DeferredDialogFallback label={language === "en" ? "Opening account…" : "Открываем личный кабинет…"} />}>
           <AccountPanel
@@ -8084,6 +8075,16 @@ export function GenesisCalendar() {
         {syncStatus === 'error' ? <button type="button" onClick={() => window.dispatchEvent(new Event('focus'))}>{translateText('Повторить', language)}</button> : null}
       </section>
     </div> : null}
+    {/* Recovery and conflict review can be required before the workspace leaves its inert state. */}
+    {workspaceRecoveryRequest ? (
+      <WorkspaceRecoveryDialog
+        request={workspaceRecoveryRequest}
+        language={language}
+        onRecovered={confirmWorkspaceRecovery}
+        onCancel={cancelWorkspaceRecovery}
+      />
+    ) : null}
+    {cloudUser ? <Suspense fallback={null}><WorkspaceConflictReview language={language} /></Suspense> : null}
     </DiaryProvider>
     </SacredFeaturesContext>
     </SharedUpdatesProvider>
