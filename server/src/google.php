@@ -56,25 +56,26 @@ function genesisGoogleAuthUrl(string $state, string $challenge, string $purpose 
     if (empty($config['google_client_id'])) {
         throw new RuntimeException('Google OAuth client is not configured.');
     }
-    if (!in_array($purpose, ['login', 'services', 'link', 'reauth', 'recovery'], true)) {
+    if (!in_array($purpose, ['login', 'services', 'link', 'reauth', 'recovery', 'drive'], true)) {
         throw new InvalidArgumentException('Google OAuth purpose is invalid.');
     }
     $connectServices = $purpose === 'services' || $purpose === 'link' && !genesisGoogleIdentityManagementEnabled();
+    $drive = $purpose === 'drive';
     $parameters = [
         'client_id' => (string)$config['google_client_id'],
         'redirect_uri' => genesisGoogleRedirectUri(),
         'response_type' => 'code',
-        'scope' => implode(' ', $connectServices ? GENESIS_GOOGLE_SCOPES : GENESIS_GOOGLE_IDENTITY_SCOPES),
-        'access_type' => $connectServices ? 'offline' : 'online',
-        'include_granted_scopes' => 'true',
-        'prompt' => $purpose === 'link' ? 'consent select_account' : ($connectServices ? 'consent' : 'select_account'),
+        'scope' => implode(' ', $drive ? ['openid','email',GENESIS_DRIVE_SCOPE] : ($connectServices ? GENESIS_GOOGLE_SCOPES : GENESIS_GOOGLE_IDENTITY_SCOPES)),
+        'access_type' => $connectServices || $drive ? 'offline' : 'online',
+        'include_granted_scopes' => $drive ? 'false' : 'true',
+        'prompt' => $drive || $purpose === 'link' ? 'consent select_account' : ($connectServices ? 'consent' : 'select_account'),
         'state' => $state,
         'code_challenge' => $challenge,
         'code_challenge_method' => 'S256',
     ];
     if ($nonce !== null) $parameters['nonce']=$nonce;
     if (in_array($purpose,['reauth','recovery'],true)) $parameters['max_age']='0';
-    if ($purpose === 'services' && is_string($loginHint) && $loginHint !== '') {
+    if (($purpose === 'services' || $drive) && is_string($loginHint) && $loginHint !== '') {
         $parameters['login_hint'] = $loginHint;
     }
     return 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query($parameters, '', '&', PHP_QUERY_RFC3986);
@@ -202,8 +203,13 @@ function genesisRevokeGoogleToken(array $user): void
 
 function genesisGoogleAccessToken(array $user, bool $forceRefresh = false): string
 {
-    $user = (!empty($user['_linked_account']) ? genesisFindLinkedGoogleAccount((string)$user['id'])
-        : genesisFindUser((string)$user['id'])) ?? $user;
+    return genesisGoogleWithLegacyOperation($user,static fn(array $current):string=>genesisGoogleStoredAccessToken($current,$forceRefresh));
+}
+/** Identity/OAuth credential operation only. Private external-copy code uses
+ * this after its independent owner/account/consent binding. Legacy product IO
+ * must keep using genesisGoogleAccessToken and its migration fence. */
+function genesisGoogleStoredAccessToken(array $user,bool $forceRefresh=false):string
+{
     $current = genesisDecrypt($user['access_token_enc'] ?? null);
     if (!$forceRefresh && $current && (int)($user['token_expires_at'] ?? 0) > time() + 60) {
         return $current;
@@ -281,8 +287,7 @@ function genesisHandleGoogleAuthorizationFailure(array $user, string $scope, Gen
 
 function genesisGoogleApi(string $method, string $path, array $user, ?array $payload = null): array
 {
-    $user = (!empty($user['_linked_account']) ? genesisFindLinkedGoogleAccount((string)$user['id'])
-        : genesisFindUser((string)$user['id'])) ?? $user;
+    return genesisGoogleWithLegacyOperation($user,static function(array $user)use($method,$path,$payload):array{
     genesisGoogleQuotaCheck('calendar');
     $path .= (str_contains($path, '?') ? '&' : '?') . 'quotaUser=' . substr(genesisGoogleCacheKey($user), 0, 40);
     $headers = [
@@ -307,12 +312,12 @@ function genesisGoogleApi(string $method, string $path, array $user, ?array $pay
         if (genesisGoogleDailyQuotaError($error)) throw new GenesisGoogleHttpException(429, 'GENESIS_GOOGLE_DAILY_QUOTA', genesisGoogleQuotaWarning('calendar'));
         genesisHandleGoogleAuthorizationFailure($user, GENESIS_GOOGLE_CALENDAR_SCOPE, $error);
     }
+    });
 }
 
 function genesisGoogleTasksApi(string $method, string $path, array $user, ?array $payload = null): array
 {
-    $user = (!empty($user['_linked_account']) ? genesisFindLinkedGoogleAccount((string)$user['id'])
-        : genesisFindUser((string)$user['id'])) ?? $user;
+    return genesisGoogleWithLegacyOperation($user,static function(array $user)use($method,$path,$payload):array{
     genesisGoogleQuotaCheck('tasks');
     $path .= (str_contains($path, '?') ? '&' : '?') . 'quotaUser=' . substr(genesisGoogleCacheKey($user), 0, 40);
     $headers = [
@@ -337,6 +342,7 @@ function genesisGoogleTasksApi(string $method, string $path, array $user, ?array
         if (genesisGoogleDailyQuotaError($error)) throw new GenesisGoogleHttpException(429, 'GENESIS_GOOGLE_DAILY_QUOTA', genesisGoogleQuotaWarning('tasks'));
         genesisHandleGoogleAuthorizationFailure($user, GENESIS_GOOGLE_TASKS_SCOPE, $error);
     }
+    });
 }
 
 function genesisGoogleScopeGranted(array $user, string $scope): bool

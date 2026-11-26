@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__.'/billing-settlement.php';
+require_once __DIR__.'/e2ee-background.php';
 
 /** Payloads are server-encrypted. No user content appears in job diagnostics. */
 function genesisBackgroundEnqueue(string $kind,string $key,array $payload,?string $availableAt=null): void
@@ -15,17 +16,33 @@ function genesisBackgroundClaim(?string $now=null,?string $uniqueKey=null): ?arr
     $db=genesisDb(); $now??=genesisNow(); genesisBeginWriteTransaction($db);
     try {
         $scope=$uniqueKey===null?'':' AND unique_key=?';$keyValues=$uniqueKey===null?[]:[$uniqueKey];
-        $q=$db->prepare("SELECT kind,unique_key,payload FROM background_jobs WHERE state='running' AND lease_until<=? AND attempts>=5".$scope);
+        $q=$db->prepare("SELECT * FROM background_jobs WHERE state='running' AND lease_until<=? AND attempts>=5".$scope);
         $q->execute([$now,...$keyValues]);$expired=$q->fetchAll();$q->closeCursor();
-        $db->prepare("UPDATE background_jobs SET state='failed',lease_token=NULL,lease_until=NULL,error_code='BACKGROUND_LEASE_EXPIRED',updated_at=? WHERE state='running' AND lease_until<=? AND attempts>=5".$scope)->execute([$now,$now,...$keyValues]);
+        $legacy=[];
+        foreach($expired as $ended) {
+            if(genesisE2eeBackgroundHold($ended,$now)!==null)continue;
+            $db->prepare("UPDATE background_jobs SET state='failed',lease_token=NULL,lease_until=NULL,error_code='BACKGROUND_LEASE_EXPIRED',updated_at=? WHERE id=?")->execute([$now,$ended['id']]);$legacy[]=$ended;
+        }
+        $expired=$legacy;
         foreach($expired as$ended)if($ended['kind']==='shared-bulk')genesisSharedBulkJobFailed($ended,'BACKGROUND_LEASE_EXPIRED');
         foreach($expired as$ended)if($ended['kind']==='shared-notification')genesisNotificationJobFailed($ended,'BACKGROUND_LEASE_EXPIRED');
         foreach($expired as$ended)if($ended['kind']==='habit-notification')genesisHabitReminderJobFailed($ended,'BACKGROUND_LEASE_EXPIRED');
         foreach($expired as$ended)if($ended['kind']==='advice-notification')genesisAdviceNotificationJobFailed($ended,'BACKGROUND_LEASE_EXPIRED');
         foreach($expired as$ended)if($ended['kind']==='billing-settlement')genesisBillingSettlementJobFailed($ended,'BACKGROUND_LEASE_EXPIRED');
         foreach($expired as$ended)if($ended['kind']==='shared-automation')genesisAutomationJobError($ended,'BACKGROUND_LEASE_EXPIRED',true);
-        $q=$db->prepare("SELECT * FROM background_jobs WHERE ((state='pending' AND available_at<=?) OR (state='running' AND lease_until<=?))".$scope." ORDER BY available_at,id LIMIT 1");
+        // This non-deterministic, read-only SQL function resolves legacy private
+        // scope references under this same writer lock. Filtering precedes LIMIT:
+        // a large protected queue can never look like an empty runnable queue.
+        $quarantine=[];
+        $db->sqliteCreateFunction('genesis_e2ee_job_blocked',static function(string $id,string $kind,string $payload)use(&$quarantine):int{
+            try{return (int)genesisE2eeBackgroundBlocked(['kind'=>$kind,'payload'=>$payload]);}
+            catch(GenesisE2eeJobReviewRequired){$quarantine[$id]=true;return 1;}
+        },3);
+        $q=$db->prepare("SELECT * FROM background_jobs WHERE ((state='pending' AND available_at<=?) OR (state='running' AND lease_until<=?))".$scope." AND genesis_e2ee_job_blocked(id,kind,payload)=0 ORDER BY available_at,id LIMIT 1");
         $q->execute([$now,$now,...$keyValues]);$job=$q->fetch();$q->closeCursor();
+        // Never write from an SQLite filter callback. Isolate corrupt bindings
+        // after its cursor closes, while the same writer still owns the queue.
+        foreach(array_keys($quarantine) as $id)genesisE2eeBackgroundQuarantine(['id'=>$id],$now);
         if(!$job){$db->commit();return null;}
         $token=genesisUuid();$lease=gmdate('Y-m-d\TH:i:s\Z',strtotime($now)+120);
         $db->prepare("UPDATE background_jobs SET state='running',attempts=attempts+1,lease_token=?,lease_until=?,updated_at=? WHERE id=?")->execute([$token,$lease,$now,$job['id']]);
@@ -44,6 +61,7 @@ function genesisBackgroundPerform(array $job,?callable $handler=null): string
     try {
         $q=$db->prepare("SELECT state,lease_token FROM background_jobs WHERE id=?");$q->execute([$job['id']]);$current=$q->fetch();$q->closeCursor();
         if(!$current||$current['state']!=='running'||$current['lease_token']!==$job['lease_token']){$db->commit();return 'superseded';}
+        if(($held=genesisE2eeBackgroundHold($job,null,true))!==null){$db->commit();return $held;}
         $payload=json_decode(genesisSharedContentDecrypt($job['payload']),true,32,JSON_THROW_ON_ERROR);
         $state=$handler ? $handler($job['kind'],$payload) : match($job['kind']) {
             'shared-series'=>genesisSharedSeriesGenerate($payload),
@@ -67,6 +85,9 @@ function genesisBackgroundPerform(array $job,?callable $handler=null): string
         $delay=min(3600,30*(2**min(7,(int)$job['attempts'])));
         genesisBeginWriteTransaction($db);
         try{
+            $q=$db->prepare('SELECT state,lease_token FROM background_jobs WHERE id=?');$q->execute([$job['id']]);$latest=$q->fetch();$q->closeCursor();
+            if(!$latest||$latest['state']!=='running'||$latest['lease_token']!==$job['lease_token']){$db->commit();return 'superseded';}
+            if(($held=genesisE2eeBackgroundHold($job))!==null){$db->commit();return $held;}
             $update=$db->prepare("UPDATE background_jobs SET state=?,available_at=?,lease_until=NULL,lease_token=NULL,error_code=?,updated_at=? WHERE id=? AND state='running' AND lease_token=?");
             $update->execute([$state,gmdate('Y-m-d\TH:i:s\Z',time()+$delay),$code,genesisNow(),$job['id'],$job['lease_token']]);
             if(!$update->rowCount()){$db->commit();return 'superseded';}
@@ -82,8 +103,10 @@ function genesisBackgroundPerform(array $job,?callable $handler=null): string
 function genesisBackgroundRun(int $limit=20): array
 {
     require_once __DIR__.'/billing-yookassa.php';
+    require_once __DIR__.'/billing-play-voids.php';
     genesisBillingYooScan();
     genesisBillingPaddleScan();
+    genesisBillingPlayVoidScan();
     $db=genesisDb();$db->exec("UPDATE background_worker_state SET started_at=strftime('%Y-%m-%dT%H:%M:%SZ','now') WHERE id=1");
     genesisSharedSeriesEnqueue();
     genesisAutomationScan();

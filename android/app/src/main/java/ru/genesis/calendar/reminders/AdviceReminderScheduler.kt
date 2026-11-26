@@ -59,6 +59,11 @@ internal object AdviceReminderScheduler {
     private const val NOTE_ID = 7421
     private val scheduleMutex = Mutex()
     private val deliveryMutex = Mutex()
+    private suspend fun <T> operation(context:Context,scope:String,denied:T,run:suspend ()->T):T {
+        if(ru.genesis.calendar.security.UpdateGate.blocked.value)return denied
+        return try{AuthController.get(context).withLegacyAdviceScope(scope,run)}
+        catch(error:AuthApiError){if(!legacyAdviceDenied(error))throw error;denied}
+    }
     private fun registry(context: Context) = context.getSharedPreferences("genesis.advice.alarms.v1", Context.MODE_PRIVATE)
     fun cancelDay(context: Context, scope: String, day: String) {
         NotificationManagerCompat.from(context).cancel("advice:$scope:$day", NOTE_ID)
@@ -105,10 +110,11 @@ internal object AdviceReminderScheduler {
             }
     }
 
-    suspend fun restore(context: Context) = withContext(Dispatchers.IO) { scheduleMutex.withLock {
+    suspend fun restore(context: Context) = withContext(Dispatchers.IO) {
         val app = context.applicationContext as GenesisApplication
         val scope = app.workspaceScope
-        if (!scope.startsWith("account-")) { cancel(context); return@withLock }
+        if (!scope.startsWith("account-")) { scheduleMutex.withLock{if(app.workspaceScope==scope)cancel(context)};return@withContext }
+        operation(context,scope,Unit) { scheduleMutex.withLock {
         val account = AuthController.get(context).cachedAdviceNotificationAccount(scope)
         if (app.workspaceScope != scope) return@withLock
         val preferences = account?.settings?.advicePreferences
@@ -152,7 +158,7 @@ internal object AdviceReminderScheduler {
             } catch (_: SecurityException) { alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, atMillis, operation) }
         }
         if (withinWindow(day, settings, now)) enqueueDelivery(context, raw)
-    } }
+    } } }
 
     fun enqueueDelivery(context: Context, raw: Uri) {
         val parts = raw.pathSegments
@@ -167,10 +173,11 @@ internal object AdviceReminderScheduler {
     }
 
     /** True asks WorkManager to retry, only inside today's two-hour delivery window. */
-    suspend fun deliver(context: Context, raw: Uri): Boolean = deliveryMutex.withLock {
+    suspend fun deliver(context: Context, raw: Uri): Boolean {
         val app = context.applicationContext as GenesisApplication
         val parts = raw.pathSegments
-        if (raw.scheme != "genesis" || raw.authority != "advice-reminder" || parts.size != 4 || parts[0] != app.workspaceScope) return@withLock false
+        if (raw.scheme != "genesis" || raw.authority != "advice-reminder" || parts.size != 4 || parts[0] != app.workspaceScope || !Regex("account-[a-f0-9]{32}").matches(parts[0])) return false
+        return operation(context,parts[0],false) { deliveryMutex.withLock {
         if (BuildConfig.DEBUG && app.getSharedPreferences("genesis.validation.v1", Context.MODE_PRIVATE).getBoolean("isolated", false)) return@withLock false
         val scope = parts[0]
         val day = LocalDate.parse(parts[1])
@@ -242,7 +249,7 @@ internal object AdviceReminderScheduler {
             store.markDelivered(scope, day.toString())
         } catch (_: SecurityException) { return@withLock false }
         false
-    }
+    } } }
 
     internal fun notificationCopy(context: Context, language: String): JSONObject =
         context.assets.open("originals/i18n/advice-notification-copy.json").bufferedReader(Charsets.UTF_8).use {

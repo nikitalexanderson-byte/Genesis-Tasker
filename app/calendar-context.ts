@@ -10,15 +10,19 @@ export const ASTRONOMY_FIRST_YEAR = 1900;
 export const ASTRONOMY_LAST_YEAR = 2100;
 export const CIVIL_DAY_MS = 86_400_000;
 
+function normalizeUtcAlias(value: string) {
+  // Android providers serialize the same zero-offset system zone differently.
+  return value === "GMT" || value === "+00:00" ? "UTC" : value;
+}
+
 export function deviceTimeZone() {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  return normalizeUtcAlias(Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
 }
 
 /** IANA zones supported by the runtime, plus UTC; no locale-dependent abbreviations. */
 const canonicalZones = new Map<string, string>();
 export function calendarTimeZone(value: string) {
-  // Android's default UTC device zone may be serialized with this unambiguous alias.
-  if (value === "GMT") value = "UTC";
+  value = normalizeUtcAlias(value);
   if (value !== "UTC" && !/^[A-Za-z_+-]+(?:\/[A-Za-z0-9_+-]+)+$/.test(value)) throw new RangeError("INVALID_CALENDAR_TIME_ZONE");
   if (!canonicalZones.has(value)) canonicalZones.set(value, new Intl.DateTimeFormat("en", { timeZone: value }).resolvedOptions().timeZone);
   return canonicalZones.get(value)!;

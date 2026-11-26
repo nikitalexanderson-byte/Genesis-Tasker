@@ -9,11 +9,15 @@ export type ProjectWorkflow={config:WorkflowConfig;counts:Record<string,number>}
 export type WorkflowContext={project:Pick<SharedProject,'id'|'title'|'role'|'permissions'>}&Pick<SharedProjectSnapshot,'statuses'|'customFieldDefinitions'>;
 export type WorkflowSnapshot=ProjectWorkflow&{context:WorkflowContext};
 export type WorkflowCommand=Pick<WorkflowConfig,'enabled'>&Partial<Pick<WorkflowConfig,'statuses'|'transitions'>>&{expectedRevision:number;requestId:string};
-export type WorkflowVersion=Omit<WorkflowConfig,'revision'>&{revision:number;createdAt:string;actorId:string};
+export type WorkflowVersion=Omit<WorkflowConfig,'revision'>&{revision:number;createdAt:string;actorId:string|null;historyOrigin?:'migration'};
 const path=(project:string)=>`/projects/${encodeURIComponent(project)}/workflow`;
 export const loadWorkflow=(project:string,signal?:AbortSignal)=>sharedCollaborationRequest<WorkflowSnapshot>(path(project),{signal});
 export const saveWorkflow=(project:string,command:WorkflowCommand)=>sharedCollaborationRequest<ProjectWorkflow>(path(project),{method:'PUT',body:JSON.stringify(command)});
-export const workflowHistory=(project:string,before?:number,signal?:AbortSignal)=>sharedCollaborationRequest<{versions:WorkflowVersion[];nextCursor:number|null}>(`${path(project)}/history${before?`?before=${before}`:''}`,{signal});
+export async function workflowHistory(project:string,before?:number,signal?:AbortSignal){
+ const page=await sharedCollaborationRequest<{versions:WorkflowVersion[];archivedVersions?:WorkflowVersion[];nextCursor:number|null}>(`${path(project)}/history${before?`?before=${before}`:''}`,{signal});
+ const archived=(page.archivedVersions??[]).map(row=>({...row,historyOrigin:'migration' as const}));
+ return{versions:[...page.versions,...archived],nextCursor:page.nextCursor};
+}
 export function workflowDraft(config:WorkflowConfig,statuses:SharedStatus[]):WorkflowConfig {
  const ids=new Set(statuses.map(status=>status.id));
  return {...config,statuses:statuses.map(status=>{const rule=structuredClone(config.statuses.find(rule=>rule.statusId===status.id)??{statusId:status.id,wipLimit:null,requiredFields:[]});return {...rule,wipLimit:status.isDone?null:rule.wipLimit};}),

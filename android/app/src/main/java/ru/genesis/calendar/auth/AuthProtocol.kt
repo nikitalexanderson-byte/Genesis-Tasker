@@ -8,7 +8,7 @@ internal val AUTH_ORIGIN = BuildConfig.GENESIS_ORIGIN
 internal val AUTH_HOST = BuildConfig.GENESIS_HOST
 internal const val SESSION_COOKIE = "GENESISSESSID"
 
-class ServerIdentity(val uid: String, val displayName: String, val email: String) {
+class ServerIdentity(val uid: String, val displayName: String, val email: String,val privateVault:Boolean=false) {
     override fun toString() = "ServerIdentity([redacted])"
 }
 
@@ -48,7 +48,7 @@ internal object AuthProtocol {
         val email = user.getString("email")
         require(uid.isNotBlank() && uid.length <= 255 && email.length <= 254) { "Invalid identity" }
         val name = if (user.isNull("displayName")) email else user.optString("displayName", email)
-        return ServerIdentity(uid, name.take(160), email)
+        return ServerIdentity(uid, name.take(160), email,user.has("privatePreferencesMode"))
     }
 
     fun challenge(body: JSONObject): AuthChallenge {

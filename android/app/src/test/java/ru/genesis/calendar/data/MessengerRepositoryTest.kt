@@ -18,20 +18,23 @@ private class MessengerMemory : MessagingStore {
 private class MessengerServer : MessagingGateway {
     val id="21000000-0000-0000-0000-000000000001"
     val chat=JSONObject().put("id",id).put("kind","direct").put("title","Other").put("members",JSONArray().put(JSONObject().put("userId","owner").put("name","Me").put("role","owner").put("status","active")).put(JSONObject().put("userId","peer").put("name","Other").put("role","member").put("status","active")))
-    val rows=linkedMapOf<String,JSONObject>();val commands=mutableListOf<String>();var loseAck=false;var account=true;var conflict=false
+    val rows=linkedMapOf<String,JSONObject>();val commands=mutableListOf<String>();var loseAck=false;var account=true;var conflict=false;var unavailableReads=0
     override fun check(){check(account)}
     override suspend fun request(method:String,path:String,body:JSONObject?):JSONObject {
         check()
         return when {
             path=="/shared/messenger/conversations"->JSONObject().put("conversations",JSONArray().put(chat))
             path=="/shared/messenger/conversations/$id"->chat
-            path.contains("/messages?before=")->JSONObject().put("messages",JSONArray(rows.values.toList())).put("nextCursor",JSONObject.NULL)
+            path.contains("/messages?before=")->{
+                if(unavailableReads>0){unavailableReads--;throw IOException("Reconciliation temporarily unavailable")}
+                JSONObject().put("messages",JSONArray(rows.values.toList())).put("nextCursor",JSONObject.NULL)
+            }
             path.endsWith("/read")->JSONObject().put("ok",true)
             path.endsWith("/messages")&&method=="POST"->{
-                if(conflict)throw AuthFailure(AuthFailure.Kind.CONFLICT,409)
                 val input=requireNotNull(body);commands+=input.toString();val mid=input.getString("id")
+                if(conflict){rows[mid]=JSONObject().put("id",mid).put("seq",rows.size+1).put("senderId","owner").put("revision",1).put("text","Existing conflicting content");throw AuthFailure(AuthFailure.Kind.CONFLICT,409)}
                 if(!rows.containsKey(mid))rows[mid]=JSONObject().put("id",mid).put("seq",rows.size+1).put("senderId","owner").put("revision",1).put("text",input.getString("text"))
-                if(loseAck){loseAck=false;throw IOException("Lost acknowledgement")}
+                if(loseAck){loseAck=false;unavailableReads=1;throw IOException("Lost acknowledgement")}
                 JSONObject().put("ok",true).put("id",mid).put("revision",1)
             }
             else->error("Unexpected request $method $path")
@@ -50,7 +53,7 @@ class MessengerRepositoryTest {
         server.conflict=false;server.loseAck=true
         assertTrue(runCatching{repository.send()}.isFailure)
         assertTrue(runCatching{repository.recoverPendingConflict()}.isFailure)
-        repository.send();assertEquals(1,server.rows.size)
+        repository.send();assertEquals(2,server.rows.size);assertEquals(1,server.rows.values.count{it.getString("text")=="Preserve rejected text"})
     }
     @Test fun cloudChatNeverRequestsLegacyOrDeviceKeys()=runBlocking {
         val server=MessengerServer();val store=MessengerMemory();val repository=MessengerRepository("owner",server,store)

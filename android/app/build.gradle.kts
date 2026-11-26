@@ -44,8 +44,8 @@ android {
         applicationId = "ru.genesis.calendar"
         minSdk = 26
         targetSdk = 37
-        versionCode = 149
-        versionName = "3.3.5"
+        versionCode = 150
+        versionName = "3.3.6"
         buildConfigField("boolean", "PLAY_DISTRIBUTION", "false")
         buildConfigField("boolean", "PLAY_BILLING_ENABLED", "false")
         buildConfigField("boolean", "TRIAL_BUILD", "false")
@@ -86,6 +86,7 @@ android {
         create("play") {
             initWith(getByName("release"))
             buildConfigField("boolean", "PLAY_DISTRIBUTION", "true")
+            buildConfigField("boolean", "PLAY_BILLING_ENABLED", "true")
         }
         // Local QA uses release R8/resource packaging under its own package and
         // a disposable debug certificate, so it cannot replace a user's release.
@@ -108,7 +109,10 @@ android {
         resValues = true
     }
     sourceSets.getByName("androidTest").assets.srcDir("src/test/resources")
+    // The same public path inventory is consumed by web and native migration.
+    sourceSets.getByName("main").assets.srcDir("../../contracts/e2ee")
     sourceSets.getByName("androidTest").assets.srcDir(rootProject.file("../tests/fixtures"))
+    sourceSets.getByName("test").resources.directories.add(rootProject.file("../tests/fixtures").absolutePath)
 }
 
 // Original byte copies in generated assets; no tracked duplicate or image conversion.
@@ -125,7 +129,7 @@ val genesisAssets = tasks.register<GenesisAssetsTask>("genesisAssets") {
     }
     from(rootProject.file("third-party-licenses")) { into("third-party-licenses") }
     from(rootProject.file("../app/translations.en.json")) { into("i18n") }
-    from(rootProject.file("../releases/android-3.3.5-notes.json")) { into("i18n") }
+    from(rootProject.file("../releases/android-3.3.6-notes.json")) { into("i18n") }
     from(rootProject.file("../app")) { include("solar-model-localization.js", "solar-model-labels.json", "ui-refinement-copy.json"); into("i18n") }
     from(rootProject.file("../app")) {
         include("translations.el.a.json", "translations.el.b.json", "translations.de.json", "translations.de.b.json", "translations.fr.json", "translations.fr.b.json",
@@ -147,6 +151,8 @@ val genesisAssets = tasks.register<GenesisAssetsTask>("genesisAssets") {
     from(rootProject.file("../app/custom-field-recovery-translations.json")) { into("i18n") }
     from(rootProject.file("../app/planning-translations.json")) { into("i18n") }
     from(rootProject.file("../app/daily-advice-copy.json")) { into("i18n") }
+    from(rootProject.file("../app/native-web-runtime-copy.json")) { into("i18n") }
+    from(rootProject.file("../contracts/native-web-runtime-v1.json")) { into("i18n") }
     from(rootProject.file("../app/messenger-copy.json")) { into("i18n") }
     from(rootProject.file("../app/diary-copy.json")) { into("i18n") }
     from(rootProject.file("../app/dream-journal-copy.json")) { into("i18n") }
@@ -215,6 +221,9 @@ val genesisAssets = tasks.register<GenesisAssetsTask>("genesisAssets") {
         include("*.json")
         into("i18n/year-translations")
     }
+    // Only public edition pins are bundled; large catalogue bodies stay lazy.
+    from(rootProject.file("../contracts/public-advice-editions-v1.json")) { into("catalogs") }
+    from(rootProject.file("../contracts/public-advice-metadata-v1.json")) { into("catalogs") }
     into(assetsDirectory.dir("originals"))
 }
 abstract class GenesisAuroraAssetsTask : DefaultTask() {
@@ -229,8 +238,10 @@ abstract class GenesisAuroraAssetsTask : DefaultTask() {
 }
 val genesisAuroraAssets = tasks.register<GenesisAuroraAssetsTask>("genesisAuroraAssets") {
     assetsDirectory.set(layout.buildDirectory.dir("generated/auroraAssets"))
-    inputs.files(rootProject.fileTree("../app") { include("aurora/**", "*.css", "*.ts", "*.json", "Olympian*.tsx", "olympian-native.*", "olympian-knowledge-copy/**", "BackupPanel.tsx", "backup-native-entry.tsx", "backup-native.html", "backup-locales/**", "catalog-translations/**") })
+    inputs.files(rootProject.fileTree("../app") { include("aurora/**", "e2ee/**", "*.css", "*.ts", "*.json", "Olympian*.tsx", "olympian-native.*", "olympian-knowledge-copy/**", "BackupPanel.tsx", "BackupJournalChoices.tsx", "backup-native-entry.tsx", "backup-native.html", "backup-locales/**", "catalog-translations/**") })
     inputs.file(rootProject.file("../scripts/aurora/build-native.mjs"))
+    inputs.file(rootProject.file("../contracts/native-web-runtime-v1.json"))
+    inputs.files(rootProject.fileTree("../contracts/e2ee") { include("*.json") })
     inputs.file(rootProject.file("../pnpm-lock.yaml"))
 }
 androidComponents.onVariants { variant ->
@@ -243,8 +254,12 @@ tasks.withType<JavaCompile>().configureEach { options.encoding = "UTF-8" }
 dependencies {
     val composeBom = platform(libs.compose.bom)
 
+    // RFC 9180 HPKE and RFC 5869 HKDF; no application implementation of either primitive.
+    implementation("org.bouncycastle:bcprov-jdk18on:1.87")
+
     implementation(composeBom)
     implementation("androidx.activity:activity-compose:1.13.0")
+    implementation("androidx.biometric:biometric-compose:1.4.0-rc01")
     implementation("androidx.core:core:1.18.0")
     implementation("androidx.browser:browser:1.10.0")
     implementation("androidx.compose.material3:material3")

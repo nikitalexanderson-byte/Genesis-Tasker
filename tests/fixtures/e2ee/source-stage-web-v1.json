@@ -1,0 +1,228 @@
+{
+  "synthetic": true,
+  "warning": "PUBLIC TEST KEYS; DO NOT USE FOR USER DATA",
+  "producer": "Node WebCrypto",
+  "scope": {
+    "ownerId": "synthetic-stage-actor",
+    "scopeId": "device:synthetic-stage",
+    "deviceId": "fixture-stage-device",
+    "generation": 1,
+    "cryptoEpoch": 1,
+    "securityEpoch": 1,
+    "keyId": "public-synthetic-stage-root"
+  },
+  "rootKey": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+  "publicKeySpki": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEb_A7lJJBzh2t1DUZ5pYOCoW0GmmgXDKBA6orzhWUyhY8T3U6Vb8B3FP2wLDH7ueLQMb_fSWpbiKCuYnO9xwUSg",
+  "privateKeyPkcs8": "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQGhRANCAARv8DuUkkHOHa3UNRnmlg4KhbQaaaBcMoEDqivOFZTKFjxPdTpVvwHcU_bAsMfu54tAxv99JaluIoK5ic73HBRK",
+  "target": {
+    "ownerId": "different-content-owner",
+    "scopeId": "project:interop-source",
+    "kind": "project"
+  },
+  "reference": {
+    "stageId": "4bdff29b-bc1d-4693-b52e-c155963bce3f",
+    "manifestHash": "YplAxpKSBKffp0ymFLiRGRG9PTlVzCus8_PVNvUTDEM"
+  },
+  "historyStages": 2,
+  "expectedPaths": [
+    {
+      "id": "project.content",
+      "bytes": "UFVCTElDIFNZTlRIRVRJQyBTT1VSQ0UgeyJkdXBsaWNhdGUiOjEsImR1cGxpY2F0ZSI6Mn0NCg"
+    },
+    {
+      "id": "project.local-work",
+      "bytes": "AP_YACJcDQo"
+    }
+  ],
+  "records": [
+    {
+      "key": "21:synthetic-stage-actor22:device:synthetic-stage14:local-snapshot104:source-stage:HxnJG5EHWWnqW7PR4FEWAQ8e4ncneoliDWlepiNntt8:4bdff29b-bc1d-4693-b52e-c155963bce3f:j:00:00000",
+      "serial": 6,
+      "envelope": {
+        "context": {
+          "cryptoProtocol": 1,
+          "suite": "A256KW-A256GCM-ES256",
+          "ownerId": "synthetic-stage-actor",
+          "scopeId": "device:synthetic-stage",
+          "domain": "local-snapshot",
+          "objectId": "source-stage:HxnJG5EHWWnqW7PR4FEWAQ8e4ncneoliDWlepiNntt8:4bdff29b-bc1d-4693-b52e-c155963bce3f:j:00:00000",
+          "schemaVersion": 1,
+          "dataGeneration": 1,
+          "writerProtocol": 9,
+          "cryptoEpoch": 1,
+          "securityEpoch": 1,
+          "revision": 6,
+          "keyId": "public-synthetic-stage-root",
+          "deviceId": "fixture-stage-device",
+          "operationId": "f9796995-b02d-441e-bb9d-d7d96a0afb12"
+        },
+        "wrappedKey": "4SVfCFA0pCCwyyIIh0lTsYKBrtw5U94xbYtRdxdn_XcVAzHWW-FwTQ",
+        "nonce": "oRrn-Hk1_9VsJwqI",
+        "ciphertext": "FgHVHl8iFwCS6Sx743ZXOOWvEg59ueS_fiD6qshjr2IAaIARXXODS7_8475943vsx9PMzL85J6jvz4_jkt3bVv74eLYORNleMTiXSkR6w5ujTkw2FFQa7eDOKQLW_pfbOCnsSdt6E_x6Lhr-s3JgRLGsOFvrgrjePPae-FAxKSMq3uk9LjuQgS6eGmutsZOzoNK6ZCLAAe6fRk_D5_Hqa9i8e-Ft6uFG-q2dyH2DBSkJPx5V1QUw7NgFqiYy6ircJ_QU-Smpl2x6AYvLJNeyyh_2325QzppODm6WNISG7x8h14_1MuxWKKYWuDsE8EdxDvUU2COdMgqrsnaRACmry6zbwvAOLJf4FIiREWbph3HVL5Oqz3oaktjW8K2TXCkwsMNoIdhleaM998u3v6J7hsh_klGfDnF0uS9Gy2xbH-E3CBLWsMPvp8v3DI2AKrJK9zulWCzv-sYnZJQYPX3dCLzh817-b-HkpcQ9EraZPka4QcBI-68qmme23ADEG-Lsa3ZLPMvEO6ul0wUl3f3gY7pu2dvCBAqKP-v7S4-TzJcyIrP19FrGB1O8KjHQXl0JLvVVwoaZYp0pDBL5Bljv0ZFxlJ3WDDvPMgOyIJV-u3aj9lR43sDRnTMloYiBLnYgosbf9xKflr6BUkJsJCRoCe5t-QwW2fylbKwGaUkyxVxDb0mFF2ZLDbzwFMXDQuWz4Dy4fib9jhhzLkGTH4CwlXvhrNHXIjGF5Tc8-EUBfsPssM0qzl-a1GTPquzIhIB3MSOINByViJxXs_AKU332cRkalFZM9f_PoEXInqjz8lN3ox1QQn9iXyveu6Cr0t9V4VtBc2n4yqQ0fuIPGNlI8LPWQr2XPtiYXFs1IZgYdyIyX34y12UFPMXwVsjxpj03AUr728xm693prQTSmGEeGds3Nrq1hvjNeX2NTQJWmFsrTpSzblWq3Tvl6s4XaH0TD0iNJaOkIZfMJ80ajY1FFMGjgvWWsTFcAG6Cm1hU9HZ9uPJMPJmEll8qyjvqMtYLrpOHTT9UvAEtBd6IUOY",
+        "signature": "fppkstPU_wvz0a_le0CEpWRXCosS0NHn6qrQ-Z1thOYAE2pn_eRyCRCpEBo0S_LMqz8sBOcaVKTXUl1ueIJs5g"
+      }
+    },
+    {
+      "key": "21:synthetic-stage-actor22:device:synthetic-stage14:local-snapshot104:source-stage:HxnJG5EHWWnqW7PR4FEWAQ8e4ncneoliDWlepiNntt8:4bdff29b-bc1d-4693-b52e-c155963bce3f:m:00:00000",
+      "serial": 1,
+      "envelope": {
+        "context": {
+          "cryptoProtocol": 1,
+          "suite": "A256KW-A256GCM-ES256",
+          "ownerId": "synthetic-stage-actor",
+          "scopeId": "device:synthetic-stage",
+          "domain": "local-snapshot",
+          "objectId": "source-stage:HxnJG5EHWWnqW7PR4FEWAQ8e4ncneoliDWlepiNntt8:4bdff29b-bc1d-4693-b52e-c155963bce3f:m:00:00000",
+          "schemaVersion": 1,
+          "dataGeneration": 1,
+          "writerProtocol": 9,
+          "cryptoEpoch": 1,
+          "securityEpoch": 1,
+          "revision": 1,
+          "keyId": "public-synthetic-stage-root",
+          "deviceId": "fixture-stage-device",
+          "operationId": "8858364a-2d3a-4f9b-a969-5094cfc6d8b8"
+        },
+        "wrappedKey": "NQfI75Vbf6RRcqubgqURkEJXPrftik-rroJ3LRm2mgQg8jZHBh1pkg",
+        "nonce": "qw3iHTHQlrrwRvka",
+        "ciphertext": "b4q8SDks7j-6DL-LraeqR3Sok__GWcyh1Tw6OEDaZVkGcckGkIOEOSqjaZZZwpt9uv6PPYpr64jRotoJjnnMG6Qqmy9AzuAW4IEaD1WVX_4vxysPOrL2Wp6Um9Q7ci-D8V0xCc_LGWf4o5RGxBXjH3GwVY4UlMJyThUJX0N2cfgqHQagIkTDgFgqNZl-RiWarpXLk8KrZD12c7NYp_IFvqzdx-1t-ZQTDamCmIoSeCKECtjN8ONT5ptBbtL3-cTKBZYesJwfv75sOIum1udfmyxPV9gVljQeTPnvvH73NpQSrOP90o0jOxcfcPWB4uhZxKrBYX_Jsh8wF4RC_OfRnNI8LsZ8W-TnILMk5jo08Ug8y3-546NmIK6uXRz-mpZk9ioorofqLOQwTbTN6OOAJIhcHsg6LMn1f32e6-ExCUixkCHdabMNdRXjt906goJCAwjL44otjSoXiAtqDwpkGSWe_4EqoMZbFj9UULJnhHajQ38qW059o3C1ehpXU5lp0qmviHMS_UUgMSHoa7wfZvHMf6hFNp9k5cQdVDh30_wz1ApN1tp5_dMvkhoL-q7yADAGN53aH3VVYzDVMS37tw84WAkfiydZYw5kNdHBBGpAmBuIAaJ4khPT37xdfE1ObjDTHU_mfcOgiY85BS4os32TqBQk7EmwNCHcOvLBomUagem0xyXe08T57EIHzivXC5NNdCdgwrfhbUs-D4JSBO1SSOssFcH1gFgNGpN6Tdue7gZuoMbWWiP3xSBF9P3gEhJPMqpg5Mv_jYUFltwmhOB_8Zcc-K4LmOx6DajA26Kc193cAaxvHl4sauQ4w2EYvpjY7UIl2kgOKH2tnU_PIfgllMb8RwBI2-WJpL1nf8hXsp9av893Yx21LzDx5RBvNhUVxPlPxNmeBow-yJo1W1lJR_1d2w",
+        "signature": "8cK6U2ijYVzEParwg6f0Gxjs2l-m29e5w-3kIm6jxzhZVsaVIKIgm1XZyn5-CfFsWiRY1qbKEZhj2298m0fZmA"
+      }
+    },
+    {
+      "key": "21:synthetic-stage-actor22:device:synthetic-stage14:local-snapshot104:source-stage:HxnJG5EHWWnqW7PR4FEWAQ8e4ncneoliDWlepiNntt8:4bdff29b-bc1d-4693-b52e-c155963bce3f:p:00:00000",
+      "serial": 1,
+      "envelope": {
+        "context": {
+          "cryptoProtocol": 1,
+          "suite": "A256KW-A256GCM-ES256",
+          "ownerId": "synthetic-stage-actor",
+          "scopeId": "device:synthetic-stage",
+          "domain": "local-snapshot",
+          "objectId": "source-stage:HxnJG5EHWWnqW7PR4FEWAQ8e4ncneoliDWlepiNntt8:4bdff29b-bc1d-4693-b52e-c155963bce3f:p:00:00000",
+          "schemaVersion": 1,
+          "dataGeneration": 1,
+          "writerProtocol": 9,
+          "cryptoEpoch": 1,
+          "securityEpoch": 1,
+          "revision": 1,
+          "keyId": "public-synthetic-stage-root",
+          "deviceId": "fixture-stage-device",
+          "operationId": "388225b4-ea94-4fdc-8558-3ac1b471836b"
+        },
+        "wrappedKey": "WoZuUF62KxNn9ubpLaHvt6UFVe2RK6FI4ublZATyt5DC8Je9JpW3Gg",
+        "nonce": "nMREm9uZGGiwodrF",
+        "ciphertext": "XA0CoMU-IeNeflVGSOxx6r_QsjkVjJ6qO4o-X-ZuHvF6XmPQXYC6sGG1yC6pTy9XOD4xRwJd5koVXgCeYPGdGzpeTY83i8o",
+        "signature": "wUj37HVb-AV9dhdKXmGW3iVDBYX9tCM3larDPbprV-_gb2lGlgDvs6EspMVot0y_WzvMpufF6-0qGrB4UzHLKg"
+      }
+    },
+    {
+      "key": "21:synthetic-stage-actor22:device:synthetic-stage14:local-snapshot104:source-stage:HxnJG5EHWWnqW7PR4FEWAQ8e4ncneoliDWlepiNntt8:4bdff29b-bc1d-4693-b52e-c155963bce3f:p:01:00000",
+      "serial": 1,
+      "envelope": {
+        "context": {
+          "cryptoProtocol": 1,
+          "suite": "A256KW-A256GCM-ES256",
+          "ownerId": "synthetic-stage-actor",
+          "scopeId": "device:synthetic-stage",
+          "domain": "local-snapshot",
+          "objectId": "source-stage:HxnJG5EHWWnqW7PR4FEWAQ8e4ncneoliDWlepiNntt8:4bdff29b-bc1d-4693-b52e-c155963bce3f:p:01:00000",
+          "schemaVersion": 1,
+          "dataGeneration": 1,
+          "writerProtocol": 9,
+          "cryptoEpoch": 1,
+          "securityEpoch": 1,
+          "revision": 1,
+          "keyId": "public-synthetic-stage-root",
+          "deviceId": "fixture-stage-device",
+          "operationId": "ac8ab6ee-64d4-4bf4-8bc0-53bcdb36e2e9"
+        },
+        "wrappedKey": "vPgZTCjhwfvRdbr-cmr2UA_-oNUeebCdiQp1DEyhK2JQ15hIBEky6Q",
+        "nonce": "_hGVZZVfFiHKNlL7",
+        "ciphertext": "V0fIlgoGPg2uVncD26sJhzvJCqXgryde",
+        "signature": "96Xy_bSIKzFy4qX7Acbj38nRKnqZ_PYrqmbHKQGNw_PHxgYEKi34Fn5skyGPHa0pamVZj8UuooGHPu2aUY1kjw"
+      }
+    },
+    {
+      "key": "21:synthetic-stage-actor22:device:synthetic-stage14:local-snapshot104:source-stage:HxnJG5EHWWnqW7PR4FEWAQ8e4ncneoliDWlepiNntt8:b1c0bdef-52aa-440b-8648-fb67981a3838:j:00:00000",
+      "serial": 3,
+      "envelope": {
+        "context": {
+          "cryptoProtocol": 1,
+          "suite": "A256KW-A256GCM-ES256",
+          "ownerId": "synthetic-stage-actor",
+          "scopeId": "device:synthetic-stage",
+          "domain": "local-snapshot",
+          "objectId": "source-stage:HxnJG5EHWWnqW7PR4FEWAQ8e4ncneoliDWlepiNntt8:b1c0bdef-52aa-440b-8648-fb67981a3838:j:00:00000",
+          "schemaVersion": 1,
+          "dataGeneration": 1,
+          "writerProtocol": 9,
+          "cryptoEpoch": 1,
+          "securityEpoch": 1,
+          "revision": 3,
+          "keyId": "public-synthetic-stage-root",
+          "deviceId": "fixture-stage-device",
+          "operationId": "973f0372-febd-4c84-826c-75d730f35d54"
+        },
+        "wrappedKey": "ut5gSwuMwgYOg2CBbFNSO5X9yfCr8qXieFna0IhHfXrrBxGBUo7Flg",
+        "nonce": "sjtBjnrB1ijiEO5-",
+        "ciphertext": "yWhHZBGLk12eLK5xJVaLGrh1cdLBNUg_QOyc96w1Z8FIXH0mgsDecL1x_eqKG__-I4LdNnt7sYdyLg4bnxrXd9ZYc2mFcGP4j7_vMJHsjfTSjhEgvu_qucS3ZfbMHCMCfOLNtS6s0r-wE5RmwEyIJ1QD1a9RhjAcYvIvdHKrlkOYdt8IYeQPo5ue7h1xHcwSRA-NvLEvwl2F4cQFv75IghixnOj7WAyn8zRdBOLSJl5hf1v1qqLnQY-doy_xd4nX39Lh0U5qIPgQkI9Zzny5FItTLsChbIItPI0551tkHn27wsxXJTkIgi1jlOegS8pfjCZGiQ2dRuz19ecTgwPUHUojpn798eGQ9OU67py4rwuJ_i-6aNwKYRhF3NLro0Hah59L1H9YMNS8s3ycKaplYiRqmgHfYkaKYJnUWa3eD8qMXBFO7197ww5S9MxvpmRJVHzQDO5-ZorUsRaW9F3DR6esqwzcleBaOh6gZPRpYw3PsgTSN2ndvo-HCPoFkZnNnIgCA25V9tZkNgS-AFZzb7HaSFzuxLHOKf4KcDfEs4weUxjKfAWEKWN1A_lSMVjjapNwQzp14JCXncH4xNn328OFT77uCw-MQfeB4XbJZXP0vGz6nJuiL09Tn1sE47VdtNy9uVPy3o9CSdJYGhw0OQodW7iQg5MREkHsmg5tH5441ovebb2flgLI3WbwnF_WtbLJ4wJ0en--J8Jl-RqBYkzHQTIM-vif1rR60OqdhMARG_rnzawtoBcjsK1_er7W0gbJsUWQduz8_BthwoVkkhYI8gOS9rHpDHKD4JcjEoR5yXuKhoqTOF5c45QRVZ7yKSIg_myedjiGFH_E_ARDP7TwlIhvRjkwM2Yj3lpTgiA",
+        "signature": "Y59S6eIJqRQZbXLTG4m_FSwNs1z6V2GbaddBQTMihmxQGxFXrK2hEGFJISj_di_QdcrYyTZOPBWd-lTFQjMi1Q"
+      }
+    },
+    {
+      "key": "21:synthetic-stage-actor22:device:synthetic-stage14:local-snapshot104:source-stage:HxnJG5EHWWnqW7PR4FEWAQ8e4ncneoliDWlepiNntt8:b1c0bdef-52aa-440b-8648-fb67981a3838:p:00:00000",
+      "serial": 1,
+      "envelope": {
+        "context": {
+          "cryptoProtocol": 1,
+          "suite": "A256KW-A256GCM-ES256",
+          "ownerId": "synthetic-stage-actor",
+          "scopeId": "device:synthetic-stage",
+          "domain": "local-snapshot",
+          "objectId": "source-stage:HxnJG5EHWWnqW7PR4FEWAQ8e4ncneoliDWlepiNntt8:b1c0bdef-52aa-440b-8648-fb67981a3838:p:00:00000",
+          "schemaVersion": 1,
+          "dataGeneration": 1,
+          "writerProtocol": 9,
+          "cryptoEpoch": 1,
+          "securityEpoch": 1,
+          "revision": 1,
+          "keyId": "public-synthetic-stage-root",
+          "deviceId": "fixture-stage-device",
+          "operationId": "fe436b5c-7d87-4b78-876c-55497b624601"
+        },
+        "wrappedKey": "95nh9Ri0VuEBJQA7UmIWcLivKBr4ZgIxwiuWXT0wUx19CQm10z8XHw",
+        "nonce": "23HzVOnrM-LujHYK",
+        "ciphertext": "HpO9ivrx_Z2LZLGPC_i_6ZBoeS59MzF0jY4r8cW37KHYyaWBoCsIuN6r-FfD8Ku8csQkEyA",
+        "signature": "krvHQN6FZIEWAJGoq-oNZXm0jlcY6DreHVpJOJIxwc3Kb4Xcbogt2fPAxN04q2VUznhp7feDajnKb-XoV7yrTA"
+      }
+    },
+    {
+      "key": "21:synthetic-stage-actor22:device:synthetic-stage14:local-snapshot64:source-stage-catalog:HxnJG5EHWWnqW7PR4FEWAQ8e4ncneoliDWlepiNntt8",
+      "serial": 3,
+      "envelope": {
+        "context": {
+          "cryptoProtocol": 1,
+          "suite": "A256KW-A256GCM-ES256",
+          "ownerId": "synthetic-stage-actor",
+          "scopeId": "device:synthetic-stage",
+          "domain": "local-snapshot",
+          "objectId": "source-stage-catalog:HxnJG5EHWWnqW7PR4FEWAQ8e4ncneoliDWlepiNntt8",
+          "schemaVersion": 1,
+          "dataGeneration": 1,
+          "writerProtocol": 9,
+          "cryptoEpoch": 1,
+          "securityEpoch": 1,
+          "revision": 3,
+          "keyId": "public-synthetic-stage-root",
+          "deviceId": "fixture-stage-device",
+          "operationId": "64fb3f85-3d00-4017-bb17-25d235152571"
+        },
+        "wrappedKey": "eeRQVn4xsks-NIUTZY2sCPQFcfjCu8CltX633q3W3OGx_9xPIZ3Mbg",
+        "nonce": "0fvkCtUMbAapqdfB",
+        "ciphertext": "Aa282MxQlpzY7cJy9en4EzmDzEitfA04VWMemIcdrTLuyVrsKpwA-Mf3XPkfbppGG12JKEgl9vu9S5XT15BQRTez78IRyoQuDuuab5S9UH-cr8XcnhDnHhevsylonkTnIpZz_XIrjL9LRXxlWYgLU2Lo_MmQvBLn3andXmyNONBoMPvJiq6dkW1BAgZBBcKwWieXONwNHs18de_lOupmvdPFfbOTaUEPnaAvmgAg1jhiFdNGXoqAFmckX-sBeztIlLMHns4BH2lMbB0hPx8BlNhJt8ZsiM-fEU0hL0_oBhpyXhCDN3N89siCdif7vd_7bThRiXsB94SQq5u21NiM3nYrHCNTC1KjI-LgDRniScBOlgyivRRYhZ3mAaiRVlafReAOGY6KVsFrAVWz9VewmwzlAq34A0USpCRkyhJYq964IB66R8hy38ao2QimFf8DZeIGSFsy1a1kSVM_Rmc1YKrSmd5EJHSuJvbKZkgdVhWrZIXePPp0AERYGt3aeav7vIGjgmIYoE0gxt-YihQMfpMiNLOv_gB7oZSDhywVNPXXjBh-9G8lkwZKSVR3YDnpIM7aaXDMuHy8cU-M4Lg9OCiSTTWcMDYDZDMM18K-xXccJwP1Phx3oj6n9eHKMjYYT9O_GBB98rCGDkgptIWWXUMGmcCRpn6sPUlEXxYF2isQ",
+        "signature": "mYg8MBzFKcqnwFUuegRD4-4JKyjuMGd7rRebvsc2fRmMNsiYsyL1x5wNjAPGY4gkgw9-R2ERzB5bGtZ0UvsB2Q"
+      }
+    }
+  ]
+}

@@ -98,6 +98,7 @@ private fun SharedProjectsContent(controller: SharedWorkspaceGateway, language: 
     destination: SharedInvitationDestination?, preferences: UiPreferences, onPrivateMessages: ((String) -> Unit)?,
     onProjectChat: ((String) -> Unit)?, teamActivity: (@Composable () -> Unit)?) {
     val en = language == "en"
+    val invitationCopy = invitationSecurityCopy(language)
     val canExchangeData = LocalFeatureAccess.current.allows("data-export")
     val scope = rememberCoroutineScope()
     val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
@@ -844,15 +845,19 @@ private fun SharedProjectsContent(controller: SharedWorkspaceGateway, language: 
                         invitations.forEach { invitation ->
                             Text(invitation.optString("spaceTitle"), style = MaterialTheme.typography.titleMedium)
                             Text(invitation.optString("inviterName"), style = MaterialTheme.typography.bodySmall)
+                            if (invitation.optBoolean("pendingApproval") || invitation.optBoolean("admitted")) UntranslatedText(invitationCopy.getString(if (invitation.optBoolean("admitted")) "device" else "saved"))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Button(onClick = { run {
                                     val joined = controller.acceptSharedInvitation(invitation.getString("id"))
-                                    refreshSpaces(); spaceId = joined.optString("spaceId"); createModal = null
-                                } }, enabled = !busy) { Text(if (en) "Join" else "Присоединиться") }
+                                    if (joined.optBoolean("pendingApproval") || joined.optBoolean("deviceApprovalRequired")) {
+                                        invitations = controller.sharedInvitations().getJSONArray("invitations").rows()
+                                        message = invitationCopy.getString(if (joined.optBoolean("pendingApproval")) "saved" else "device")
+                                    } else { refreshSpaces(); spaceId = joined.optString("spaceId"); createModal = null }
+                                } }, enabled = !busy && !invitation.optBoolean("pendingApproval") && !invitation.optBoolean("admitted")) { Text(if (en) "Join" else "Присоединиться") }
                                 OutlinedButton(onClick = { run {
                                     controller.rejectSharedInvitation(invitation.getString("id"))
                                     invitations = controller.sharedInvitations().getJSONArray("invitations").rows()
-                                } }, enabled = !busy) { Text(if (en) "Decline" else "Отклонить") }
+                                } }, enabled = !busy && !invitation.optBoolean("admitted")) { Text(if (en) "Decline" else "Отклонить") }
                             }
                         }
                     }
@@ -1485,14 +1490,16 @@ private fun SharedProjectsContent(controller: SharedWorkspaceGateway, language: 
     val headerActions: @Composable (Boolean) -> Unit = { inShell ->
         if (taskId.isBlank() && projectToolbar) {
             SharedProjectMenu.entries.forEach { menu -> Box {
-                AffairsIconButton(menu.title, menu.action, { projectMenu = menu }, Modifier.testTag(menu.tag))
+                AffairsIconButton(menu.title, menu.action, { projectMenu = menu }, Modifier.testTag(menu.tag),
+                    selected = projectMenu == menu, tonal = true)
                 DropdownMenu(projectMenu == menu, { closeActions() }) { actionItems(menu) }
             } }
         } else if (spaceToolbar) {
             listOf(SharedProjectMenu.TEAM, SharedProjectMenu.SETTINGS).forEach { menu -> Box {
                 AffairsIconButton(if (menu == SharedProjectMenu.TEAM) "Команда" else "Данные и архивы",
                     if (menu == SharedProjectMenu.TEAM) AffairsAction.TEAM else AffairsAction.ARCHIVE,
-                    { projectMenu = menu }, Modifier.testTag(if (menu == SharedProjectMenu.TEAM) "shared-space-team" else "shared-space-data"))
+                    { projectMenu = menu }, Modifier.testTag(if (menu == SharedProjectMenu.TEAM) "shared-space-team" else "shared-space-data"),
+                    selected = projectMenu == menu, tonal = true)
                 DropdownMenu(projectMenu == menu, { closeActions() }) { actionItems(menu) }
             } }
         } else if (taskId.isBlank()) Box {
@@ -1647,13 +1654,15 @@ private fun SharedProjectsContent(controller: SharedWorkspaceGateway, language: 
                 BoxWithConstraints(Modifier.fillMaxWidth()) {
                 val buttonCount = 5 + (if (canWrite) 1 else 0) + (if (canEditTask && statuses.isNotEmpty() || canWrite) 1 else 0)
                 val buttonGap = 6.dp
-                val buttonWidth = with(LocalDensity.current) {
+                val buttonWidth = maxOf(48.dp, with(LocalDensity.current) {
                     kotlin.math.floor((maxWidth.toPx() - buttonGap.toPx() * (buttonCount - 1)) / buttonCount).toDp()
-                }
+                })
                 CompositionLocalProvider(LocalAffairsControlWidth provides buttonWidth,
+                    LocalGenesisIconButtonTonal provides true,
                     LocalMinimumInteractiveComponentSize provides 0.dp) {
-                Row(Modifier.fillMaxWidth().testTag("shared-create-actions"),
-                    horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.horizontalScroll(rememberScrollState()).widthIn(min = maxWidth).testTag("shared-create-actions"),
+                    horizontalArrangement = Arrangement.spacedBy(buttonGap, androidx.compose.ui.Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically) {
                     SharedMindmapButton { taskExtensions.mindmapsOpen = true }
                     SharedWorkspaceViewChoice(activeView, { viewOverride = it }, compact = true)
                     SharedWorkspaceCreateMenu(!busy, canEditTask && statuses.isNotEmpty(), canWrite,
@@ -1664,7 +1673,8 @@ private fun SharedProjectsContent(controller: SharedWorkspaceGateway, language: 
                             createKind = kind; parentId = projectId; parentBoardId = ""; createModal = "project"
                         })
                     if (canWrite) AffairsIconButton("Создать доску", AffairsAction.CREATE_BOARD, { createModal = "status" },
-                        Modifier.testTag("shared-create-board"), enabled = !busy && statuses.size < 30)
+                        Modifier.testTag("shared-create-board"), enabled = !busy && statuses.size < 30,
+                        selected = createModal == "status")
                     headerActions(false)
                 }
                 }
@@ -2083,7 +2093,7 @@ private fun SharedProjectsContent(controller: SharedWorkspaceGateway, language: 
 }
 
 @Composable
-private fun SharedWorkspaceViewChoice(value: String, onChange: (String) -> Unit, modifier: Modifier = Modifier, compact: Boolean = false) {
+internal fun SharedWorkspaceViewChoice(value: String, onChange: (String) -> Unit, modifier: Modifier = Modifier, compact: Boolean = false) {
     var open by remember { mutableStateOf(false) }
     val choices = listOf("list" to "Список", "board" to "Доска", "calendar" to "Календарь", "gantt" to "Гант")
     fun icon(id: String) = when (id) {
@@ -2092,7 +2102,7 @@ private fun SharedWorkspaceViewChoice(value: String, onChange: (String) -> Unit,
     }
     Box(modifier.testTag("shared-view-actions")) {
         if (compact) AffairsIconButton(choices.firstOrNull { it.first == value }?.second ?: "Список", icon(value),
-            { open = true }, Modifier.testTag("shared-view-selector"))
+            { open = true }, Modifier.testTag("shared-view-selector"), selected = open)
         else OutlinedButton(onClick = { open = true }, shape = AffairsLayout.controlShape,
             modifier = Modifier.heightIn(min = 48.dp).testTag("shared-view-selector"), contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp)) {
             Text(choices.firstOrNull { it.first == value }?.second ?: "Список")
@@ -2111,12 +2121,13 @@ private fun SharedWorkspaceViewChoice(value: String, onChange: (String) -> Unit,
 }
 
 @Composable
-private fun SharedWorkspaceCreateMenu(enabled: Boolean, canCreateTask: Boolean, canCreateContainer: Boolean,
+internal fun SharedWorkspaceCreateMenu(enabled: Boolean, canCreateTask: Boolean, canCreateContainer: Boolean,
     onTask: (String) -> Unit, onContainer: (String) -> Unit) {
     if (!canCreateTask && !canCreateContainer) return
     var open by remember { mutableStateOf(false) }
     Box {
-        AffairsIconButton("Создать", AffairsAction.ADD, { open = true }, Modifier.testTag("shared-create-task"), enabled = enabled)
+        AffairsIconButton("Создать", AffairsAction.ADD, { open = true }, Modifier.testTag("shared-create-task"),
+            enabled = enabled, selected = open)
         DropdownMenu(open, { open = false }) {
             listOf("task" to "Создать задачу", "event" to "Создать событие", "task-list" to "Создать список задач",
                 "meeting" to "Создать встречу", "project" to "Создать подпроект").forEach { (kind, label) ->

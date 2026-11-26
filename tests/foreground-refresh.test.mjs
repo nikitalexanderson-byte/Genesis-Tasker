@@ -2,11 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { foregroundRefresh } from "../app/foreground-refresh.ts";
 import { deferred } from "./helpers/cloud-sync-client.mjs";
+import { closePrivateMembershipUi, privateMembershipUi, replacePrivateMembershipOperation, showPrivateMembershipOperation, subscribePrivateMembershipClose } from "../app/private-membership-ui.ts";
 
-function fixture(operation) {
+function fixture(operation, canRefresh = () => true) {
   const timers = new Map(); let next = 0, available = true;
   const results = [];
-  const loop = foregroundRefresh(operation, { available: () => available,
+  const loop = foregroundRefresh(operation, { available: () => available && canRefresh(),
     success: () => results.push("ok"), failure: error => results.push(error.message),
     schedule(fn, ms) { const id = ++next; timers.set(id, { fn, ms }); return id; },
     cancel(id) { timers.delete(id); } });
@@ -42,4 +43,31 @@ test("background and offline windows do not issue a request", async () => {
   await f.loop.trigger(); assert.equal(requests, 0);
   f.available(true); await f.loop.trigger(); assert.equal(requests, 1);
   f.loop.stop(); await f.loop.trigger(); assert.equal(requests, 1);
+});
+
+test("a membership review suspends passive workspace reads until it closes", async () => {
+  let requests = 0;
+  const f = fixture(async () => { requests++; }, () => !privateMembershipUi());
+  const resumed = [];
+  const unsubscribe = subscribePrivateMembershipClose(() => resumed.push(f.loop.trigger()));
+  try {
+    await f.loop.trigger();
+    assert.equal(requests, 1);
+    showPrivateMembershipOperation("refresh-owner", "en", "refresh-intent");
+    await f.loop.trigger();
+    assert.equal(requests, 1);
+    replacePrivateMembershipOperation(privateMembershipUi().id, "revised-intent");
+    await f.loop.trigger();
+    assert.equal(requests, 1);
+    assert.equal(resumed.length, 0);
+    closePrivateMembershipUi(privateMembershipUi().id);
+    await Promise.all(resumed);
+    assert.equal(resumed.length, 1);
+    assert.equal(requests, 2);
+  } finally {
+    unsubscribe();
+    f.loop.stop();
+    const review = privateMembershipUi();
+    if (review) closePrivateMembershipUi(review.id);
+  }
 });

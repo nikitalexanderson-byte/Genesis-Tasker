@@ -1,6 +1,6 @@
 package ru.genesis.calendar.data
 
-import androidx.room.withTransaction
+import ru.genesis.calendar.data.withTransaction
 import java.time.*
 import java.util.UUID
 import kotlinx.coroutines.flow.map
@@ -65,23 +65,20 @@ class HabitsRepository(private val app: GenesisApplication) {
     private val dao=db.dao()
     private val cipher=LocalCipher()
     private val scope=app.workspaceScope
+    internal val migrationScope get()=scope
     private val backupMutation=ru.genesis.calendar.auth.NativeBackupMutationGuard(scope)
     private fun engine()=HabitEngine(GenesisCalendar(ZoneId.systemDefault()))
-    val workspace=dao.observeDocument(scope,"habits").map { record ->
+    val workspace=PrivatePersonalDocuments.observe(scope,"habits",dao.observeDocument(scope,"habits").map { record ->
         if(record == null) LocalHabitWorkspace() else HabitDocument.decode(cipher.decrypt(record.encrypted,"$scope/habits"),record.revision)
-    }.flowOn(Dispatchers.IO)
+    },HabitDocument::decode).flowOn(Dispatchers.IO)
 
     private suspend fun mutate(preserveEconomy: Boolean = false, skipNoop: Boolean = false, feedback: Boolean = false, change: (LocalHabitWorkspace) -> LocalHabitWorkspace): Pair<LocalHabitWorkspace, LocalHabitWorkspace> {
-        lateinit var mutation: Pair<LocalHabitWorkspace, LocalHabitWorkspace>
-        db.withTransaction {
-            backupMutation.check()
-            val record=dao.document(scope,"habits")
-            val current=if(record==null) LocalHabitWorkspace() else HabitDocument.decode(cipher.decrypt(record.encrypted,"$scope/habits"),record.revision)
+        suspend fun transform(current:LocalHabitWorkspace):Pair<LocalHabitWorkspace,LocalHabitWorkspace>{
             val changedAt = Instant.now().toString()
             val candidate=observeChangedHabitAvailability(current,HabitTimerWorkspace.finishDisabled(change(current),changedAt,timerOwner),changedAt)
             app.requireQuotaGrowth("habits",current.habits.count { HabitLifecycle.state(it).status!="deleted" },candidate.habits.count { HabitLifecycle.state(it).status!="deleted" },scope)
             // A known lifecycle replay must retain the exact encrypted document and pending outbox identity.
-            if (skipNoop && candidate == current) { mutation=current to current; return@withTransaction }
+            if (skipNoop && candidate == current) return current to current
             val lifecycleChanged=candidate.habits.any { habit -> current.habits.firstOrNull { it.id==habit.id }?.let {
                 it.lifecycleHistory.filter { row -> row.action!="observe" }!=habit.lifecycleHistory.filter { row -> row.action!="observe" }
             }==true }
@@ -90,16 +87,25 @@ class HabitsRepository(private val app: GenesisApplication) {
             val next=(if(preserveEconomy || lifecycleChanged) projected.copy(rewards=economy.rewards,streakFreezeTransactions=economy.streakFreezeTransactions,
                 achievementUnlocks=economy.achievementUnlocks,quests=economy.quests,progress=projected.progress.copy(lifetimeXp=if(projected.progress.grossLifetimeXp != null) projected.progress.lifetimeXp else economy.progress.lifetimeXp,
                     laurelsBalance=economy.progress.laurelsBalance,streakFreezeCount=economy.progress.streakFreezeCount)) else projected).copy(revision=current.revision+1)
-            dao.putDocument(DocumentRecord(scope,"habits",cipher.encrypt(HabitDocument.encode(next),"$scope/habits"),next.revision))
-            if (scope.startsWith("account-")) dao.putOutbox(OutboxRecord(scope,"habits",next.revision,UUID.randomUUID().toString()))
-            mutation = current to next
+            return current to next
+        }
+        val mutation=if(PrivatePersonalDocuments.isProtected(scope))PrivatePersonalDocuments.mutate(scope,"habits"){raw,revision->
+            val pair=transform(HabitDocument.decode(raw,revision));HabitDocument.encode(pair.second) to pair
+        }else db.withTransaction {
+            backupMutation.check();val record=dao.document(scope,"habits")
+            val current=if(record==null)LocalHabitWorkspace()else HabitDocument.decode(cipher.decrypt(record.encrypted,"$scope/habits"),record.revision)
+            val pair=transform(current);val next=pair.second
+            if(!skipNoop||next!=current){
+                dao.putDocument(DocumentRecord(scope,"habits",cipher.encrypt(HabitDocument.encode(next),"$scope/habits"),next.revision))
+                if(scope.startsWith("account-"))dao.putOutbox(OutboxRecord(scope,"habits",next.revision,UUID.randomUUID().toString()))
+            };pair
         }
         if (feedback) habitFeedbackTransition(scope, mutation.first, mutation.second)?.let(app::offerHabitFeedback)
         app.scheduler.restoreHabitNotifications()
         return mutation
     }
 
-    suspend fun refresh() { if(dao.document(scope,"habits") != null) mutate { it } }
+    suspend fun refresh() { if(PrivatePersonalDocuments.isProtected(scope)||dao.document(scope,"habits") != null) mutate { it } }
     suspend fun expireIdleHabits(now: Instant = Instant.now()) = mutate(skipNoop=true) { HabitAutoDeleteWorkspace.apply(it,now) }
     suspend fun applyTimer(command: HabitTimerCommand): Pair<LocalHabitWorkspace, LocalHabitWorkspace> {
         if (command.action in setOf("start", "resume")) require(app.featureAccess(scope).allows("habit-timer")) { "FEATURE_SUBSCRIPTION_REQUIRED" }
@@ -402,6 +408,11 @@ internal object HabitDocument {
             value.getString("entryId"),value.getString("ruleId"),value.getJSONArray("replaces").let { ids ->
                 (0 until ids.length()).map { ids.getString(it) } },amount,value.optString("note"),value.getString("source"),value.optBoolean("historical"))
     }
+    /** Migration preflight uses existing codecs without rewriting the source. */
+    internal fun migrationEventProjection(kind: String, rows: JSONArray): JSONArray = JSONArray((0 until rows.length()).map { index ->
+        val row=rows.getJSONObject(index)
+        when(kind) { "measurement" -> measurementEvent(measurementEvent(row)); "rule" -> rule(rule(row)); else -> error("E2EE_WORKSPACE_FORMAT_UNSUPPORTED") }
+    })
     private fun habit(h: Habit): JSONObject = entity(h.entity).put("title",h.title).put("description",h.description).put("createdDate",h.createdDate.toString())
         .put("measurement",h.measurement?.let(::measurement) ?: JSONObject.NULL).put("ruleHistory",JSONArray(h.ruleHistory.map(::rule)))
         .apply {

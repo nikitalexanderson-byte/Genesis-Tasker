@@ -81,6 +81,16 @@ internal fun MindmapsScreen(repo:MindmapRepository,tasks:List<LocalTask>,project
     var history by remember { mutableStateOf<List<NativeMapRecord>?>(null) };var import by remember { mutableStateOf(false) };var export by remember { mutableStateOf(false) }
     var view by remember { mutableStateOf(JSONObject().put("mode","map").put("zoom",1.0)) };var undo by remember { mutableStateOf<List<MindmapDocument>>(emptyList()) }
     val record=records.firstOrNull { it.document.id==mapId };val map=record?.document;val node=map?.nodes?.firstOrNull { it.id==selected } ?: map?.nodes?.firstOrNull()
+    val migrationCapture by rememberUpdatedState<()->JSONObject>({JSONObject().put("document",map?.json()?:JSONObject.NULL).put("revision",record?.revision?:0)
+        .put("state",JSONObject().put("mapId",mapId?:JSONObject.NULL).put("selected",selected?:JSONObject.NULL).put("create",create).put("title",title).put("description",description)
+            .put("editing",editing?:JSONObject.NULL).put("text",text).put("note",note).put("query",query).put("template",template).put("pickerQuery",pickerQuery)
+            .put("occurrenceTask",occurrenceTask?.let{JSONObject(it.json())}?:JSONObject.NULL).put("occurrenceDate",occurrenceDate)
+            .put("view",JSONObject(view.toString())).put("undo",org.json.JSONArray(undo.map{it.json()})).put("history",history?.let{org.json.JSONArray(it.map{row->row.json()})}?:JSONObject.NULL))})
+    DisposableEffect(repo){val release=repo.registerMigrationEditor{migrationCapture()};onDispose{release()}}
+    RememberMigrationInput(repo.migrationOwner,if(repo.personalMigrationSource)"mindmaps"else"local-work",repo){
+        ru.genesis.calendar.security.NativeMigrationMemory.Capture(if(repo.personalMigrationSource)repo.captureMigration()else null,
+            migrationCapture(),!busy)
+    }
     if (map != null && !readOnly) NativeGuidanceBlockingSurface()
     fun run(action:suspend ()->Unit) { if(busy)return;busy=true;error=null;loadFailed=false;scope.launch {try { action() }catch(e:kotlinx.coroutines.CancellationException){throw e}catch(e:Exception){error=mindmapFailureMessage(e)}finally{busy=false} } }
     suspend fun refreshMaps() {
@@ -136,9 +146,9 @@ internal fun MindmapsScreen(repo:MindmapRepository,tasks:List<LocalTask>,project
     val headerActions: @Composable (Modifier) -> Unit = { actionsModifier ->
             Box(actionsModifier) {
                 if (map == null) WorkspaceHeaderButton("Действия с картой", "mindmaps-actions", onClick={files=true}) { AffairsActionIcon(AffairsAction.MORE) }
-                else OutlinedIconButton(onClick={exportMenu=true}, enabled=!busy && canExchange,
+                else GenesisIconButton(onClick={exportMenu=true}, enabled=!busy && canExchange, selected=exportMenu,
                     modifier=Modifier.size(48.dp).testTag("mindmap-export-menu")
-                        .semantics { contentDescription=exportLabel }, shape=AffairsLayout.controlShape) {
+                        .semantics { contentDescription=exportLabel }) {
                     GenesisLucideIcon("download")
                 }
                 DropdownMenu(files,{files=false}) {
@@ -209,6 +219,7 @@ internal fun MindmapsScreen(repo:MindmapRepository,tasks:List<LocalTask>,project
             }
         } else {
             BoxWithConstraints(Modifier.fillMaxWidth().testTag("mindmap-toolbar-viewport")) {
+            CompositionLocalProvider(LocalGenesisIconButtonTonal provides true) {
             Row(Modifier.horizontalScroll(rememberScrollState()).widthIn(min = maxWidth).height(IntrinsicSize.Min)
                 .testTag("mindmap-toolbar"),horizontalArrangement=Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                 verticalAlignment=Alignment.CenterVertically) {
@@ -216,10 +227,10 @@ internal fun MindmapsScreen(repo:MindmapRepository,tasks:List<LocalTask>,project
                 Box { AffairsIconButton(if (structure) "Показать карту" else "Показать структуру",
                     if (structure) AffairsAction.MINDMAP else AffairsAction.SUBTASK, {
                         query = ""; changeView(JSONObject(view.toString()).put("mode", if (structure) "map" else "structure"))
-                    }, Modifier.testTag("mindmap-mode-toggle")) }
+                    }, Modifier.testTag("mindmap-mode-toggle"), selected=structure) }
                 Box {
                     AffairsIconButton("Добавить",AffairsAction.ADD,{addMenu=true},enabled=!busy&&!readOnly,
-                        modifier=Modifier.testTag("mindmap-add-node"))
+                        modifier=Modifier.testTag("mindmap-add-node"), selected=addMenu)
                     DropdownMenu(addMenu,{addMenu=false}) {
                         DropdownMenuItem(text={Text("Добавить мысль")},leadingIcon={AffairsActionIcon(AffairsAction.ADD)},
                             modifier=Modifier.testTag("mindmap-add-thought"),onClick={addMenu=false;add()})
@@ -232,11 +243,12 @@ internal fun MindmapsScreen(repo:MindmapRepository,tasks:List<LocalTask>,project
                 }, Modifier.testTag("mindmap-undo"), enabled=undo.isNotEmpty()&&!busy&&!readOnly)
                 AffairsIconButton("Название и описание", AffairsAction.EDIT, {
                     title=map.title;description=map.description;create=true
-                }, Modifier.testTag("mindmap-title-description"), enabled=!busy&&!readOnly)
+                }, Modifier.testTag("mindmap-title-description"), enabled=!busy&&!readOnly, selected=create)
                 AffairsIconButton("История", AffairsAction.HISTORY, {
                     run {serverPreview=false;history=repo.history(map.id)}
-                }, Modifier.testTag("mindmap-history"), enabled=!busy)
+                }, Modifier.testTag("mindmap-history"), enabled=!busy, selected=history!=null)
                 headerActions(Modifier)
+            }
             }
             }
             if(view.optString("focus").isNotBlank()&&view.optString("focus")!="null")TextButton(onClick={changeView(JSONObject(view.toString()).removeFocus())}){Text("Вся карта")}
@@ -361,7 +373,7 @@ internal fun MindmapsScreen(repo:MindmapRepository,tasks:List<LocalTask>,project
     }},confirmButton={})
     if(occurrenceTask!=null&&map!=null&&node!=null)AlertDialog(onDismissRequest={occurrenceTask=null},title={Text("День повторения")},text={Column {AuthorDatePicker(occurrenceDate,ru.genesis.calendar.domain.CalendarMode.PROFANE){occurrenceDate=it};Text("На карте будет только выбранный экземпляр.")}},confirmButton={TextButton(enabled=runCatching {TaskOccurrences.occursOn(occurrenceTask!!,java.time.LocalDate.parse(occurrenceDate))}.getOrDefault(false),onClick={save(map.copy(nodes=map.nodes+MindmapNode(UUID.randomUUID().toString(),node.id,"task",refId=occurrenceTask!!.id,occurrenceDate=occurrenceDate)));occurrenceTask=null;picker=false}){Text("Привязать этот день")}},dismissButton={TextButton(onClick={occurrenceTask=null}){Text("Отмена")}})
     if(import||export)AlertDialog(onDismissRequest={import=false;export=false},title={Text(if(import)"Импорт JSON" else "Экспорт JSON")},text={OutlinedTextField(text,{if(import)text=it},readOnly=export,label={Text("Документ GENESIS")},modifier=Modifier.fillMaxWidth().heightIn(max=360.dp))},confirmButton={TextButton(enabled=export||(!readOnly && canExchange),onClick={if(import)run {open(repo.importJson(text).id)};import=false;export=false}){Text(if(import)"Импортировать копию" else "Закрыть")}})
-    history?.let { versions->AlertDialog(onDismissRequest={history=null},title={Text("История карты")},text={LazyColumn {items(versions,key={it.revision}) {r->TextButton(enabled=!readOnly,onClick={if(map!=null){if(serverPreview)run {repo.adoptServer(map.id);open(map.id)}else save(r.document.copy(id=map.id))};history=null}){Text("Версия ${r.revision} · ${r.document.title}")} } }},confirmButton={}) }
+    history?.let { versions->AlertDialog(onDismissRequest={history=null},title={Text("История карты")},text={LazyColumn {items(versions,key={"${it.migratedHistory}:${it.revision}"}) {r->TextButton(enabled=!readOnly,onClick={if(map!=null){if(serverPreview)run {repo.adoptServer(map.id);open(map.id)}else save(r.document.copy(id=map.id))};history=null}){Text("Версия ${r.revision} · ${r.document.title}")} } }},confirmButton={}) }
     // Recovery also binds a previously committed conversion after process death.
     LaunchedEffect(map?.id,tasks,records,busy) {if(onConvertIdea==null&&!readOnly&&map!=null&&!busy&&!record.unsynced) {val recovered=map.nodes.map { n->if(n.kind=="idea")tasks.firstOrNull {it.id==map.taskId(n.id)}?.let {n.copy(kind="task",text="",refId=it.id)} ?: n else n };if(recovered!=map.nodes)run {repo.save(map.copy(nodes=recovered))} } }
 }

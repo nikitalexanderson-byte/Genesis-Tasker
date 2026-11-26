@@ -1,0 +1,72 @@
+{
+  "en": {
+    "action": "Cancel transfer",
+    "confirm": "I want to cancel this transfer. Original data, encrypted snapshots and unsent changes must be kept. An already activated scope cannot be reverted.",
+    "done": "The transfer was cancelled. Original data and saved copies are preserved."
+  },
+  "ru": {
+    "action": "Отменить переход",
+    "confirm": "Я хочу отменить этот переход. Исходные данные, зашифрованные снимки и неотправленные изменения должны сохраниться. Уже активированную область вернуть к прежней схеме нельзя.",
+    "done": "Переход отменён. Исходные данные и сохранённые копии сохранены."
+  },
+  "de": {
+    "action": "Übertragung abbrechen",
+    "confirm": "Ich möchte diese Übertragung abbrechen. Originaldaten, verschlüsselte Schnappschüsse und ungesendete Änderungen müssen erhalten bleiben. Ein bereits aktivierter Bereich kann nicht zurückgesetzt werden.",
+    "done": "Die Übertragung wurde abgebrochen. Originaldaten und gespeicherte Kopien bleiben erhalten."
+  },
+  "el": {
+    "action": "Ακύρωση μεταφοράς",
+    "confirm": "Θέλω να ακυρώσω αυτή τη μεταφορά. Τα αρχικά δεδομένα, τα κρυπτογραφημένα στιγμιότυπα και οι μη απεσταλμένες αλλαγές πρέπει να διατηρηθούν. Μια ήδη ενεργοποιημένη περιοχή δεν μπορεί να επανέλθει.",
+    "done": "Η μεταφορά ακυρώθηκε. Τα αρχικά δεδομένα και τα αποθηκευμένα αντίγραφα διατηρούνται."
+  },
+  "es": {
+    "action": "Cancelar transferencia",
+    "confirm": "Quiero cancelar esta transferencia. Deben conservarse los datos originales, las instantáneas cifradas y los cambios sin enviar. No se puede revertir un ámbito ya activado.",
+    "done": "La transferencia se ha cancelado. Se conservan los datos originales y las copias guardadas."
+  },
+  "fr": {
+    "action": "Annuler le transfert",
+    "confirm": "Je souhaite annuler ce transfert. Les données d'origine, les instantanés chiffrés et les modifications non envoyées doivent être conservés. Un espace déjà activé ne peut pas être rétabli dans l'ancien mode.",
+    "done": "Le transfert a été annulé. Les données d'origine et les copies enregistrées sont conservées."
+  },
+  "it": {
+    "action": "Annulla trasferimento",
+    "confirm": "Voglio annullare questo trasferimento. I dati originali, le istantanee cifrate e le modifiche non inviate devono essere conservati. Un ambito già attivato non può tornare alla modalità precedente.",
+    "done": "Il trasferimento è stato annullato. I dati originali e le copie salvate sono conservati."
+  },
+  "ja": {
+    "action": "転送をキャンセル",
+    "confirm": "この転送をキャンセルします。元のデータ、暗号化されたスナップショット、未送信の変更は保持する必要があります。有効化済みの領域を以前の方式に戻すことはできません。",
+    "done": "転送をキャンセルしました。元のデータと保存済みのコピーは保持されています。"
+  },
+  "pl": {
+    "action": "Anuluj przenoszenie",
+    "confirm": "Chcę anulować to przenoszenie. Oryginalne dane, zaszyfrowane migawki i niewysłane zmiany muszą zostać zachowane. Nie można przywrócić poprzedniego trybu już aktywowanego obszaru.",
+    "done": "Przenoszenie anulowano. Oryginalne dane i zapisane kopie są zachowane."
+  },
+  "pt": {
+    "action": "Cancelar transferência",
+    "confirm": "Quero cancelar esta transferência. Os dados originais, as imagens encriptadas e as alterações não enviadas devem ser mantidos. Um âmbito já ativado não pode voltar ao modo anterior.",
+    "done": "A transferência foi cancelada. Os dados originais e as cópias guardadas são mantidos."
+  },
+  "sr": {
+    "action": "Откажи пренос",
+    "confirm": "Желим да откажем овај пренос. Изворни подаци, шифровани снимци и непослате измене морају бити сачувани. Већ активирана област не може да се врати на претходни режим.",
+    "done": "Пренос је отказан. Изворни подаци и сачуване копије су задржани."
+  },
+  "tr": {
+    "action": "Aktarımı iptal et",
+    "confirm": "Bu aktarımı iptal etmek istiyorum. Asıl veriler, şifreli anlık görüntüler ve gönderilmemiş değişiklikler korunmalıdır. Zaten etkinleştirilmiş bir alan önceki düzene döndürülemez.",
+    "done": "Aktarım iptal edildi. Asıl veriler ve kaydedilmiş kopyalar korunur."
+  },
+  "uk": {
+    "action": "Скасувати перехід",
+    "confirm": "Я хочу скасувати цей перехід. Початкові дані, зашифровані знімки та ненадіслані зміни мають зберегтися. Уже активовану область повернути до попередньої схеми не можна.",
+    "done": "Перехід скасовано. Початкові дані та збережені копії збережено."
+  },
+  "zh": {
+    "action": "取消转移",
+    "confirm": "我要取消此次转移。必须保留原始数据、加密快照和未发送的更改。已启用的范围无法恢复到以前的方式。",
+    "done": "转移已取消。原始数据和已保存的副本均已保留。"
+  }
+}

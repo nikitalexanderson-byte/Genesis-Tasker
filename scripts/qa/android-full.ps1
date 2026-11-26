@@ -4,6 +4,7 @@ param(
     [string]$PhysicalDeviceLabel = 'samsung-physical',
     [ValidateSet('clear', 'reinstall')][string]$ResetQaMode = 'clear',
     [switch]$SkipBuild,
+    [switch]$DismissOwnedAospVerifierCrash,
     [switch]$IncludeCaptures,
     [string]$MindmapFixtureDirectory = '',
     [string]$FixtureCa = '',
@@ -28,6 +29,7 @@ $package = 'ru.genesis.calendar.qa1103.debug'
 $reasons = [System.Collections.Generic.List[string]]::new()
 $results = [System.Collections.Generic.List[object]]::new()
 $devices = [System.Collections.Generic.List[object]]::new()
+$environmentActions = [System.Collections.Generic.List[object]]::new()
 $build = [ordered]@{ status = 'NOT_RUN'; apkSha256 = $null; testApkSha256 = $null }
 $taskShapeFixture = $null
 $taskShapeDeviceInputs = [System.Collections.Generic.List[string]]::new()
@@ -43,7 +45,7 @@ function Save-Report {
         sourceCommit = (& git -C $root rev-parse HEAD); sourceHash = $nativeSourceHash;
         nativeSourceHash = $nativeSourceHash; runnerSourceHash = $runnerSourceHash; backendSourceHash = $backendSourceHash; package = $package;
         backendOrigin = 'https://localhost:4443'; versionName = (Get-NativeVersion $root).versionName; versionCode = (Get-NativeVersion $root).versionCode;
-        build = $build; resetQaMode = $ResetQaMode; taskShapeFixture = $taskShapeFixture; devices = @($devices); results = @($results); reasons = @($reasons);
+        build = $build; resetQaMode = $ResetQaMode; taskShapeFixture = $taskShapeFixture; devices = @($devices); environmentActions = @($environmentActions); results = @($results); reasons = @($reasons);
         scope = 'Native Compose, Room, Keystore and local entitlement fixtures; authenticated provider E2E is reported separately.';
         status = if ($reasons.Count -or @($results | Where-Object status -ne 'PASS').Count -or !$results.Count) { 'INCOMPLETE' } else { 'PASS_LOCAL_SCOPE' }
     } | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $output 'results.json') -Encoding utf8
@@ -51,6 +53,16 @@ function Save-Report {
 
 try {
     if (!(Test-Path -LiteralPath $adb)) { throw 'Android SDK platform-tools/adb.exe is unavailable' }
+    if ($DismissOwnedAospVerifierCrash) {
+        if ($Serial.Count -ne 1 -or $Serial[0] -ne 'emulator-5594') {
+            throw 'Verifier-dialog maintenance is restricted to the exact owned AOSP26 AVD'
+        }
+        $maintenanceName = ((Run-Adb @('-s', 'emulator-5594', 'emu', 'avd', 'name')) -split "`n")[0].Trim()
+        $maintenanceApi = (Run-Adb @('-s', 'emulator-5594', 'shell', 'getprop', 'ro.build.version.sdk')).Trim()
+        if ($maintenanceName -ne 'GenesisSecurity336_API26_AOSP' -or $maintenanceApi -ne '26') {
+            throw 'Verifier-dialog maintenance is restricted to the exact owned AOSP26 AVD'
+        }
+    }
     if (!(Test-Path -LiteralPath (Join-Path $java 'bin/java.exe'))) { throw 'JDK is unavailable' }
     $env:JAVA_HOME = $java; $env:ANDROID_HOME = $sdk; $env:ANDROID_SDK_ROOT = $sdk
     if (!$SkipBuild) {
@@ -132,6 +144,23 @@ try {
         }
         Run-Adb @('-s', $device, 'install', '-r', $apk) | Out-Null
         Run-Adb @('-s', $device, 'install', '-r', $testApk) | Out-Null
+        if ($DismissOwnedAospVerifierCrash) {
+            # SDK AOSP26 revision1 can crash its own statementservice receiver
+            # after package installation. Dismiss ONLY that observed dialog;
+            # never disable the verifier, change AppOps or weaken app guards.
+            $avdName = ((Run-Adb @('-s', $device, 'emu', 'avd', 'name')) -split "`n")[0].Trim()
+            if ($device -ne 'emulator-5594' -or $api -ne 26 -or $avdName -ne 'GenesisSecurity336_API26_AOSP') {
+                throw 'Verifier-dialog maintenance is restricted to the exact owned AOSP26 AVD'
+            }
+            for ($probe = 0; $probe -lt 12; $probe++) {
+                $window = Run-Adb @('-s', $device, 'shell', 'dumpsys', 'window')
+                if ($window -match '(?m)^\s*mCurrentFocus=.*Application Error: com\.android\.statementservice\}') {
+                    Run-Adb @('-s', $device, 'shell', 'input', 'keyevent', 'KEYCODE_BACK') | Out-Null
+                    $environmentActions.Add([ordered]@{ device=$device; action='DISMISS_OBSERVED_SYSTEM_VERIFIER_CRASH_DIALOG'; package='com.android.statementservice'; permissionsChanged=$false; verifierDisabled=$false })
+                }
+                Start-Sleep -Milliseconds 200
+            }
+        }
         foreach ($suite in $Class) {
             if ($suite -notmatch '^ru\.genesis\.calendar\.[A-Za-z0-9_.]+(?:#[A-Za-z0-9_]+)?$') { throw 'Invalid test class' }
             $label = $suite.Replace('ru.genesis.calendar.', '').Replace('#', '-')

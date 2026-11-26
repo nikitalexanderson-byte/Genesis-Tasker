@@ -3,7 +3,7 @@ package ru.genesis.calendar
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
@@ -16,6 +16,49 @@ import ru.genesis.calendar.data.*
 @RunWith(AndroidJUnit4::class)
 class CloudTaskSyncTest {
     private val scope = CloudAccountSnapshot.scopeFor("synthetic-task-account")
+
+    @Test fun persistentMigrationFenceStopsTaskFlushBeforeLegacyDecryptOrProviderIO() = runBlocking {
+        val db=Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(),GenesisDatabase::class.java).build()
+        try {
+            db.dao().putTask(TaskRecord(scope,"protected","retained-not-a-decryptable-ciphertext",1,false));db.dao().putOutbox(OutboxRecord(scope,"protected",1,"original-pending"))
+            NativeLegacyScopeFence(db,"synthetic-task-account","personal:synthetic-task-account",{}).withFence{}
+            var calls=0;val transport=object:CloudTaskTransport{override fun put(id:String,task:JSONObject):JSONObject{calls++;error("Unexpected IO")};override fun delete(id:String,task:JSONObject):JSONObject{calls++;error("Unexpected IO")}}
+            try{CloudTaskSync(db,transport).flush(scope);fail("Expected persistent fence")}catch(error:ru.genesis.calendar.auth.AuthApiError){assertEquals("E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN",error.code)}
+            assertEquals(0,calls);assertEquals("original-pending",db.dao().outbox(scope).single().operationId);assertEquals("retained-not-a-decryptable-ciphertext",db.dao().task(scope,"protected")!!.encrypted)
+        }finally{db.close()}
+    }
+
+    @Test fun completeTaskFlushDrainsResponseAndAcknowledgementBeforeMigrationCapture() = runBlocking {
+        val db=Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(),GenesisDatabase::class.java).build()
+        val release=java.util.concurrent.CountDownLatch(1)
+        try {
+            val cipher=LocalCipher();val raw=JSONObject().put("id","inflight").put("title","Original pending").put("dueDate","2026-11-19").put("priority",5)
+            db.dao().putTask(TaskRecord(scope,"inflight",cipher.encrypt(raw.toString(),"$scope/inflight"),1,false));db.dao().putOutbox(OutboxRecord(scope,"inflight",1,"same-operation"))
+            val entered=CompletableDeferred<Unit>();val captured=CompletableDeferred<Unit>()
+            val transport=object:CloudTaskTransport{
+                override fun put(id:String,task:JSONObject):JSONObject{entered.complete(Unit);check(release.await(10,java.util.concurrent.TimeUnit.SECONDS));return JSONObject().put("task",JSONObject().put("id",id).put("title","Confirmed response"))}
+                override fun delete(id:String,task:JSONObject)=error("Unexpected delete")
+            }
+            withTimeout(15000){coroutineScope{
+                val flush=async(Dispatchers.IO){CloudTaskSync(db,transport).flush(scope)};entered.await()
+                val migration=async(Dispatchers.IO){NativeLegacyScopeFence(db,"synthetic-task-account","personal:synthetic-task-account",{}).withFence{
+                    assertTrue(db.dao().outbox(scope).isEmpty());val row=requireNotNull(db.dao().task(scope,"inflight"));assertEquals("Confirmed response",JSONObject(cipher.decrypt(row.encrypted,"$scope/inflight")).getString("title"));captured.complete(Unit)
+                }}
+                delay(75);assertFalse(captured.isCompleted);release.countDown();assertEquals(1,flush.await());migration.await();assertTrue(captured.isCompleted)
+            }}
+        }finally{release.countDown();db.close()}
+    }
+
+    @Test fun accountChangeAfterProviderResponseCannotAcknowledgeOrRewriteOriginalTask() = runBlocking {
+        val db=Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(),GenesisDatabase::class.java).build()
+        try {
+            val cipher=LocalCipher();val raw=JSONObject().put("id","late-owner").put("title","Original pending").put("dueDate","2026-11-19").put("priority",5)
+            val encrypted=cipher.encrypt(raw.toString(),"$scope/late-owner");db.dao().putTask(TaskRecord(scope,"late-owner",encrypted,1,false));db.dao().putOutbox(OutboxRecord(scope,"late-owner",1,"preserved-operation"))
+            var current=true;val transport=object:CloudTaskTransport{override fun put(id:String,task:JSONObject):JSONObject{current=false;return JSONObject().put("task",JSONObject().put("id",id).put("title","Late response"))};override fun delete(id:String,task:JSONObject)=error("Unexpected delete")}
+            try{CloudTaskSync(db,transport).flush(scope){check(current){"E2EE_ACCOUNT_CHANGED"}};fail("Expected owner refusal")}catch(error:IllegalStateException){assertEquals("E2EE_ACCOUNT_CHANGED",error.message)}
+            assertEquals(encrypted,db.dao().task(scope,"late-owner")!!.encrypted);assertEquals("preserved-operation",db.dao().outbox(scope).single().operationId)
+        }finally{db.close()}
+    }
 
     @Test fun sendsOnlyAccountTasksAndAcknowledgesOnlyConfirmedRevision() = runBlocking {
         val db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), GenesisDatabase::class.java).build()

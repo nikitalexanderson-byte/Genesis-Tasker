@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "vinext dev",
     "build": "vinext build",
-    "build:web": "vite build --config vite.web.config.ts && node scripts/verify-public-gallery.mjs && node scripts/verify-public-documents.mjs && node scripts/verify-ui-locale-chunks.mjs && node scripts/verify-offline-precache.mjs",
+    "build:web": "node scripts/export-e2ee-legacy-worker.mjs --check && vite build --config vite.web.config.ts && node scripts/verify-public-gallery.mjs && node scripts/verify-public-documents.mjs && node scripts/verify-ui-locale-chunks.mjs && node scripts/verify-offline-precache.mjs",
     "start": "vinext start",
     "test": "npm run i18n:audit && npm run build && node scripts/test.mjs",
     "i18n:audit": "node scripts/audit-translations.mjs && node scripts/audit-multilingual-translations.mjs && node android/tools/export-web-i18n.mjs --check && node android/tools/audit-native-i18n.mjs && node android/tools/export-template-copy.mjs --check && node android/tools/export-notification-copy.mjs --check && node scripts/export-shared-notification-copy.mjs --check",
@@ -27,6 +27,8 @@
     "qa:serve": "node scripts/qa/serve.mjs"
   },
   "dependencies": {
+    "@hpke/core": "1.10.1",
+    "@noble/hashes": "2.4.0",
     "astronomy-engine": "2.1.19",
     "drizzle-orm": "0.45.2",
     "react": "19.3.1",

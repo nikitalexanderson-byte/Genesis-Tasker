@@ -73,19 +73,12 @@ internal enum class AffairsAction { BACK, NEXT, MORE, CLOSE, SEARCH, FILTER, SOR
 @Composable internal fun AffairsIconButton(label: String, action: AffairsAction, onClick: () -> Unit,
     modifier: Modifier = Modifier, enabled: Boolean = true, fillWidth: Boolean = false, selected: Boolean? = null,
     contentColor: Color = Color.Unspecified, outlined: Boolean = LocalAffairsControlOutlined.current,
-    translate: Boolean = true) {
+    translate: Boolean = true, tonal: Boolean = LocalGenesisIconButtonTonal.current) {
     val description = if (translate) genesisTranslate(label) else label
-    val selection = selectedControlColors()
     TooltipBox(positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
         tooltip = { PlainTooltip { Text(label, translate = translate) } }, state = rememberTooltipState()) {
-        OutlinedIconButton(onClick = onClick, enabled = enabled, shape = AffairsLayout.controlShape,
-            border = selectedControlBorder(selected == true, enabled,
-                if (outlined && action != AffairsAction.CLOSE) IconButtonDefaults.outlinedIconButtonBorder(enabled) else null),
-            colors = if (selected == true) IconButtonDefaults.outlinedIconButtonColors(
-                containerColor = selection.container, contentColor = selection.content,
-                disabledContainerColor = selection.disabledContainer, disabledContentColor = selection.disabledContent)
-                else if (contentColor != Color.Unspecified) IconButtonDefaults.outlinedIconButtonColors(contentColor = contentColor)
-                else IconButtonDefaults.outlinedIconButtonColors(),
+        GenesisIconButton(onClick = onClick, enabled = enabled, selected = selected, tonal = tonal,
+            contentColor = if (contentColor != Color.Unspecified) contentColor else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = modifier.then(if (fillWidth) Modifier.fillMaxWidth().heightIn(min = AffairsLayout.touchTarget)
                 else Modifier.size(width = LocalAffairsControlWidth.current, height = AffairsLayout.touchTarget))
                 .semantics { contentDescription = description; if (selected != null) this.selected = selected }) { AffairsActionIcon(action) }

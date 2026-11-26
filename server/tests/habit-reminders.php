@@ -21,9 +21,9 @@ function hrPlan(int $count=1): array{
 foreach([$user,$other] as $id)$db->prepare('INSERT INTO users(id,google_sub,email,language,created_at,updated_at) VALUES(?,?,?,?,?,?)')->execute([$id,$id,$id.'@example.invalid','en',$now,$now]);
 // This scenario tests legacy reminder/writer interoperability for existing members.
 foreach([$user,$other] as $id)$db->prepare("UPDATE users SET subscription_plan='premium4life' WHERE id=?")->execute([$id]);
-$key=openssl_pkey_new(['private_key_type'=>OPENSSL_KEYTYPE_EC,'curve_name'=>'prime256v1']);$ec=openssl_pkey_get_details($key)['ec'];
+$key=openssl_pkey_new(['private_key_type'=>OPENSSL_KEYTYPE_EC,'curve_name'=>'prime256v1']);$publicPoint=genesisPushPublicPoint(openssl_pkey_get_details($key));
 $registration=['deviceKey'=>'synthetic-device-1234','requestId'=>'synthetic-request-1234','consent'=>true,'expectedRevision'=>0,'timeZone'=>$testZone,'maxPerDay'=>128,'snoozeMinutes'=>10,
- 'subscription'=>['endpoint'=>'https://fcm.googleapis.com/synthetic-habit','keys'=>['p256dh'=>genesisPushBase64("\x04".$ec['x'].$ec['y']),'auth'=>genesisPushBase64(random_bytes(16))]]];
+ 'subscription'=>['endpoint'=>'https://fcm.googleapis.com/synthetic-habit','keys'=>['p256dh'=>genesisPushBase64($publicPoint),'auth'=>genesisPushBase64(random_bytes(16))]]];
 $cap=['available'=>true];$body=['ciphertext'=>base64_encode('opaque personal content'),'iv'=>base64_encode(random_bytes(12))];
 try{
  $vectors=json_decode(file_get_contents(dirname(__DIR__,2).'/tests/fixtures/habit-reminders-vectors.json'),true,32,JSON_THROW_ON_ERROR);

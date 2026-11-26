@@ -1,0 +1,14 @@
+{
+  "description":"Serialized ciphertext row headroom; counts and deletion credits require the actual provider transaction.",
+  "cases":[
+    {"id":"new-row","rows":[{"nextBytes":1000,"previousBytes":null}],"expected":{"added":1,"removed":0,"writeBytes":10192,"rewriteBytes":8192}},
+    {"id":"small-rewrite-of-large-row","rows":[{"nextBytes":10,"previousBytes":1000}],"expected":{"added":0,"removed":0,"writeBytes":8212,"rewriteBytes":9192}},
+    {"id":"existing-row-deletion","rows":[{"nextBytes":null,"previousBytes":1000}],"expected":{"added":0,"removed":1,"writeBytes":8192,"rewriteBytes":9192}},
+    {"id":"missing-row-is-not-deletion-credit","rows":[{"nextBytes":null,"previousBytes":null}],"expected":{"added":0,"removed":0,"writeBytes":8192,"rewriteBytes":8192}},
+    {"id":"mixed-atomic-batch","rows":[{"nextBytes":100,"previousBytes":null},{"nextBytes":null,"previousBytes":200},{"nextBytes":300,"previousBytes":500}],"expected":{"added":1,"removed":1,"writeBytes":25376,"rewriteBytes":25276}},
+    {"id":"zero-sized-serialized-row","rows":[{"nextBytes":0,"previousBytes":null}],"error":"E2EE_STORAGE_ADMISSION_INVALID"},
+    {"id":"new-row-peak-overflow","rows":[{"nextBytes":9007199254740991,"previousBytes":null}],"error":"E2EE_STORAGE_ADMISSION_INVALID"},
+    {"id":"old-row-rewrite-overflow","rows":[{"nextBytes":1,"previousBytes":9007199254740991}],"error":"E2EE_STORAGE_ADMISSION_INVALID"},
+    {"id":"empty-batch","rows":[],"error":"E2EE_STORAGE_ADMISSION_INVALID"}
+  ]
+}

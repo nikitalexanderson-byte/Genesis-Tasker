@@ -12,7 +12,7 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.unit.dp
-import androidx.room.withTransaction
+import ru.genesis.calendar.data.withTransaction
 import androidx.test.platform.app.InstrumentationRegistry
 import java.time.Instant
 import java.time.LocalDate

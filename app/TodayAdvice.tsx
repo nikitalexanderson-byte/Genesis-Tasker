@@ -2,7 +2,8 @@
 /* eslint-disable @next/next/no-img-element -- Decorative account-specific artwork uses native lazy loading in both web builds. */
 
 import { useEffect, useMemo, useRef, useState, type PointerEvent, type KeyboardEvent } from "react";
-import { loadDailyAdvice,loadSavedAdvice, recordDailyAdvice, type GenesisUser } from "./cloud-sync";
+import { loadDailyAdvice,loadSavedAdvice, recordDailyAdvice, usesPrivateProductStorage, type GenesisUser } from "./cloud-sync";
+import {usePersonalMigrationSource} from './use-personal-migration-source';
 import { ADVICE_CATEGORIES, ADVICE_TOPICS, adviceHabitScores, adviceHabitTopicScores, adviceTaskContext, advicePreferences, todayAdviceHistory, adviceCardVisible, type AdviceScores, type AdviceTopicScores, type AdvicePersonalTask, type DailyAdviceResponse } from "./daily-advice";
 import type { Habit } from "./habits";
 import labels from "./daily-advice-copy.json";
@@ -17,6 +18,7 @@ import { AdviceShareButton } from './AdviceShareButton';
 import { translateText } from './i18n';
 import {adviceTargetFromUrl,type AdviceTarget} from './advice-notifications';
 import notificationLabels from './advice-notification-copy.json';
+import {PrivatePendingOperations} from './PrivatePendingOperations';
 
 function adviceLinkTarget():AdviceTarget|false|null {
   if(typeof window==='undefined')return null;
@@ -24,7 +26,11 @@ function adviceLinkTarget():AdviceTarget|false|null {
   return ['advice','adviceDay','adviceCollection'].some(key=>url.searchParams.has(key))?adviceTargetFromUrl(url)??false:null;
 }
 
-export function TodayAdvice({ user, habits, tasks, day, ready, onOpenDiary }: { user: GenesisUser; habits: readonly Habit[]; tasks: readonly AdvicePersonalTask[]; day: string; ready: boolean; onOpenDiary?: () => void }) {
+export function TodayAdvice(props:Parameters<typeof TodayAdviceBody>[0]){const [revision,setRevision]=useState(0);return <>
+  <PrivatePendingOperations ownerId={props.user.uid} language={props.user.language} feature="advice" onResolved={()=>setRevision(value=>value+1)}/>
+  <TodayAdviceBody {...props} operationRevision={revision}/>
+</>;}
+function TodayAdviceBody({ user, habits, tasks, day, ready, onOpenDiary,operationRevision=0 }: { user: GenesisUser; habits: readonly Habit[]; tasks: readonly AdvicePersonalTask[]; day: string; ready: boolean; onOpenDiary?: () => void;operationRevision?:number }) {
   const diary = useDiary(); const diaryText = diaryLabels[user.language];
   const [reactionError, setReactionError] = useState(false);
   const preferences = advicePreferences(user.advicePreferences);
@@ -56,6 +62,11 @@ export function TodayAdvice({ user, habits, tasks, day, ready, onOpenDiary }: { 
   const container = useRef<HTMLElement>(null);
   const copy = labels[user.language];
   const result = saved?.key === requestKey ? saved.result : null;
+  usePersonalMigrationSource(!usesPrivateProductStorage(user.uid)?user.uid:null,'advice',()=>({
+    preferences:{base:preferences,value:preferences},
+    mounted:result?{language:user.language,result,selection:selection?.key===requestKey?selection.id:null}:null,
+    state:{saved,selection,openedAdvice},settled:!busy,
+  }));
   const cards = result ? todayAdviceHistory(result, preferences) : [];
   const advice = cards.find(card => selection?.key === requestKey && card.id === selection.id)
     ?? cards.find(card => card.id === result?.advice?.id) ?? cards.at(-1) ?? null;
@@ -100,7 +111,7 @@ export function TodayAdvice({ user, habits, tasks, day, ready, onOpenDiary }: { 
       }
     }).catch(() => {if(openedAdvice&&!controller.signal.aborted&&serial===requestSerial.current)setFailedOpen(requestKey); /* Never fall back to a draw when a saved notification target cannot be opened. */ });
     return () => controller.abort();
-  }, [ready, preferences.enabled, context, requestKey, retry, busy,openedAdvice]);
+  }, [ready, preferences.enabled, context, requestKey, retry, busy,openedAdvice,operationRevision]);
 
   useEffect(()=>{
     if(shown&&openedAdvice&&container.current){container.current.scrollIntoView({block:'start',behavior:'auto'});container.current.focus({preventScroll:true});}

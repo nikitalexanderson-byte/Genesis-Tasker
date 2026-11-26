@@ -3,7 +3,7 @@ package ru.genesis.calendar
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.room.withTransaction
+import ru.genesis.calendar.data.withTransaction
 import androidx.test.platform.app.InstrumentationRegistry
 import java.util.UUID
 import kotlinx.coroutines.runBlocking

@@ -8,15 +8,18 @@ import { translateText, type Language } from "./i18n";
 import { formatTimeValue, type TimeFormat } from "./time-format";
 import { formatCalendarDateValue, type CalendarMode } from "./calendar-data";
 import type { HabitWorkspace } from "./habits";
+import {useReminderMigrationCapture,useReminderMigrationTask} from './reminder-migration-editors';
 
-export function HabitReminderInputPanel({workspace,target,language,calendarMode,timeFormat,onSave}: {
-  workspace:HabitWorkspace;target:HabitReminderTarget;language:Language;calendarMode:CalendarMode;timeFormat:TimeFormat;
+export function HabitReminderInputPanel({userId,workspace,target,language,calendarMode,timeFormat,onSave}: {
+  userId:string;workspace:HabitWorkspace;target:HabitReminderTarget;language:Language;calendarMode:CalendarMode;timeFormat:TimeFormat;
   onSave:(target:HabitReminderTarget,input:HabitReminderInput)=>Promise<void>;
 }) {
   const t=(text:string)=>translateText(text,language);
   const [value,setValue]=useState(""),[note,setNote]=useState(""),[error,setError]=useState("");
   const [busy,setBusy]=useState(false),[quality,setQuality]=useState(5);
   const operation=useRef<string|null>(null),saving=useRef(false);
+  const migrationTask=useReminderMigrationTask(userId);
+  useReminderMigrationCapture(userId,'habit-reminder-input',()=>({target,value,note,error,busy,quality,operationId:operation.current,saving:saving.current}));
   const habit=workspace.habits.find(item=>item.id===target.habitId);
   if(!habit)return <p>{t("Привычка недоступна. Данные не изменены.")}</p>;
   const rule=habitRuleForDate(habit,target.date),measurement=effectiveHabitMeasurement(rule);
@@ -28,7 +31,7 @@ export function HabitReminderInputPanel({workspace,target,language,calendarMode,
   const available=action==="input"||action==="interval";
   const save=async(input:HabitReminderInput)=>{
     if(saving.current)return;saving.current=true;setBusy(true);setError("");
-    try{await onSave(target,input);if(input.kind==="measurement"){setValue("");setNote("");operation.current=null;}}
+    try{await migrationTask(()=>onSave(target,input));if(input.kind==="measurement"){setValue("");setNote("");operation.current=null;}}
     catch{setError(t("Не удалось сохранить запись. Проверьте значение и повторите."));}
     finally{saving.current=false;setBusy(false);}
   };

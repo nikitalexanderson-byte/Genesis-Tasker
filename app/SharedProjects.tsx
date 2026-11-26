@@ -1,9 +1,12 @@
 /* eslint-disable @next/next/no-img-element -- User-provided board pictures remain native img elements. */
 "use client";
 import "./shared-dialog-ui.css";
+import {PrivateTaskCompletionReview} from './PrivateTaskCompletionReview';
+import {usesPrivateProductStorage} from './cloud-sync';
 import { SharedBoardColor } from "./SharedBoardColor";
 import { DialogCloseButton } from "./DialogCloseButton";
 import { foregroundRefresh } from "./foreground-refresh";
+import { privateMembershipUi, subscribePrivateMembershipClose } from "./private-membership-ui";
 import { useSacredFeaturesEnabled } from "./sacred-features";
 import { getSolarEvent } from "./calendar-data";
 import { useMobileLayout } from "./use-mobile-layout";
@@ -129,16 +132,21 @@ const SHARED_RETRY_EVENT = "genesis:shared-retry";
 function watchSharedRead(operation: (signal: AbortSignal) => Promise<unknown>, success: () => void,
   failure: (error: unknown) => void, settled?: () => void) {
   // The first visible read may restore the protected cache while already offline.
-  const refresh = foregroundRefresh(operation, { available: initial => (initial || navigator.onLine) && document.visibilityState === "visible", success, failure, settled });
+  // The membership dialog makes the workspace inert while its own reads run.
+  const refresh = foregroundRefresh(operation, { available: initial => !privateMembershipUi() && (initial || navigator.onLine) && document.visibilityState === "visible", success, failure, settled });
   const trigger = () => void refresh.trigger();
+  const resume = subscribePrivateMembershipClose(trigger);
   window.addEventListener("focus", trigger); window.addEventListener("online", trigger);
   window.addEventListener(SHARED_RETRY_EVENT, trigger); document.addEventListener("visibilitychange", trigger);
-  return () => { refresh.stop(); window.removeEventListener("focus", trigger); window.removeEventListener("online", trigger);
+  return () => { refresh.stop(); resume(); window.removeEventListener("focus", trigger); window.removeEventListener("online", trigger);
     window.removeEventListener(SHARED_RETRY_EVENT, trigger); document.removeEventListener("visibilitychange", trigger); };
 }
+import {invitationSecurityCopy} from './invitation-security-copy';
 import type { SharedInvitationDestination } from "./SharedInvitationNotices";
+import {PrivateGoogleCopy} from './PrivateGoogleCopy';
 
 type Props = { userId: string; language: string; writeEnabled: boolean; enabledCalendars: CalendarMode[]; experimentalTheme?: boolean; timeFormat?: TimeFormat; weekStart?: 'sunday' | 'monday';
+  googleAccounts?:import('./cloud-sync').GoogleAccount[];
   projectViewOrder: ProjectView[] | null; onProjectViewOrder: (views: ProjectView[]) => void;
   calendarScale: CalendarScale; onCalendarScale: (scale: CalendarScale) => void;
   inboxWidth: number; onInboxWidth: (width: number) => void; inboxPosition: InboxPosition; inboxHidden: boolean; inboxCompact: boolean; onInboxPosition: (position: InboxPosition) => void; onInboxHidden: (hidden: boolean) => void; onInboxCompact: (compact: boolean) => void;
@@ -155,8 +163,9 @@ function localDateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-export function SharedProjects({ userId, language, writeEnabled, enabledCalendars, calendarMode, taskCalendarMode, onCalendarModeChange, experimentalTheme = false, timeFormat = "24h", weekStart = 'monday', destination, inboxWidth, onInboxWidth, inboxPosition, inboxHidden, inboxCompact, onInboxPosition, onInboxHidden, onInboxCompact, categoriesExpanded, onCategoriesExpanded, categoriesView, onCategoriesView, projectViewOrder, onProjectViewOrder, calendarScale, onCalendarScale }: Props) {
+export function SharedProjects({ userId, language, writeEnabled, enabledCalendars, calendarMode, taskCalendarMode, onCalendarModeChange, experimentalTheme = false, timeFormat = "24h", weekStart = 'monday', destination, inboxWidth, onInboxWidth, inboxPosition, inboxHidden, inboxCompact, onInboxPosition, onInboxHidden, onInboxCompact, categoriesExpanded, onCategoriesExpanded, categoriesView, onCategoriesView, projectViewOrder, onProjectViewOrder, calendarScale, onCalendarScale,googleAccounts=[] }: Props) {
   const english = language === "en";
+  const [privateApprovalTask,setPrivateApprovalTask]=useState<SharedTask|null>(null);
   const sacredFeaturesEnabled = useSacredFeaturesEnabled();
   const tasksCompact = inboxCompact;
   const [initialPlace] = useState(() => {
@@ -536,13 +545,18 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
   }, [taskProjectId, taskId]);
   useEffect(() => {
     if (!taskProjectId || !taskId) return;
-    let live = true;
+    let live = true, refreshing = false;
     const refresh = () => {
-      if (!navigator.onLine || document.visibilityState !== "visible") return;
-      void Promise.all([loadSharedProject(taskProjectId), loadSharedTask(taskProjectId, taskId, true)]).then(([result, task]) => {
+      if (refreshing || privateMembershipUi() || !navigator.onLine || document.visibilityState !== "visible") return;
+      refreshing = true;
+      const projectRead = loadSharedProject(taskProjectId);
+      const taskRead = loadSharedTask(taskProjectId, taskId, true);
+      const detailRead = Promise.all([projectRead, taskRead]).then(([result, task]) => {
         if (live) setTaskSnapshot({ ...result, tasks: [...result.tasks.filter(item => item.id !== task.id), task] });
       }).catch(error => { if(live && error && typeof error==="object" && "status" in error && [401,403,404].includes(Number(error.status))) {setTaskSnapshot(null);setTaskId("");setComments([]);setMessage(translateText("Эта задача больше недоступна."));} });
-      void listSharedComments(taskProjectId,taskId).then(items=>{if(live)setComments(items);}).catch(()=>undefined);
+      const commentsRead = listSharedComments(taskProjectId,taskId).then(items=>{if(live)setComments(items);}).catch(()=>undefined);
+      // One failed detail request can settle before its sibling finishes.
+      void Promise.allSettled([projectRead, taskRead, detailRead, commentsRead]).then(() => { refreshing = false; });
     };
     const timer = window.setInterval(refresh, 5_000);
     return () => { live = false; window.clearInterval(timer); };
@@ -1012,18 +1026,13 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
     { id: child.id, title: child.title, kind: "container", project: child }, { projectId, statusId, position: 0 });
   useEffect(() => {
     if (!inboxProjectId) return;
-    let live = true;
-    const refresh = () => void loadSharedProject(inboxProjectId).then((result) => {
-      if (live) setInboxPreview(result);
-    }).catch((error: unknown) => {
-      if (live) {
-        setMessage(error instanceof Error ? error.message : String(error));
-        if(error && typeof error==="object" && "status" in error && [401,403,404].includes(Number(error.status)))setInboxPreview(null);
-      }
+    return watchSharedRead(async signal => {
+      const result = await loadSharedProject(inboxProjectId, undefined, null, "position", signal);
+      if (!signal.aborted) setInboxPreview(result);
+    }, () => {}, error => {
+      setMessage(error instanceof Error ? error.message : String(error));
+      if (error && typeof error === "object" && "status" in error && [401,403,404].includes(Number(error.status))) setInboxPreview(null);
     });
-    refresh();
-    const timer = window.setInterval(refresh, 5_000);
-    return () => { live = false; window.clearInterval(timer); };
   }, [inboxProjectId]);
   const visibleInbox = inboxPreview && inboxPreview.project.id === inboxProjectId ? {...inboxPreview,tasks:[]} : null;
   const { active: activeCalendarTasks } = ganttTaskGroups(snapshot?.tasks ?? [], snapshot?.statuses ?? []);
@@ -1128,6 +1137,7 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
   const selectedSpace=spaces.find(space=>space.id===spaceId);
   const confirmTask = (task: SharedTask) => {
     if (busy) return;
+    if(usesPrivateProductStorage(userId)){setPrivateApprovalTask(task);return;}
     void run(async () => {
       const result = await approveSharedTask(task.projectId, task.id);
       setEditTaskRevision(result.revision);
@@ -1789,7 +1799,8 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
           <SharedTaskDetailsEditor key={selectedTask.id} task={selectedTask} value={taskDetailsDraft(selectedTask)} onChange={() => undefined} members={taskSnapshot.members} mode={editTaskCalendarMode} disabled={busy} readOnly saved
           onConvert={() => undefined} onCreateChild={async () => undefined} onOpen={(projectId, taskId) => void run(async () => { const [context, task] = await Promise.all([loadSharedProject(projectId), loadSharedTask(projectId, taskId, true)]); openTask(task, context); })}/></>}
 
-          {selectedTask.seriesId || taskEditing && canEditTask && taskSnapshot.project.canOrganizeTasks ? <Suspense fallback={null}><SharedTaskSeries key={selectedTask.id} task={selectedTask} mode={editTaskCalendarMode}
+          {usesPrivateProductStorage(userId)?<PrivateGoogleCopy ownerId={userId} language={language as import('./i18n').Language} accounts={googleAccounts} source={selectedTask}/>:null}
+          {selectedTask.seriesId || taskEditing && canEditTask && taskSnapshot.project.canOrganizeTasks ? <Suspense fallback={null}><SharedTaskSeries key={selectedTask.id} task={selectedTask} userId={userId} spaceId={taskSnapshot.project.spaceId} mode={editTaskCalendarMode}
             readOnly={!taskEditing || !canEditTask || !taskSnapshot.project.canOrganizeTasks || Boolean(selectedTask.archivedAt)} disabled={busy || taskEditing && !taskFieldsSaved}
             onDirtyChange={setSeriesDirty} onSaved={async () => { await refreshTaskProject(selectedTask.projectId); await refreshProject(selectedTask.projectId); }}
             onOpen={(projectId, taskId) => void run(async () => { const [context, task] = await Promise.all([loadSharedProject(projectId), loadSharedTask(projectId, taskId, true)]); openTask(task, context); })}/></Suspense> : null}
@@ -1798,7 +1809,7 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
           {taskProjectChoice}
           </details> : null}
         {selectedTask.imageUrl ? <SharedTaskImage key={selectedTask.id} src={selectedTask.imageUrl} english={english} /> : null}
-        <SharedTaskAttachmentList files={selectedTask.attachments ?? []} english={english} />
+        <SharedTaskAttachmentList files={selectedTask.attachments ?? []} english={english} language={language} />
         </div>
         <div id="shared-task-discussion" role="tabpanel" aria-labelledby="shared-comments-tab" hidden={taskSection !== "comments"}>
         <SharedComments key={`comments-${selectedTask.id}`} comments={comments} members={taskSnapshot.members} english={english} canComment={Boolean(canCommentTask)} busy={busy} onSubmit={submitComment} highlightedId={commentId} active={taskSection === "comments"}/>
@@ -1868,11 +1879,14 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
             : !invitations.length ? <p>{english ? "No invitations yet." : "Приглашений пока нет."}</p>
               : invitations.map((invitation) => <article key={invitation.id}><h3>{invitation.spaceTitle}</h3>
                 <p>{invitation.inviterName}{invitation.projectTitle ? ` · ${invitation.projectTitle}` : ""}</p>
-                <div><button type="button" className="primary-button" disabled={busy} onClick={() => void run(async () => {
-                  const result = await acceptSharedInvitation(invitation.id); await refreshSpaces();
+                {invitation.pendingApproval || invitation.admitted ? <p role="status" data-no-translate>{invitationSecurityCopy(language)[invitation.admitted ? 'device' : 'saved']}</p> : null}
+                <div><button type="button" className="primary-button" disabled={busy || invitation.pendingApproval || invitation.admitted} onClick={() => void run(async () => {
+                  const result = await acceptSharedInvitation(invitation.id);
+                  if (result.pendingApproval || result.deviceApprovalRequired) { setInvitations(await listSharedInvitations()); setMessage(invitationSecurityCopy(language)[result.pendingApproval ? 'saved' : 'device']); return; }
+                  await refreshSpaces();
                   setSpaceId(result.spaceId); setCreateModal(null);
                 })}>{english ? "Join" : "Присоединиться"}</button>
-                <button type="button" className="secondary-button" disabled={busy} onClick={() => void run(async () => {
+                <button type="button" className="secondary-button" disabled={busy || invitation.admitted} onClick={() => void run(async () => {
                   await rejectSharedInvitation(invitation.id); setInvitations(await listSharedInvitations());
                 })}>{english ? "Decline" : "Отклонить"}</button></div></article>)}
         </div> : null}
@@ -1918,6 +1932,9 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
         </article>)}</div>
       </section>
 
+          {teamSnapshot.project.isInbox && ["owner", "admin"].includes(teamSnapshot.project.spaceRole ?? "") ? (
+            <SharedActivity key={teamSnapshot.project.id} projectId={teamSnapshot.project.id} english={english} refreshKey={activityKey}/>
+          ) : null}
           {["owner", "admin"].includes(spaces.find((space) => space.id === spaceId)?.role ?? "") ? <button type="button" className="primary-button" onClick={() => setCreateModal("invite")}>{english ? "Invite to workspace" : "Пригласить в пространство"}</button> : null}
         </> : null}
         {createModal === "board" && editingBoard && snapshot ? <form onSubmit={(event) => {
@@ -2034,5 +2051,6 @@ export function SharedProjects({ userId, language, writeEnabled, enabledCalendar
         </form> : null}
       </> : null}
     </dialog>
+    {privateApprovalTask?<PrivateTaskCompletionReview ownerId={userId} task={privateApprovalTask} language={language} onClose={()=>setPrivateApprovalTask(null)} onApproved={result=>{setPrivateApprovalTask(null);setEditTaskRevision(result.revision);void run(async()=>{await refreshTaskProject(result.projectId);await refreshProject(result.projectId);await refreshProjects(spaceId);window.dispatchEvent(new Event('genesis:shared-updates'));});}}/>:null}
   </div>;
 }

@@ -247,7 +247,7 @@ import java.util.Locale
                     AutomationFact("Создано задач", result.getInt("createdTaskCount").toString()); AutomationFact("Уведомления", result.getInt("notifications").toString())
                     val notices = result.getJSONArray("notices"); (0 until notices.length()).forEach { Text(automationErrorText(notices.getString(it)), style = MaterialTheme.typography.bodySmall) }
                 }
-                if (state.canManage && run.getString("state") == "failed") AffairsIconButton("Повторить запуск", AffairsAction.REFRESH,
+                if (state.canManage && !run.optBoolean("historyOnly") && run.getString("state") == "failed") AffairsIconButton("Повторить запуск", AffairsAction.REFRESH,
                     { onCommand("retry", null, run.getString("id")) }, Modifier.testTag("automation-retry-run-${run.getString("id")}"),
                     enabled = state.canMutate && parameters && rule.getBoolean("enabled") && !rule.getBoolean("deleted") && run.getInt("revision") == rule.getInt("revision") && run.getInt("retryCount") < 3)
                 HorizontalDivider()

@@ -1,4 +1,6 @@
 import { isRecurrencePattern, recurrenceDatesForTask, type RecurrenceMode, type RecurrencePattern } from "./task-recurrence";
+import {e2eeHttpErrorCode,isE2eeResponsePath,readE2eeJsonResponse} from './e2ee/http-response';
+import type {E2eeHttpObservation} from './e2ee/http-observation';
 import { currentFeatureAccess, rememberFeatureAccess } from './feature-access';
 import {beginTrialTransport,acceptTrialTransport,invalidateTrialAccess,type BillingTrial,type BillingTrialPlan} from './billing-trial';
 import {allowDataTransfer,requireDataTransfer} from './data-transfer-access';
@@ -6,6 +8,16 @@ import { notifyUpgradeError } from './upgrade-events';
 import {advicePushDeviceKey,type AdviceTarget} from './advice-notifications';
 import { habitLifecycleState } from './habit-lifecycle';
 import { normalizeCalendarDateNote, type CalendarMode } from "./calendar-data";
+import {personalLegacyTransportProtected} from './e2ee/legacy-transport';
+import {IndexedDbLegacyTransportMarkers,WebLegacyTransportGate,WebMigrationTransportFence,WebSharedMigrationTransportFence} from './e2ee/legacy-transport-fence';
+import {requireLegacyTransportWorker} from './e2ee/legacy-worker-client';
+import {assertLegacyLocalWriteAllowed,localMigrationMarker} from './e2ee/web-local-migration-fence';
+import {showPrivateMigration} from './private-migration-ui';
+import {migrationSourceStorage,retiredMigrationWorkspaceKey} from './e2ee/legacy-storage-retirement';
+import {closePrivateAccount,requirePrivateAccount,waitForPrivateAccount,unlockPrivateAccount,privateAccountView,subscribePrivateAccount,markPrivateAccountOwner,privateAccountIsRequired,type PrivateAccountTransport} from './e2ee/product-session';
+import {PRIVATE_VAULT_COPY} from './private-vault-copy';
+import {privateUserCacheRequired,privateUserProfile} from './last-user-cache';
+import {protectPrivateWorkspaceOwner,installPrivateWorkspaceStorage,retirePrivateWorkspaceStorage} from './private-workspace-storage';
 import type { Language } from "./i18n";
 import { apiUnavailableMessage, billingApiErrorMessage, isTemporaryApiStatus } from "./api-availability";
 import type { SharedChecklist, SharedTaskDetailsDraft } from "./shared-task-details";
@@ -27,6 +39,7 @@ import {
 } from "./habits";
 import { clearAllTrackerAnalyticsCaches, clearTrackerAnalyticsCache } from "./tracker-cache";
 import {clearMessagingVault} from "./private-message-vault";
+import {isIndependentMessagingPath} from './e2ee/independent-messaging';
 import {clearHabitRestoreJournal} from "./habit-restore-journal";
 import {clearSharedEditorDraftStorage} from "./shared-editor-indexed-storage";
 import { acceptAuthenticatedLogin, clearPrivateDeviceStorage, hasLocalSignOut, LOCAL_SIGN_OUT_KEY, markLocalSignOut, prepareLocalSignIn, privateDeviceAccessBlocked } from "./local-sign-out";
@@ -168,6 +181,8 @@ export type GenesisTask = {
 export type GenesisUser = {
   uid: string;
   dataGeneration?: number;
+  privateVault?: boolean;
+  privatePreferencesMode?: 'e2ee';
   forecastElitePlus?: boolean;
   subscriptionPlan?: SubscriptionPlan;
   featureAccess?: import("./feature-access").FeatureAccess;
@@ -250,7 +265,7 @@ export type GenesisWorkspace = HabitWorkspace & {
   taskListLinks: TaskListProjectLink[];
   hasRemoteStructure: boolean;
   syncWarning: string | null;
-  workspaceKeyMode: "account" | "legacy" | "client" | "new";
+  workspaceKeyMode: "account" | "legacy" | "client" | "new" | "e2ee";
 };
 
 export type WorkspaceRecoveryReason = "new-device" | "key-mismatch";
@@ -498,6 +513,17 @@ export function createCloudTipsCheckout() {
 const PENDING_KEY = "genesis-pending-mutations-v2";
 const LAST_USER_CACHE = "genesis-last-user-v2";
 let sessionGeneration = 0;
+let confirmedTransportOwnerId:string|null=null;
+const serverProtectedTransportOwners=new Set<string>();
+let privateIdentityCache:GenesisUser|null=null;
+let personalTransportGate:WebLegacyTransportGate|null=null;
+function legacyTransportGate() {
+  if(!personalTransportGate) {
+    if(typeof navigator==='undefined'||!navigator.locks||!IndexedDbLegacyTransportMarkers.available())throw new Error('E2EE_BROWSER_LOCKS_REQUIRED');
+    personalTransportGate=new WebLegacyTransportGate(new IndexedDbLegacyTransportMarkers(),navigator.locks);
+  }
+  return personalTransportGate;
+}
 let localSessionEnded = privateDeviceAccessBlocked();
 const accountRequests = new Set<AbortController>();
 export const LOCAL_SESSION_ENDED_EVENT = "genesis-local-session-ended";
@@ -514,11 +540,18 @@ export function captureAccountSessionGuard() {
   const generation = sessionGeneration;
   return () => requireActiveLocalSession(generation);
 }
+/** Independent messaging keeps its protocol, but may not follow a later login
+ * or restored account generation while an old key/attachment is in flight. */
+export function captureMessagingSessionGuard(ownerId:string){
+  const session=captureAccountSessionGuard(),generation=backupDataGeneration;
+  const current=()=>{session();if(confirmedTransportOwnerId!==ownerId||backupDataGeneration!==generation)throw new Error('E2EE_ACCOUNT_CHANGED');};
+  current();return current;
+}
 
 /** Owner-scoped Physis transport; account wrapping uses personalDocumentAccess, with no offline queue. */
-export async function physisRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+export async function physisRequest<T>(path: string, init: RequestInit = {},permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit): Promise<T> {
   if (!/^\/(access|vault|records|rotate|catalog)(?:\?[A-Za-z0-9=&_-]*)?$/.test(path)) throw new Error("Invalid Physis path");
-  try { return await api<T>(`/physis/v1${path}`, { ...init, cache: "no-store" }); }
+  try { return await api<T>(`/physis/v1${path}`, { ...init, cache: "no-store" },{},permit); }
   catch (error) {
     if (error instanceof GenesisNetworkTimeoutError) throw new Error("Сервер не ответил. Несинхронизированные данные Фюзиса остаются только в памяти этой вкладки.");
     throw error;
@@ -526,19 +559,34 @@ export async function physisRequest<T>(path: string, init: RequestInit = {}): Pr
 }
 
 /** Narrow adapter for independent encrypted personal documents. Reuses the session and workspace key. */
-export function personalDocumentAccess(userId: string) {
+export type PersonalDocumentAccess={
+  check:()=>void;
+  request:<T>(path:string,init?:RequestInit)=>Promise<T>;
+  privateId:(scope:string)=>Promise<string>;
+  seal:(value:unknown,scope:string)=>Promise<{iv:string;ciphertext:string}>;
+  open:<T>(envelope:{iv:string;ciphertext:string},scope:string)=>Promise<T>;
+  withLegacyOperation:<T>(operation:(access:PersonalDocumentAccess)=>Promise<T>)=>Promise<T>;
+};
+export function personalDocumentAccess(userId: string,permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit):PersonalDocumentAccess {
   const active = captureAccountSessionGuard();
   const check = () => {
     active();
+    if (confirmedTransportOwnerId !== null && confirmedTransportOwnerId !== userId) throw new Error('E2EE_ACCOUNT_CHANGED');
     if (!userId || userId !== workspaceUserId || !workspaceKey) throw new Error("Разблокируйте зашифрованное пространство GENESIS.");
+    if(permit)legacyTransportGate().assertOperation(permit,userId);
   };
-  return {
+  const access:PersonalDocumentAccess={
     check,
+    withLegacyOperation:async operation=>{
+      check();
+      if(permit)return legacyTransportGate().borrow(permit,userId,check,()=>operation(access));
+      return legacyTransportGate().withOperation(userId,check,borrowed=>operation(personalDocumentAccess(userId,borrowed)));
+    },
     async request<T>(path: string, init: RequestInit = {}) {
       check();
       if (!/^\/(?:mindmaps(?:\/[a-zA-Z0-9_-]+(?:\/history)?)?|diary(?:\/[a-zA-Z0-9_-]+)?|stoicheion-workspace|aurora-workspace|aurora-results)$/.test(path)
         && !/^\/diary\/dream-clock\?timeZone=[A-Za-z0-9_%+.-]+$/.test(path)) throw new Error("Invalid personal document path");
-      const value = await api<T>(path, init); check(); return value;
+      const value = await api<T>(path, init,{},permit); check(); return value;
     },
     async privateId(scope: string) {
       check(); const encode = (value: string) => new TextEncoder().encode(value);
@@ -548,11 +596,11 @@ export function personalDocumentAccess(userId: string) {
       return Array.from(new Uint8Array(result), value => value.toString(16).padStart(2, '0')).join('');
     },
     async seal(value: unknown, scope: string) {
-      check(); const iv = crypto.getRandomValues(new Uint8Array(12));
+      check();assertLegacyLocalWriteAllowed(userId); const iv = crypto.getRandomValues(new Uint8Array(12));
       const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv,
         additionalData: new TextEncoder().encode(`genesis-mindmap-v1:${userId}:${scope}`) },
       await importWorkspaceKey(), new TextEncoder().encode(JSON.stringify(value)));
-      check(); return { iv: bytesToBase64(iv), ciphertext: bytesToBase64(new Uint8Array(encrypted)) };
+      check();assertLegacyLocalWriteAllowed(userId); return { iv: bytesToBase64(iv), ciphertext: bytesToBase64(new Uint8Array(encrypted)) };
     },
     async open<T>(envelope: { iv: string; ciphertext: string }, scope: string) {
       check(); const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: base64ToBytes(envelope.iv),
@@ -561,11 +609,68 @@ export function personalDocumentAccess(userId: string) {
       check(); return JSON.parse(new TextDecoder().decode(plain)) as T;
     },
   };
+  return access;
+}
+
+export type PhysisLegacyRequest=<T>(path:string,init?:RequestInit)=>Promise<T>;
+export type PhysisLegacyAccess={check:()=>void;request:PhysisLegacyRequest;
+  withLegacyOperation:<T>(operation:(request:PhysisLegacyRequest)=>Promise<T>)=>Promise<T>};
+/** Physis also has an independent legacy vault: owner exclusion must not depend
+ * on opening the workspace key. Every nested HTTP request borrows the same
+ * operation so a queued exclusive migration cannot deadlock its parent. */
+export function physisLegacyAccess(userId:string,permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit):PhysisLegacyAccess {
+  const active=captureAccountSessionGuard();
+  const check=()=>{
+    active();
+    if(confirmedTransportOwnerId!==userId||workspaceUserId&&workspaceUserId!==userId)throw new Error('E2EE_ACCOUNT_CHANGED');
+    if(serverProtectedTransportOwners.has(userId))throw new Error('E2EE_UPGRADE_REQUIRED');
+    if(permit)legacyTransportGate().assertOperation(permit,userId);
+  };
+  const request:PhysisLegacyRequest=async<T>(path:string,init:RequestInit={})=>{
+    check();const result=await physisRequest<T>(path,init,permit);check();return result;
+  };
+  return{check,request,withLegacyOperation:async operation=>{
+    check();
+    if(permit)return legacyTransportGate().borrow(permit,userId,check,()=>operation(request));
+    return legacyTransportGate().withOperation(userId,check,borrowed=>operation(physisLegacyAccess(userId,borrowed).request));
+  }};
+}
+
+/** Bootstrap/unlock/wrapping and the first store read are one admitted owner
+ * operation. Its nested account crypto and HTTP use the same live permit. */
+export async function withPhysisAccountOperation<T>(userId:string,operation:(ports:{account:PersonalDocumentAccess;request:PhysisLegacyRequest;
+  permit:import('./e2ee/legacy-transport-fence').LegacyOperationPermit})=>Promise<T>):Promise<T> {
+  const physis=physisLegacyAccess(userId);physis.check();
+  return legacyTransportGate().withOperation(userId,physis.check,async permit=>{
+    const account=personalDocumentAccess(userId,permit),bound=physisLegacyAccess(userId,permit);account.check();bound.check();
+    const result=await operation({account,request:bound.request,permit});account.check();bound.check();return result;
+  });
 }
 
 /** Deliberately separate from bootstrap: checking export must not pull or merge user data. */
-export function backupRequest<T>(path: '/status' | '/authorize' | '/server-snapshot' | '/preview' | '/commit', body?: unknown) {
-  return api<T>(`/backup/v1${path}`, { method:body === undefined ? 'GET' : 'POST', cache:'no-store', ...(body === undefined ? {} : { body:JSON.stringify(body) }) });
+export function backupRequest<T>(path: '/status' | '/authorize' | '/server-snapshot' | '/preview' | '/commit', body?: unknown,permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit) {
+  return api<T>(`/backup/v1${path}`, { method:body === undefined ? 'GET' : 'POST', cache:'no-store', ...(body === undefined ? {} : { body:JSON.stringify(body) }) },{},permit);
+}
+export type BackupOperationAccess={access:PersonalDocumentAccess;request:typeof backupRequest;run:<T>(operation:()=>Promise<T>)=>Promise<T>;
+  openWorkspace:typeof openBackupWorkspace;sealWorkspace:typeof sealBackupWorkspace;current:()=>ReturnType<typeof backupRestoreCurrent>;hold:()=>Promise<void>};
+/** One explicit permit through capture, safety encryption, every nested IO,
+ * archive parsing/crypto, download and final receipts. Nothing is stored in a
+ * mutable global/current permit. Ports expire with this one captured session. */
+export async function withBackupOperation<T>(userId:string,operation:(ports:BackupOperationAccess)=>Promise<T>):Promise<T>{
+  const original=personalDocumentAccess(userId);original.check();
+  return legacyTransportGate().withOperation(userId,original.check,async permit=>{
+    const raw=personalDocumentAccess(userId,permit);raw.check();
+    const run=<V>(action:()=>Promise<V>)=>legacyTransportGate().borrow(permit,userId,raw.check,action);
+    const access:PersonalDocumentAccess={...raw,withLegacyOperation:action=>run(()=>action(access)),
+      request:(path,init)=>run(()=>raw.request(path,init)),privateId:scope=>run(()=>raw.privateId(scope)),
+      seal:(value,purpose)=>run(()=>raw.seal(value,purpose)),open:(value,purpose)=>run(()=>raw.open(value,purpose))};
+    const owner=(candidate:string)=>{access.check();if(candidate!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};
+    const ports:BackupOperationAccess={access,run,request:(path,body)=>run(()=>backupRequest(path,body,permit)),
+      openWorkspace:(candidate,envelope)=>run(async()=>{owner(candidate);return openBackupWorkspace(candidate,envelope,permit);}),
+      sealWorkspace:(candidate,document,version)=>run(async()=>{owner(candidate);return sealBackupWorkspace(candidate,document,version,permit);}),
+      current:()=>run(()=>backupRestoreCurrent(userId,permit)),hold:()=>run(()=>holdBackupStaleChanges(userId,permit))};
+    const result=await operation(ports);access.check();return result;
+  });
 }
 export function accountSecurityRequest<T>(path:'/account/google-identities'|'/account/google-identities/primary'|'/account/google-identities/disable'|'/account/google-identities/recovery-code'|'/account-recovery/status'|'/account-recovery/request'|'/account-recovery/complete'|'/admin/account-recovery'|'/admin/account-recovery/review',body?:unknown) {
   return api<T>(path,{cache:'no-store',method:body===undefined?'GET':'POST',...(body===undefined?{}:{body:JSON.stringify(body)})});
@@ -592,23 +697,23 @@ export function captureBackupSyncState(userId: string) {
   });
   return structuredClone({ generation:backupDataGeneration, version:workspaceVersion, metadata:workspaceSyncMetadata, baseMetadata:workspaceBaseMetadata, pending:rows });
 }
-export async function sealBackupWorkspace(userId: string, document: EncryptedWorkspaceStructure, expectedVersion: number) {
-  const access=personalDocumentAccess(userId);access.check();
+export async function sealBackupWorkspace(userId: string, document: EncryptedWorkspaceStructure, expectedVersion: number,permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit) {
+  const access=personalDocumentAccess(userId,permit);access.check();
   const iv=crypto.getRandomValues(new Uint8Array(12));
   const ciphertext=await crypto.subtle.encrypt({name:'AES-GCM',iv},await importWorkspaceKey(),new TextEncoder().encode(JSON.stringify(document)));
   access.check();return {iv:bytesToBase64(iv),ciphertext:bytesToBase64(new Uint8Array(ciphertext)),expectedVersion,version:expectedVersion+1,writerProtocol:9,minimumWriterProtocol:workspaceMinimumWriterProtocol(document),
     quotaUsage:{'personal-projects':document.projects.map(row=>row.id),habits:document.habits.filter(row=>habitLifecycleState(row).status!=='deleted').map(row=>row.id)},metrics:metricsFor([],document.projects,document.habits.length)};
 }
-export async function openBackupWorkspace(userId:string,envelope:{iv:string;ciphertext:string}):Promise<EncryptedWorkspaceStructure> {
-  const access=personalDocumentAccess(userId);access.check();
+export async function openBackupWorkspace(userId:string,envelope:{iv:string;ciphertext:string},permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit):Promise<EncryptedWorkspaceStructure> {
+  const access=personalDocumentAccess(userId,permit);access.check();
   const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:base64ToBytes(envelope.iv)},await importWorkspaceKey(),base64ToBytes(envelope.ciphertext));
   access.check();return JSON.parse(new TextDecoder().decode(plain));
 }
-export async function backupRestoreCurrent(userId:string) {
-  personalDocumentAccess(userId).check();
-  const response=await api<{workspace:{envelope:WorkspaceEnvelope|null}}>('/workspace',{cache:'no-store'});
-  const document=response.workspace.envelope?await openBackupWorkspace(userId,response.workspace.envelope):{projects:[],categories:[],taskLists:[],taskListLinks:[],...EMPTY_HABIT_WORKSPACE};
-  return {document,version:response.workspace.envelope?.version??0,tasks:await loadRecoveredTasks(userId)};
+export async function backupRestoreCurrent(userId:string,permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit) {
+  const access=personalDocumentAccess(userId,permit);access.check();
+  const response=await api<{workspace:{envelope:WorkspaceEnvelope|null}}>('/workspace',{cache:'no-store'},{},permit);access.check();
+  const document=response.workspace.envelope?await openBackupWorkspace(userId,response.workspace.envelope,permit):{projects:[],categories:[],taskLists:[],taskListLinks:[],...EMPTY_HABIT_WORKSPACE};
+  const tasks=await loadRecoveredTasks(userId,permit);access.check();return {document,version:response.workspace.envelope?.version??0,tasks};
 }
 export function backupNeedsReconciliation() { return backupReconciliationRequired; }
 function backupOwnedLocalKeys(userId:string) {
@@ -624,8 +729,8 @@ function retainHeldBackup(userId:string,key:string,value:unknown) {
   for(const row of rows.slice(2))localStorage.removeItem(row.key);
 }
 /** Explicitly hold the old device state instead of replaying it under the new generation. */
-export async function holdBackupStaleChanges(userId:string) {
-  const access=personalDocumentAccess(userId);access.check();
+export async function holdBackupStaleChanges(userId:string,permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit) {
+  const access=personalDocumentAccess(userId,permit);access.check();
   const saved=backupOwnedLocalKeys(userId).map(key=>[key,localStorage.getItem(key)] as const);
   const protectedCopy=await access.seal(saved,'backup-held-state:v1');access.check();
   // A failed storage write leaves every original and the barrier intact.
@@ -633,10 +738,10 @@ export async function holdBackupStaleChanges(userId:string) {
   for(const [key,raw]of saved)if(localStorage.getItem(key)===raw)localStorage.removeItem(key);
   localStorage.setItem(`genesis-data-generation-v1:${userId}`,String(backupDataGeneration));backupReconciliationRequired=false;
 }
-async function loadRecoveredTasks(userId:string):Promise<GenesisTask[]> {
+async function loadRecoveredTasks(userId:string,permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit):Promise<GenesisTask[]> {
   if (!backupTransportSupported) return [];
-  const access=personalDocumentAccess(userId);
-  const result=await api<{tasks:{id:string;revision:number;iv:string;ciphertext:string}[]}>('/recovered-tasks');
+  const access=personalDocumentAccess(userId,permit);access.check();
+  const result=await api<{tasks:{id:string;revision:number;iv:string;ciphertext:string}[]}>('/recovered-tasks',{}, {},permit);access.check();
   return Promise.all(result.tasks.map(async row=>{
     const task=await access.open<GenesisTask>(row,`recovered-task:v1:${row.id}`);
     if(task.id!==row.id||!task.restoredFrom)throw new Error('RECOVERED_TASK_INVALID');
@@ -646,22 +751,34 @@ async function loadRecoveredTasks(userId:string):Promise<GenesisTask[]> {
 
 /** Server-encrypted shared documents; device drafts still use this member's private key. */
 export function sharedMindmapDocumentAccess(userId: string, spaceId: string) {
-  const local = personalDocumentAccess(userId);
+  return sharedMindmapAccess(personalDocumentAccess(userId),userId,spaceId);
+}
+type MindmapDocumentAccess=Pick<PersonalDocumentAccess,'check'|'seal'|'open'|'request'> & {
+  withLegacyOperation:<T>(operation:(access:MindmapDocumentAccess)=>Promise<T>)=>Promise<T>;
+};
+function sharedMindmapAccess(local:PersonalDocumentAccess,userId:string,spaceId:string):MindmapDocumentAccess {
   const scope = (value: string) => `shared:${spaceId}:${value}`;
   const seal = (value: unknown, valueScope: string) => local.seal(value, scope(valueScope));
   const open = <T>(envelope: {iv:string;ciphertext:string}, valueScope: string) => local.open<T>(envelope, scope(valueScope));
-  return {check: local.check, seal, open, async request<T>(path: string, init: RequestInit = {}) {
+  // The member's local ciphertext/journals belong to the personal migration
+  // inventory too. Keep its owner permit through shared IO and local cleanup.
+  // This is not the shared project's/space's own migration or signed ACL fence.
+  return {check: local.check, seal, open,
+    withLegacyOperation:operation=>local.withLegacyOperation(bound=>operation(sharedMindmapAccess(bound,userId,spaceId))),
+    async request<T>(path: string, init: RequestInit = {}) {
     local.check();
     if (!/^\/mindmaps(?:\/[a-zA-Z0-9_-]+(?:\/history)?)?$/.test(path)) throw new Error("Invalid shared document path");
     const remotePath = `/shared/spaces/${encodeURIComponent(spaceId)}${path}`;
+    const headers=new Headers(init.headers);headers.set('X-Genesis-Account-Id',userId);
+    const requestInit={...init,headers:Object.fromEntries(headers.entries())};
     if (init.method === "PUT") {
       const request = JSON.parse(String(init.body));
       const id = path.split("/")[2];
       const document = await open(request, `map:${id}`);
-      const result = await api<T>(remotePath, {...init,body:JSON.stringify({schemaVersion:1,expectedRevision:request.expectedRevision,operationId:request.operationId,document})});
+      const result = await api<T>(remotePath, {...requestInit,body:JSON.stringify({schemaVersion:1,expectedRevision:request.expectedRevision,operationId:request.operationId,document})});
       local.check(); return result;
     }
-    const result = await api<T>(remotePath, init); local.check();
+    const result = await api<T>(remotePath, requestInit); local.check();
     if (init.method === "DELETE") return result;
     const key = path.endsWith("/history") ? "versions" : "maps";
     const rows = (result as Record<string, {id:string;schemaVersion:number;revision:number;updatedAt:string;document:unknown}[]>)[key];
@@ -671,6 +788,10 @@ export function sharedMindmapDocumentAccess(userId: string, spaceId: string) {
 }
 
 function endLocalSession() {
+  closePrivateAccount();
+  retirePrivateWorkspaceStorage();
+  privateIdentityCache=null;
+  confirmedTransportOwnerId=null;
   cancelWorkspaceConflict?.();
   dismissedWorkspaceConflict = "";
   localSessionEnded = true;
@@ -808,6 +929,7 @@ function readPending(): PendingMutation[] {
   try {
     const storageKey = pendingStorageKey();
     if (workspaceUserId && !localStorage.getItem(storageKey) && localStorage.getItem(PENDING_KEY)) {
+      assertLegacyLocalWriteAllowed(workspaceUserId);
       localStorage.setItem(storageKey, localStorage.getItem(PENDING_KEY) || "[]");
       localStorage.removeItem(PENDING_KEY);
     }
@@ -833,11 +955,13 @@ function readPending(): PendingMutation[] {
 function writePending(items: PendingMutation[]) {
   if (localSessionEnded || privateDeviceAccessBlocked()) return;
   if (typeof window !== "undefined") {
+    if(workspaceUserId)assertLegacyLocalWriteAllowed(workspaceUserId);
     localStorage.setItem(pendingStorageKey(), JSON.stringify(items.filter(row => !row.key.startsWith("workspace:")).slice(-2000)));
   }
 }
 
 function queueMutation(mutation: PendingMutation) {
+  if(workspaceUserId)assertLegacyLocalWriteAllowed(workspaceUserId);
   if (isWorkspaceMutation(mutation) && mutation.key !== "workspace") {
     requireActiveLocalSession();
     localStorage.setItem(workspaceJournalPrefix() + mutation.key, JSON.stringify(mutation));
@@ -849,6 +973,7 @@ function queueMutation(mutation: PendingMutation) {
 }
 
 function clearMutation(key: string, sent?: PendingMutation) {
+  if(workspaceUserId)assertLegacyLocalWriteAllowed(workspaceUserId);
   if (key.startsWith("workspace:")) {
     const stored = localStorage.getItem(workspaceJournalPrefix() + key);
     const row = stored ? JSON.parse(stored) as PendingMutation : null;
@@ -861,6 +986,7 @@ function clearMutation(key: string, sent?: PendingMutation) {
 
 function rememberDeletedTasks(ids: string[]) {
   if (localSessionEnded || privateDeviceAccessBlocked()) return;
+  if(workspaceUserId)assertLegacyLocalWriteAllowed(workspaceUserId);
   const key = `${PENDING_KEY}-deleted:${workspaceUserId || "anonymous"}`;
   let previous: unknown = [];
   try { previous = JSON.parse(localStorage.getItem(key) || "[]"); } catch { /* Recover a malformed local cache from the server ledger. */ }
@@ -900,16 +1026,55 @@ export class GenesisNetworkTimeoutError extends Error {}
 export class GenesisApiError extends Error {
   readonly status: number;
   readonly payload: Record<string, unknown> | null;
+  readonly retryAfterSeconds:number|null;
 
-  constructor(status: number, payload: Record<string, unknown> | null, message: string) {
+  constructor(status: number, payload: Record<string, unknown> | null, message: string,retryAfterSeconds:number|null=null) {
     super(message);
     this.name = "GenesisApiError";
     this.status = status;
     this.payload = payload;
+    this.retryAfterSeconds=retryAfterSeconds;
   }
 }
 
-async function api<T>(path: string, init: RequestInit = {}, feedback: { upgradePrompt?: boolean } = {}): Promise<T> {
+type ApiFeedback={upgradePrompt?:boolean;e2eeObservation?:E2eeHttpObservation};
+async function api<T>(path: string, init: RequestInit = {}, feedback: ApiFeedback = {},permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit): Promise<T> {
+  if(isIndependentMessagingPath(path)&&confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId)){
+    const owner=confirmedTransportOwnerId,account=requirePrivateAccount(owner),controller=new AbortController(),cancel=()=>controller.abort(init.signal?.reason);account.requireOpen();
+    const unsubscribe=subscribePrivateAccount(()=>{const view=privateAccountView();if(view.ownerId!==owner||view.phase!=='ready')controller.abort();});
+    if(init.signal?.aborted)cancel();else init.signal?.addEventListener('abort',cancel,{once:true});
+    try{const result=await apiOverHttp<T>(path,{...init,signal:controller.signal},feedback);account.requireOpen();return result;}
+    finally{unsubscribe();init.signal?.removeEventListener('abort',cancel);}
+  }
+  if(path.startsWith('/shared/')&&!isIndependentMessagingPath(path)&&confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId)){
+    if(permit)throw new Error('E2EE_LEGACY_WRITE_FORBIDDEN');const owner=confirmedTransportOwnerId,current=captureAccountSessionGuard();current();
+    const {privateSharedRequest}=await import('./e2ee/shared-web-live');current();const result=await privateSharedRequest(owner,path,init);current();return result as T;
+  }
+  const method=(init.method??'GET').toUpperCase();let body:unknown=undefined;
+  if(path.replace(/^\/+/, '').split('?',1)[0]==='account/preferences'&&!['GET','HEAD','OPTIONS'].includes(method)) {
+    try { if(typeof init.body!=='string')throw new Error();body=JSON.parse(init.body); }
+    catch { throw new Error('E2EE_INVALID_LEGACY_REQUEST'); }
+  }
+  if(!permit&&!personalLegacyTransportProtected(method,path,body))return apiOverHttp<T>(path,init,feedback);
+  const owner=confirmedTransportOwnerId,generation=sessionGeneration;
+  if(!owner)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');
+  if(workspaceUserId&&workspaceUserId!==owner)throw new Error('E2EE_ACCOUNT_CHANGED');
+  if(serverProtectedTransportOwners.has(owner))throw new Error('E2EE_UPGRADE_REQUIRED');
+  const current=()=>{requireActiveLocalSession(generation);if(confirmedTransportOwnerId!==owner)throw new Error('E2EE_ACCOUNT_CHANGED');if(serverProtectedTransportOwners.has(owner))throw new Error('E2EE_UPGRADE_REQUIRED');};
+  const waiting=new AbortController(),abort=()=>waiting.abort(init.signal?.reason);
+  accountRequests.add(waiting);if(init.signal?.aborted)abort();else init.signal?.addEventListener('abort',abort,{once:true});
+  try {
+    const send=()=>apiOverHttp<T>(path,{...init,signal:waiting.signal},feedback,owner);
+    return await (permit?legacyTransportGate().borrow(permit,owner,current,send):legacyTransportGate().request(owner,current,send,waiting.signal));
+  }
+  catch(error){
+    if(error instanceof Error&&error.message==='E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN'&&confirmedTransportOwnerId===owner)showPrivateMigration(owner,privateIdentityCache?.language??'en','resume');
+    throw error;
+  }
+  finally { accountRequests.delete(waiting);init.signal?.removeEventListener('abort',abort); }
+}
+
+async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: ApiFeedback = {},legacyOwner?:string): Promise<T> {
   if (backupReconciliationRequired && !['GET','HEAD'].includes(init.method ?? 'GET')
     && /^\/(?:workspace|tasks|mindmaps|diary|stoicheion-workspace|aurora-workspace|physis|recovered-tasks)(?:\/|$)/.test(path))
     throw new Error('BACKUP_RECONCILIATION_REQUIRED');
@@ -927,11 +1092,18 @@ async function api<T>(path: string, init: RequestInit = {}, feedback: { upgradeP
   const timeout = globalThis.setTimeout(() => {
     timedOut = true;
     requestController.abort();
-  }, API_TIMEOUT_MS);
+  }, path.startsWith('/private-drive/v1/')?120_000:API_TIMEOUT_MS);
   let response: Response;
   try {
+    if(feedback.e2eeObservation){
+      if(!isE2eeResponsePath(path)||requestInit.body!=null&&typeof requestInit.body!=='string')throw new Error('E2EE_OBSERVATION_REQUEST_INVALID');
+      await feedback.e2eeObservation.prepare(Object.freeze({path,method:requestInit.method??'GET',body:typeof requestInit.body==='string'?requestInit.body:null}));
+      if(generation!==sessionGeneration)throw new GenesisApiError(401,null,'AUTH_REQUIRED');
+      if(requestController.signal.aborted)throw requestController.signal.reason;
+    }
     response = await fetch(`${API_BASE}${path}`, {
       ...requestInit,
+      ...(isE2eeResponsePath(path)?{redirect:'error' as const}:{}),
       credentials: "include",
       signal: requestController.signal,
       headers: {
@@ -942,17 +1114,26 @@ async function api<T>(path: string, init: RequestInit = {}, feedback: { upgradeP
         "X-Genesis-Data-Generation": String(backupDataGeneration),
         ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
         ...init.headers,
+        ...(legacyOwner?{'X-Genesis-Account-Id':legacyOwner}:{}),
       },
     });
     if (generation !== sessionGeneration) throw new GenesisApiError(401, null, "AUTH_REQUIRED");
     if (requestController.signal.aborted) throw requestController.signal.reason;
-    const payload = (await response.json().catch((error: unknown) => {
+    const payload = (isE2eeResponsePath(path)?await readE2eeJsonResponse(response,path,()=>{
+      if(generation!==sessionGeneration)throw new GenesisApiError(401,null,'AUTH_REQUIRED');
+      if(requestController.signal.aborted)throw requestController.signal.reason;
+    },feedback.e2eeObservation):await response.json().catch((error: unknown) => {
       if (requestController.signal.aborted) throw requestController.signal.reason ?? error;
       return null;
     })) as ({ error?: string } & Record<string, unknown>) | null;
     if (generation !== sessionGeneration) throw new GenesisApiError(401, null, "AUTH_REQUIRED");
     if (requestController.signal.aborted) throw requestController.signal.reason;
     if (!response.ok) {
+      if(isE2eeResponsePath(path)){
+        const code=e2eeHttpErrorCode(response.status,payload);
+        const retry=response.headers.get('Retry-After'),seconds=retry!==null&&/^\d{1,3}$/.test(retry)?Number(retry):null;
+        throw new GenesisApiError(response.status,code?{error:code}:null,code??'E2EE_HTTP_ERROR',seconds!==null&&seconds<=600?seconds:null);
+      }
       const message = isTemporaryApiStatus(response.status) ? apiUnavailableMessage()
         : response.status === 413 ? "Запрос превышает допустимый размер. Уменьшите объём данных или вложений."
         : response.status === 429 ? "Слишком много запросов. Повторите позже."
@@ -968,13 +1149,34 @@ async function api<T>(path: string, init: RequestInit = {}, feedback: { upgradeP
     if (payload === null) {
       throw new Error("Сервис GENESIS временно недоступен.");
     }
+    // Content/control-plane responses cannot publish identity, profile/trial
+    // metadata or CSRF. Ordinary authenticated endpoints keep their own rules.
+    if(isE2eeResponsePath(path)&&(Object.hasOwn(payload,'user')||Object.hasOwn(payload,'csrf')))throw new Error('E2EE_INVALID_RESPONSE');
     const profile = payload.user as GenesisUser | null | undefined;
-    if (profile && typeof profile.uid === 'string') {
+    if(legacyOwner&&profile!==undefined&&profile?.uid!==legacyOwner){endLocalSession();throw new Error('E2EE_ACCOUNT_CHANGED');}
+    // Only the fully validated /session reader may establish or change identity.
+    // Other endpoints can update this owner's metadata, never rebind old bytes
+    // or grant a new owner merely by returning a `user` object.
+    if (path !== '/session' && profile && typeof profile.uid === 'string') {
+      if (!confirmedTransportOwnerId || profile.uid !== confirmedTransportOwnerId) {
+        endLocalSession();
+        throw new Error('E2EE_ACCOUNT_CHANGED');
+      }
       if (!acceptTrialTransport(profile.uid, profile.featureAccess, trialCheckpoint)) throw new DOMException("Superseded account profile", "AbortError");
       rememberFeatureAccess(profile.uid, profile.featureAccess);
+      // This server hint only denies legacy IO. It cannot approve a device or
+      // open keys, and an absent later hint never reopens this owner's writer.
+      if(Object.hasOwn(profile,'privatePreferencesMode')){serverProtectedTransportOwners.add(profile.uid);markPrivateAccountOwner(profile.uid);protectPrivateWorkspaceOwner(profile.uid,`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${profile.uid}`);}
+      payload.user=privateUserProfile(profile,serverProtectedTransportOwners.has(profile.uid));
+      if(serverProtectedTransportOwners.has(profile.uid))privateIdentityCache=payload.user as GenesisUser;
+    }
+    else if(path !== '/session' && profile===null) {
+      endLocalSession();
+      throw new Error('E2EE_ACCOUNT_CHANGED');
     }
     return payload as T;
   } catch (error) {
+    if (timedOut&&path.startsWith('/private-drive/v1/')) throw new Error('DRIVE_CONNECTION_UNCERTAIN');
     if (timedOut) throw new GenesisNetworkTimeoutError("Сервер GENESIS не ответил за 20 секунд. Изменения сохранены на устройстве и будут синхронизированы позже.");
     throw error;
   } finally {
@@ -1222,6 +1424,7 @@ function readWorkspaceSyncCache(userId = workspaceUserId): WorkspaceSyncCache | 
 
 function persistWorkspaceSyncCache() {
   if (typeof window === "undefined" || !workspaceUserId || localSessionEnded || privateDeviceAccessBlocked()) return;
+  assertLegacyLocalWriteAllowed(workspaceUserId);
   const cache: WorkspaceSyncCache = {
     version: workspaceVersion,
     base: workspaceBase,
@@ -1243,6 +1446,7 @@ function restoreWorkspaceSyncCache() {
 
 export function restoreOfflineWorkspaceSession(userId: string, provider: "google" | "yandex" = "google") {
   if (localSessionEnded || privateDeviceAccessBlocked()) return false;
+  if (confirmedTransportOwnerId !== null && confirmedTransportOwnerId !== userId) return false;
   activeAuthProvider = provider;
   workspaceUserId = userId;
   workspaceDeviceId = deviceWorkspaceId(userId);
@@ -1659,6 +1863,20 @@ export function loadGenesisWorkspace(): Promise<GenesisWorkspace> {
 async function loadGenesisWorkspaceSnapshot(): Promise<GenesisWorkspace> {
   const generation = sessionGeneration;
   requireActiveLocalSession(generation);
+  const protectedOwner=confirmedTransportOwnerId;
+  if(protectedOwner&&serverProtectedTransportOwners.has(protectedOwner)){
+    const account=requirePrivateAccount(protectedOwner);
+    const identity=account.mode==='offline'?privateIdentityCache:await loadGenesisSession();requireActiveLocalSession(generation);
+    if(!identity||identity.uid!==protectedOwner)throw new Error('E2EE_ACCOUNT_CHANGED');
+    await waitForPrivateAccount(protectedOwner,identity.language);requireActiveLocalSession(generation);
+    const product=await privatePersonalProduct(protectedOwner),snapshot=await product.load(account.mode);requireActiveLocalSession(generation);
+    const structure=structureFromDocument(snapshot.workspace as SyncableWorkspaceDocument);
+    workspaceUserId=protectedOwner;backupDataGeneration=requirePrivateAccount(protectedOwner).personal().directory.generation;
+    workspaceVersion=0;workspaceKey='';workspaceBase=null;workspaceBaseMetadata=null;workspaceSyncMetadata=null;
+    const {privatePreferences}=await import('./e2ee/preferences-product');const user=await privatePreferences(protectedOwner).apply(identity);requireActiveLocalSession(generation);
+    return{...structure,user,csrf:csrfToken,tasks:snapshot.tasks.map(task=>normalizeTask(task as Partial<GenesisTask>&Pick<GenesisTask,'id'|'title'>)),deletedTaskIds:snapshot.deletedTaskIds,
+      hasRemoteStructure:true,syncWarning:account.mode==='offline'?PRIVATE_VAULT_COPY[identity.language??'en'].offlineDescription:null,workspaceKeyMode:'e2ee'};
+  }
   const payload = await api<BootstrapPayload>("/bootstrap");
   backupTransportSupported = payload.user.dataGeneration !== undefined;
   backupDataGeneration = payload.user.dataGeneration ?? 0;
@@ -1752,6 +1970,7 @@ export function observeGenesisUser(
   const poll = async () => {
     try {
       const user = await loadGenesisSession(controller.signal);
+      if(user&&serverProtectedTransportOwners.has(user.uid))await waitForPrivateAccount(user.uid,user.language,controller.signal);
       if (active) listener(user);
     } catch (error) {
       if (controller.signal.aborted || error instanceof DOMException && error.name === "AbortError") return;
@@ -1773,7 +1992,35 @@ export function observeGenesisUser(
 }
 
 const readGenesisSession = sessionReader(async () => {
-  try { return sessionEnvelope<GenesisUser>(await api<unknown>("/session", { cache: "no-store" })); }
+  const generation=sessionGeneration;
+  try {
+    const result=sessionEnvelope<GenesisUser>(await api<unknown>("/session", { cache: "no-store" }));
+    if(generation!==sessionGeneration)throw new DOMException('Session check superseded','AbortError');
+    // A validated identity change retires old capabilities even when persisting
+    // the new local login receipt fails (for example, exhausted storage).
+    const previousOwner=confirmedTransportOwnerId||workspaceUserId||null;
+    if(previousOwner!==null&&previousOwner!==result.user?.uid)endLocalSession();
+    const accepted=result.user!==null&&acceptAuthenticatedLogin(localStorage,result.loginId||'')&&!hasLocalSignOut(localStorage);
+    const user=accepted?privateUserProfile(result.user!,serverProtectedTransportOwners.has(result.user!.uid)||Object.hasOwn(result.user!,'privatePreferencesMode')):null;
+    if(user===null&&previousOwner!==null&&previousOwner===result.user?.uid)endLocalSession();
+    localSessionEnded=user===null;
+    confirmedTransportOwnerId=user?.uid??null;
+    if(user) {
+      try{if(localMigrationMarker(user.uid)?.phase==='preparing')showPrivateMigration(user.uid,user.language??'en','resume');}
+      catch{showPrivateMigration(user.uid,user.language??'en','resume');}
+      if(!acceptTrialTransport(user.uid,user.featureAccess,beginTrialTransport()))throw new DOMException('Superseded account profile','AbortError');
+      rememberFeatureAccess(user.uid,user.featureAccess);
+      if(Object.hasOwn(user,'privatePreferencesMode')){
+        serverProtectedTransportOwners.add(user.uid);markPrivateAccountOwner(user.uid);protectPrivateWorkspaceOwner(user.uid,`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${user.uid}`);
+        privateIdentityCache=user;
+      }
+    } else invalidateTrialAccess();
+    csrfToken=result.csrf;
+    activeAuthProvider=user?.authProvider==='yandex'?'yandex':'google';
+    // Coalesced observers share the post-transition receipt. They must not
+    // mistake this reader's own deliberate retirement for a stale response.
+    return {user,generation:sessionGeneration};
+  }
   catch(error) {
     if(error instanceof GenesisApiError || error instanceof DOMException && error.name==="AbortError" ||
       error instanceof TypeError || error instanceof GenesisNetworkTimeoutError)throw error;
@@ -1782,21 +2029,12 @@ const readGenesisSession = sessionReader(async () => {
 });
 
 export async function loadGenesisSession(signal?: AbortSignal) {
-  const generation=sessionGeneration;
   const result = await readGenesisSession(signal);
-  if(generation!==sessionGeneration)throw new DOMException("Session check superseded", "AbortError");
-  if (!result.user) invalidateTrialAccess();
-  if (result.user && !acceptAuthenticatedLogin(localStorage, result.loginId || "")) {
-    localSessionEnded = true;
-    invalidateTrialAccess();
-    csrfToken = "";
-    return null;
-  }
-  localSessionEnded = result.user === null || hasLocalSignOut(localStorage);
-  if (localSessionEnded) invalidateTrialAccess();
-  csrfToken = result.csrf;
-  activeAuthProvider = result.user?.authProvider === "yandex" ? "yandex" : "google";
-  return result.user;
+  if(result.generation!==sessionGeneration)throw new DOMException("Session check superseded", "AbortError");
+  if(result.user&&Object.hasOwn(result.user,'privatePreferencesMode')&&privateAccountView().phase==='ready'&&privateAccountView().ownerId===result.user.uid){
+    const {privatePreferences}=await import('./e2ee/preferences-product');const user=await privatePreferences(result.user.uid).apply(result.user);
+    if(result.generation!==sessionGeneration)throw new DOMException('Session check superseded','AbortError');return user;
+  }return result.user;
 }
 
 export async function signInWithGoogle() {
@@ -2044,6 +2282,16 @@ export async function updateAccountPreferences(preferences: Partial<{
   syncRouting: SyncRouting;
 }>, signal?: AbortSignal) {
   try {
+    if(confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId)){
+      const privateNames=['advicePreferences','uiVisibility','uiLayout','syncRouting'] as const,privatePatch:Record<string,unknown>={},publicPatch:Record<string,unknown>={};
+      for(const [key,value]of Object.entries(preferences)){if((privateNames as readonly string[]).includes(key))privatePatch[key]=value;else publicPatch[key]=value;}
+      if(Object.keys(privatePatch).length){
+        const owner=confirmedTransportOwnerId,current=captureAccountSessionGuard(),{privatePreferences}=await import('./e2ee/preferences-product');current();
+        await privatePreferences(owner).update(privatePatch);current();
+        const user=Object.keys(publicPatch).length?(await api<{user:GenesisUser}>('/account/preferences',{method:'PUT',body:JSON.stringify(publicPatch),signal})).user:await loadGenesisSession(signal);
+        current();if(!user||user.uid!==owner)throw new Error('E2EE_ACCOUNT_CHANGED');return{user:await privatePreferences(owner).apply(user)};
+      }
+    }
     return await api<{ user: GenesisUser }>("/account/preferences", {
       method: "PUT",
       body: JSON.stringify(preferences),
@@ -2057,15 +2305,18 @@ export async function updateAccountPreferences(preferences: Partial<{
   }
 }
 
-export function loadDailyAdvice(scores: import("./daily-advice").AdviceScores, signal?: AbortSignal, topics?: import("./daily-advice").AdviceTopicScores,
+export async function loadDailyAdvice(scores: import("./daily-advice").AdviceScores, signal?: AbortSignal, topics?: import("./daily-advice").AdviceTopicScores,
   from?: Pick<import("./daily-advice").DailyAdvice, "id" | "dayKey">) {
+  if(confirmedTransportOwnerId&&usesPrivateProductStorage(confirmedTransportOwnerId)){signal?.throwIfAborted();return(await privateAdviceProduct(confirmedTransportOwnerId)).today(scores,topics,from);}
   return api<import("./daily-advice").DailyAdviceResponse>(from ? "/advice/next" : "/advice/today", {
     method: "POST", body: JSON.stringify({ scores, topics, maxDailyCards: 9, ...(from ? { fromId: from.id, dayKey: from.dayKey } : {}) }), signal });
 }
-export function recordDailyAdvice(advice: Pick<import("./daily-advice").DailyAdvice, "id" | "dayKey">, dismiss = false) {
+export async function recordDailyAdvice(advice: Pick<import("./daily-advice").DailyAdvice, "id" | "dayKey">, dismiss = false) {
+  if(confirmedTransportOwnerId&&usesPrivateProductStorage(confirmedTransportOwnerId))return(await privateAdviceProduct(confirmedTransportOwnerId)).record(advice.id,advice.dayKey,dismiss);
   return api<{ ok: true }>(dismiss ? "/advice/dismiss" : "/advice/view", { method: "POST", body: JSON.stringify({ id: advice.id, dayKey: advice.dayKey }) });
 }
-export function loadSavedAdvice(target:AdviceTarget,signal?:AbortSignal) {
+export async function loadSavedAdvice(target:AdviceTarget,signal?:AbortSignal) {
+  if(confirmedTransportOwnerId&&usesPrivateProductStorage(confirmedTransportOwnerId)){signal?.throwIfAborted();return(await privateAdviceProduct(confirmedTransportOwnerId)).saved(target.id,target.dayKey,target.collection);}
   return api<import('./daily-advice').DailyAdviceResponse>('/advice/saved?'+new URLSearchParams({...target,maxDailyCards:'9'}),{signal});
 }
 export type AdviceNotificationStatus={capabilities:{available:boolean;publicKey?:string;blocker?:string};devices:{id:string}[]};
@@ -2286,8 +2537,8 @@ export async function saveSharedProjectAccess(spaceId: string, userId: string, c
   if (typeof window !== "undefined") window.dispatchEvent(new Event("genesis:shared-updates"));
   return receipt;
 }
-export async function approveSharedTask(projectId: string, taskId: string) {
-  return (await api<{task: SharedTask}>(`/shared/projects/${encodeURIComponent(projectId)}/tasks/${encodeURIComponent(taskId)}/approve`, {method:"POST",body:"{}"})).task;
+export async function approveSharedTask(projectId: string, taskId: string,decision?:{review:{proposalId:string;payloadHash:string;version:import('./e2ee/shared-product').ProductVersion};requestId:string}) {
+  return (await api<{task: SharedTask}>(`/shared/projects/${encodeURIComponent(projectId)}/tasks/${encodeURIComponent(taskId)}/approve`, {method:"POST",body:JSON.stringify(decision??{})})).task;
 }
 export type SharedComment = { id: string; body: string; mentionIds?: string[]; authorId: string; authorName: string; importedAuthorName?:string; createdAt: string };
 export type SharedActivityEvent = { id: string; action: string; objectId: string; taskId: string | null; boardId: string | null; actorName: string; createdAt: string;
@@ -2402,6 +2653,7 @@ export function canRestoreOfflineSession(error: unknown) {
 }
 
 async function sharedCachedRequest<T>(path: string, signal?: AbortSignal): Promise<T> {
+  if(confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId))return api<T>(path,{signal});
   const generation = sessionGeneration;
   let owner = workspaceUserId;
   // Session UI can mount before the first bootstrap assigns the private workspace owner.
@@ -2462,9 +2714,16 @@ async function sharedCachedRequest<T>(path: string, signal?: AbortSignal): Promi
   }
 }
 
-export function sharedDataCameFromOfflineCache() { return sharedReadAvailability().size > 0; }
+export function sharedDataCameFromOfflineCache() {
+  const owner=confirmedTransportOwnerId;
+  if(owner&&serverProtectedTransportOwners.has(owner))return requirePrivateAccount(owner).mode==='offline';
+  return sharedReadAvailability().size > 0;
+}
 
 export async function queuedSharedMutations(projectId: string) {
+  if(confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId)){
+    const {privateSharedPending}=await import('./e2ee/shared-web-live');return(await privateSharedPending(confirmedTransportOwnerId,projectId)).map(({request})=>({requestId:request.id,kind:request.path.endsWith('/move')?'move' as const:request.method==='POST'?'create' as const:'update' as const,title:typeof request.body.title==='string'?request.body.title:'',dueDate:typeof request.body.dueDate==='string'?request.body.dueDate:null,queuedAt:request.createdAt,error:undefined,draft:null}));
+  }
   return (await readSharedOfflineStore()).queue.filter((item) => item.projectId === projectId)
     .map(({ requestId, kind, title, dueDate, queuedAt, error, body }) => ({
       requestId, kind, title, dueDate, queuedAt, error, draft: error ? body : null,
@@ -2472,11 +2731,13 @@ export async function queuedSharedMutations(projectId: string) {
 }
 
 export async function pendingSharedMutationCount() {
+  if(confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId)){const {privateSharedPending}=await import('./e2ee/shared-web-live');return(await privateSharedPending(confirmedTransportOwnerId)).length;}
   if (!workspaceUserId || !workspaceKey) return 0;
   return (await readSharedOfflineStore()).queue.length;
 }
 
 export async function discardSharedMutation(requestId: string) {
+  if(confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId))throw new Error('E2EE_SHARED_PENDING_REVIEW_REQUIRED');
   await changeSharedOfflineStore((store) => {
     const item = store.queue.find((queued) => queued.requestId === requestId);
     if (!item || !item.error) throw new Error("SHARED_DRAFT_NOT_FOUND");
@@ -2491,6 +2752,11 @@ export function flushSharedMutations() {
 }
 
 async function flushSharedMutationQueue() {
+  if(confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId)){
+    const owner=confirmedTransportOwnerId,account=requirePrivateAccount(owner);if(account.mode==='offline')return;
+    const {privateSharedPending,resumePrivateSharedRequest}=await import('./e2ee/shared-web-live');
+    for(const row of await privateSharedPending(owner)){account.requireOpen();await resumePrivateSharedRequest(owner,row.resourceId,row.request.id,row.kind);}return;
+  }
   if (!workspaceUserId || !workspaceKey || !navigator.onLine) return;
   const owner = workspaceUserId;
   const queued = (await readSharedOfflineStore()).queue;
@@ -2521,6 +2787,7 @@ async function flushSharedMutationQueue() {
 }
 
 async function sendSharedMutation<T extends { pending?: boolean }>(item: SharedQueuedMutation, pending: T): Promise<T> {
+  if(confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId))return(await api<{task:T}>(item.path,{method:item.method,body:item.body})).task;
   if (!workspaceUserId || !workspaceKey) {
     return (await api<{ task: T }>(item.path, { method: item.method, body: item.body })).task;
   }
@@ -2563,6 +2830,15 @@ export function allowCurrentDataTransfer(): boolean {
   return allowDataTransfer(localSessionEnded || privateDeviceAccessBlocked() ? undefined : currentFeatureAccess(workspaceUserId));
 }
 export async function createSharedSpace(title: string, description = "", invitations: SharedSpaceInvitationInput[] = [], cover?:{coverImage?:string;coverPosition:{x:number;y:number}}) {
+  const owner=confirmedTransportOwnerId;
+  if(owner&&privateAccountIsRequired(owner)){
+    const session=captureAccountSessionGuard(),account=requirePrivateAccount(owner),current=()=>{session();account.requireOpen();if(confirmedTransportOwnerId!==owner||requirePrivateAccount(owner)!==account)throw new Error('E2EE_ACCOUNT_CHANGED');};current();
+    const [{E2eePrivateResourceCreation},{waitForPrivateResourceCreation}]=await Promise.all([import('./e2ee/private-resource-create'),import('./private-migration-ui')]);current();
+    const creation=new E2eePrivateResourceCreation(account,privateScopeSetupHttpTransport(),current),id=await creation.create({title,description,invitations:invitations.map(row=>({...row,permissions:row.permissions??{createProjects:row.role!=='guest',editTasks:row.role!=='guest',organizeTasks:row.role==='admin',comment:row.role!=='guest',manageProjects:row.role==='admin',inviteMembers:row.role==='admin'}})),coverImage:cover?.coverImage??null,coverPosition:cover?.coverPosition??{x:50,y:50}});current();
+    const intent=await creation.inspect(id);current();
+    try{const result=await waitForPrivateResourceCreation(owner,privateIdentityCache?.language??'en',{scopeId:intent.scopeId,kind:'space',resourceId:intent.resourceId},id);current();return result.space as SharedSpace;}
+    catch(reason){if(reason instanceof Error&&reason.message==='E2EE_RESOURCE_CREATION_PAUSED'){const {default:copy}=await import('../contracts/e2ee/private-resource-copy-v1.json');const language=privateIdentityCache?.language as keyof typeof copy;throw new Error((copy[language]??copy.en).paused);}throw reason;}
+  }
   return (await api<{ space: SharedSpace }>("/shared/spaces", {
     method: "POST", body: JSON.stringify({ title, description, invitations, ...cover }),
   })).space;
@@ -2601,6 +2877,16 @@ export function searchSharedAffairs(spaceId: string, query: string, signal?: Abo
 }
 export async function createSharedProject(spaceId: string, input: { title: string; description: string;
   layout: "list" | "board"; tags?: string[]; labelIds?: string[]; categoryId?: string | null; kind?: "project" | "task-list"; boardStatusId?: string | null; parentId?: string | null }) {
+  const owner=confirmedTransportOwnerId;
+  if(owner&&privateAccountIsRequired(owner)){
+    const {creation,current}=await privateProjectCreationSession(),language=privateIdentityCache?.language??'en';current();
+    const {default:all}=await import('../contracts/e2ee/project-creation-copy-v1.json');current();const copy=all[language as keyof typeof all]??all.en;
+    const id=await creation.create({spaceId,title:input.title,description:input.description,layout:input.layout,kind:input.kind??'project',parentId:input.parentId??null,
+      categoryId:input.categoryId??null,boardStatusId:input.boardStatusId??null,tags:[...(input.tags??[])],labelIds:[...(input.labelIds??[])],statusTitles:{...copy.statusTitles}});current();
+    const intent=await creation.inspect(id);current();const {waitForPrivateResourceCreation}=await import('./private-migration-ui');current();
+    try{const result=await waitForPrivateResourceCreation(owner,language,{scopeId:intent.scopeId,kind:'project',resourceId:intent.resourceId},id);current();return result.project as SharedProject;}
+    catch(reason){if(reason instanceof Error&&reason.message==='E2EE_RESOURCE_CREATION_PAUSED'){const {default:paused}=await import('../contracts/e2ee/private-resource-copy-v1.json');throw new Error((paused[language as keyof typeof paused]??paused.en).paused);}throw reason;}
+  }
   return (await api<{ project: SharedProject }>(`/shared/spaces/${encodeURIComponent(spaceId)}/projects`, {
     method: "POST", body: JSON.stringify(input),
   })).project;
@@ -2798,6 +3084,7 @@ export function deleteSharedTask(projectId: string, taskId: string, expectedRevi
 export type SharedInvitation = {
   id: string; inviterName: string; spaceTitle: string; projectTitle: string;
   role: string; expiresAt: string;
+  encrypted?: boolean; pendingApproval?: boolean; admitted?: boolean; deviceApprovalRequired?: boolean;
 };
 export async function listSharedInvitations(signal?: AbortSignal) {
   return (await api<{ invitations: SharedInvitation[] }>("/shared/invitations", {signal})).invitations;
@@ -2868,7 +3155,7 @@ export async function readSharedNotifications(eventIds: string[]) {
   return result;
 }
 export async function acceptSharedInvitation(id: string) {
-  return api<{ projectId: string; spaceId: string }>("/shared/invitations/accept", {
+  return api<{ projectId: string; spaceId: string; pendingApproval?: boolean; admitted?: boolean; deviceApprovalRequired?: boolean }>("/shared/invitations/accept", {
     method: "POST", body: JSON.stringify({ id }),
   });
 }
@@ -2933,16 +3220,23 @@ export function observeCloudTasks(
   listener: (tasks: GenesisTask[], taskLists: GoogleTaskList[], fromCache: boolean, warning: string | null) => void,
   onError: (error: Error) => void,
 ) {
+  if(serverProtectedTransportOwners.has(_uid))return observePrivateProduct(_uid,workspace=>listener(workspace.tasks,workspace.taskLists,requirePrivateAccount(_uid).mode==='offline',workspace.syncWarning),onError);
+  const check=personalDocumentAccess(_uid).check;
   let active = true;
   let polling = false;
   const poll = async () => {
     if (polling) return;
     polling = true;
     try {
+      check();
       await flushSharedMutations();
+      check();
       await flushPendingMutations();
+      check();
       await refreshWorkspaceFromCloud();
+      check();
       const result = await api<{ tasks: GenesisTask[]; deletedTaskIds?: string[]; taskLists?: GoogleTaskList[]; syncWarning?: string | null }>("/sync/tasks");
+      check();
       rememberDeletedTasks(result.deletedTaskIds ?? []);
       if (active) listener(
         [...result.tasks.filter((task) => !isCloudTaskDeleted(task.id)).map((task) => normalizeTask(task)), ...await loadRecoveredTasks(_uid)],
@@ -2969,6 +3263,7 @@ export function observeCloudTasks(
 }
 
 export function observeCloudWorkspace(onError?: (error: Error) => void) {
+  if(confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId))return observePrivateProduct(confirmedTransportOwnerId,workspace=>publishWorkspaceUpdate(workspace),onError);
   let active = true;
   let polling = false;
   const poll = async () => {
@@ -3001,7 +3296,16 @@ export async function mergeLocalWorkspace(
   _uid: string,
   local: Pick<GenesisWorkspace, "tasks" | "projects" | "categories" | "taskListLinks" | "taskLists"> & Partial<HabitWorkspace>,
 ) {
+  const check=captureAccountSessionGuard();check();
+  if(confirmedTransportOwnerId!==_uid)throw new Error('E2EE_ACCOUNT_CHANGED');
+  if(serverProtectedTransportOwners.has(_uid)){
+    // Legacy cache and receipts have already been reconciled by migration.
+    // They cannot become new-generation edits or external copies after login.
+    await waitForPrivateAccount(_uid);check();return;
+  }
   const remote = await loadGenesisWorkspace();
+  check();
+  if(remote.user.uid!==_uid)throw new Error('E2EE_ACCOUNT_CHANGED');
   if (readPending().some(isWorkspaceMutation)) {
     await flushPendingMutations();
   } else if (shouldSeedRemoteWorkspace(remote.hasRemoteStructure,
@@ -3034,10 +3338,15 @@ export async function mergeLocalWorkspace(
 }
 
 export async function saveCloudTask(_uid: string, task: GenesisTask) {
+  if(serverProtectedTransportOwners.has(_uid)){
+    const product=await privatePersonalProduct(_uid);return normalizeTask(await product.saveTask(task) as Partial<GenesisTask>&Pick<GenesisTask,'id'|'title'>);
+  }
+  const check=personalDocumentAccess(_uid).check;check();
   if (task.restoredFrom && /^restored-[a-f0-9]{32}$/.test(task.id)) {
     const access = personalDocumentAccess(_uid);
     const envelope = await access.seal(task, `recovered-task:v1:${task.id}`);
     const receipt = await api<{ revision: number }>(`/recovered-tasks/${task.id}`, { method:'PUT', body:JSON.stringify({ ...envelope, expectedRevision:task.restoredRevision ?? 0 }) });
+    check();
     return { ...task, restoredRevision:receipt.revision };
   }
   if (isCloudTaskDeleted(task.id)) throw new Error("TASK_DELETED");
@@ -3050,9 +3359,11 @@ export async function saveCloudTask(_uid: string, task: GenesisTask) {
   const mutation: PendingMutation = { key: `task:${task.id}`, path, method: "PUT", body };
   queueMutation(mutation);
   return withTaskMutationLock(mutation.key, async () => {
+    check();
     if (isCloudTaskDeleted(task.id)) throw new Error("TASK_DELETED");
     try {
       const result = await api<{ task: GenesisTask }>(path, { method: "PUT", body });
+      check();
       clearMutation(mutation.key, mutation);
       return normalizeTask(result.task);
     } catch (error) {
@@ -3067,6 +3378,9 @@ export async function saveCloudTask(_uid: string, task: GenesisTask) {
 
 /** The protected map journal owns retries; never enqueue plaintext task drafts here. */
 export async function createCloudTaskOnce(uid: string, task: GenesisTask) {
+  if(serverProtectedTransportOwners.has(uid)){
+    const product=await privatePersonalProduct(uid);return normalizeTask(await product.saveTask(task,true) as Partial<GenesisTask>&Pick<GenesisTask,'id'|'title'>);
+  }
   const guard = captureAccountSessionGuard();
   guard();
   if (uid !== workspaceUserId) throw new Error("AUTH_REQUIRED");
@@ -3077,6 +3391,8 @@ export async function createCloudTaskOnce(uid: string, task: GenesisTask) {
 }
 
 export async function removeCloudTask(_uid: string, task: GenesisTask) {
+  if(serverProtectedTransportOwners.has(_uid)){await(await privatePersonalProduct(_uid)).removeTask(task.id);return;}
+  const check=personalDocumentAccess(_uid).check;check();
   if (task.restoredFrom && /^restored-[a-f0-9]{32}$/.test(task.id)) {
     await api(`/recovered-tasks/${task.id}`, { method:'DELETE', body:JSON.stringify({ expectedRevision:task.restoredRevision ?? 0 }) }); return;
   }
@@ -3093,13 +3409,18 @@ export async function removeCloudTask(_uid: string, task: GenesisTask) {
   const mutation: PendingMutation = { key: `task:${task.id}`, path, method: "DELETE", body };
   queueMutation(mutation);
   await withTaskMutationLock(mutation.key, async () => {
+    check();
     await api<{ ok: boolean }>(path, { method: "DELETE", body });
+    check();
     clearMutation(mutation.key, mutation);
   });
 }
 
 /** A transfer must not queue an uncertain deletion for later replay. */
 export async function removeCloudTaskForTransfer(task: GenesisTask) {
+  if(confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId)){
+    await(await privatePersonalProduct(confirmedTransportOwnerId)).removeTask(task.id);return;
+  }
   const path = `/tasks/${encodeURIComponent(task.id)}`;
   const body = JSON.stringify({
     googleEventId: task.googleEventId,
@@ -3132,6 +3453,12 @@ export async function saveWorkspaceStructure(
   taskLists?: GoogleTaskList[],
   onQueued?: () => void,
 ) {
+  if(confirmedTransportOwnerId&&serverProtectedTransportOwners.has(confirmedTransportOwnerId)){
+    const product=await privatePersonalProduct(confirmedTransportOwnerId);
+    const current=product.snapshot();
+    const revision=await product.saveWorkspace({projects,categories,taskListLinks,taskLists:taskLists??current.taskLists??[],...normalizeHabitWorkspace(habitWorkspace??current as Partial<HabitWorkspace>)},onQueued);
+    return{ok:true,workspace:{version:revision,updatedAt:new Date().toISOString()}};
+  }
   return withWorkspaceMutationLock(async () => {
     workspaceQueueId ||= `workspace:${crypto.randomUUID()}`;
     const waiting = readPending().filter(isWorkspaceMutation);
@@ -3183,19 +3510,35 @@ export async function loadSharedCalendarPreviews(from: string, to: string, signa
 }
 
 export async function loadHabitReminderStatus(userId: string) {
-  const status = await api<HabitReminderStatus>(`/habit-reminders/status?deviceKey=${encodeURIComponent(habitReminderDeviceKey(userId))}`);
-  if (workspaceUserId === userId) habitReminderProjectionWanted = status.hasDevices;
-  return status;
+  return withPersonalReminderOperation(userId,async permit=>{
+    const status=await api<HabitReminderStatus>(`/habit-reminders/status?deviceKey=${encodeURIComponent(habitReminderDeviceKey(userId))}`,{},{},permit);
+    habitReminderProjectionWanted=status.hasDevices;return status;
+  });
 }
 
 export async function registerHabitReminderDevice(userId: string, subscription: PushSubscription, frequency: HabitReminderFrequency,
   expectedRevision: number, requestId: string) {
-  const result = await api<{ id: string; revision: number }>("/habit-reminders/devices", { method: "POST", body: JSON.stringify({
-    deviceKey: habitReminderDeviceKey(userId), subscription: subscription.toJSON(), consent: true,
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, ...frequency, expectedRevision, requestId,
-  }) });
-  if (workspaceUserId === userId) habitReminderProjectionWanted = true;
-  return result;
+  return withPersonalReminderOperation(userId,async permit=>{
+    const result = await api<{ id: string; revision: number }>("/habit-reminders/devices", { method: "POST", body: JSON.stringify({
+      deviceKey: habitReminderDeviceKey(userId), subscription: subscription.toJSON(), consent: true,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, ...frequency, expectedRevision, requestId,
+    }) },{},permit);
+    habitReminderProjectionWanted=true;return result;
+  });
+}
+
+/** Reminder settings/local receipts have no workspace-key requirement. Hold
+ * the SAME owner permit used by personal API transport through async OS work
+ * and final storage writes; nested API calls borrow it explicitly. */
+export async function withPersonalReminderOperation<T>(userId:string,operation:(permit:import('./e2ee/legacy-transport-fence').LegacyOperationPermit)=>Promise<T>,permit?:import('./e2ee/legacy-transport-fence').LegacyOperationPermit):Promise<T>{
+  const session=captureAccountSessionGuard();const check=()=>{session();
+    if(!userId||workspaceUserId!==userId||(confirmedTransportOwnerId!==null?confirmedTransportOwnerId!==userId:!workspaceKey))throw new Error('E2EE_ACCOUNT_CHANGED');
+    if(serverProtectedTransportOwners.has(userId))throw new Error('E2EE_UPGRADE_REQUIRED');};
+  check();return permit?legacyTransportGate().borrow(permit,userId,check,()=>operation(permit)):legacyTransportGate().withOperation(userId,check,operation);
+}
+export async function saveReminderLocalValue(userId:string,key:string,value:string){
+  if(![`genesis.habit-reminder.frequency.${userId}`,`genesis-moon-reminders-v1:${userId}`].includes(key))throw new Error('E2EE_REMINDER_SOURCE_INVALID');
+  return withPersonalReminderOperation(userId,async()=>{localStorage.setItem(key,value);});
 }
 
 export async function deleteHabitReminderDevice(device: NonNullable<HabitReminderStatus["device"]>) {
@@ -3257,7 +3600,17 @@ export async function removeGoogleTaskList(taskListId: string, accountId?: strin
   });
 }
 
+/** Private counts are derived from encrypted domain data. Do not continue the
+ * optional legacy aggregate upload after a protected or locked private entry.
+ * The shared transport fence also covers an activation racing this early check. */
+function privateActivityUploadsBlocked(){
+  const owner=confirmedTransportOwnerId??workspaceUserId??privateIdentityCache?.uid;
+  if(!owner)return false;
+  return serverProtectedTransportOwners.has(owner)||privateAccountView().ownerId===owner
+    ||Boolean(privateIdentityCache?.uid===owner&&privateUserCacheRequired(privateIdentityCache));
+}
 export async function saveMetrics(metrics: GenesisMetrics) {
+  if(privateActivityUploadsBlocked())return{ok:true};
   return api<{ ok: boolean }>("/metrics", { method: "POST", body: JSON.stringify({ metrics }) });
 }
 
@@ -3266,6 +3619,7 @@ export async function loadAdminStats() {
 }
 
 export async function recordFeatureUsage(features: string[], platform: "web" | "android" = "web") {
+  if(privateActivityUploadsBlocked())return{ok:true};
   return api<{ ok: boolean }>("/feature-usage", {
     method: "POST", body: JSON.stringify({ features, platform }),
   });
@@ -3305,21 +3659,41 @@ export async function deleteAdminUser(userId: string, blacklist: boolean) {
 }
 
 export async function loadStoicheionDraws() {
+  if(confirmedTransportOwnerId&&usesPrivateProductStorage(confirmedTransportOwnerId))return(await privateStoicheionProduct(confirmedTransportOwnerId)).loadDraws();
   return api<{ dayKey: string; draws: Partial<Record<StoicheionDrawKind, StoicheionDrawRecord>>; testingAccess?:boolean }>("/stoicheion/draws");
 }
 
 export async function saveStoicheionDraw(kind: StoicheionDrawKind, seed: number) {
+  if(confirmedTransportOwnerId&&usesPrivateProductStorage(confirmedTransportOwnerId))return(await privateStoicheionProduct(confirmedTransportOwnerId)).saveDraw(kind,seed);
   return api<{ draw: StoicheionDrawRecord }>("/stoicheion/draws", {
     method: "POST",
     body: JSON.stringify({ kind, seed: seed >>> 0 }),
   });
 }
 
-export async function requestAssistantPlan(payload: {
+export async function requestPrivateGoogleCopy(owner:string,input:import('./e2ee/google-copy-product').GoogleCopyPayload,consent:import('./e2ee/external-copy').ExternalCopyConsent){
+  if(confirmedTransportOwnerId!==owner||!usesPrivateProductStorage(owner))throw new Error('E2EE_ACCOUNT_CHANGED');const account=requirePrivateAccount(owner),{consumeExternalCopy,EXTERNAL_COPY_NOTICE_VERSION}=await import('./e2ee/external-copy');
+  const snapshot=await consumeExternalCopy(account,consent,input.provider,`google-copy:${input.accountId}`,input);account.requireOpen();
+  const result=await api<import('./e2ee/google-copy-product').GoogleCopyReceipt>('/private-services/google/copy',{method:'POST',body:JSON.stringify({...snapshot,consentVersion:EXTERNAL_COPY_NOTICE_VERSION})});account.requireOpen();if(requirePrivateAccount(owner)!==account)throw new Error('E2EE_ACCOUNT_CHANGED');return result;
+}
+export type AssistantPlanInput={
   command: string;
   audio: { data: string; mimeType: string } | null;
   context: GeminiAssistantContext;
-}) {
+};
+export async function reviewAssistantCopy(payload:AssistantPlanInput,provider:Exclude<AssistantProvider,'local'>,confirmed:boolean){
+  if(!confirmed)throw new Error('E2EE_EXTERNAL_COPY_CONSENT_REQUIRED');const owner=confirmedTransportOwnerId;
+  if(!owner||!usesPrivateProductStorage(owner))return undefined;const account=requirePrivateAccount(owner),{approveExternalCopy,EXTERNAL_COPY_NOTICE_VERSION}=await import('./e2ee/external-copy');account.requireOpen();
+  return approveExternalCopy(account,provider,'assistant-plan',payload,{confirmed,noticeVersion:EXTERNAL_COPY_NOTICE_VERSION});
+}
+export async function requestAssistantPlan(payload:AssistantPlanInput,authorization?:{provider:Exclude<AssistantProvider,'local'>;consent:import('./e2ee/external-copy').ExternalCopyConsent|undefined}) {
+  const owner=confirmedTransportOwnerId;if(owner&&usesPrivateProductStorage(owner)){
+    const account=requirePrivateAccount(owner);if(!authorization)throw new Error('E2EE_EXTERNAL_COPY_CONSENT_REQUIRED');
+    const {consumeExternalCopy,EXTERNAL_COPY_NOTICE_VERSION}=await import('./e2ee/external-copy'),snapshot=await consumeExternalCopy(account,authorization.consent,authorization.provider,'assistant-plan',payload);account.requireOpen();
+    const controller=new AbortController(),unsubscribe=subscribePrivateAccount(()=>{const view=privateAccountView();if(view.ownerId!==owner||view.phase!=='ready')controller.abort();});
+    try{const result=await api<{provider:Exclude<AssistantProvider,'local'>;model:string;plan:GeminiPlan}>('/private-services/assistant/plan',{method:'POST',signal:controller.signal,body:JSON.stringify({...snapshot,provider:authorization.provider,consentVersion:EXTERNAL_COPY_NOTICE_VERSION})});account.requireOpen();return result;}
+    finally{unsubscribe();}
+  }
   return api<{ provider: Exclude<AssistantProvider, "local">; model: string; plan: GeminiPlan }>("/assistant/plan", {
     method: "POST",
     body: JSON.stringify(payload),
@@ -3386,16 +3760,702 @@ export function resetAdminAccess(userId:string,expectedPlan:SubscriptionPlan,exp
   return api<{userId:string;subscriptionPlan:SubscriptionPlan;subscriptionRevision:number}>(`/admin/users/${encodeURIComponent(userId)}/reset-access`,
     {method:'POST',body:JSON.stringify({expectedPlan,expectedRevision})});
 }
+/** Shares authenticated transport/CSRF/cancellation only. No root or private key
+ * is accepted by this boundary; E2EE clients send signed commands/ciphertext. */
+const privatePersonalProducts=new WeakMap<import('./e2ee/product-session').WebPrivateAccount,import('./e2ee/personal-product').E2eePersonalProduct>();
+const privateStoicheionProducts=new WeakMap<import('./e2ee/product-session').WebPrivateAccount,import('./e2ee/stoicheion-product').E2eeStoicheionProduct>();
+const privateAdviceProducts=new WeakMap<import('./e2ee/product-session').WebPrivateAccount,import('./e2ee/advice-product').E2eeAdviceProduct>();
+async function privateAdviceProduct(ownerId:string){const session=captureAccountSessionGuard(),account=requirePrivateAccount(ownerId);let product=privateAdviceProducts.get(account);
+  if(!product){const [{webAdviceProduct},{publicAdviceCatalogueReader}]=await Promise.all([import('./e2ee/advice-product'),import('./e2ee/advice-catalogue')]);session();account.requireOpen();
+    const base=new URL('.',new URL(API_BASE,window.location.href));if(base.origin!==window.location.origin)throw new Error('E2EE_ORIGIN_MISMATCH');
+    product=webAdviceProduct(account,()=>{session();account.requireOpen();return(privateIdentityCache?.language??'en') as import('./e2ee/advice-catalogue').AdviceCatalogueLanguage;},publicAdviceCatalogueReader(base,()=>{session();account.requireOpen();}));privateAdviceProducts.set(account,product);
+  }return product;
+}
+export async function resumePrivateAdvice(){const owner=confirmedTransportOwnerId;if(!owner||!usesPrivateProductStorage(owner))throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');return(await privateAdviceProduct(owner)).resume();}
+export async function hasPendingPrivateAdvice(){const owner=confirmedTransportOwnerId;if(!owner||!usesPrivateProductStorage(owner))return false;return(await privateAdviceProduct(owner)).hasPending();}
+async function privateStoicheionProduct(ownerId:string){const current=captureAccountSessionGuard(),account=requirePrivateAccount(ownerId);let product=privateStoicheionProducts.get(account);
+  if(!product){const {E2eeStoicheionProduct}=await import('./e2ee/stoicheion-product');current();account.requireOpen();product=new E2eeStoicheionProduct(account);privateStoicheionProducts.set(account,product);}current();account.requireOpen();return product;}
+export async function resumePrivateStoicheion(kind:StoicheionDrawKind){const owner=confirmedTransportOwnerId;if(!owner||!usesPrivateProductStorage(owner))throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');return(await privateStoicheionProduct(owner)).resume(kind);}
+export async function pendingPrivateStoicheion(){const owner=confirmedTransportOwnerId;if(!owner||!usesPrivateProductStorage(owner))return[];return(await privateStoicheionProduct(owner)).pending();}
+function observePrivateProduct(ownerId:string,listener:(workspace:GenesisWorkspace)=>void,onError?:(error:Error)=>void){
+  let active=true,busy=false;const current=captureAccountSessionGuard();
+  const poll=async()=>{if(busy||document.visibilityState!=='visible')return;busy=true;
+    try{current();const product=await privatePersonalProduct(ownerId);if(navigator.onLine)await product.flush();current();
+      const workspace=await loadGenesisWorkspace();current();if(active)listener(workspace);
+    }catch(error){if(active)onError?.(error instanceof Error?error:new Error('E2EE_PRIVATE_CONTENT_UNAVAILABLE'));}finally{busy=false;}
+  };
+  const refresh=()=>{void poll();},timer=window.setInterval(refresh,30000);window.addEventListener('focus',refresh);window.addEventListener('online',refresh);window.addEventListener(PERSONAL_DOCUMENT_READY_EVENT,refresh);
+  return()=>{active=false;window.clearInterval(timer);window.removeEventListener('focus',refresh);window.removeEventListener('online',refresh);window.removeEventListener(PERSONAL_DOCUMENT_READY_EVENT,refresh);};
+}
+export function usesPrivateProductStorage(ownerId:string){return serverProtectedTransportOwners.has(ownerId);}
+/** Public reference entries are not the user's private health records. The
+ * server independently enforces the existing catalogue administrator role. */
+export async function privatePhysisCatalogueRequest<T>(ownerId:string,init:RequestInit={}):Promise<T>{
+  const current=captureAccountSessionGuard();current();requirePrivateAccount(ownerId).requireOpen();
+  const method=init.method??'GET';if(!['GET','PUT'].includes(method))throw new Error('PHYSIS_ROUTE_INVALID');
+  const result=await api<T>('/private-services/physis-catalog',init);current();requirePrivateAccount(ownerId).requireOpen();return result;
+}
+/** Read-only service metadata. These routes accept no diary text or old key and
+ * remain separate from the retired diary content transport. */
+export async function privateServiceRequest<T>(ownerId:string,service:'dream-clock'|'dream-voice',timeZone?:string,signal?:AbortSignal):Promise<T>{
+  const current=captureAccountSessionGuard(),account=requirePrivateAccount(ownerId);current();account.requireOpen();
+  if(account.mode!=='online'||confirmedTransportOwnerId!==ownerId)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');
+  if(service!=='dream-clock'&&service!=='dream-voice'||service==='dream-clock'&&(typeof timeZone!=='string'||timeZone.length>128))throw new Error('E2EE_ROUTE_FORBIDDEN');
+  const result=await api<T>(`/private-services/${service}${service==='dream-clock'?`?timeZone=${encodeURIComponent(timeZone!)}`:''}`,{cache:'no-store',signal});
+  current();account.requireOpen();return result;
+}
+/** Cached identity supplies display metadata only. Offline access still needs
+ * the independent device secret and verified saved directory; no HTTP session,
+ * device enrollment, billing or ACL is restored from this profile. */
+export function privateAccountAppearance(ownerId:string):Readonly<Pick<GenesisUser,'theme'|'darkPalette'|'featureAccess'>>|null {
+ const user=privateIdentityCache;
+ return confirmedTransportOwnerId===ownerId&&user?.uid===ownerId?{theme:user.theme,darkPalette:user.darkPalette,featureAccess:user.featureAccess}:null;
+}
+export async function restoreOfflinePrivateWorkspace(user:GenesisUser){
+  if(localSessionEnded||privateDeviceAccessBlocked()||!privateUserCacheRequired(user)||confirmedTransportOwnerId!==null&&confirmedTransportOwnerId!==user.uid)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');
+  confirmedTransportOwnerId=user.uid;privateIdentityCache=privateUserProfile(user,true);serverProtectedTransportOwners.add(user.uid);markPrivateAccountOwner(user.uid);
+  protectPrivateWorkspaceOwner(user.uid,`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${user.uid}`);
+  await waitForPrivateAccount(user.uid,user.language);requirePrivateAccount(user.uid).requireOpen();
+  const check=captureAccountSessionGuard(),{privatePreferences}=await import('./e2ee/preferences-product');check();
+  const restored=await privatePreferences(user.uid).apply(privateUserProfile(user,true));check();return restored;
+}
+async function privatePersonalProduct(ownerId:string){
+  const check=captureAccountSessionGuard();check();if(confirmedTransportOwnerId!==ownerId)throw new Error('E2EE_ACCOUNT_CHANGED');
+  const account=requirePrivateAccount(ownerId);let product=privatePersonalProducts.get(account);
+  if(!product){const {E2eePersonalProduct}=await import('./e2ee/personal-product');check();account.requireOpen();product=new E2eePersonalProduct(account);privatePersonalProducts.set(account,product);}
+  return product;
+}
+export function privateAccountHttpTransport():PrivateAccountTransport{
+  return{status:()=>e2eeRequest('/status'),directory:scopeId=>e2eeRequest('/directory',{scopeId}),command:packet=>e2eeRequest('/command',packet),
+    read:packet=>e2eeRequest('/read',packet),challenge:(scopeId,deviceId,keys)=>e2eeRequest('/challenge',{scopeId,deviceId,keys}),
+    membership:{membershipGraph:spaceId=>e2eeRequest('/membership-graph',{spaceId}),membershipState:targets=>e2eeRequest('/membership-state',{targets}),membershipPreview:(intentId,changes)=>e2eeRequest('/membership-preview',{intentId,changes}),membershipCommit:batch=>e2eeRequest('/membership',batch),
+      membershipAtomicBegin:input=>e2eeRequest('/membership-atomic-begin',input),membershipAtomicPage:input=>e2eeRequest('/membership-atomic-page',input),
+      membershipAtomicStatus:input=>e2eeRequest('/membership-atomic-status',input),membershipAtomicCancel:input=>e2eeRequest('/membership-atomic-cancel',input),membershipAtomicSeal:input=>e2eeRequest('/membership-atomic-seal',input),
+      membershipAtomicCommit:input=>e2eeRequest('/membership-atomic-commit',input),membershipAtomicReceipt:input=>e2eeRequest('/membership-atomic-receipt',input),membershipAtomicReceiptPage:input=>e2eeRequest('/membership-atomic-receipt-page',input),membershipAtomicPreview:input=>e2eeRequest('/membership-atomic-preview',input)}};
+}
+export function privateScopeSetupHttpTransport():import('./e2ee/scope-setup').ScopeSetupTransport{
+ const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;
+ const check=()=>{session();if(!owner||confirmedTransportOwnerId!==owner)throw new Error('E2EE_ACCOUNT_CHANGED');};check();
+ return{bootstrap:async packet=>{check();if(packet.command.ownerId!==owner)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');const result=await e2eeRequest('/bootstrap',packet);check();return result;},
+   directory:async scopeId=>{check();const result=await e2eeRequest<{events:import('./e2ee/commands').SignedE2eeCommand[]}>('/directory',{scopeId});check();return result;}};
+}
+export async function currentPrivateMigrationStatus(){
+ const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;
+ const check=()=>{session();if(!owner||confirmedTransportOwnerId!==owner)throw new Error('E2EE_ACCOUNT_CHANGED');};check();
+ const {validatePrivateAccountStatus}=await import('./e2ee/product-session');check();
+ const status=validatePrivateAccountStatus(await e2eeRequest('/status'));check();return{ownerId:owner!,...status};
+}
+/** Opens an explicit setup/resume operation. The caller holds an inert editor
+ * surface throughout; status discovery never starts this operation itself. */
+export async function prepareCurrentPrivateMigration(secret:Uint8Array,kit:import('./e2ee/keys').RecoveryKit,assertEditorsFrozen:()=>void){
+ const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;
+ const current=()=>{session();if(!owner||confirmedTransportOwnerId!==owner||typeof document==='undefined'||document.visibilityState!=='visible')throw new Error('E2EE_ACCOUNT_CHANGED');};current();assertEditorsFrozen();
+ const {WebProductMigration}=await import('./e2ee/web-product-migration');current();
+ return WebProductMigration.open(owner!,secret,kit,backupDataGeneration,{account:privateAccountHttpTransport(),setup:privateScopeSetupHttpTransport(),
+   request:(path,body,observation,signal)=>{current();return e2eeRequest(path,body,signal,observation);},
+   sources:async(device,directory,ports)=>{
+    current();if(workspaceUserId!==owner){
+     if(workspaceUserId)throw new Error('E2EE_ACCOUNT_CHANGED');
+     const {readDeviceMigrationResume}=await import('./e2ee/migration');current();
+     if(!await readDeviceMigrationResume(device,directory))throw new Error('E2EE_LEGACY_SNAPSHOT_REQUIRED');current();
+     workspaceUserId=owner!;
+    }
+    return createMountedPersonalMigrationSources(owner!,directory,ports);
+   },
+   fence:(device,directory)=>createPersonalMigrationTransportFence(owner!,directory,device),assertCurrent:current,assertEditorsFrozen});
+}
+/** Shared owner migration uses the same frozen surface and source/recovery
+ * sequence as personal setup. It never creates a second unlocked device. */
+export async function prepareCurrentSharedPrivateMigration(target:import('./e2ee/web-product-migration').WebSharedMigrationTarget,secret:Uint8Array,kit:import('./e2ee/keys').RecoveryKit,assertEditorsFrozen:()=>void){
+ const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId,binding=Object.freeze({...target});
+ if(!owner)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');const account=requirePrivateAccount(owner);
+ const current=()=>{session();account.requireOpen();if(confirmedTransportOwnerId!==owner||requirePrivateAccount(owner)!==account
+   ||typeof document==='undefined'||document.visibilityState!=='visible')throw new Error('E2EE_ACCOUNT_CHANGED');};current();assertEditorsFrozen();
+ const {WebProductMigration}=await import('./e2ee/web-product-migration');current();
+ const setupTransport=privateScopeSetupHttpTransport(),known=(await account.scopeSummaries()).filter(row=>row.kind===binding.kind&&row.resourceId===binding.resourceId);current();
+ if(known.length>1||known.length&&known[0].scopeId!==binding.scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+ if(!known.length){const {E2eeScopeSetup}=await import('./e2ee/scope-setup');current();
+   const setup=new E2eeScopeSetup(account.device,{...binding,ownerId:owner},setupTransport,()=>{current();assertEditorsFrozen();});
+   await setup.prepare(secret,kit,0);current();await setup.submit();current();
+ }
+ return WebProductMigration.attach(account,binding,{account:privateAccountHttpTransport(),setup:setupTransport,
+   request:(path,body,observation,signal)=>{current();return e2eeRequest(path,body,signal,observation);},
+   sources:async(_device,directory,ports)=>{current();return createCompleteMigrationSourceRegistry(owner,directory,ports);},
+   fence:(_device,directory)=>new WebSharedMigrationTransportFence(legacyTransportGate(),owner,account.personal().directory.scopeId,
+     {scopeId:directory.scopeId,kind:binding.kind,resourceId:directory.resourceId},current,async()=>{
+       current();const personal=account.personal();
+       // openScope refreshes the directory cached by the product account too.
+       const fresh=await account.openScope({scopeId:personal.directory.scopeId,kind:'personal',resourceId:owner,state:'active'},account.device.authorityPin,owner);current();return fresh.directory;
+     },()=>requireLegacyTransportWorker()),assertCurrent:current,assertEditorsFrozen});
+}
+export async function finishCurrentSharedPrivateMigration(target:import('./e2ee/web-product-migration').WebSharedMigrationTarget){
+ const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId,binding=Object.freeze({...target});
+ if(!owner)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');const account=requirePrivateAccount(owner);
+ const current=()=>{session();account.requireOpen();if(confirmedTransportOwnerId!==owner||requirePrivateAccount(owner)!==account)throw new Error('E2EE_ACCOUNT_CHANGED');};current();
+ const scope=await account.openScope({...binding,state:'active'},account.device.authorityPin,owner);current();
+ if(scope.directory.state!=='active')throw new Error('E2EE_MIGRATION_UNVERIFIED');
+ const {bootstrap}=await account.sharedRecords(binding.scopeId,binding.kind,binding.resourceId);current();await bootstrap.prepare();current();await bootstrap.flush();current();
+ const {E2eeSharedTrust}=await import('./e2ee/shared-trust');current();await new E2eeSharedTrust(owner).acceptOwned(scope.directory);current();
+ window.dispatchEvent(new Event('genesis:shared-updates'));
+}
+export async function completeCurrentPrivateSpaceCreation(id:string,secret:Uint8Array,kit:import('./e2ee/keys').RecoveryKit,assertEditorsFrozen:()=>void,
+  progress:(phase:'snapshot'|'sources'|'reconciliation'|'uploading'|'active')=>void,controller:(value:import('./e2ee/web-product-migration').WebProductMigration|null)=>void){
+ const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;
+ if(!owner)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');const account=requirePrivateAccount(owner);
+ const current=()=>{session();account.requireOpen();assertEditorsFrozen();if(confirmedTransportOwnerId!==owner||requirePrivateAccount(owner)!==account)throw new Error('E2EE_ACCOUNT_CHANGED');};current();
+ const {E2eePrivateResourceCreation}=await import('./e2ee/private-resource-create');current();
+ const creation=new E2eePrivateResourceCreation(account,privateScopeSetupHttpTransport(),current),prepared=await creation.prepare(id,secret,kit);current();
+ const intent=prepared.intent,receipt=intent.preparation;if(!receipt)throw new Error('E2EE_PRIVATE_RESOURCE_CREATE_UNVERIFIED');
+ for(const target of [{scopeId:intent.scopeId,kind:'space' as const,resourceId:intent.resourceId},{scopeId:`project:${receipt.inboxId}`,kind:'project' as const,resourceId:receipt.inboxId}]){
+   current();let opened:import('./e2ee/web-product-migration').WebProductMigration|null=null;
+   try{opened=await prepareCurrentSharedPrivateMigration(target,secret,kit,current);current();controller(opened);await opened.run(secret,kit,progress);current();opened.close();opened=null;controller(null);await finishCurrentSharedPrivateMigration(target);current();}
+   finally{opened?.close();controller(null);}
+ }
+ await creation.advance(id,'migrated');current();await creation.applyInitialValues(id);current();await creation.advance(id,'values');current();
+ await creation.issueInvitations(id);current();await creation.advance(id,'invitations');current();
+ // Invitation issuance grants no key or membership. Actual recipient access
+ // remains a separate approved-device and signed membership/rotation operation.
+ const {privateSharedRequest}=await import('./e2ee/shared-web-live');current();const result=await privateSharedRequest(owner,`/shared/spaces/${encodeURIComponent(intent.resourceId)}`);current();
+ await creation.advance(id,'complete');current();return result;
+}
+async function privateProjectCreationSession(guard:()=>void=()=>{}){
+ const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;if(!owner)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');const account=requirePrivateAccount(owner);
+ const current=()=>{guard();session();account.requireOpen();if(confirmedTransportOwnerId!==owner||requirePrivateAccount(owner)!==account)throw new Error('E2EE_ACCOUNT_CHANGED');};current();
+ const {E2eePrivateProjectCreation}=await import('./e2ee/private-project-create');current();
+ return{owner,account,current,creation:new E2eePrivateProjectCreation(account,privateScopeSetupHttpTransport(),current)};
+}
+async function privateDeviceAccessSession(){
+ const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;if(!owner)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');const account=requirePrivateAccount(owner);
+ const current=()=>{session();account.requireOpen();if(confirmedTransportOwnerId!==owner||requirePrivateAccount(owner)!==account||typeof document==='undefined'||document.visibilityState!=='visible')throw new Error('E2EE_ACCOUNT_CHANGED');};current();
+ const {E2eeDeviceAccess}=await import('./e2ee/device-access'),{E2eeSharedTrust}=await import('./e2ee/shared-trust'),{validateDeviceAccessTarget}=await import('./e2ee/device-access-contract');current();
+ const trust=new E2eeSharedTrust(owner),target=async(scopeId:string)=>{
+  current();const personal=account.personal().directory;if(scopeId===personal.scopeId)return validateDeviceAccessTarget({scopeId,ownerId:owner,kind:'personal',resourceId:owner,authority:account.device.authorityPin});
+  const pins=await trust.list();current();const matches=pins.filter(row=>row.scopeId===scopeId);if(matches.length!==1)throw new Error('E2EE_SHARED_FINGERPRINT_REQUIRED');
+  const pin=matches[0];return validateDeviceAccessTarget({scopeId,ownerId:pin.ownerId,kind:pin.kind,resourceId:pin.resourceId,authority:pin.authority});
+ };
+ const client=async(binding:import('./e2ee/device-access-contract').DeviceAccessTarget)=>{current();const actual=await target(binding.scopeId);current();
+  if(actual.ownerId!==binding.ownerId||actual.kind!==binding.kind||actual.resourceId!==binding.resourceId||actual.authority.signingKey!==binding.authority.signingKey||actual.authority.receivingKey!==binding.authority.receivingKey)throw new Error('E2EE_AUTHORITY_CHANGED');
+  if(binding.kind==='personal')return account.personal().client;const opened=await trust.open(binding.scopeId);current();const directory=opened.directory;
+  if(directory.ownerId!==binding.ownerId||directory.kind!==binding.kind||directory.resourceId!==binding.resourceId||directory.recoveryKit.authority.signingKey!==binding.authority.signingKey||directory.recoveryKit.authority.receivingKey!==binding.authority.receivingKey)throw new Error('E2EE_AUTHORITY_CHANGED');return opened.client;
+ };
+ const ports:import('./e2ee/device-access').DeviceAccessPorts={target,client,directory:async scopeId=>{current();const result=await e2eeRequest<{events:import('./e2ee/commands').SignedE2eeCommand[]}>('/directory',{scopeId});current();return result;},
+  challenge:async(binding,deviceId,keys,requestId)=>{current();const result=await e2eeRequest('/challenge',{scopeId:binding.scopeId,deviceId,keys,requestId});current();return result;},
+  command:async packet=>{current();const result=await e2eeRequest('/command',packet);current();return result;},open:async binding=>{await client(binding);current();if(binding.kind==='personal')await account.personal().client.refresh();current();window.dispatchEvent(new Event('genesis:shared-updates'));}
+ };return{access:new E2eeDeviceAccess(account,ports,current),current,account,ports};
+}
+async function privateMembershipSession(){
+ const {account,ports,current}=await privateDeviceAccessSession(),{E2eeMembershipProduct}=await import('./e2ee/membership-product'),{E2eeMembershipOwnerReview}=await import('./e2ee/membership-owner-review'),{membershipGrantReviewRequired}=await import('./e2ee/membership-contract');current();
+ const peers:import('./e2ee/membership-exchange').MembershipPeerPorts={target:ports.target,directory:ports.directory,current,
+  checkpoint:async scopeId=>{current();const value=await account.device.savedDirectory(scopeId);current();return value?.checkpoint;},
+  remember:async(target,events)=>{current();const directory=await account.device.rememberDirectory(target.scopeId,target.authority,events,target.ownerId);current();
+   const own=directory.devices.get(account.device.deviceId);if(own&&!own.revoked&&own.userId===account.ownerId){await ports.open(target);current();}}
+ };
+ const openOwned=async(plan:import('./e2ee/membership-product').MembershipScopePlan)=>{current();const target=await ports.target(plan.scopeId);current();
+  if(plan.ownerId!==account.ownerId||target.ownerId!==plan.ownerId||target.kind!==plan.kind||target.resourceId!==plan.resourceId)throw new Error('E2EE_OWNER_REQUIRED');return ports.client(target);
+ };
+ const transport=privateAccountHttpTransport().membership;if(!transport)throw new Error('E2EE_MEMBERSHIP_TRANSPORT_REQUIRED');
+ const product=new E2eeMembershipProduct(account.device,account.personal().client,transport,async scopeId=>{const target=await ports.target(scopeId);current();if(target.ownerId!==account.ownerId)throw new Error('E2EE_OWNER_REQUIRED');return ports.client(target);},current,peers);
+ const {webMembershipAtomicApply}=await import('./e2ee/membership-atomic-web-apply');current();const atomic=webMembershipAtomicApply(account,transport,peers,current);
+ const {webMembershipAtomicOwnerReviews}=await import('./e2ee/membership-atomic-web-owner');current();const atomicOwnerReview=webMembershipAtomicOwnerReviews(account,peers,openOwned,current);
+ return{account,product,atomic,atomicOwnerReview,ownerReview:new E2eeMembershipOwnerReview(account,openOwned,current),current,needsReview:(state:{hashFormat?:string;changes:unknown})=>!state.hashFormat||membershipGrantReviewRequired(state.changes)};
+}
+export async function pendingCurrentPrivateAtomicOwnerReviews(){const {atomicOwnerReview,current}=await privateMembershipSession();const value=await atomicOwnerReview.pending();current();return value;}
+export async function importCurrentPrivateAtomicOwnerReview(input:import('./e2ee/membership-atomic-review').MembershipAtomicReview){const {atomicOwnerReview,current}=await privateMembershipSession();const value=await atomicOwnerReview.create(input);current();return value;}
+export async function importCurrentPrivateAtomicOwnerPart(input:import('./e2ee/membership-atomic-review').MembershipAtomicReviewPart){const {atomicOwnerReview,current}=await privateMembershipSession();const value=await atomicOwnerReview.putPart(input);current();return value;}
+export async function readCurrentPrivateAtomicOwnerPart(fingerprint:string,kind:import('./e2ee/membership-atomic-review').MembershipAtomicReviewPart['kind'],index:number){const {atomicOwnerReview,current}=await privateMembershipSession();const value=await atomicOwnerReview.part(fingerprint,kind,index);current();return value;}
+export async function reviewCurrentPrivateAtomicOwners(fingerprint:string){const {atomicOwnerReview,current}=await privateMembershipSession();const value=await atomicOwnerReview.review(fingerprint);current();return value;}
+export async function approveCurrentPrivateAtomicOwner(fingerprint:string,scopeId:string,displayedFingerprint:string,roles:import('./e2ee/membership-atomic-preview').MembershipAtomicScopePreview['roles']){const {atomicOwnerReview,current}=await privateMembershipSession();const value=await atomicOwnerReview.approve(fingerprint,scopeId,displayedFingerprint,roles);current();return value;}
+export async function acceptCurrentPrivateAtomicOwnerApproval(fingerprint:string,input:import('./e2ee/membership-atomic-review').MembershipAtomicOwnerApproval){const {atomicOwnerReview,current}=await privateMembershipSession();const value=await atomicOwnerReview.acceptApproval(fingerprint,input);current();return value;}
+export async function exportCurrentPrivateAtomicOwnerApproval(fingerprint:string,scopeId:string){const {atomicOwnerReview,current}=await privateMembershipSession();const value=await atomicOwnerReview.exportApproval(fingerprint,scopeId);current();return value;}
+export async function prepareCurrentPrivateAtomicReview(intentId:string,productPackets:import('./e2ee/commands').SignedE2eeCommand[],createdAt:string){const {account,atomicOwnerReview,current}=await privateMembershipSession(),{prepareMembershipAtomicReview}=await import('./e2ee/membership-atomic-review-prepare');current();const value=await prepareMembershipAtomicReview(account.membershipAtomic(),atomicOwnerReview,intentId,productPackets,current,createdAt);current();return value;}
+export async function currentPrivatePersonalRestore(action:'pending'|'inspect'|'preview'|'confirm'|'apply',id?:string,fingerprint?:string,guard:()=>void=()=>{}){
+ const {account,current:baseCurrent}=await privateMembershipSession(),current=()=>{baseCurrent();guard();},{webPersonalContentRestore}=await import('./e2ee/personal-content-restore-web');current();const restore=webPersonalContentRestore(account,current);
+ if(action==='pending')return restore.pending();if(!id)throw new Error('E2EE_RESTORE_REQUIRED');if(action==='inspect')return restore.inspect(id);if(action==='preview')return restore.preview(id);if(action==='confirm'){if(!fingerprint)throw new Error('E2EE_RESTORE_REVIEW_REQUIRED');return restore.confirm(id,fingerprint);}return restore.apply(id);
+}
+export async function prepareCurrentPrivatePersonalRestore(payload:unknown,sectionIndex:number,entryIndex:number,versionId:string,guard:()=>void=()=>{}){
+ const {account,current:baseCurrent}=await privateMembershipSession(),current=()=>{baseCurrent();guard();},{personalRestoreArchiveSource}=await import('./e2ee/personal-content-restore-archive'),{webPersonalContentRestore}=await import('./e2ee/personal-content-restore-web');current();
+ const value=await personalRestoreArchiveSource(account.ownerId,payload,sectionIndex,entryIndex,versionId,current);current();const restore=webPersonalContentRestore(account,current),id=await restore.create(value.backupId,value.source);current();return restore.preview(id);
+}
+export async function pendingCurrentPrivateInvitationAdmissions(){const {account,current}=await privateMembershipSession(),{webInvitationAdmissions}=await import('./e2ee/invitation-admission');current();return webInvitationAdmissions(account,current);}
+export async function currentPrivateDomainRestore(action:'pending'|'inspect'|'preview'|'confirm'|'apply',id?:string,fingerprint?:string,guard:()=>void=()=>{}){
+ const {account,current:baseCurrent}=await privateMembershipSession(),current=()=>{baseCurrent();guard();},{webDomainContentRestore}=await import('./e2ee/domain-content-restore-web');current();const restore=webDomainContentRestore(account,current);
+ if(action==='pending')return restore.pending();if(!id)throw new Error('E2EE_RESTORE_REQUIRED');if(action==='inspect')return restore.inspect(id);if(action==='preview')return restore.preview(id);if(action==='confirm'){if(!fingerprint)throw new Error('E2EE_RESTORE_REVIEW_REQUIRED');return restore.confirm(id,fingerprint);}return restore.apply(id);
+}
+export async function currentPrivateSharedRestore(action:'pending'|'inspect'|'preview'|'confirm'|'apply',id?:string,fingerprint?:string,guard:()=>void=()=>{}){
+ const {account,current:baseCurrent}=await privateMembershipSession(),current=()=>{baseCurrent();guard();},{webSharedContentRestore}=await import('./e2ee/shared-content-restore-web');current();const restore=webSharedContentRestore(account,current);
+ if(action==='pending')return restore.pending();if(!id)throw new Error('E2EE_RESTORE_REQUIRED');if(action==='inspect')return restore.inspect(id);if(action==='preview')return restore.preview(id);if(action==='confirm'){if(!fingerprint)throw new Error('E2EE_RESTORE_REVIEW_REQUIRED');return restore.confirm(id,fingerprint);}return restore.apply(id);
+}
+export async function prepareCurrentPrivateSharedRestore(payload:unknown,sectionIndex:number,entryIndex:number,versionId:string,guard:()=>void=()=>{}){
+ const {account,current:baseCurrent}=await privateMembershipSession(),current=()=>{baseCurrent();guard();},{sharedRestoreArchiveSource}=await import('./e2ee/shared-content-restore-archive'),{webSharedContentRestore}=await import('./e2ee/shared-content-restore-web');current();
+ const value=await sharedRestoreArchiveSource(account.ownerId,payload,sectionIndex,entryIndex,versionId,current);current();const restore=webSharedContentRestore(account,current),id=await restore.create(value.backupId,value.source);current();return restore.preview(id);
+}
+export async function prepareCurrentPrivateDomainRestore(payload:unknown,sectionIndex:number,entryIndex:number,versionId:string,guard:()=>void=()=>{}){
+ const {account,current:baseCurrent}=await privateMembershipSession(),current=()=>{baseCurrent();guard();},{domainRestoreArchiveSource}=await import('./e2ee/domain-content-restore-archive'),{webDomainContentRestore}=await import('./e2ee/domain-content-restore-web');current();
+ const value=await domainRestoreArchiveSource(account.ownerId,payload,sectionIndex,entryIndex,versionId,current);current();const restore=webDomainContentRestore(account,current),id=await restore.create(value.backupId,value.source);current();return restore.preview(id);
+}
+export async function createCurrentPrivateMembershipOperation(operation:import('./e2ee/membership-operation-plan').MembershipOperation){const {account,current}=await privateMembershipSession(),{privateMembershipOperationDrafts}=await import('./e2ee/membership-web-operations');current();const drafts=privateMembershipOperationDrafts(account.ownerId),id=await drafts.create(operation);current();const state=await drafts.preview(id);current();return state;}
+export async function pendingCurrentPrivateMembershipOperations(){const {account,current}=await privateMembershipSession(),{privateMembershipOperationDrafts}=await import('./e2ee/membership-web-operations');current();const value=await privateMembershipOperationDrafts(account.ownerId).pending();current();return value;}
+export async function loadCurrentPrivateMembershipOperation(id:string){const {account,current}=await privateMembershipSession(),{privateMembershipOperationDrafts}=await import('./e2ee/membership-web-operations');current();const value=await privateMembershipOperationDrafts(account.ownerId).inspect(id);current();return value;}
+export async function completedCurrentPrivateMembershipOperation(id:string){
+ const {account,atomic,current}=await privateMembershipSession(),{privateMembershipOperationDrafts}=await import('./e2ee/membership-web-operations'),{membershipOperationResult}=await import('./e2ee/membership-operation-result');current();
+ const draft=await privateMembershipOperationDrafts(account.ownerId).follow(id);current();if(!draft.started){if(draft.cancelled)throw new Error('E2EE_MEMBERSHIP_CANCELLED');return null;}
+ let receipt:import('./e2ee/membership-atomic-receipts').MembershipAtomicReceipt|null=null;
+ if(draft.proposal!.plan.scopeIds.length){let state;try{state=await atomic.inspect(draft.intentId);}catch(error){if(error instanceof Error&&error.message==='E2EE_MEMBERSHIP_FINAL_REVIEW_REQUIRED')return null;throw error;}current();if(!state.complete)return null;receipt=state.receipt;}
+ return membershipOperationResult(draft,receipt);
+}
+export async function describeCurrentPrivateMembershipScope(scopeId:string){const {account,current}=await privateMembershipSession(),{E2eeSharedTrust}=await import('./e2ee/shared-trust'),{validateSharedLiveContext}=await import('./e2ee/shared-live');current();
+ const {directory}=await new E2eeSharedTrust(account.ownerId).open(scopeId);current();if(directory.kind==='personal')throw new Error('E2EE_SCOPE_BINDING_MISMATCH');const {records}=await account.sharedRecords(scopeId,directory.kind,directory.resourceId);current();const root=await records.get(directory.kind,directory.resourceId);current();
+ const result=await account.shared(scopeId,directory.kind,directory.resourceId).client.readProductContext();current();const context=validateSharedLiveContext(result.context),body=root.body as import('./e2ee/shared-domain').SharedRecordBody|null;
+ return{scopeId,ownerId:directory.ownerId,kind:directory.kind,resourceId:directory.resourceId,title:typeof body?.record.title==='string'?body.record.title:'',members:context.members.map(row=>({userId:String(row.userId),displayName:String(row.displayName)}))};}
+export async function previewCurrentPrivateMembershipOperation(id:string){const {account,current}=await privateMembershipSession(),{privateMembershipOperationDrafts}=await import('./e2ee/membership-web-operations');current();const value=await privateMembershipOperationDrafts(account.ownerId).preview(id);current();return value;}
+export async function confirmCurrentPrivateMembershipOperation(id:string,fingerprint:string){const {account,current}=await privateMembershipSession(),{privateMembershipOperationDrafts}=await import('./e2ee/membership-web-operations');current();const value=await privateMembershipOperationDrafts(account.ownerId).confirm(id,fingerprint);current();return value;}
+export async function composeCurrentPrivateMembershipOperation(id:string){const {account,atomicOwnerReview,current}=await privateMembershipSession(),{webMembershipOperationComposer}=await import('./e2ee/membership-web-operations');current();const value=await webMembershipOperationComposer(account,atomicOwnerReview,current).compose(id);current();return value;}
+export async function prepareCurrentPrivateMembershipPackets(id:string,fingerprint:string){const {account,atomicOwnerReview,current}=await privateMembershipSession(),{webMembershipOperationComposer}=await import('./e2ee/membership-web-operations');current();const value=await webMembershipOperationComposer(account,atomicOwnerReview,current).packets(id,fingerprint);current();return value;}
+export async function cancelCurrentPrivateMembershipOperation(id:string){const {account,current}=await privateMembershipSession(),{privateMembershipOperationDrafts}=await import('./e2ee/membership-web-operations'),{cancelMembershipOperation}=await import('./e2ee/membership-operation-resolution');current();const value=await cancelMembershipOperation(id,{current,drafts:privateMembershipOperationDrafts(account.ownerId),stager:account.membershipAtomic()});current();return value;}
+export async function resolveCurrentPrivateMembershipOperation(id:string){const {account,current}=await privateMembershipSession(),{privateMembershipOperationDrafts}=await import('./e2ee/membership-web-operations'),{resolveMembershipOperation}=await import('./e2ee/membership-operation-resolution');current();const value=await resolveMembershipOperation(id,{current,drafts:privateMembershipOperationDrafts(account.ownerId),stager:account.membershipAtomic()});current();return value;}
+export async function exportCurrentPrivateMembershipReviewFile(fingerprint:string){const {atomicOwnerReview,current}=await privateMembershipSession(),{exportMembershipReviewFile}=await import('./e2ee/membership-review-file');current();return exportMembershipReviewFile(fingerprint,atomicOwnerReview,current);}
+export async function importCurrentPrivateMembershipReviewFile(file:Blob){const {atomicOwnerReview,current}=await privateMembershipSession(),{importMembershipReviewFile,membershipReviewFileChunks}=await import('./e2ee/membership-review-file');current();const value=await importMembershipReviewFile(membershipReviewFileChunks(file),atomicOwnerReview,current);current();return value;}
+export async function pendingCurrentPrivateAtomicMembership(){const {atomic,current}=await privateMembershipSession();const values=await atomic.pending();current();return values;}
+export async function describeCurrentPrivateAtomicMembership(id:string){const {atomic,current}=await privateMembershipSession();const view=await atomic.describe(id);current();return view;}
+export async function confirmCurrentPrivateAtomicMembership(id:string,displayedFingerprint:string){const {atomic,current}=await privateMembershipSession();const state=await atomic.confirm(id,displayedFingerprint);current();return state;}
+export async function submitCurrentPrivateAtomicMembership(id:string){const {atomic,current}=await privateMembershipSession();const receipt=await atomic.submit(id);current();window.dispatchEvent(new Event('genesis:shared-updates'));return receipt;}
+export async function reconcileCurrentPrivateAtomicMembership(id:string){const {atomic,current}=await privateMembershipSession();const receipt=await atomic.reconcile(id);current();window.dispatchEvent(new Event('genesis:shared-updates'));return receipt;}
+export async function pendingCurrentPrivateMembership(){const {product,ownerReview,current,needsReview}=await privateMembershipSession(),ids=await product.pending(),intents=[];current();
+ for(const id of ids){const row=await product.inspect(id);current();intents.push({id,scopeIds:row.scopeIds,complete:Boolean(row.result),reviewRequired:needsReview(row)});}
+ const reviews=await ownerReview.list();current();return{intents,ownerReviews:reviews.map(row=>({id:row.id,scopeId:row.scopeId,complete:Boolean(row.packet)}))};
+}
+export async function startCurrentPrivateMembership(changes:import('./e2ee/membership-product').MembershipChange[],scopeIds:string[]){const {product,current}=await privateMembershipSession();const id=await product.create(changes,scopeIds);current();await product.preview(id);current();return product.exportReview(id);}
+export async function loadCurrentPrivateMembership(id:string){const {product,current,needsReview}=await privateMembershipSession();const state=await product.inspect(id);current();return{state,review:state.preview&&!needsReview(state)?await product.exportReview(id):null};}
+export async function previewCurrentPrivateMembership(id:string){const {product,current}=await privateMembershipSession();await product.preview(id);current();return product.exportReview(id);}
+export async function prepareCurrentPrivateMembership(id:string,displayedFingerprint:string){const {product,current}=await privateMembershipSession(),view=await product.exportReview(id);current();
+ if(view.fingerprint!==displayedFingerprint)throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');const reviews=view.request.preview.scopePlans.map(plan=>({scopeId:plan.scopeId,roles:structuredClone(plan.roles)}));
+ const batch=await product.prepare(id,reviews);current();return batch;
+}
+export async function importCurrentPrivateMembershipApproval(id:string,input:string){const {product,current}=await privateMembershipSession(),{parseLegacyMigrationJson}=await import('./e2ee/legacy-json');current();
+ const result=await product.importOwnerApproval(id,parseLegacyMigrationJson(input,'E2EE_MEMBERSHIP_REVIEW_MISMATCH',2*1024*1024) as import('./e2ee/membership-exchange').MembershipOwnerApproval);current();return result;
+}
+export async function approveCurrentPrivateMembershipOwner(input:string,scopeId:string,comparedFingerprint:string){
+ const {ownerReview,current}=await privateMembershipSession(),{parseLegacyMigrationJson}=await import('./e2ee/legacy-json'),{validateMembershipReviewRequest}=await import('./e2ee/membership-exchange');current();
+ const request=validateMembershipReviewRequest(parseLegacyMigrationJson(input,'E2EE_MEMBERSHIP_REVIEW_MISMATCH',2*1024*1024)),plan=request.preview.scopePlans.find(row=>row.scopeId===scopeId);if(!plan)throw new Error('E2EE_MEMBERSHIP_REVIEW_MISMATCH');
+ const result=await ownerReview.approve(request,scopeId,comparedFingerprint,structuredClone(plan.roles));current();return result;
+}
+export async function exportCurrentPrivateMembershipOwner(id:string){const {ownerReview,current}=await privateMembershipSession();const result=await ownerReview.export(id);current();return result;}
+export async function submitCurrentPrivateMembership(id:string){const {product,current}=await privateMembershipSession();const result=await product.submit(id);current();window.dispatchEvent(new Event('genesis:shared-updates'));return result;}
+async function privateDeviceAccessView(state:import('./e2ee/device-access').DeviceAccessState,current:()=>void){
+ const {deviceAccessFingerprint}=await import('./e2ee/device-access-contract');current();const fingerprint=state.request?await deviceAccessFingerprint(state.request):null;current();return{state,fingerprint};
+}
+export async function pendingCurrentPrivateDeviceAccess(){const {access,current}=await privateDeviceAccessSession();const rows=await access.pending();current();return rows.map(row=>({id:row.id,mode:row.mode,scopeId:row.target.scopeId,complete:row.complete}));}
+export async function createCurrentPrivateDeviceAccess(scopeId:string){const {access,current}=await privateDeviceAccessSession();const id=await access.create(scopeId);current();const state=await access.request(id);current();return privateDeviceAccessView(state,current);}
+export async function loadCurrentPrivateDeviceAccess(id:string){const {access,current}=await privateDeviceAccessSession();let state=await access.inspect(id);current();if(state.mode==='request'&&!state.request){state=await access.request(id);current();}return privateDeviceAccessView(state,current);}
+export async function approveCurrentPrivateDeviceAccess(input:string,comparedFingerprint:string){
+ const {access,current}=await privateDeviceAccessSession(),{parseLegacyMigrationJson}=await import('./e2ee/legacy-json'),{validateDeviceAccessRequest}=await import('./e2ee/device-access-contract');current();
+ const state=await access.approve(validateDeviceAccessRequest(parseLegacyMigrationJson(input,'E2EE_DEVICE_ACCESS_INVALID',128*1024)),comparedFingerprint);current();return privateDeviceAccessView(state,current);
+}
+export async function submitCurrentPrivateDeviceAccess(id:string,input:string){
+ const {access,current}=await privateDeviceAccessSession();if(input.trim()){
+  const {parseLegacyMigrationJson}=await import('./e2ee/legacy-json');current();await access.stageApproval(id,parseLegacyMigrationJson(input,'E2EE_DEVICE_ACCESS_INVALID',128*1024) as import('./e2ee/commands').SignedE2eeCommand);current();
+ }
+ const state=await access.submit(id);current();return privateDeviceAccessView(state,current);
+}
+export async function previewCurrentPrivateProjectCreation(id:string,refresh=false,guard:()=>void=()=>{}){
+ const {account,creation,current}=await privateProjectCreationSession(guard);let intent=await creation.inspect(id);current();
+ if(!intent.started&&(!intent.topology||refresh)){intent=await creation.preview(id);current();}
+ if(!intent.topology)throw new Error('E2EE_PROJECT_TOPOLOGY_REQUIRED');
+ const {validateSharedLiveContext}=await import('./e2ee/shared-live'),{privateProjectTopologyHash}=await import('./e2ee/private-project-create');current();
+ if(intent.started)return{intent,topologyHash:privateProjectTopologyHash(intent.topology),members:intent.topology.reviewedMembers.map(row=>({...row,displayName:''}))};
+ const {E2eeSharedTrust}=await import('./e2ee/shared-trust');current();await new E2eeSharedTrust(account.ownerId).open(intent.topology.spaceAnchor.scopeId);current();
+ const response=await account.shared(intent.topology.spaceAnchor.scopeId,'space',intent.input.spaceId).client.readProductContext();current();
+ const context=validateSharedLiveContext(response.context);if(context.spaceId!==intent.input.spaceId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+ // Names are identity display context only. The exact user IDs and roles below
+ // are the durable proposal; this grants no device approval or key capsule.
+ return{intent,topologyHash:privateProjectTopologyHash(intent.topology),members:intent.topology.reviewedMembers.map(row=>({...row,displayName:(context.members.find(member=>member.userId===row.userId)?.displayName as string|undefined)??''}))};
+}
+export async function confirmCurrentPrivateProjectCreationReview(id:string,displayedHash:string,guard:()=>void=()=>{}){
+ const {creation,current}=await privateProjectCreationSession(guard);await creation.confirmReview(id,displayedHash);current();return previewCurrentPrivateProjectCreation(id,false,current);
+}
+export async function resolveCurrentPrivateProjectCreation(id:string,secret:Uint8Array,kit:import('./e2ee/keys').RecoveryKit,guard:()=>void){
+ const {creation,current}=await privateProjectCreationSession(guard);const intent=await creation.resolveAndRetry(id,secret,kit);current();
+ return{creationId:intent.intentId,target:{scopeId:intent.scopeId,kind:'project' as const,resourceId:intent.resourceId}};
+}
+export async function completeCurrentPrivateProjectCreation(id:string,secret:Uint8Array,kit:import('./e2ee/keys').RecoveryKit,assertEditorsFrozen:()=>void,
+ progress:(phase:'snapshot'|'sources'|'reconciliation'|'uploading'|'active')=>void,controller:(value:import('./e2ee/web-product-migration').WebProductMigration|null)=>void){
+ const {owner,creation,current}=await privateProjectCreationSession(assertEditorsFrozen),prepared=await creation.prepare(id,secret,kit);current();const intent=prepared.intent;
+ const target={scopeId:intent.scopeId,kind:'project' as const,resourceId:intent.resourceId};let opened:import('./e2ee/web-product-migration').WebProductMigration|null=null;
+ try{opened=await prepareCurrentSharedPrivateMigration(target,secret,kit,current);current();controller(opened);await opened.run(secret,kit,progress);current();opened.close();opened=null;controller(null);await finishCurrentSharedPrivateMigration(target);current();}
+ finally{opened?.close();controller(null);}
+ await creation.markMigrated(id);current();await creation.applyInitialValues(id);current();
+ const {privateSharedRequest}=await import('./e2ee/shared-web-live');current();const result=await privateSharedRequest(owner,`/shared/projects/${encodeURIComponent(intent.resourceId)}`);current();
+ await creation.complete(id);current();return result;
+}
+export async function pendingCurrentPrivateCreations(){
+ const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;if(!owner)throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');const account=requirePrivateAccount(owner);
+ const current=()=>{session();account.requireOpen();if(confirmedTransportOwnerId!==owner||requirePrivateAccount(owner)!==account)throw new Error('E2EE_ACCOUNT_CHANGED');};current();
+ const {E2eePrivateResourceCreation}=await import('./e2ee/private-resource-create'),{E2eePrivateProjectCreation}=await import('./e2ee/private-project-create');current();
+ const spaces=await new E2eePrivateResourceCreation(account,privateScopeSetupHttpTransport(),current).pending();current();
+ const projects=await new E2eePrivateProjectCreation(account,privateScopeSetupHttpTransport(),current).pending();current();
+ return [...spaces,...projects].map(row=>({intentId:row.intentId,scopeId:row.scopeId,resourceId:row.resourceId,kind:row.kind,input:{title:row.input.title}}));
+}
+/** Public personal authority export for an independently compared new device. */
+export async function currentPrivatePersonalDeviceTarget(){const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;if(!owner)throw new Error('E2EE_ACCOUNT_CHANGED');const account=requirePrivateAccount(owner),scope=account.personal();account.requireOpen();session();
+ const {validateDeviceAccessTarget}=await import('./e2ee/device-access-contract'),{personalDeviceTargetFingerprint}=await import('./e2ee/personal-device-target');session();account.requireOpen();
+ const target=validateDeviceAccessTarget({ownerId:owner,scopeId:scope.directory.scopeId,kind:'personal',resourceId:owner,authority:account.device.authorityPin});return{target,fingerprint:personalDeviceTargetFingerprint(target)};
+}
+async function personalDeviceEntryForeground(assertForeground:()=>void){
+ const session=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;
+ const current=()=>{session();assertForeground();if(!owner||!serverProtectedTransportOwners.has(owner)||confirmedTransportOwnerId!==owner||typeof document==='undefined'||document.visibilityState!=='visible')throw new Error('E2EE_ACCOUNT_CHANGED');};current();
+ const {validatePrivateAccountStatus}=await import('./e2ee/product-session');current();const status=validatePrivateAccountStatus(await e2eeRequest('/status'));current();const personal=status.scopes.filter(row=>row.kind==='personal'&&row.resourceId===owner&&row.state==='active');if(personal.length!==1)throw new Error('E2EE_PERSONAL_SCOPE_REQUIRED');
+ const transport=privateAccountHttpTransport(),ports:import('./e2ee/personal-device-entry').PersonalDeviceEntryPorts={transport,challenge:async(target,deviceId,keys,requestId)=>{current();const value=await e2eeRequest('/challenge',{scopeId:target.scopeId,deviceId,keys,requestId});current();return value;}};
+ return{owner:owner!,scopeId:personal[0].scopeId,ports,current};
+}
+export async function beginCurrentPrivatePersonalDeviceEntry(secret:Uint8Array,input:string,comparedFingerprint:string,assertForeground:()=>void){
+ const {owner,scopeId,ports,current}=await personalDeviceEntryForeground(assertForeground),{ComparedPersonalDeviceTarget}=await import('./e2ee/personal-device-target'),{WebPersonalDeviceEntry}=await import('./e2ee/personal-device-entry'),{parseLegacyMigrationJson}=await import('./e2ee/legacy-json');current();
+ const target=ComparedPersonalDeviceTarget.compare(parseLegacyMigrationJson(input,'E2EE_DEVICE_ACCESS_INVALID',8192),comparedFingerprint,owner);if(target.target.scopeId!==scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');return WebPersonalDeviceEntry.begin(target,secret,ports,current);
+}
+export async function resumeCurrentPrivatePersonalDeviceEntry(secret:Uint8Array,assertForeground:()=>void){
+ const {owner,scopeId,ports,current}=await personalDeviceEntryForeground(assertForeground),{WebPersonalDeviceEntry}=await import('./e2ee/personal-device-entry');current();const entry=await WebPersonalDeviceEntry.resume(owner,secret,ports,current);current();if(entry.target.scopeId!==scopeId){entry.close();throw new Error('E2EE_SCOPE_BINDING_MISMATCH');}return entry;
+}
+export async function replaceCurrentPrivatePersonalDeviceEntry(oldSecret:Uint8Array,newSecret:Uint8Array,input:string,comparedFingerprint:string,assertForeground:()=>void){
+ const {owner,scopeId,ports,current}=await personalDeviceEntryForeground(assertForeground),{ComparedPersonalDeviceTarget}=await import('./e2ee/personal-device-target'),{WebPersonalDeviceEntry}=await import('./e2ee/personal-device-entry'),{parseLegacyMigrationJson}=await import('./e2ee/legacy-json');current();
+ const target=ComparedPersonalDeviceTarget.compare(parseLegacyMigrationJson(input,'E2EE_DEVICE_ACCESS_INVALID',8192),comparedFingerprint,owner);if(target.target.scopeId!==scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');return WebPersonalDeviceEntry.replaceRevoked(target,oldSecret,newSecret,ports,current);
+}
+export async function unlockCurrentPrivateAccount(secret:string,kit?:import('./e2ee/keys').RecoveryKit,mode:'online'|'offline'='online'){
+  const check=captureAccountSessionGuard(),owner=confirmedTransportOwnerId;
+  if(!owner||!serverProtectedTransportOwners.has(owner))throw new Error('E2EE_ACCOUNT_BINDING_REQUIRED');
+  await unlockPrivateAccount(secret,privateAccountHttpTransport(),()=>{check();if(confirmedTransportOwnerId!==owner)throw new Error('E2EE_ACCOUNT_CHANGED');},kit,async account=>{
+    const {retainEncryptedUserCache}=await import('./e2ee/user-cache-retention');check();account.requireOpen();
+    await retainEncryptedUserCache(account.device,()=>{check();account.requireOpen();});check();
+    const {E2eePersonalProduct}=await import('./e2ee/personal-product');check();account.requireOpen();
+    const product=new E2eePersonalProduct(account);await product.load(account.mode);check();account.requireOpen();
+    privatePersonalProducts.set(account,product);installPrivateWorkspaceStorage(owner,`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${owner}`,{
+      assertCurrent:()=>{check();account.requireOpen();},read:()=>product.snapshot(),write:value=>product.stageSnapshot(value)});
+  },mode);
+  if(typeof window!=='undefined')window.dispatchEvent(new Event(PERSONAL_DOCUMENT_READY_EVENT));
+}
+export async function e2eeRequest<T>(path:'/status'|'/bootstrap'|'/command'|'/read'|'/challenge'|'/directory'|'/source'|'/membership-state'|'/membership-preview'|'/membership'|'/membership-graph'|'/membership-atomic-begin'|'/membership-atomic-page'|'/membership-atomic-status'|'/membership-atomic-cancel'|'/membership-atomic-seal'|'/membership-atomic-commit'|'/membership-atomic-receipt'|'/membership-atomic-receipt-page'|'/membership-atomic-preview',body?:unknown,signal?:AbortSignal,observation?:E2eeHttpObservation) {
+  try{
+    if(!isE2eeResponsePath(`/e2ee/v1${path}`)||(path==='/status')!==(body===undefined))throw new Error('E2EE_ROUTE_FORBIDDEN');
+    return await api<T>(`/e2ee/v1${path}`,{method:body===undefined?'GET':'POST',cache:'no-store',signal,...(body===undefined?{}:{body:JSON.stringify(body)})},{e2eeObservation:observation});
+  }catch(error){
+    if(['/read','/status','/directory','/membership-graph','/membership-state'].includes(path)&&!observation&&error instanceof GenesisApiError&&error.status===429&&error.retryAfterSeconds!==null){
+      const {E2eeReadRateError}=await import('./e2ee/read-rate-retry');throw new E2eeReadRateError(error.retryAfterSeconds);
+    }
+    const code=error instanceof GenesisApiError?e2eeHttpErrorCode(error.status,error.payload):null;if(code)throw new Error(code);throw error;
+  }
+  finally{observation?.close();}
+}
+
+/** Independent encrypted-file transport. No legacy backup, identity publication
+ * or provider URL is accepted through this API. */
+export async function privateDriveRequest(ownerId:string,path:'status'|'web-connect'|'disconnect'|'prepare'|'commit'|'list'|'download',body?:unknown,signal?:AbortSignal):Promise<unknown>{
+  const current=captureMessagingSessionGuard(ownerId);current();
+  if(!isE2eeResponsePath(`/private-drive/v1/${path}`)||(path==='status')!==(body===undefined))throw new Error('DRIVE_ROUTE_FORBIDDEN');
+  const result=await apiOverHttp<unknown>(`/private-drive/v1/${path}`,{method:body===undefined?'GET':'POST',cache:'no-store',signal,headers:{'X-Genesis-Account-Id':ownerId},...(body===undefined?{}:{body:JSON.stringify(body)})});
+  current();return result;
+}
+
+/** Transport exclusion only. The product must combine this with every mounted
+ * editor/local writer fence; this factory does not activate a migration. */
+export function createPersonalMigrationTransportFence(userId:string,directory:import('./e2ee/directory').VerifiedDirectory,
+  device:import('./e2ee/device-vault').UnlockedWebDevice) {
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();device.requireOpen();if(confirmedTransportOwnerId!==userId||device.ownerId!==userId)throw new Error('E2EE_ACCOUNT_CHANGED');};check();
+  if(directory.kind!=='personal'||directory.ownerId!==userId||directory.resourceId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+  return new WebMigrationTransportFence(legacyTransportGate(),userId,directory.scopeId,check,()=>requireLegacyTransportWorker(),()=>{
+    check();const prior=localMigrationMarker(userId);if(!prior)return null;
+    if(prior.scopeId!==directory.scopeId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');return{token:prior.token,phase:prior.phase};
+  });
+}
+
+/** Real read-only workspace migration sources. The caller must still provide the
+ * mounted editor capture and the coordinator's durable local/multitab fence.
+ * This factory does not start a migration or switch the active product writer.
+ */
+export async function createPersonalWorkspaceMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyWorkspace'>,
+  captureCurrent:()=>unknown|null,review?:import('./e2ee/workspace-source').WorkspaceSourcePorts['review']) {
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const {PersonalWorkspaceSource}=await import('./e2ee/workspace-source');check();
+  return new PersonalWorkspaceSource(userId,scopeId,{storage:migrationSourceStorage(userId),assertCurrent:check,
+    memory:()=>{check();return{ownerId:workspaceUserId,key:workspaceKey,version:workspaceVersion,generation:backupDataGeneration,reconciliationRequired:backupReconciliationRequired,deviceId:workspaceDeviceId,
+      base:workspaceBase,baseMetadata:workspaceBaseMetadata,metadata:workspaceSyncMetadata,current:captureCurrent(),draftSource:workspaceDraftSource};},
+    legacyWorkspace:context=>transport.legacyWorkspace(context),review});
+}
+
+/** Read-only Aurora source factory. The mounted callback must capture the real
+ * repository base/revision with its current editor document. Product migration
+ * still requires the complete source registry and persistent owner fence. */
+export async function createPersonalAuroraMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyAurora'>,
+  captureCurrent:()=>import('./e2ee/aurora-source').AuroraMigrationMemory['current']) {
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const {PersonalAuroraSource}=await import('./e2ee/aurora-source');check();
+  return new PersonalAuroraSource(userId,scopeId,{storage:migrationSourceStorage(userId),assertCurrent:check,
+    memory:()=>{check();return{ownerId:workspaceUserId,legacyKey:workspaceKey,generation:backupDataGeneration,
+      reconciliationRequired:backupReconciliationRequired,current:captureCurrent()};},legacyAurora:context=>transport.legacyAurora(context)});
+}
+
+/** Exact task cache/queue capture, without readPending's attribution or writers.
+ * The product coordinator must fence every mounted editor before calling it. */
+export async function createPersonalTasksMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyTasks'>,
+  captureCurrent:()=>Pick<import('./e2ee/tasks-source').TasksMigrationMemory,'tasks'|'editors'>,
+  review?:import('./e2ee/tasks-source').TasksSourcePorts['review'],
+  reviewProviderHistory?:import('./e2ee/tasks-source').TasksSourcePorts['reviewProviderHistory']) {
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const {PersonalTasksSource}=await import('./e2ee/tasks-source');check();
+  return new PersonalTasksSource(userId,scopeId,{storage:migrationSourceStorage(userId),assertCurrent:check,
+    memory:()=>{check();return{...captureCurrent(),ownerId:workspaceUserId,legacyKey:workspaceKey,generation:backupDataGeneration,
+      reconciliationRequired:backupReconciliationRequired};},legacyTasks:context=>transport.legacyTasks(context),review,reviewProviderHistory});
+}
+
+/** Exact owner-scoped capture only; product migration supplies every mounted
+ * editor, the complete source registry and persistent owner/device lifecycle. */
+export async function createPersonalDiaryMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyDiary'>,
+  captureCurrent:()=>Pick<import('./e2ee/diary-source').DiaryMigrationMemory,'records'|'editors'>,
+  review?:import('./e2ee/diary-source').DiarySourcePorts['review']) {
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const {PersonalDiarySource}=await import('./e2ee/diary-source');check();
+  return new PersonalDiarySource(userId,scopeId,{storage:migrationSourceStorage(userId),assertCurrent:check,
+    memory:()=>{check();return{...captureCurrent(),ownerId:workspaceUserId,legacyKey:workspaceKey,generation:backupDataGeneration,
+      reconciliationRequired:backupReconciliationRequired};},legacyDiary:context=>transport.legacyDiary(context),review});
+}
+
+export async function createPersonalMindmapsMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyMindmapsPage'>,
+  captureCurrent:()=>Pick<import('./e2ee/mindmaps-source').MindmapsMigrationMemory,'records'|'editors'|'localWork'>,
+  review?:import('./e2ee/mindmaps-source').MindmapsSourcePorts['review']) {
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const [{PersonalMindmapsSource},{collectLegacyPersonalPages}]=await Promise.all([import('./e2ee/mindmaps-source'),import('./e2ee/legacy-pages')]);check();
+  return new PersonalMindmapsSource(userId,scopeId,{storage:migrationSourceStorage(userId),assertCurrent:check,
+    memory:()=>{check();return{...captureCurrent(),ownerId:workspaceUserId,legacyKey:workspaceKey,generation:backupDataGeneration,reconciliationRequired:backupReconciliationRequired};},
+    legacyMindmaps:context=>collectLegacyPersonalPages(context,'mindmaps',{assertCurrent:check,readPage:(value,table,offset)=>transport.legacyMindmapsPage(value,table,offset)}),review});
+}
+
+/** Capture retained Physis queues/forms before signed source IO. A cold/unmounted
+ * Android source uses its native capability instead of exporting account keys. */
+export async function createPersonalPhysisMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyPhysisPage'>,
+  options:Pick<import('./e2ee/physis-source').PhysisSourcePorts,'independentUnlock'|'review'>={}) {
+  const session=captureAccountSessionGuard();const check=()=>{session();if(confirmedTransportOwnerId!==userId||workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const [{PersonalPhysisSource},{collectLegacyPersonalPages},{capturePhysisSessionMemory}]=await Promise.all([
+    import('./e2ee/physis-source'),import('./e2ee/legacy-pages'),import('./physis/session-memory')]);check();
+  return new PersonalPhysisSource(userId,scopeId,{assertCurrent:check,
+    memory:async()=>{check();const stores=await capturePhysisSessionMemory(userId);check();
+      if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+      return{ownerId:userId,generation:backupDataGeneration,reconciliationRequired:backupReconciliationRequired,legacyKey:workspaceKey,stores};},
+    legacyPhysis:context=>collectLegacyPersonalPages(context,'physis',{assertCurrent:check,readPage:(value,table,offset)=>transport.legacyPhysisPage(value,table,offset)}),...options});
+}
+
+/** Read-only reminder inventory. The full product coordinator must hold its
+ * owner/global local-write fence, freeze the mounted UI and retain this input
+ * under the new root before reaching the signed server pages. */
+export async function createPersonalRemindersMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyRemindersPage'>,
+  options:Pick<import('./e2ee/reminders-source').RemindersSourcePorts,'reviewUnassigned'>={}) {
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const [{PersonalRemindersSource},{captureWebReminderInventory},{collectLegacyPersonalPages}]=await Promise.all([
+    import('./e2ee/reminders-source'),import('./e2ee/reminders-web-source'),import('./e2ee/legacy-pages')]);check();
+  return new PersonalRemindersSource(userId,scopeId,{assertCurrent:check,memory:async()=>{
+    check();const generation=backupDataGeneration,projectionWanted=habitReminderProjectionWanted;
+    const local=await captureWebReminderInventory(userId,{storage:migrationSourceStorage(userId),assertCurrent:check,caches:typeof caches==='undefined'?null:caches,projectionWanted,
+      notifications:async()=>{
+        if(typeof navigator==='undefined'||!navigator.serviceWorker)return[];const registration=await navigator.serviceWorker.getRegistration();check();
+        return(await registration?.getNotifications()??[]).map(({title,body,tag,lang,data,silent})=>({title,body,tag,lang,data,silent}));
+      }});check();if(generation!==backupDataGeneration||projectionWanted!==habitReminderProjectionWanted)throw new Error('E2EE_REMINDER_CAPTURE_CHANGED');
+    return{ownerId:userId,generation,reconciliationRequired:backupReconciliationRequired,local};
+  },legacyReminders:context=>collectLegacyPersonalPages(context,'reminders',{assertCurrent:check,readPage:(value,table,offset)=>transport.legacyRemindersPage(value,table,offset)}),...options});
+}
+
+/** Archive capture primitive only. The full owner coordinator must persist these
+ * bytes under the new root before it reads any signed legacy archive fragment.
+ * This is deliberately not registered as a complete private-path adapter. */
+export async function createPersonalArchivesLocalCapture(userId:string,scopeId:string){
+  const session=captureAccountSessionGuard();const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const [{captureWebArchiveInventory},{captureBackupMemorySafety},{capturePhysisSessionMemory}]=await Promise.all([import('./e2ee/archives-web-source'),import('./backup-device'),import('./physis/session-memory')]);check();
+  return{captureLocal:async()=>{
+    check();const generation=backupDataGeneration,reconciliationRequired=backupReconciliationRequired,legacyKey=workspaceKey;
+    const local=await captureWebArchiveInventory(userId,{storage:migrationSourceStorage(userId),memorySafety:()=>captureBackupMemorySafety(userId),assertCurrent:check}),physis=await capturePhysisSessionMemory(userId);check();
+    if(generation!==backupDataGeneration||reconciliationRequired!==backupReconciliationRequired||legacyKey!==workspaceKey)throw new Error('E2EE_ARCHIVE_CAPTURE_CHANGED');
+    const bytes=new TextEncoder().encode(JSON.stringify({protocol:1,ownerId:userId,scopeId,capturedAt:new Date().toISOString(),
+      memory:{ownerId:userId,generation,reconciliationRequired,legacyKey,local,physis}}));
+    if(bytes.length>48*1024*1024){bytes.fill(0);throw new Error('E2EE_SNAPSHOT_TOO_LARGE');}return bytes;
+  }};
+}
+
+/** Composed personal archive source. Capture remains local-only; the signed
+ * archive reader is reached by reconcile after the coordinator protects input. */
+export async function createPersonalArchivesMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyArchiveFragment'|'legacyPhysisPage'>,
+  options:Pick<import('./e2ee/archives-source').ArchivesSourcePorts,'openPhysis'|'independentUnlock'>={}){
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const [capture,{PersonalArchivesSource},{collectLegacyArchiveFragments},{collectLegacyPersonalPages}]=await Promise.all([
+    createPersonalArchivesLocalCapture(userId,scopeId),import('./e2ee/archives-source'),import('./e2ee/archive-fragments'),import('./e2ee/legacy-pages')]);check();
+  return new PersonalArchivesSource(userId,scopeId,{assertCurrent:check,captureLocal:capture.captureLocal,
+    legacyArchives:context=>collectLegacyArchiveFragments(context,{assertCurrent:check,
+      readFragment:(value,table,offset,byteOffset)=>transport.legacyArchiveFragment(value,table,offset,byteOffset)}),
+    legacyPhysis:context=>collectLegacyPersonalPages(context,'physis',{assertCurrent:check,readPage:(value,table,offset)=>transport.legacyPhysisPage(value,table,offset)}),...options});
+}
+
+/** Source factories for the remaining personal/project/space data paths. Local
+ * originals are read without using a live legacy transport permit or key API. */
+export async function createRelationalMigrationSources(userId:string,directory:import('./e2ee/directory').VerifiedDirectory,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyPrivatePathFragment'>&Partial<Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyPrivatePathBatch'>>){
+  const session=captureAccountSessionGuard(),legacy=workspaceKey;
+  const check=()=>{session();if(workspaceUserId!==userId||workspaceKey!==legacy||directory.ownerId!==userId)throw new Error('E2EE_ACCOUNT_CHANGED');};check();
+  const [{RelationalPrivatePathSource},{captureWebPrivatePathLocal},{collectPrivatePathFragments},{requiredPrivatePaths}]=await Promise.all([
+    import('./e2ee/relational-path-source'),import('./e2ee/local-work-source'),import('./e2ee/private-path-fragments'),import('./e2ee/private-paths')]);check();
+  const open=async(envelope:{iv:string;ciphertext:string},purpose:string)=>{
+    check();if(!/^shared-work-draft:[A-Za-z0-9_-]+:[a-z-]+:[A-Za-z0-9_-]+$/.test(purpose)
+      &&!/^shared:[A-Za-z0-9_-]+:(?:map|view|conversion):[A-Za-z0-9_:-]+$/.test(purpose))throw new Error('E2EE_LOCAL_WORK_SOURCE_INVALID');
+    const legacyKey=directory.kind==='personal'?legacy:retiredMigrationWorkspaceKey(userId,directory.scopeId);
+    if(!legacyKey)throw new Error('E2EE_LEGACY_KEY_UNAVAILABLE');
+    const raw=base64ToBytes(legacyKey),iv=base64ToBytes(envelope.iv),cipher=base64ToBytes(envelope.ciphertext);let plain:Uint8Array|undefined;
+    try{if(raw.length!==32||iv.length!==12||cipher.length<16||cipher.length>64*1024*1024)throw new Error('E2EE_LOCAL_WORK_SOURCE_INVALID');
+      const key=await crypto.subtle.importKey('raw',new Uint8Array(raw),'AES-GCM',false,['decrypt']);check();
+      plain=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(iv),additionalData:new TextEncoder().encode(`genesis-mindmap-v1:${userId}:${purpose}`)},key,new Uint8Array(cipher)));check();
+      return new TextDecoder('utf-8',{fatal:true}).decode(plain);
+    }finally{raw.fill(0);iv.fill(0);cipher.fill(0);plain?.fill(0);}
+  };
+  return requiredPrivatePaths(directory.kind).filter(path=>directory.kind!=='personal'||path.id==='personal.local-work').map(path=>{
+    const target={ownerId:userId,scopeId:directory.scopeId,kind:directory.kind,resourceId:directory.resourceId,pathId:path.id};
+    return new RelationalPrivatePathSource(target,{assertCurrent:check,
+      capture:()=>path.id.endsWith('.local-work')?captureWebPrivatePathLocal(target,{storage:migrationSourceStorage(userId),assertCurrent:check,open})
+        :Promise.resolve({platform:'web' as const,inventoryVersion:1 as const,entries:[],editors:[]}),
+      read:context=>collectPrivatePathFragments(context,target,{assertCurrent:check,
+        read:(value,pathId,table,offset,byteOffset)=>transport.legacyPrivatePathFragment(value,pathId,table,offset,byteOffset),readBatch:transport.legacyPrivatePathBatch?.bind(transport)})});
+  });
+}
+
+/** Full-registry composition is explicit. Each required existing personal
+ * adapter comes from its real factory; omissions refuse before source IO. */
+export async function createCompleteMigrationSourceRegistry(userId:string,directory:import('./e2ee/directory').VerifiedDirectory,
+  transport:import('./e2ee/source-replay').LegacyReadPorts,
+  existingPersonal:readonly import('./e2ee/migration-sources').PrivatePathAdapter[]=[],
+  archives:Pick<import('./e2ee/archives-source').ArchivesSourcePorts,'openPhysis'|'independentUnlock'>={}){
+  const session=captureAccountSessionGuard();const check=()=>{session();if(workspaceUserId!==userId||directory.ownerId!==userId)throw new Error('E2EE_ACCOUNT_CHANGED');};check();
+  const {E2eeMigrationSources,requiredPrivatePaths}=await import('./e2ee/migration-sources');check();
+  const expected=requiredPrivatePaths('personal').filter(path=>!['personal.archives','personal.local-work'].includes(path.id)).map(path=>path.id);
+  if(directory.kind==='personal'&&(existingPersonal.length!==expected.length||new Set(existingPersonal.map(path=>path.id)).size!==expected.length||expected.some(id=>!existingPersonal.some(path=>path.id===id)))
+    ||directory.kind!=='personal'&&existingPersonal.length)throw new Error('E2EE_SOURCE_ADAPTER_REQUIRED');
+  const remaining=await createRelationalMigrationSources(userId,directory,transport);check();
+  const all=directory.kind==='personal'?[...existingPersonal,await createPersonalArchivesMigrationSource(userId,directory.scopeId,transport,archives),...remaining]:remaining;check();
+  const registry=new E2eeMigrationSources(userId,directory.scopeId,directory.kind);
+  for(const adapter of all)registry.registerIntegrated(adapter,check);
+  // Synchronous full preflight, before capture, new-key persistence or a lease.
+  registry.stagedCapture();registry.stagedReconciliation();return registry;
+}
+
+/** Product composition for the actual web repositories. Closed screens are
+ * captured from their durable stores by the same adapters; live input comes
+ * from every registered owner-bound instance. Arbitrary forms remain inert in
+ * personal.local-work rather than becoming executable tasks/provider jobs. */
+export async function createMountedPersonalMigrationSources(userId:string,directory:import('./e2ee/directory').VerifiedDirectory,
+  transport:import('./e2ee/source-replay').LegacyReadPorts,
+  reviews:{workspace?:import('./e2ee/workspace-source').WorkspaceSourcePorts['review'];
+    tasks?:import('./e2ee/tasks-source').TasksSourcePorts['review'];providers?:import('./e2ee/tasks-source').TasksSourcePorts['reviewProviderHistory'];
+    diary?:import('./e2ee/diary-source').DiarySourcePorts['review'];mindmaps?:import('./e2ee/mindmaps-source').MindmapsSourcePorts['review'];
+    physis?:Pick<import('./e2ee/physis-source').PhysisSourcePorts,'independentUnlock'|'review'>;
+    reminders?:Pick<import('./e2ee/reminders-source').RemindersSourcePorts,'reviewUnassigned'>;
+    archives?:Pick<import('./e2ee/archives-source').ArchivesSourcePorts,'openPhysis'|'independentUnlock'>}={}){
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId||directory.kind!=='personal'||directory.ownerId!==userId||directory.resourceId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const [{capturePersonalMigrationSources},{captureAllBackupSources},{samePrivateJson}]=await Promise.all([
+    import('./personal-migration-memory'),import('./backup-sources'),import('./e2ee/product-json')]);check();
+  const read=<K extends keyof import('./personal-migration-memory').PersonalMigrationMemory>(kind:K)=>{
+    check();const values=capturePersonalMigrationSources(userId,kind).filter(row=>row.mounted);
+    if(values.some(row=>row.value.settled===false))throw new Error('E2EE_SOURCE_NOT_SETTLED');return values;
+  };
+  const one=<T>(values:readonly (T|null)[]):T|null=>{
+    const present=values.filter((value):value is T=>value!==null);
+    if(present.some(value=>!samePrivateJson(value,present[0])))throw new Error('E2EE_MOUNTED_SOURCE_REVIEW_REQUIRED');return present[0]??null;
+  };
+  const workspace=()=>{
+    check();const values=captureAllBackupSources(userId).sources.filter(row=>row.moduleId==='workspace');
+    const documents=values.map(row=>{
+      const value=row.value as {format?:unknown;workspace?:unknown};
+      if(row.format!=='migration'||value?.format!=='genesis-workspace-editor-v1'||!value.workspace||typeof value.workspace!=='object'||Array.isArray(value.workspace))throw new Error('E2EE_SOURCE_ADAPTER_REQUIRED');
+      return value.workspace;
+    });return one(documents);
+  };
+  const domainEditors=(values:unknown[],prefix:string)=>values.map((value,index)=>{
+    if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('E2EE_SOURCE_ADAPTER_REQUIRED');
+    // The complete state, including File/Blob values, is materialized by the
+    // local-work source. Typed content reconciliation uses only the document.
+    const {state:ignored,...editor}=value as Record<string,unknown>;void ignored;
+    return{...editor,source:`${prefix}:${String(editor.source??index)}`};
+  });
+  const adapters:import('./e2ee/migration-sources').PrivatePathAdapter[]=[];
+  adapters.push(await createPersonalWorkspaceMigrationSource(userId,directory.scopeId,transport,workspace,reviews.workspace));check();
+  adapters.push(await createPersonalTasksMigrationSource(userId,directory.scopeId,transport,()=>{
+    const current=workspace() as {tasks?:unknown}|null;
+    if(current&&!Array.isArray(current.tasks))throw new Error('E2EE_SOURCE_ADAPTER_REQUIRED');return{tasks:current?.tasks as unknown[]??[],editors:[]};
+  },reviews.tasks,reviews.providers));check();
+  adapters.push(await createPersonalDiaryMigrationSource(userId,directory.scopeId,transport,()=>{
+    const values=read('diary');return{records:values.flatMap(row=>row.value.records),editors:values.flatMap(row=>domainEditors(row.value.editors,row.sourceId))};
+  },reviews.diary));check();
+  adapters.push(await createPersonalMindmapsMigrationSource(userId,directory.scopeId,transport,()=>{
+    const values=read('mindmaps');return{records:values.flatMap(row=>row.value.records),editors:values.flatMap(row=>domainEditors(row.value.editors,row.sourceId)),localWork:values.flatMap(row=>row.value.localWork)};
+  },reviews.mindmaps));check();
+  adapters.push(await createPersonalPhysisMigrationSource(userId,directory.scopeId,transport,reviews.physis));check();
+  adapters.push(await createPersonalRemindersMigrationSource(userId,directory.scopeId,transport,reviews.reminders));check();
+  adapters.push(await createPersonalAuroraMigrationSource(userId,directory.scopeId,transport,()=>one(read('aurora').map(row=>row.value.current))));check();
+  adapters.push(await createPersonalStoicheionMigrationSource(userId,directory.scopeId,transport,()=>{
+    const draws=read('stoicheion-draws');return{current:one(read('stoicheion').map(row=>row.value.current)),
+      draws:one(draws.map(row=>row.value.draws))??[],timeline:one(draws.map(row=>row.value.timeline))};
+  }));check();
+  adapters.push(await createPersonalAdviceMigrationSource(userId,directory.scopeId,transport,()=>{
+    const values=read('advice');return{preferences:one(values.map(row=>row.value.preferences)),mounted:one(values.map(row=>row.value.mounted))};
+  }));check();
+  return createCompleteMigrationSourceRegistry(userId,directory,transport,adapters,reviews.archives);
+}
+
+export async function createPersonalStoicheionMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyStoicheion'>,
+  captureCurrent:()=>Pick<import('./e2ee/stoicheion-source').StoicheionMigrationMemory,'current'|'draws'|'timeline'>) {
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const {PersonalStoicheionSource}=await import('./e2ee/stoicheion-source');check();
+  return new PersonalStoicheionSource(userId,scopeId,{storage:migrationSourceStorage(userId),assertCurrent:check,
+    memory:()=>{check();return{...captureCurrent(),ownerId:workspaceUserId,legacyKey:workspaceKey,generation:backupDataGeneration,
+      reconciliationRequired:backupReconciliationRequired,nativeDraws:null};},legacyStoicheion:context=>transport.legacyStoicheion(context)});
+}
+
+/** Captures actual mounted Advice/settings while the complete owner coordinator
+ * holds its persistent fence. Public catalogue IO uses no account credentials. */
+export async function createPersonalAdviceMigrationSource(userId:string,scopeId:string,
+  transport:Pick<import('./e2ee/migration-transport').SignedMigrationTransport,'legacyAdvice'>,
+  captureCurrent:()=>Pick<import('./e2ee/advice-source').AdviceMigrationMemory,'preferences'|'mounted'>) {
+  const session=captureAccountSessionGuard();
+  const check=()=>{session();if(workspaceUserId!==userId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');};check();
+  const publicBase=new URL('.',new URL(API_BASE,window.location.href));
+  if(publicBase.origin!==window.location.origin)throw new Error('E2EE_ORIGIN_MISMATCH');
+  const [{PersonalAdviceSource},{PublicAdviceCatalogues,publicAdviceCatalogueReader}]=await Promise.all([import('./e2ee/advice-source'),import('./e2ee/advice-catalogue')]);check();
+  const catalogues=new PublicAdviceCatalogues(publicAdviceCatalogueReader(publicBase,check),check);
+  return new PersonalAdviceSource(userId,scopeId,{storage:migrationSourceStorage(userId),assertCurrent:check,catalogues,
+    memory:()=>{check();return{...captureCurrent(),ownerId:workspaceUserId,generation:backupDataGeneration,
+      reconciliationRequired:backupReconciliationRequired,rendered:[],seen:[],unassignedLegacy:false};},legacyAdvice:context=>transport.legacyAdvice(context)});
+}
 
 export async function changeStoicheionSpreadCard(draw:StoicheionDrawRecord,position:number) {
+  if(confirmedTransportOwnerId&&usesPrivateProductStorage(confirmedTransportOwnerId))return(await privateStoicheionProduct(confirmedTransportOwnerId)).spreadCard(draw,position);
   return api<{draw:StoicheionDrawRecord}>('/stoicheion/spread/cards',{method:'POST',body:JSON.stringify({position,revision:draw.cardRevision??0,seed:draw.seed,dayKey:draw.dayKey})});
 }
 
 export async function loadStoicheionTimelineCards() {
+  if(confirmedTransportOwnerId&&usesPrivateProductStorage(confirmedTransportOwnerId))return(await privateStoicheionProduct(confirmedTransportOwnerId)).loadTimeline();
   return api<{timeline:StoicheionTimelineRecord|null;serverNow:string}>("/stoicheion/timeline/cards", {cache:"no-store"});
 }
 
 export async function changeStoicheionTimelineCard(position:number, action:"reveal"|"reroll", revision:number) {
+  if(confirmedTransportOwnerId&&usesPrivateProductStorage(confirmedTransportOwnerId))return(await privateStoicheionProduct(confirmedTransportOwnerId)).timelineCard(position,action,revision);
   return api<{timeline:StoicheionTimelineRecord;serverNow:string}>("/stoicheion/timeline/cards", {
     method:"POST", cache:"no-store", body:JSON.stringify({position,action,revision}),
   });

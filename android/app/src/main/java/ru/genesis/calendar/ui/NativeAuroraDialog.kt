@@ -24,6 +24,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.SecureFlagPolicy
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.*
 import org.json.JSONObject
 import ru.genesis.calendar.BuildConfig
@@ -33,9 +35,11 @@ import ru.genesis.calendar.auth.AuthController
 import ru.genesis.calendar.auth.AuthFailure
 import ru.genesis.calendar.data.AuroraGateway
 import ru.genesis.calendar.data.AuroraNativeStore
+import ru.genesis.calendar.data.NativeLegacyOperationPermit
 import java.io.ByteArrayInputStream
 import java.net.URI
 import java.util.Base64
+import java.util.concurrent.ConcurrentHashMap
 import java.util.Locale
 
 data class AuroraTaskDraft(val title: String, val description: String, val dueDate: String?,
@@ -62,33 +66,76 @@ internal object AuroraWebOrigin {
 }
 
 @Keep
-private class AuroraJavascriptBridge(private val store: AuroraNativeStore, private val gateway: AuroraGateway,
+internal class AuroraJavascriptBridge(private val store: AuroraNativeStore, private val gateway: AuroraGateway,
     private val scope: CoroutineScope, private val deliver: (String,JSONObject)->Unit,
     private val onTask: (AuroraTaskDraft)->Unit, private val onCheckout: (String)->Unit,
     private val onSpeak: (String)->Unit, private val onClose: ()->Unit,
-    private val onContentSize: (Int,Int)->Unit, private val onLoadFailed: ()->Unit) {
+    private val onContentSize: (Int,Int,Boolean)->Unit, private val onLoadFailed: ()->Unit,
+    private val migration:NativeEmbeddedMigrationCapture?=null) {
     @Volatile private var active=true
-    @JavascriptInterface fun contentSize(height: Int, width: Int) {
+    private val operationMonitor=Any()
+    private val operations=ConcurrentHashMap<String,NativeLegacyOperationPermit>()
+    private val startedOperations=mutableSetOf<String>()
+    private val endedOperations=mutableSetOf<String>()
+    @JavascriptInterface fun contentSize(height: Int, width: Int, fillViewport: Boolean) {
         if (!active || height !in 1..100000 || width !in 1..8192) return
-        scope.launch(Dispatchers.Main) { if (active) onContentSize(height, width) }
+        scope.launch(Dispatchers.Main) { if (active) onContentSize(height, width, fillViewport) }
     }
     private fun check(){check(active){"AURORA_VIEW_CLOSED"};gateway.check()}
-    @JavascriptInterface fun getItem(key:String):String?=runBlocking(Dispatchers.IO){check();store.getItem(key).also{check()}}
-    @JavascriptInterface fun setItem(key:String,value:String)=runBlocking(Dispatchers.IO){check();store.setItem(key,value);check()}
-    @JavascriptInterface fun removeItem(key:String)=runBlocking(Dispatchers.IO){check();store.removeItem(key);check()}
+    @JavascriptInterface fun migrationState(requestId:String,raw:String){
+        if(!active)return
+        try{check();migration?.accept(requestId,raw)}catch(_:Exception){migration?.failed()}
+    }
+    private fun operation(id:String)=operations[id]?:throw AuthApiError("E2EE_INVALID_LEGACY_OPERATION")
+    private fun endOperation(id:String)=synchronized(operationMonitor) { endedOperations.add(id);operations.remove(id) }
+    @JavascriptInterface fun checkSession(operationId:String){check();if(operationId.isNotEmpty())operation(operationId).check()}
+    @JavascriptInterface fun getItem(key:String,operationId:String):String?=runBlocking(Dispatchers.IO){check();operation(operationId).borrow { store.getItem(key).also{check()} }}
+    @JavascriptInterface fun keys(operationId:String):String=runBlocking(Dispatchers.IO){check();operation(operationId).borrow { org.json.JSONArray(store.keys()).toString().also{check()} }}
+    @JavascriptInterface fun setItem(key:String,value:String,operationId:String)=runBlocking(Dispatchers.IO){check();operation(operationId).borrow { store.setItem(key,value);check() }}
+    @JavascriptInterface fun removeItem(key:String,operationId:String)=runBlocking(Dispatchers.IO){check();operation(operationId).borrow { store.removeItem(key);check() }}
     @JavascriptInterface fun postMessage(raw:String){
         if(raw.length>4_100_000)return
         val request=runCatching{JSONObject(raw)}.getOrNull()?:return
         val id=request.optString("id");if(!id.matches(Regex("[a-f0-9-]{36}")))return
-        scope.launch(Dispatchers.IO){
+        val beginToken=if(request.optString("method")=="operationBegin")request.optJSONObject("payload")?.optString("operationId")
+            ?.takeIf{it.matches(Regex("[a-f0-9-]{36}"))} else null
+        val job=scope.launch(Dispatchers.IO){
             val response=try{
                 // Leaving a failed view must not depend on a still-valid cloud session.
                 when (request.getString("method")) {
                     "close" -> { withContext(Dispatchers.Main) { if(active)onClose() }; return@launch }
                     "loadFailed" -> { withContext(Dispatchers.Main) { if(active)onLoadFailed() }; return@launch }
                 }
-                check();val payload=request.optJSONObject("payload")?:JSONObject()
-                val value:Any=when(request.getString("method")){
+                val method=request.getString("method");val payload=request.optJSONObject("payload")?:JSONObject()
+                // Cleanup must release even when the captured account/session has
+                // already changed. finish invalidates and drains native children.
+                if(method=="operationEnd") {
+                    val token=payload.getString("operationId");require(token.matches(Regex("[a-f0-9-]{36}")))
+                    val permit=endOperation(token)
+                    permit?.finish();withContext(Dispatchers.Main){if(active)deliver(id,JSONObject().put("value",JSONObject()))};return@launch
+                }
+                check()
+                suspend fun execute():Any=when(method){
+                    "privateDocument"->store.privateDocument(payload.getString("action"),payload)
+                    "privateSealResult"->store.privateSealResult(payload.getString("id"),payload.getJSONObject("value"))
+                    "privateLocalResult"->store.privateLocalResult(payload.getJSONObject("manifest"))
+                    "privatePublishResult"->store.privatePublishResult(payload.getString("id"),payload.getString("methodVersion"))
+                    "privateOpenResult"->store.privateOpenResult(payload.getString("id"),payload.getJSONObject("reference"))
+                    "operationBegin"->{
+                        val token=payload.getString("operationId");require(token.matches(Regex("[a-f0-9-]{36}")))
+                        synchronized(operationMonitor) {
+                            check(active && token !in endedOperations && startedOperations.add(token)) { "E2EE_INVALID_LEGACY_OPERATION" }
+                            check(startedOperations.size<=8192 && endedOperations.size<=8192) { "AURORA_OPERATION_LIMIT" }
+                        }
+                        val permit=store.beginLegacyOperation()
+                        try {
+                            check();synchronized(operationMonitor) {
+                                check(active && token !in endedOperations) { "E2EE_INVALID_LEGACY_OPERATION" };operations[token]=permit
+                            }
+                            JSONObject().put("operationId",token)
+                        }
+                        catch(error:Throwable){permit.close();operations.entries.removeAll { it.value===permit };throw error}
+                    }
                     "request"->store.request(payload.getString("method"),payload.getString("path"),payload.optJSONObject("body"))
                     "billing"->{val method=payload.getString("method");val path=payload.getString("path");val body=payload.optJSONObject("body")
                         if(method=="POST"&&path=="/billing/modeling/orders")body?.put("client",if(BuildConfig.PLAY_DISTRIBUTION)"android-play" else "android")
@@ -106,16 +153,24 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
                         withContext(Dispatchers.Main){check();onTask(AuroraTaskDraft(title,description,date,time,zone,kind,source))};JSONObject()}
                     else->error("AURORA_METHOD_INVALID")
                 }
-                check();JSONObject().put("value",value)
-            }catch(cancelled:CancellationException){return@launch}
+                val token=payload.optString("operationId")
+                val value=if(token.isNotEmpty() && method!="operationBegin")operation(token).borrow { execute() } else execute()
+                // A begin receipt must deliver its caller-selected cleanup ID
+                // even if the account expires immediately after acquisition.
+                if(method!="operationBegin")check();JSONObject().put("value",value)
+            }catch(cancelled:CancellationException){beginToken?.let{endOperation(it)?.close()};return@launch}
             catch(error:Exception){
-                val code=when(error){is AuthApiError->error.code;else->error.message?.takeIf{it.matches(Regex("(?:AURORA|MODELING)_[A-Z_]+"))}?:"AURORA_NATIVE_REQUEST_FAILED"}
+                val code=when(error){is AuthApiError->error.code;else->error.message?.takeIf{it.matches(Regex("(?:AURORA|MODELING|E2EE)_[A-Z_]+"))}?:"AURORA_NATIVE_REQUEST_FAILED"}
                 JSONObject().put("error",code).put("status",(error as? AuthFailure)?.httpStatus?:if(code=="AURORA_ACCOUNT_CHANGED")401 else 0)
             }
             withContext(Dispatchers.Main){if(active)deliver(id,response)}
         }
+        job.invokeOnCompletion { failure->if(failure!=null)beginToken?.let{endOperation(it)?.close()} }
     }
-    fun stop(){active=false;store.close()}
+    fun stop(){
+        val permits=synchronized(operationMonitor) { active=false;operations.values.toList().also { operations.clear() } }
+        permits.forEach{it.close()};store.close()
+    }
 }
 
 /** Native navigation/insets/crypto surround a local signed, shared module.
@@ -125,10 +180,13 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
 @Composable internal fun NativeAuroraDialog(owner:String,source:JSONObject?,onClose:()->Unit,onTask:(AuroraTaskDraft)->Unit,
     testGateway:AuroraGateway?=null, temporal:JSONObject?=null) {
     val context=LocalContext.current;val app=context.applicationContext as GenesisApplication
+    val storageScope=app.workspaceScope;val workspaceEpoch=app.workspaceEpoch
     val controller=remember(context){AuthController.get(context)}
-    val gateway=remember(owner,testGateway){testGateway?:controller.auroraGateway(owner)}
-    val scope=rememberCoroutineScope();val store=remember(owner,gateway){AuroraNativeStore(app,owner,app.workspaceScope,gateway)}
+    val authState by controller.state.collectAsStateWithLifecycle()
+    val gateway=remember(owner,storageScope,workspaceEpoch,testGateway){testGateway?:controller.auroraGateway(owner)}
+    val scope=rememberCoroutineScope();val store=remember(owner,storageScope,gateway){AuroraNativeStore(app,owner,storageScope,gateway)}
     val dark=LocalEveningTheme.current;val palette=LocalDarkPalette.current;val language=LocalGenesisLanguage.current
+    val runtimeProblem=rememberNativeWebRuntimeProblem(language)
     val entryCopy=remember(context,language){context.assets.open("originals/i18n/aurora-availability.json").bufferedReader(Charsets.UTF_8).use{JSONObject(it.readText()).getJSONObject(language)}}
     val scheme=MaterialTheme.colorScheme
     val textScale=LocalDensity.current.fontScale
@@ -138,13 +196,29 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
         .put("--ui-accent",hex(scheme.primary)).put("--ui-on-accent",hex(scheme.onPrimary)).put("--teal",hex(scheme.primary))
     val theme=JSONObject().put("dark",dark).put("palette",palette).put("colors",colors)
     fun encoded(value:JSONObject)=Base64.getEncoder().encodeToString(value.toString().toByteArray(Charsets.UTF_8))
-    val boot=remember(owner){JSONObject().put("ownerId",owner).put("language",language)
+    val boot=remember(owner,store){JSONObject().put("ownerId",owner).put("language",language)
+        .put("privateMode",store.privateMode)
         .put("client",if(BuildConfig.PLAY_DISTRIBUTION)"android-play" else "android").put("source",source?:JSONObject.NULL)
         .put("temporal",temporal?:JSONObject.NULL)
         .put("dark",dark).put("palette",palette).put("colors",colors)}
-    var web by remember { mutableStateOf<WebView?>(null) };var ready by remember{mutableStateOf(false)};var failed by remember{mutableStateOf(false)}
+    var web by remember(store){mutableStateOf<WebView?>(null)};var ready by remember(store){mutableStateOf(false)};var failed by remember(store){mutableStateOf(runtimeProblem!=null)}
+    val migrationOwner=rememberLegacyMigrationOwner(storageScope)?.takeIf{it==owner&&!authState.requiresSignIn}
+    val migration=remember(store,migrationOwner){migrationOwner?.let{uid->
+        val guard=controller.privateUiOwnerGuard(uid)
+        NativeEmbeddedMigrationCapture(uid,boot){guard();gateway.check()}
+    }}
+    DisposableEffect(store,migrationOwner,migration){
+        val release=if(migrationOwner!=null&&migration!=null)ru.genesis.calendar.security.NativeMigrationMemory.register(migrationOwner,"aurora",
+            prepare={check(ready&&!failed){"E2EE_EMBEDDED_SOURCE_CAPTURE_REQUIRED"};migration.prepare(requireNotNull(web){"E2EE_EMBEDDED_SOURCE_CAPTURE_REQUIRED"})},
+            finish={migration.thaw(web)},read=migration::capture)else null
+        onDispose{release?.invoke();migration?.close()}
+    }
+    DisposableEffect(store){onDispose{store.close()}}
+    val migrationView by ru.genesis.calendar.security.NativeMigrationUiState.state.collectAsStateWithLifecycle()
+    LaunchedEffect(web,ready,migrationView?.id){if(ready&&migrationView?.owner!=owner)migration?.thaw(web)}
     val density = LocalDensity.current.density
     var contentHeight by remember { mutableStateOf(160.dp) }
+    var fillsViewport by remember { mutableStateOf(true) }
     var headerHeight by remember { mutableStateOf(80.dp) }
     val speech=remember(context){TextToSpeech(context){}}
     DisposableEffect(speech){onDispose{speech.stop();speech.shutdown()}}
@@ -160,17 +234,21 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
         scope.launch {delay(1500);if(!answered)onClose()}
     }
     LaunchedEffect(web) {if(web!=null){delay(15000);if(!ready)failed=true}}
-    Dialog(onDismissRequest={close()},properties=DialogProperties(usePlatformDefaultWidth=false,dismissOnClickOutside=false,decorFitsSystemWindows=false)){
+    Dialog(onDismissRequest={close()},properties=DialogProperties(usePlatformDefaultWidth=false,dismissOnClickOutside=false,decorFitsSystemWindows=false,securePolicy=SecureFlagPolicy.SecureOn)){
         Surface(Modifier.fillMaxWidth(),color=scheme.surface){
           BoxWithConstraints(Modifier.fillMaxWidth()) {
             val viewportHeight = (maxHeight - headerHeight - 8.dp).coerceAtLeast(48.dp)
+            // Gno is a full-height editor; the retained archive fits its content
+            // until it needs to scroll. Feeding Gno's current measured height
+            // back into its own viewport would leave it stuck at the old size.
+            val webHeight = if (fillsViewport) viewportHeight else contentHeight.coerceIn(48.dp, viewportHeight)
             Column(Modifier.fillMaxWidth().testTag("aurora-native-dialog")){
                 Box(Modifier.fillMaxWidth().onSizeChanged { headerHeight = (it.height / density).dp }
                     .padding(horizontal = 8.dp, vertical = 4.dp)) {
                     EditorDialogHeader("Метод моделирования будущего","aurora-native-close"){close()}
                 }
-                if(failed)UntranslatedText(entryCopy.getString("loadError"),Modifier.padding(16.dp).testTag("aurora-native-error"),color=scheme.error)
-                if(!failed)AndroidView(factory={ctx->WebView(ctx).apply{
+                if(failed)UntranslatedText(runtimeProblem?:entryCopy.getString("loadError"),Modifier.padding(16.dp).testTag("aurora-native-error"),color=scheme.error)
+                if(!failed)key(store){AndroidView(factory={ctx->WebView(ctx).apply{
                     web=this;setBackgroundColor(scheme.surface.toArgb())
                     settings.javaScriptEnabled=true;settings.allowFileAccess=false;settings.allowContentAccess=false
                     settings.domStorageEnabled=false;settings.databaseEnabled=false;settings.javaScriptCanOpenWindowsAutomatically=false
@@ -180,8 +258,11 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
                     val bridge=AuroraJavascriptBridge(store,gateway,scope,{id,response->
                         if(url==AuroraWebOrigin.ENTRY)evaluateJavascript("window.GenesisAuroraRuntime.resolve('$id','${encoded(response)}')",null)
                     },onTask,{url->ctx.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(url)))},{text->speech.language=Locale.forLanguageTag("ru-RU");speech.speak(text,TextToSpeech.QUEUE_FLUSH,null,"aurora")},onClose,
-                        { height, width -> if (this.width > 0) contentHeight = (height.toFloat() * this.width / width / density).dp },
-                        {failed=true;ready=false})
+                        { height, width, fill -> if (this.width > 0) {
+                            contentHeight = (height.toFloat() * this.width / width / density).dp
+                            fillsViewport = fill
+                        } },
+                        {failed=true;ready=false;migration?.failed()},migration)
                     tag=bridge;addJavascriptInterface(bridge,"GenesisAuroraBridge")
                     webViewClient=object:WebViewClient(){
                         override fun shouldOverrideUrlLoading(view:WebView,request:WebResourceRequest)=true
@@ -199,14 +280,15 @@ private class AuroraJavascriptBridge(private val store: AuroraNativeStore, priva
                         override fun onRenderProcessGone(view:WebView,detail:RenderProcessGoneDetail):Boolean {
                             android.util.Log.w("GenesisAurora","Local renderer terminated; crashed=${detail.didCrash()}")
                             failed=true;ready=false
+                            migration?.failed()
                             return true
                         }
                     }
                     loadUrl(AuroraWebOrigin.ENTRY)
                 }},update={view->if(ready)view.evaluateJavascript("window.GenesisAuroraRuntime.theme('${encoded(theme)}')",null)},
-                    modifier=Modifier.fillMaxWidth().height(viewportHeight).testTag("aurora-native-webview"),onRelease={view->
+                    modifier=Modifier.fillMaxWidth().height(webHeight).testTag("aurora-native-webview"),onRelease={view->
                         (view.tag as? AuroraJavascriptBridge)?.stop();view.removeJavascriptInterface("GenesisAuroraBridge");view.stopLoading();view.destroy();web=null
-                    })
+                    })}
                 if(!ready&&!failed)LinearProgressIndicator(Modifier.fillMaxWidth())
             }
           }

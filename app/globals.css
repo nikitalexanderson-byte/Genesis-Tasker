@@ -5865,6 +5865,12 @@ html[data-language="en"] .inbox-card.drop-target::after {
 .gemini-command-field textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(178, 138, 74, .12); }
 .gemini-privacy { display: flex; gap: 9px; margin: 13px 0 16px; color: var(--palette-accent, #687675); font-size: 9px; line-height: 1.55; }
 .gemini-privacy span { flex: 0 0 auto; color: var(--gold); }
+.gemini-external-copy { margin-block: 14px; color: var(--ink); font-size: 14px; line-height: 1.55; }
+.gemini-external-copy p { margin-block: 0 6px; overflow-wrap: normal; word-break: normal; hyphens: none; }
+.gemini-copy-consent { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; }
+.gemini-copy-consent input { flex: 0 0 auto; width: 20px; height: 20px; accent-color: var(--teal); }
+.gemini-copy-consent input:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+.gemini-copy-consent span { min-width: 0; overflow-wrap: normal; word-break: normal; }
 .gemini-primary { padding: 12px 18px; color: #fffdf8; font-size: 10px; font-weight: 850; background: var(--teal); border: 0; border-radius: 999px; box-shadow: 0 8px 20px color-mix(in srgb, var(--palette-raised, rgb(37 91 89)) 18%, transparent); cursor: pointer; }
 .gemini-assistant > .gemini-primary { width: 100%; }
 .gemini-assistant .form-error { margin: 12px 0; padding: 11px 13px; color: #87372d; font-size: 10px; background: rgba(165, 84, 63, .09); border: 1px solid rgba(165, 84, 63, .28); border-radius: var(--ui-surface-radius); }
@@ -13831,3 +13837,7 @@ html[data-genesis-theme] .genesis-app .project-task-card .task-check { width:36p
 .habit-feedback-preview.animated { animation:habit-feedback-preview-in .26s ease-out; }
 @keyframes habit-feedback-preview-in { from { opacity:.35; transform:translateY(8px); } to { opacity:1; transform:none; } }
 @media(prefers-reduced-motion:reduce) { .habit-feedback-preview.animated { animation:none; } }
+.private-shared-security{display:grid;gap:1rem;min-width:0}
+.private-shared-security label{display:grid;gap:.5rem;min-width:0}
+.private-shared-security button,.private-shared-security select,.private-shared-security input{min-height:44px;max-width:100%}
+.private-shared-fingerprint{display:block;max-width:100%;overflow-x:auto;white-space:nowrap;padding:.75rem;background:var(--surface-muted,rgba(127,127,127,.12));border-radius:.75rem}

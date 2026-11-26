@@ -50,8 +50,10 @@ require $serverRoot . '/src/shared-projects.php';
 require $serverRoot . '/src/shared-google.php';
 require $serverRoot . '/src/physis.php';
 require $serverRoot . '/src/backups.php';
+require $serverRoot . '/src/private-drive.php';
 require $serverRoot . '/src/weather.php';
 require $serverRoot . '/src/partner-api.php';
+require $serverRoot . '/src/e2ee-api.php';
 
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
@@ -148,6 +150,13 @@ function genesisRequireYandexUser(string $userId): array
 }
 
 try {
+    // Before every route, including early backup/import/shared handlers. Flags never
+    // remove the fence from an already activated scope.
+    genesisE2eeEnforceLegacyRoute($method, $path, genesisCurrentUserId());
+    if (str_starts_with($path, 'e2ee/v1/')) genesisE2eeRoute($method, $path);
+    // Keep the capability alive through provider callbacks, local commits and
+    // response construction. PHP request teardown releases it after exit/error.
+    $personalLegacyIo=genesisE2eeLegacyRequestGate($method,$path,genesisCurrentUserId());
     if ($path === 'donations/methods') {
         if($method!=='GET')genesisJson(['error'=>'METHOD_NOT_ALLOWED'],405);
         header('Cache-Control: no-store');genesisJson(genesisDonationMethods($_SERVER));
@@ -203,6 +212,7 @@ try {
         if($method==='POST'&&array_keys($body)===['requestId','approve','reason']&&is_bool($body['approve'])){genesisGoogleReviewRecovery($reviewer,(string)$body['requestId'],$body['approve'],(string)$body['reason']);genesisJson(['ok'=>true]);}
         genesisJson(['error'=>'RECOVERY_REQUEST_INVALID'],400);
     }
+    if (str_starts_with($path, 'private-drive/v1/')) genesisDriveRoute($method,$path);
     if (str_starts_with($path, 'backup/v1/')) {
         $owner = genesisRequireUserId();
         header('Cache-Control: no-store');
@@ -409,6 +419,18 @@ try {
             genesisJson(['error' => 'AUTH_REQUIRED'], 401);
         }
         genesisJson(genesisCreateAssistantPlan(genesisReadJson()));
+    }
+    if($method==='POST'&&$path==='private-services/google/copy'){
+        $userId=genesisRequireUserId();genesisRequireCsrf();require_once __DIR__.'/../../src/private-google-copy.php';genesisJson(genesisPrivateGoogleCopy($userId,genesisReadJson()));
+    }
+    if ($method === 'POST' && $path === 'private-services/assistant/plan') {
+        $userId=genesisRequireUserId();genesisRequireCsrf();$user=genesisFindUser($userId);
+        if($user===null)genesisJson(['error'=>'AUTH_REQUIRED'],401);
+        $input=genesisReadJson();genesisE2eeExactFields($input,['command','audio','context','provider','consentVersion']);
+        if($input['consentVersion']!=='external-copy-336-v1'||!in_array($input['provider'],['gemini','gigachat'],true)||$input['provider']!==genesisAssistantProvider())genesisJson(['error'=>'E2EE_EXTERNAL_COPY_CONSENT_REQUIRED'],409);
+        // This is an explicitly selected external copy. It never reads a vault,
+        // private key, encrypted workspace, original, queue or shared table.
+        genesisJson(genesisCreateAssistantPlan(array_intersect_key($input,array_flip(['command','audio','context']))));
     }
 
     if ($method === 'GET' && $path === 'sync/tasks') {
@@ -735,9 +757,19 @@ try {
         }
 
         try {
-            $tokens = genesisExchangeGoogleCode($code, (string)($request['verifier'] ?? ''));
+            $tokens = ($request['purpose']??'')==='drive'
+                ? genesisDriveTokenRequest(['code'=>$code,'client_id'=>(string)genesisConfig()['google_client_id'],'client_secret'=>(string)genesisConfig()['google_client_secret'],'redirect_uri'=>genesisGoogleRedirectUri(),'grant_type'=>'authorization_code','code_verifier'=>(string)$request['verifier']])
+                : genesisExchangeGoogleCode($code, (string)($request['verifier'] ?? ''));
             if (empty($tokens['access_token'])) {
                 throw new RuntimeException('Google did not return an access token.');
+            }
+            if(($request['purpose']??'')==='drive'){
+                $owner=genesisRequireUserId();$attempt=$_SESSION['drive_oauth_request']??null;
+                if(!is_array($attempt))throw new DomainException('DRIVE_AUTH_STALE');
+                foreach($attempt as$key=>$value)if(!array_key_exists($key,$request)||$request[$key]!==$value)throw new DomainException('DRIVE_AUTH_STALE');
+                $profile=genesisVerifyNativeGoogleToken((string)($tokens['id_token']??''),(string)genesisConfig()['google_client_id'],['hash'=>hash('sha256',$request['nonce']),'issuedAt'=>$request['issued_at']],time(),static fn():array=>genesisNativeGoogleCertificates($_SESSION,time()));
+                genesisDriveAuthorize($owner,$attempt,$tokens,$profile);
+                genesisOAuthRedirect($returnTo);
             }
             $profile = genesisGoogleUserInfo((string)$tokens['access_token']);
             if (empty($profile['sub']) || empty($profile['email'])) {
@@ -1314,6 +1346,19 @@ try {
         if(count($segments)===6 && $method==='PATCH'){genesisRequireCsrf();genesisJson(genesisSharedRestoreTrash($userId,$segments[2],$segments[4],$segments[5],genesisReadJson()));}
     }
 
+    // Read-only metadata/entitlement tools for the private client. No content,
+    // settings, keys, or legacy mutation path is accepted on this surface.
+    if($path==='private-services/physis-catalog'&&in_array($method,['GET','PUT'],true)){
+        $userId=genesisRequireUserId();header('Cache-Control: no-store');require_once $serverRoot.'/src/physis-catalog.php';
+        if($method==='GET')genesisJson(genesisPhysisCatalog($userId));
+        genesisRequireCsrf();genesisJson(genesisPhysisCatalogSave($userId,genesisReadJson()));
+    }
+    if (count($segments) === 2 && $segments[0] === 'private-services' && $method === 'GET') {
+        $userId=genesisRequireUserId(); header('Cache-Control: no-store');
+        if ($segments[1] === 'dream-clock') genesisJson(genesisDreamClock((string)($_GET['timeZone']??'UTC')));
+        if ($segments[1] === 'dream-voice') { genesisRequireFeature($userId,'dream-voice'); genesisJson(['allowed'=>true]); }
+    }
+
     if ($segments && $segments[0] === 'diary') {
         $userId=genesisRequireUserId(); header('Cache-Control: no-store');
         if ($method==='GET' && count($segments)===2 && $segments[1]==='dream-clock') genesisJson(genesisDreamClock((string)($_GET['timeZone']??'UTC')));
@@ -1707,6 +1752,9 @@ try {
     if ($error->status === 429) header('Retry-After: ' . (600 - time() % 600));
     genesisJson(['error' => $error->getMessage()], $error->status);
 } catch (PDOException $error) {
+    if (str_contains($error->getMessage(), 'E2EE_LEGACY_WRITE_FORBIDDEN') || str_contains($error->getMessage(), 'E2EE_DOWNGRADE_FORBIDDEN') || str_contains($error->getMessage(), 'E2EE_ACL_ROTATION_REQUIRED')) {
+        genesisJson(['error'=>'E2EE_UPGRADE_REQUIRED'],409);
+    }
     if(str_contains($error->getMessage(),'BILLING_SETTLEMENT_REQUIRED'))genesisJson(['error'=>'BILLING_SETTLEMENT_REQUIRED'],409);
     if (str_contains($error->getMessage(), 'GENESIS_QUOTA_EXCEEDED')) {
         genesisJson(['error' => 'STORAGE_QUOTA_EXCEEDED'], 409);

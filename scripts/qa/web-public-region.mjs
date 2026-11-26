@@ -10,6 +10,9 @@ export async function verifyPublicRegions({browser,baseURL,output}) {
     {id:'foreign-gps-ru-ip',ip:'RU',gps:{latitude:40.7128,longitude:-74.006},path:'/?lang=en',destination:'/?lang=en',donation:true},
     {id:'ip-only-no-redirect',ip:'RU',path:'/?lang=ru',destination:'/?lang=ru',donation:true},
     {id:'unknown-region',ip:'unknown',path:'/?lang=en',destination:'/?lang=en',donation:true},
+    {id:'suggestion-from-gps',ip:'outside-RU',gps:{latitude:56.8389,longitude:60.6057},path:'/',destination:'/',suggested:'ru'},
+    {id:'suggestion-from-ip',ip:'RU',path:'/',destination:'/',suggested:'ru'},
+    {id:'android-dollar-link',ip:'RU',path:'/?lang=ru&currency=USD#pricing',destination:'/?lang=ru&currency=USD#pricing',currency:'USD'},
   ];
   const results=[];
   for(const scenario of cases){
@@ -31,12 +34,26 @@ export async function verifyPublicRegions({browser,baseURL,output}) {
       }
       await page.goto(scenario.path);
       await page.waitForURL(baseURL+scenario.destination);
+      if(scenario.suggested){
+        await page.locator(`html[lang="${scenario.suggested}"]`).waitFor({state:'attached'});
+        assert.equal(await page.url(),baseURL+scenario.destination);
+        const languages=page.getByRole('radio');
+        await languages.first().waitFor({state:'attached'});
+        assert.equal(await languages.count(),14);
+        await page.getByRole('radio',{name:'Deutsch',exact:true}).click();
+        await page.locator('html[lang="de"]').waitFor({state:'attached'});
+        await page.goto('/');
+        await page.locator('html[lang="de"]').waitFor({state:'attached'});
+        await languages.first().waitFor({state:'attached'});
+        assert.equal(await languages.count(),14);
+      }
       const merchant=page.locator('.public-merchant').first();await merchant.waitFor();
       assert.match(await merchant.innerText(),/Nikita|Никита/);
       assert.match(await merchant.innerText(),/Iurii Logvinov/);
       assert.match(await merchant.innerText(),/772495179010/);
       if(scenario.path.includes('lang=')){
-        await page.locator(`.public-plans[data-currency="${scenario.path.includes('lang=ru')?'RUB':'USD'}"]`).waitFor();
+        const currency=scenario.currency??(scenario.path.includes('lang=ru')?'RUB':'USD');
+        await page.locator(`.public-plans[data-currency="${currency}"]`).waitFor();
         assert.equal(await page.getByRole('radio').count(),14);
       }
       if(scenario.id==='gps-ru-vpn'){

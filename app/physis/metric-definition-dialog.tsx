@@ -1,3 +1,4 @@
+import { usePhysisMigrationCapture } from './migration-editors';
 import { useId, useState } from 'react';
 import { DialogCloseButton } from '../DialogCloseButton';
 import { IconActionButton } from '../IconActionButton';
@@ -10,10 +11,12 @@ import { validCustomMetrics, type CustomMetricDefinition } from './custom-metric
 export function MetricDefinitionDialog({ definition, language, onSave, onClose }: {
   definition?: CustomMetricDefinition; language: string; onSave: (value: CustomMetricDefinition) => Promise<void>; onClose: () => void;
 }) {
+
   const en = language !== 'ru'; const t = (ru: string, english: string) => en ? english : ru;
   const [draft, setDraft] = useState<CustomMetricDefinition>(() => definition ? { ...definition } : {
     id: crypto.randomUUID(), name: '', unit: '', scale: 'numeric', icon: 'sliders-horizontal',
   });
+  usePhysisMigrationCapture('metric-definition-dialog.MetricDefinitionDialog',()=>({draft}));
   const action = usePhysisAction(); const titleId = useId();
   const close = () => { if (!action.busy) onClose(); };
   const ref = useDialogAccessibility<HTMLElement>(close);

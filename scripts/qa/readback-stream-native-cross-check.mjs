@@ -1,0 +1,17 @@
+// Fresh synthetic provider proof plus independent bounded plaintext digests.
+import assert from 'node:assert/strict';
+import {readFile,writeFile,access} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {resolve,relative,sep} from 'node:path';
+const root=resolve(import.meta.dirname,'../..'),[input,outputArg,expectedHash]=process.argv.slice(2);
+if(!input||!outputArg||!/^[A-F0-9]{64}$/.test(expectedHash??''))throw new Error('Supply owned provider report, fresh output and frozen native hash');
+const source=resolve(root,input),output=resolve(root,outputArg);assert.ok(source.startsWith(resolve(root,'output/qa')+sep)&&source.endsWith(sep+'results.json'));assert.ok(output.startsWith(resolve(root,'output/release-3.3.6/runtime')+sep));await assert.rejects(access(output));
+const report=JSON.parse(await readFile(source,'utf8'));assert.equal(report.package,'ru.genesis.calendar.qa1103.debug');assert.equal(report.status,'PASS_LOCAL_SCOPE');assert.deepEqual(report.reasons,[]);assert.equal(report.nativeSourceHash,expectedHash);assert.equal(report.build.nativeSourceHash,expectedHash);
+const rows=report.results.filter(row=>row.class==='ru.genesis.calendar.security.E2eeMigrationReadbackStreamDeviceTest');assert.equal(rows.length,1);const[row]=rows;assert.equal(row.status,'PASS');assert.equal(row.passed,2);assert.equal(row.failed,0);assert.equal(row.skipped,0);assert.equal(row.externalArtifacts.status,'PASS');
+let proof;for(const artifact of row.externalArtifacts.files){const path=resolve(root,artifact.path);assert.ok(path.startsWith(resolve(source,'..')+sep));const raw=await readFile(path);assert.equal(raw.length,artifact.bytes);assert.equal(createHash('sha256').update(raw).digest('hex').toUpperCase(),artifact.sha256.toUpperCase());
+ if(path.endsWith(sep+'readback-stream336-provider.json')){assert.equal(proof,undefined);proof=JSON.parse(raw.toString('utf8'));}}
+assert.equal(proof.synthetic,true);assert.ok([26,34].includes(proof.api));assert.deepEqual(proof.sizes,[4*1024*1024,3,3]);assert.equal(proof.count,3);assert.equal(proof.pageLimit,1);assert.equal(proof.bytes,4*1024*1024+6);assert.equal(proof.sha256.length,3);
+const block=Buffer.alloc(65536);try{for(const[index,size]of proof.sizes.entries()){for(let at=0;at<block.length;at++)block[at]=(at*31+index*17)&255;const hash=createHash('sha256');for(let at=0;at<size;at+=block.length)hash.update(block.subarray(0,Math.min(block.length,size-at)));assert.equal(hash.digest('base64url'),proof.sha256[index]);}}finally{block.fill(0);}
+const result={synthetic:true,status:'PASS',input:relative(root,source).replaceAll('\\','/'),nativeSourceHash:expectedHash,device:row.device,api:proof.api,newCases:row.passed,plaintextBytes:proof.bytes,largestEnvelopePlaintext:proof.sizes[0],pageLimit:proof.pageLimit,artifactHashesChecked:row.externalArtifacts.files.length,
+ checks:['complete largest allowed envelope and both small payload hashes independently constructed in bounded Node buffers','actual provider authenticates exact contexts and every plaintext byte through signed single-envelope inventory/get fixtures','pending sinks failed sinks directory drift foreign scopes loops oversized responses and retirement refuse completion','component fixtures only; no actual HTTP/backend activation product migration trust handoff or new source coverage inferred']};
+await writeFile(output,JSON.stringify(result,null,2)+'\n',{flag:'wx'});console.log(JSON.stringify(result));

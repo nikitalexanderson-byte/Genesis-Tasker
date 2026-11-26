@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {websiteRegionRussia,websiteDomesticRedirect,websiteDonationsAvailable} from '../app/website-region-policy.ts';
+import {suggestedWebsiteLanguage,websiteRegionRussia,websiteDomesticRedirect,websiteDonationsAvailable} from '../app/website-region-policy.ts';
 
 test('device location overrides a VPN IP in both directions',()=>{
   assert.equal(websiteRegionRussia({ip:'outside-RU',device:'RU'}),true);
@@ -18,4 +18,12 @@ test('donations remain available without a website region restriction or geoloca
   }
   assert.equal(websiteDonationsAvailable({ip:'outside-RU',device:'RU',loading:true}),true);
   assert.equal(websiteDonationsAvailable({ip:'RU',device:'outside-RU',loading:false}),true);
+});
+
+test('location only suggests a starting language and the browser gives a fallback',()=>{
+  assert.equal(suggestedWebsiteLanguage({ip:'outside-RU',device:'RU'},['en-US'],'America/New_York'),'ru');
+  assert.equal(suggestedWebsiteLanguage({ip:'RU',device:'outside-RU'},['de-DE'],'Europe/Berlin'),'de');
+  assert.equal(suggestedWebsiteLanguage({ip:'RU',device:null},['de-DE'],'Europe/Berlin'),'ru');
+  assert.equal(suggestedWebsiteLanguage({ip:'unknown',device:null},['ru-RU'],'America/New_York'),'ru');
+  assert.equal(suggestedWebsiteLanguage({ip:'unknown',device:null},['fi'],'Europe/Warsaw'),'pl');
 });

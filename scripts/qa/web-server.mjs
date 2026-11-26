@@ -7,8 +7,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.woff2': 'font/woff2', '.mp3': 'audio/mpeg', '.wav': 'audio/wav' };
 
 /** Serve the actual release web bundle and proxy only to the isolated loopback API. */
-export async function startWebServer({ port = 4380, apiPort = 4381 } = {}) {
-  const directory = path.join(root, 'dist-web', 'public_html');
+export async function startWebServer({ port = 4380, apiPort = 4381, directory = path.join(root, 'dist-web', 'public_html') } = {}) {
+  directory = path.resolve(directory);
   if (!existsSync(path.join(directory, 'index.html'))) throw new Error('Build the web client with pnpm build:web first');
   // Browser permission checks must use the same policy as the published bundle.
   const permissionsPolicy = readFileSync(path.join(directory, '.htaccess'), 'utf8')

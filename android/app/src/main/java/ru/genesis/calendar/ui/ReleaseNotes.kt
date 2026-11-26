@@ -26,7 +26,7 @@ internal data class Notes(val title: String, val close: String, val changes: Lis
 
 /** The app and Open testing use the same reviewed release copy. */
 internal fun currentReleaseNotes(context: Context, language: String): List<String> {
-    val catalog = context.assets.open("originals/i18n/android-3.3.5-notes.json")
+    val catalog = context.assets.open("originals/i18n/android-3.3.6-notes.json")
         .bufferedReader(Charsets.UTF_8).use { org.json.JSONObject(it.readText()) }
     val items = catalog.optJSONArray(language) ?: catalog.getJSONArray("ru")
     return (0 until items.length()).map { items.getString(it) }

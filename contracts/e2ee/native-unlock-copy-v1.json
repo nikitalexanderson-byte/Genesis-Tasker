@@ -1,0 +1,100 @@
+{
+  "en": {
+    "unlock": "Fingerprint or device PIN",
+    "hint": "Touch the fingerprint sensor, or use your phone’s PIN, pattern or password.",
+    "retry": "Fingerprint not recognized. Try again or use your phone’s screen lock.",
+    "pin": "Use device screen lock",
+    "cancel": "Cancel"
+  },
+  "ru": {
+    "unlock": "Отпечаток или PIN телефона",
+    "hint": "Приложите палец к датчику или используйте PIN, графический ключ либо пароль телефона.",
+    "retry": "Отпечаток не распознан. Повторите попытку или используйте блокировку телефона.",
+    "pin": "Использовать блокировку телефона",
+    "cancel": "Отмена"
+  },
+  "el": {
+    "unlock": "Αποτύπωμα ή PIN συσκευής",
+    "hint": "Αγγίξτε τον αισθητήρα αποτυπωμάτων ή χρησιμοποιήστε το PIN, το μοτίβο ή τον κωδικό της συσκευής.",
+    "retry": "Το αποτύπωμα δεν αναγνωρίστηκε. Δοκιμάστε ξανά ή χρησιμοποιήστε το κλείδωμα οθόνης.",
+    "pin": "Χρήση κλειδώματος συσκευής",
+    "cancel": "Ακύρωση"
+  },
+  "de": {
+    "unlock": "Fingerabdruck oder Geräte-PIN",
+    "hint": "Berühren Sie den Fingerabdrucksensor oder verwenden Sie die PIN, das Muster oder das Passwort Ihres Telefons.",
+    "retry": "Fingerabdruck nicht erkannt. Versuchen Sie es erneut oder verwenden Sie die Displaysperre Ihres Telefons.",
+    "pin": "Displaysperre verwenden",
+    "cancel": "Abbrechen"
+  },
+  "fr": {
+    "unlock": "Empreinte ou code PIN du téléphone",
+    "hint": "Touchez le capteur d’empreintes ou utilisez le code PIN, le schéma ou le mot de passe du téléphone.",
+    "retry": "Empreinte non reconnue. Réessayez ou utilisez le verrouillage de l’écran.",
+    "pin": "Utiliser le verrouillage du téléphone",
+    "cancel": "Annuler"
+  },
+  "es": {
+    "unlock": "Huella o PIN del teléfono",
+    "hint": "Toca el sensor de huellas o usa el PIN, patrón o contraseña del teléfono.",
+    "retry": "Huella no reconocida. Inténtalo de nuevo o usa el bloqueo de pantalla del teléfono.",
+    "pin": "Usar el bloqueo del teléfono",
+    "cancel": "Cancelar"
+  },
+  "it": {
+    "unlock": "Impronta o PIN del telefono",
+    "hint": "Tocca il sensore di impronte oppure usa il PIN, la sequenza o la password del telefono.",
+    "retry": "Impronta non riconosciuta. Riprova oppure usa il blocco schermo del telefono.",
+    "pin": "Usa il blocco schermo",
+    "cancel": "Annulla"
+  },
+  "pt": {
+    "unlock": "Impressão digital ou PIN do telefone",
+    "hint": "Toque no sensor de impressão digital ou use o PIN, padrão ou senha do telefone.",
+    "retry": "Impressão digital não reconhecida. Tente novamente ou use o bloqueio de tela do telefone.",
+    "pin": "Usar o bloqueio do telefone",
+    "cancel": "Cancelar"
+  },
+  "pl": {
+    "unlock": "Odcisk palca lub PIN telefonu",
+    "hint": "Dotknij czytnika linii papilarnych lub użyj kodu PIN, wzoru albo hasła telefonu.",
+    "retry": "Nie rozpoznano odcisku. Spróbuj ponownie lub użyj blokady ekranu telefonu.",
+    "pin": "Użyj blokady ekranu telefonu",
+    "cancel": "Anuluj"
+  },
+  "sr": {
+    "unlock": "Отисак прста или PIN телефона",
+    "hint": "Додирните сензор отиска прста или користите PIN, шаблон или лозинку телефона.",
+    "retry": "Отисак није препознат. Покушајте поново или користите закључавање екрана телефона.",
+    "pin": "Користи закључавање телефона",
+    "cancel": "Откажи"
+  },
+  "uk": {
+    "unlock": "Відбиток або PIN телефона",
+    "hint": "Прикладіть палець до датчика або скористайтеся PIN-кодом, графічним ключем чи паролем телефона.",
+    "retry": "Відбиток не розпізнано. Спробуйте знову або скористайтеся блокуванням телефона.",
+    "pin": "Використати блокування телефона",
+    "cancel": "Скасувати"
+  },
+  "zh": {
+    "unlock": "指纹或手机 PIN 码",
+    "hint": "请触摸指纹传感器，或使用手机的 PIN 码、图案或密码。",
+    "retry": "未识别指纹。请重试，或使用手机锁屏验证。",
+    "pin": "使用手机锁屏验证",
+    "cancel": "取消"
+  },
+  "tr": {
+    "unlock": "Parmak izi veya cihaz PIN’i",
+    "hint": "Parmak izi sensörüne dokunun veya telefonunuzun PIN’ini, desenini ya da şifresini kullanın.",
+    "retry": "Parmak izi tanınmadı. Yeniden deneyin veya telefonunuzun ekran kilidini kullanın.",
+    "pin": "Cihaz ekran kilidini kullan",
+    "cancel": "İptal"
+  },
+  "ja": {
+    "unlock": "指紋または端末の PIN",
+    "hint": "指紋センサーに触れるか、端末の PIN、パターン、パスワードを使用してください。",
+    "retry": "指紋を認識できませんでした。再試行するか、端末の画面ロックを使用してください。",
+    "pin": "端末の画面ロックを使用",
+    "cancel": "キャンセル"
+  }
+}

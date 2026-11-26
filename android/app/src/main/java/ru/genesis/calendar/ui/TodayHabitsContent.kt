@@ -78,13 +78,7 @@ internal fun TodayHabitsContent(app: GenesisApplication, date: LocalDate,
         verticalArrangement = Arrangement.spacedBy(10.dp)) {
         if (showTopDivider) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalAlignment=Alignment.CenterVertically) {
-            Surface(Modifier.size(44.dp),shape=AffairsLayout.shape,color=if(LocalEveningTheme.current)
-                MaterialTheme.colorScheme.secondaryContainer else Color(0xff123b36)) {
-                Box(contentAlignment=Alignment.Center) {
-                    GenesisVectorIcon(GenesisPageIcon.HABITS,Modifier.size(28.dp),if(LocalEveningTheme.current)
-                        MaterialTheme.colorScheme.onSecondaryContainer else Color(0xfff3d68f),animated=true)
-                }
-            }
+            TodaySectionIcon(GenesisPageIcon.HABITS, "today-habits-section-icon")
             Column(Modifier.weight(1f)) {
                 Text("Трекер привычек", style = MaterialTheme.typography.titleLarge)
                 Text("$completed из ${scheduled.size} выполнено", style = MaterialTheme.typography.bodySmall,

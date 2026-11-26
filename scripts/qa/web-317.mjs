@@ -112,6 +112,10 @@ export async function verifyRelease317({context,page,tier,output,check,snapshot}
     await check('release317-habit-import',async()=>{
       const details=await openHabitData();
       const input=details.locator('input[type="file"]');await input.waitFor({state:'attached'});
+      // setInputFiles bypasses the disabled picker. A user cannot choose a file
+      // until the encrypted restore journal has finished its asynchronous open.
+      if(!await input.isEnabled())console.log(`WAIT ${tier} habit restore journal readiness`);
+      await page.waitForFunction(()=>document.querySelector('.habit-data-export input[type="file"]')?.matches(':enabled'));
       const writes=[],observe=request=>{if(new URL(request.url()).pathname==='/api/workspace'&&request.method()==='PUT')writes.push(request.url());};
       await page.waitForLoadState('networkidle');page.on('request',observe);
       try{

@@ -1,6 +1,13 @@
 package ru.genesis.calendar.data
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Database
+import androidx.room.Entity
+import androidx.room.Index
+import androidx.room.Insert
+import androidx.room.Query
+import androidx.room.RoomDatabase
+import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 @Entity(tableName = "tasks", primaryKeys = ["scope", "id"])
@@ -19,10 +26,27 @@ data class OutboxRecord(val scope: String, val entityId: String, val revision: L
 @Entity(tableName = "documents", primaryKeys = ["scope", "kind"])
 data class DocumentRecord(val scope: String, val kind: String, val encrypted: String, val revision: Long)
 
+/** Technical deny state, never imported from a content archive. */
+@Entity(tableName = "e2ee_legacy_fences", primaryKeys = ["scope"])
+data class LegacyScopeFenceRecord(val scope: String, val ownerId: String, val remoteScopeId: String, val phase: String, val token: String) {
+    override fun toString() = "LegacyScopeFenceRecord([redacted])"
+}
+
 @Dao
 interface GenesisDao {
+    @Query("SELECT * FROM e2ee_legacy_fences WHERE scope=:scope")
+    suspend fun legacyScopeFence(scope: String): LegacyScopeFenceRecord?
+    @Insert suspend fun insertLegacyScopeFence(record: LegacyScopeFenceRecord)
+    @Query("UPDATE e2ee_legacy_fences SET phase='active' WHERE scope=:scope AND token=:token AND phase='preparing'")
+    suspend fun activateLegacyScopeFence(scope: String, token: String): Int
+    @Query("DELETE FROM e2ee_legacy_fences WHERE scope=:scope AND token=:token AND phase='preparing'")
+    suspend fun cancelLegacyScopeFence(scope: String, token: String): Int
     @Query("SELECT * FROM documents WHERE scope=:scope")
     suspend fun backupDocuments(scope: String): List<DocumentRecord>
+    @Query("SELECT kind FROM documents WHERE scope=:scope ORDER BY kind")
+    suspend fun documentKinds(scope: String): List<String>
+    @Query("SELECT DISTINCT scope FROM documents WHERE scope=:account OR substr(scope,1,length(:prefix))=:prefix ORDER BY scope")
+    suspend fun migrationDocumentScopes(account:String,prefix:String):List<String>
     @Query("DELETE FROM outbox WHERE scope=:scope")
     suspend fun clearBackupHeldOutbox(scope: String)
     @Query("SELECT * FROM tasks WHERE scope=:scope")
@@ -73,8 +97,8 @@ interface GenesisDao {
     suspend fun acknowledgeOutbox(scope: String, entityId: String, revision: Long, operationId: String): Int
 }
 
-@Database(entities = [TaskRecord::class, ReminderRecord::class, OutboxRecord::class, DocumentRecord::class],
-    version = 1, exportSchema = true)
+@Database(entities = [TaskRecord::class, ReminderRecord::class, OutboxRecord::class, DocumentRecord::class, LegacyScopeFenceRecord::class],
+    version = 2, exportSchema = true)
 abstract class GenesisDatabase : RoomDatabase() {
     abstract fun dao(): GenesisDao
 }

@@ -209,7 +209,7 @@ export default function NotificationDock({ userId, guidanceUser=null, language, 
           </article>)}
           {loading?<p role="status">{t("Загрузка…")}</p>:!notifications.length&&!count&&!error?<p>{t("Здесь пока нет обновлений.")}</p>:null}
           {nextCursor ? <button type="button" className="secondary-button notification-load-more" disabled={loadingMore} onClick={() => void loadMore()}>{t(loadingMore ? "Загрузка…" : "Показать ещё")}</button> : null}
-          {invitationsEnabled ? <SharedInvitationNotices userId={userId} english={language === "en"} persistent onActivity={setInvitationActivity} onAccepted={destination => { collapse(); onAccepted(destination); }} /> : null}
+          {invitationsEnabled ? <SharedInvitationNotices userId={userId} english={language === "en"} language={language} persistent onActivity={setInvitationActivity} onAccepted={destination => { collapse(); onAccepted(destination); }} /> : null}
           </div>
           {userId&&messengerEnabled?<Suspense fallback={null}><Messenger key={userId} userId={userId} language={language} active={expanded} view={activePane==='messages'?'contacts':'notices'} onActivity={setPrivateActivity} onConversationOpen={openMessages} legacyEnabled={sharedEnabled}/></Suspense>:null}
           {sharedEnabled&&messengerEnabled&&activePane==='updates'?<Suspense fallback={null}><PrivateNotices userId={userId} language={language} embedded active={expanded} view="notices" onConversationOpen={openMessages}/></Suspense>:null}

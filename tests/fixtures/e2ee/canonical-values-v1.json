@@ -1,0 +1,145 @@
+{
+  "format": "GENESIS tagged technical values v1",
+  "oracle": "Manually enumerated tags, big-endian lengths and unsigned safe integers; no production encoder.",
+  "valid": [
+    {
+      "name": "null",
+      "value": null,
+      "hex": "00"
+    },
+    {
+      "name": "false",
+      "value": false,
+      "hex": "01"
+    },
+    {
+      "name": "true",
+      "value": true,
+      "hex": "02"
+    },
+    {
+      "name": "zero",
+      "value": 0,
+      "hex": "030000000000000000"
+    },
+    {
+      "name": "uint32",
+      "value": 4294967296,
+      "hex": "030000000100000000"
+    },
+    {
+      "name": "max-safe",
+      "value": 9007199254740991,
+      "hex": "03001fffffffffffff"
+    },
+    {
+      "name": "empty-text",
+      "value": "",
+      "hex": "0400000000"
+    },
+    {
+      "name": "ascii",
+      "value": " ~",
+      "hex": "0400000002207e"
+    },
+    {
+      "name": "empty-array",
+      "value": [],
+      "hex": "0500000000"
+    },
+    {
+      "name": "array",
+      "value": [
+        null,
+        false,
+        true,
+        ""
+      ],
+      "hex": "05000000040001020400000000"
+    },
+    {
+      "name": "object",
+      "value": {
+        "A": 0,
+        "b": [
+          null,
+          true
+        ]
+      },
+      "hex": "060000000204000000014103000000000000000004000000016205000000020002"
+    },
+    {
+      "name": "prototype-name",
+      "value": {
+        "constructor": "technical"
+      },
+      "hex": "0600000001040000000b636f6e7374727563746f720400000009746563686e6963616c"
+    }
+  ],
+  "invalid": [
+    {
+      "name": "unknown-tag",
+      "hex": "07"
+    },
+    {
+      "name": "unsafe-integer",
+      "hex": "030020000000000000"
+    },
+    {
+      "name": "negative-integer",
+      "hex": "03ffffffffffffffff"
+    },
+    {
+      "name": "text-control",
+      "hex": "040000000100"
+    },
+    {
+      "name": "text-delete",
+      "hex": "04000000017f"
+    },
+    {
+      "name": "text-utf8",
+      "hex": "0400000002c3a9"
+    },
+    {
+      "name": "text-length-overflow",
+      "hex": "04ffffffff"
+    },
+    {
+      "name": "array-too-long",
+      "hex": "0500002711"
+    },
+    {
+      "name": "array-length-overflow",
+      "hex": "05ffffffff"
+    },
+    {
+      "name": "empty-object",
+      "hex": "0600000000"
+    },
+    {
+      "name": "too-many-properties",
+      "hex": "0600000081"
+    },
+    {
+      "name": "duplicate-name",
+      "hex": "06000000020400000001610004000000016100"
+    },
+    {
+      "name": "unsorted-name",
+      "hex": "06000000020400000001620004000000016100"
+    },
+    {
+      "name": "non-text-name",
+      "hex": "06000000010000"
+    },
+    {
+      "name": "invalid-name",
+      "hex": "060000000104000000015f00"
+    },
+    {
+      "name": "trailing-byte",
+      "hex": "0000"
+    }
+  ]
+}

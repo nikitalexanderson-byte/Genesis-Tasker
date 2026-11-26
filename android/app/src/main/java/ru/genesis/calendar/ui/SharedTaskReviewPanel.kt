@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -25,6 +26,10 @@ internal fun SharedTaskReviewPanel(gateway: SharedTaskReviewGateway, task: JSONO
     var error by remember { mutableStateOf("") }
     var configure by remember { mutableStateOf(false) }
     var confirm by remember { mutableStateOf(false) }
+    var privatePreview by remember{mutableStateOf<JSONObject?>(null)}
+    var proposalIndex by remember{mutableStateOf(0)};var versionReviewed by remember{mutableStateOf(false)}
+    val decisionIds=remember{mutableMapOf<String,String>()};val context=LocalContext.current;val language=LocalGenesisLanguage.current
+    val reviewCopy=remember(language){context.assets.open("approval-review-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
     val rows = task.optJSONArray("approvals") ?: JSONArray()
     val completed = task.optString("completedAt").let { it.isNotBlank() && it != "null" }
     val archived = task.optString("archivedAt").let { it.isNotBlank() && it != "null" }
@@ -50,7 +55,7 @@ internal fun SharedTaskReviewPanel(gateway: SharedTaskReviewGateway, task: JSONO
                 Text(if (row.isNull("approvedAt")) "Ожидается" else "Подтверждено", style = MaterialTheme.typography.labelMedium)
             }
         }
-        if (SharedTaskReviewProtocol.canApprove(task, userId)) Button(onClick = { confirm = true }, enabled = enabled,
+        if (SharedTaskReviewProtocol.canApprove(task, userId)) Button(onClick = {busy=true;error="";scope.launch{try{privatePreview=gateway.sharedTaskApprovalPreview(task.getString("projectId"),task.getString("id"));proposalIndex=0;versionReviewed=false;confirm=true}catch(cancel:CancellationException){throw cancel}catch(_:Exception){error=reviewCopy.getString("empty")}finally{busy=false}}}, enabled = enabled,
             modifier = Modifier.testTag("shared-task-approve")) { Text("Подтвердить выполнение") }
         task.optJSONObject("review")?.takeIf { completed && it.optBoolean("enabled") }?.let { data ->
             Text("Проверка выполненной задачи", style = MaterialTheme.typography.titleSmall)
@@ -74,11 +79,21 @@ internal fun SharedTaskReviewPanel(gateway: SharedTaskReviewGateway, task: JSONO
         if (error.isNotBlank()) Text(error, color = MaterialTheme.colorScheme.error)
     }
     if (confirm) AlertDialog(onDismissRequest = { if (!busy) confirm = false }, title = { Text("Подтвердить выполнение?") },
-        text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        text = { Column(Modifier.heightIn(max=420.dp).verticalScroll(rememberScrollState()),verticalArrangement = Arrangement.spacedBy(8.dp)) {
             UntranslatedText(task.getString("title"))
-            Text("Когда все назначенные участники подтвердят выполнение, задача перейдёт в выполненные.")
-        } }, confirmButton = { TextButton(enabled = enabled, onClick = { run {
-            require(SharedTaskReviewProtocol.canApprove(task, userId)); gateway.sharedTaskApprove(task.getString("projectId"), task.getString("id")); confirm = false
+            if(privatePreview==null)Text("Когда все назначенные участники подтвердят выполнение, задача перейдёт в выполненные.")
+            else{Text(reviewCopy.getString("notice"));val proposals=privatePreview!!.getJSONArray("proposals")
+                if(proposals.length()==0)Text(reviewCopy.getString("empty"))
+                else{if(proposals.length()>1)(0 until proposals.length()).forEach{at->Row(verticalAlignment=Alignment.CenterVertically){RadioButton(selected=proposalIndex==at,onClick={proposalIndex=at;versionReviewed=false});UntranslatedText(proposals.getJSONObject(at).getJSONObject("task").getString("title"))}}
+                    val proposed=proposals.getJSONObject(proposalIndex).getJSONObject("task");Text(reviewCopy.getString("details"));UntranslatedText(proposed.toString(2))
+                    Row(verticalAlignment=Alignment.CenterVertically){Checkbox(checked=versionReviewed,onCheckedChange={versionReviewed=it},enabled=!busy);Text("Подтвердить выполнение")}
+                }
+            }
+        } }, confirmButton = { TextButton(enabled = enabled&&(privatePreview==null||versionReviewed), onClick = { run {
+            require(SharedTaskReviewProtocol.canApprove(task, userId))
+            if(privatePreview==null)gateway.sharedTaskApprove(task.getString("projectId"), task.getString("id"))
+            else{val selected=privatePreview!!.getJSONArray("proposals").getJSONObject(proposalIndex);val review=JSONObject(selected.toString()).apply{remove("task")};val id=selected.getString("proposalId");val requestId=decisionIds.getOrPut(id){java.util.UUID.randomUUID().toString()};gateway.sharedTaskApproveReviewed(task.getString("projectId"),task.getString("id"),review,requestId)}
+            confirm = false
         } }) { Text("Подтвердить") } }, dismissButton = { TextButton(enabled = !busy, onClick = { confirm = false }) { Text("Отмена") } })
     if (configure) SharedTaskApproverDialog(task, members, enabled, onClose = { configure = false }) { required, selected ->
         run { gateway.sharedTaskApprovers(task.getString("projectId"), task.getString("id"),

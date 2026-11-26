@@ -99,10 +99,19 @@ function genesisModelingAcceptYoo(array $payment,array $order,array $config): vo
 
 function genesisModelingResult(string $userId,string $id): array
 {
-    $db=genesisDb();$q=$db->prepare('SELECT * FROM future_modeling_results WHERE id=? AND user_id=?');$q->execute([$id,$userId]);$result=$q->fetch();
-    if(!$result)throw new GenesisResourceLimitException(404,'MODELING_RESULT_NOT_READY');
+    $db=genesisDb();$q=$db->prepare('SELECT * FROM e2ee_aurora_results WHERE id=? AND user_id=?');$q->execute([$id,$userId]);$reference=$q->fetch();$q->closeCursor();
+    $q=$db->prepare('SELECT * FROM future_modeling_results WHERE id=? AND user_id=?');$q->execute([$id,$userId]);$result=$q->fetch();$q->closeCursor();
+    if(!$result&&!$reference)throw new GenesisResourceLimitException(404,'MODELING_RESULT_NOT_READY');
     $q=$db->prepare("SELECT id FROM future_modeling_orders WHERE result_id=? AND user_id=? AND status='paid'");$q->execute([$id,$userId]);
     if(!$q->fetchColumn()&&!genesisForecastFreeAccess(genesisFindUser($userId)??[]))throw new GenesisResourceLimitException(402,'MODELING_PAYMENT_REQUIRED');
+    if($reference){$scope=genesisE2eeScope($userId,$reference['scope_id']);
+        if($scope['kind']!=='personal'||$scope['owner_id']!==$userId||$scope['resource_id']!==$userId||!in_array($scope['state'],['active','retirement'],true)
+            ||(int)$scope['generation']!==(int)$reference['generation'])throw new DomainException('E2EE_SCOPE_BINDING_MISMATCH');
+        return ['id'=>$id,'methodVersion'=>$reference['method_version'],'solution'=>['kind'=>'aurora-e2ee-reference-v1','scopeId'=>$reference['scope_id'],
+            'generation'=>(int)$reference['generation'],'objectId'=>$reference['object_id'],'revision'=>1,'payloadHash'=>$reference['payload_hash']]];}
+    // Active private accounts must convert their retained, client-verified
+    // original. Billing may not reopen the retired account-key endpoint.
+    genesisE2eeRequireLegacyUser($userId);
     return ['id'=>$id,'methodVersion'=>$result['method_version'],'solution'=>json_decode(genesisSharedContentDecrypt($result['encrypted_result']),true,32,JSON_THROW_ON_ERROR)];
 }
 
@@ -115,7 +124,7 @@ function genesisModelingCreateOrder(string $userId,array $input,?array $settings
         ||!is_string($input['resultId']??null)||preg_match('/\A[a-f0-9-]{36}\z/D',$input['resultId'])!==1
         ||!is_string($input['idempotencyKey']??null)||preg_match('/\A[a-zA-Z0-9_-]{16,100}\z/D',$input['idempotencyKey'])!==1)
         throw new InvalidArgumentException('BILLING_ORDER_INVALID');
-    $db=genesisDb();$q=$db->prepare('SELECT id FROM future_modeling_results WHERE id=? AND user_id=?');$q->execute([$input['resultId'],$userId]);
+    $db=genesisDb();$q=$db->prepare('SELECT id FROM future_modeling_results WHERE id=? AND user_id=? UNION ALL SELECT id FROM e2ee_aurora_results WHERE id=? AND user_id=?');$q->execute([$input['resultId'],$userId,$input['resultId'],$userId]);
     if(!$q->fetchColumn())throw new GenesisResourceLimitException(404,'MODELING_RESULT_NOT_READY');
     if(genesisForecastFreeAccess($user))throw new GenesisResourceLimitException(409,'MODELING_PAYMENT_NOT_REQUIRED');
     // Existing tariff access is still required for the method; payment never upgrades it.

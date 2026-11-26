@@ -1,7 +1,9 @@
 /* eslint-disable @next/next/no-img-element -- Member-only image responses use the authenticated session. */
 "use client";
-import { useRef, useState } from "react";
+import { useEffect,useRef, useState } from "react";
 import { ExperimentalIcon } from "./ExperimentalIcon";
+import {privateSharedFileOwner,readPrivateSharedFile} from './private-shared-file';
+import {privateAccountView,requirePrivateAccount,subscribePrivateAccount} from './e2ee/product-session';
 
 export function SharedTaskImageInput({ value, onChange, onReadingChange, english, disabled }: { value: string; onChange: (data: string) => void; onReadingChange: (reading: boolean) => void; english: boolean; disabled: boolean }) {
   const [error, setError] = useState(""); const [reading, setReading] = useState(false);
@@ -26,10 +28,18 @@ export function SharedTaskImageInput({ value, onChange, onReadingChange, english
   </div>;
 }
 export function SharedTaskImage({ src, english }: { src: string; english: boolean }) {
-  const [failed, setFailed] = useState(false);
+  const privateOwner=privateSharedFileOwner(),[failure,setFailure]=useState<{src:string;owner:string|null}|null>(null),[opened,setOpened]=useState<{src:string;owner:string;url:string}|null>(null),[custody,setCustody]=useState(0);
+  const failed=failure?.src===src&&failure.owner===privateOwner;
+  useEffect(()=>{let url:string|undefined,alive=true;const controller=new AbortController(),owner=privateOwner;
+   const release=()=>{controller.abort();if(url){URL.revokeObjectURL(url);url=undefined;}if(alive)setOpened(null);};
+   const unsubscribe=owner?subscribePrivateAccount(()=>{release();if(alive){setFailure({src,owner:privateOwner});setCustody(value=>value+1);}}):()=>{};
+   const view=privateAccountView();if(owner&&view.ownerId===owner&&view.phase==='ready')void readPrivateSharedFile(src,owner,controller.signal).then(result=>{try{requirePrivateAccount(owner).requireOpen();if(!alive||controller.signal.aborted)return;if(!['image/jpeg','image/png','image/webp'].includes(result.mediaType))throw new Error('E2EE_PRIVATE_FILE_CORRUPT');url=URL.createObjectURL(new Blob([result.bytes],{type:result.mediaType}));setOpened({src,owner,url});}finally{result.bytes.fill(0);}}).catch(()=>{if(alive&&!controller.signal.aborted)setFailure({src,owner:privateOwner});});
+   return()=>{alive=false;unsubscribe();release();};
+  },[src,privateOwner,custody]);
+  const imageSource=privateOwner?(opened?.src===src&&opened.owner===privateOwner?opened.url:''):src;
   return <figure className="shared-task-image">
     {failed ? <p role="status">{english ? "Photo is unavailable. Check your connection and task access." : "Фото недоступно. Проверьте подключение и доступ к задаче."}</p>
-      : <img src={src} alt={english ? "Photo attached to this task" : "Фото, прикреплённое к задаче"} referrerPolicy="no-referrer" onError={() => setFailed(true)} />}
+      : imageSource?<img src={imageSource} alt={english ? "Photo attached to this task" : "Фото, прикреплённое к задаче"} referrerPolicy="no-referrer" onError={() => setFailure({src,owner:privateOwner})} />:<p role="status">{english?'Loading…':'Загрузка…'}</p>}
     <figcaption>{english ? "Photo is visible only to task participants." : "Фото видно только участникам задачи."}</figcaption>
   </figure>;
 }

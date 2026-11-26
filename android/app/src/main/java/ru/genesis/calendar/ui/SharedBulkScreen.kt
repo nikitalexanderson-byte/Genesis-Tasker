@@ -85,6 +85,17 @@ internal fun bulkErrorText(code: String) = when {
         val night = LocalEveningTheme.current
         var stopWarning by remember { mutableStateOf(false) }
         var leaveWarning by remember { mutableStateOf(false) }
+        RememberMigrationForm(LocalGenesisUserId.current,state,"shared-bulk",{!state.busy}){
+            JSONObject().put("context",projectId).put("query",state.query).put("initialFilter",JSONObject(initialFilter.toString()))
+                .put("initialSort",sort).put("origin",JSONObject(state.originJson)).put("rawForm",JSONObject(state.form.saved()))
+                .put("calendar",state.calendarJson?.let{JSONObject(it)}?:JSONObject.NULL).put("operationId",state.operationId)
+                .put("inputInvalid",state.inputInvalid).put("dirty",state.dirty).put("pane",state.pane)
+                .put("record",state.record?.let{JSONObject(it.toString())}?:JSONObject.NULL)
+                .put("projectBaseline",state.project?.let{JSONObject(it.toString())}?:JSONObject.NULL)
+                .put("taskBaseline",state.tasks?.let{JSONObject(it.toString())}?:JSONObject.NULL)
+                .put("scopeProjects",JSONArray(state.scopeProjects.map{JSONObject(it.toString())}))
+                .put("report",state.report?.let{JSONObject(it.toString())}?:JSONObject.NULL)
+        }
         fun close() { scope.launch { if (state.saveInput()) onClose() else leaveWarning = true } }
         DisposableEffect(state) { onDispose { scope.launch(NonCancellable) { try { state.saveInput() } finally { state.close() } } } }
         LaunchedEffect(state.version, state.busy) { if (state.dirty && !state.busy) { delay(250); state.saveInput() } }

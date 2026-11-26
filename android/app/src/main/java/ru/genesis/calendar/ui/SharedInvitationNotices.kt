@@ -25,6 +25,7 @@ internal data class SharedInvitationDestination(val spaceId: String, val project
 internal fun SharedInvitationNotices(controller: AuthController, userId: String, language: String,
     onAccepted: (SharedInvitationDestination) -> Unit) {
     val en = language == "en"
+    val invitationCopy = invitationSecurityCopy(language)
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val scope = rememberCoroutineScope()
@@ -75,15 +76,20 @@ internal fun SharedInvitationNotices(controller: AuthController, userId: String,
                     if (invitation.optString("projectTitle").isNotBlank()) Text(invitation.optString("projectTitle"))
                     if (errorId == id) Text(if (en) "Could not accept the invitation. Try again."
                         else "Не удалось принять приглашение. Повторите попытку.", color = MaterialTheme.colorScheme.error)
-                    Button(enabled = pending.isEmpty(), modifier = Modifier.testTag("shared-invitation-notice-accept-$id"),
+                    if (invitation.optBoolean("pendingApproval") || invitation.optBoolean("admitted")) UntranslatedText(invitationCopy.getString(if (invitation.optBoolean("admitted")) "device" else "saved"))
+                    Button(enabled = pending.isEmpty() && !invitation.optBoolean("pendingApproval") && !invitation.optBoolean("admitted"), modifier = Modifier.testTag("shared-invitation-notice-accept-$id"),
                         onClick = {
                             pending = id; errorId = ""
                             scope.launch {
                                 try {
                                     val joined = controller.acceptSharedInvitation(id)
-                                    hide(id)
-                                    onAccepted(SharedInvitationDestination(joined.optString("spaceId"), joined.optString("projectId")))
-                                    controller.refresh()
+                                    if (joined.optBoolean("pendingApproval") || joined.optBoolean("deviceApprovalRequired")) {
+                                        invitations = invitations.map { row -> if (row.optString("id") == id) JSONObject(row.toString()).put("pendingApproval", joined.optBoolean("pendingApproval")).put("admitted", joined.optBoolean("admitted")).put("deviceApprovalRequired", joined.optBoolean("deviceApprovalRequired")) else row }
+                                    } else {
+                                        hide(id)
+                                        onAccepted(SharedInvitationDestination(joined.optString("spaceId"), joined.optString("projectId")))
+                                        controller.refresh()
+                                    }
                                 } catch (error: CancellationException) { throw error }
                                 catch (_: Exception) { errorId = id }
                                 finally { pending = "" }

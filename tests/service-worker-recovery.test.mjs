@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { runInNewContext } from "node:vm";
+import {runServiceWorker} from './helpers/service-worker-context.mjs';
 
 const source = await readFile(new URL("../public/sw.js", import.meta.url), "utf8");
 const origin = "https://genesiscalendar.com/";
@@ -27,7 +27,7 @@ function worker({ assetHtml = false, cachedHtml = false, networkHtml = false, ne
     __GENESIS_PRECACHE_VERSION: "test", __GENESIS_PRECACHE: ["./assets/account.js"],
     addEventListener: (name, callback) => events.set(name, callback),
   };
-  runInNewContext(source, {
+  runServiceWorker(source, {
     self, URL, Request, Response, importScripts() {}, caches: { open: async () => cache, match:(request,options)=>cache.match(request,options) },
     fetch: async () => { networkRequests += 1;if(offline)throw Error('offline');return new Response(networkHtml ? "<html>fallback</html>" : "export const ready = true;", { status:networkStatus, headers: { "Content-Type": networkHtml ? "text/html" : "application/javascript" } }); },
   });

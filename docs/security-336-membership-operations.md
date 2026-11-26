@@ -1,0 +1,105 @@
+# Ordinary membership composition — candidate source,22 November
+
+This is a code-stage checkpoint, not completed membership acceptance. No tests,
+compiler, typecheck, lint, build, asset generation or CI ran. Coverage remains9/20.
+
+`membership-operation-plan.ts` is the common pure business planner for project
+role/removal, space role, member/category permissions and complete project grants.
+It retains nearest inherited grants, explicit exclusions, inbox/admin semantics,
+guest cleanup, invitation revocations, role events and private assignment clears.
+Intermediate removal effects survive a final role returning to its prior value.
+Effect-only operations retain affected scopes. Complete legacy grant sets are not
+truncated to the current bounded membership command. Review fingerprints use
+ordered bounded page hashes and the existing SQL-name-as-value projection.
+
+`MembershipOperationDrafts` persists the complete input before graph/state IO,
+reads it back, obtains a proposal, rechecks it at explicit consent and freezes it
+before crypto preparation. Before freezing, old proposals/reviews remain history.
+After freezing, a changed graph cannot silently obtain new consent or semantics.
+The journal has no apply/approval/signature replay capability. Content archives
+retain these raw inputs as inert history; importing them grants no ACL or device
+authority. Pending drafts must still be composed into normal recovery UI.
+
+`captureMembershipOperationSnapshot` reads actual pinned normal repositories,
+decrypts every selected immutable root, verifies signed topology, obtains complete
+ACL coordinates for selected users and rechecks graph/pins/heads/directories. It
+checks previously pinned project roots omitted by routing. Fresh-device unknown
+server omissions remain a stated limit, not a completeness proof. Missing scopes,
+pins or values remain errors, never empty categories. The graph endpoint returns
+only technical routing/ACL identifiers and presently requires the space owner.
+Project-owner-only/multi-owner composition still needs the owner exchange rather
+than broadening this endpoint to arbitrary ACL readers. Web and native use the
+same capture/planner/draft code through the existing isolated bundled runtime.
+Native content ports retain foreground/account/update guards; no keys or generic
+network/storage capability enter the renderer. The existing shared-aggregate
+channel was also added to the native whitelist that previously omitted it.
+
+Shared product transactions now support a membership binding in their first
+durable write. Normal flush refuses a bound transaction and normal pending flush
+does not select it. `prepare` uploads immutable encrypted values only;
+`confirmPrepared` checks signed normal heads and decrypted exact versions before
+acknowledgement. These are foundations for a containing atomic transaction, not
+permission to apply a series of ordinary product commits before changing ACL.
+
+`product-commit-bound` signatures include the intended membership hash. The
+ordinary command route rejects them; an already-held membership writer context
+must supply the same hash. Product read proofs also require the immediately
+following independently verified directory frame to be a membership rotation
+carrying that hash. The marker is derived while verifying the signed directory;
+it does not change old directory packets or crypto suites. Frozen command custody
+is typed and remains inert, whether or not a containing batch was accepted.
+
+Still required: complete signed effects/anchors manifest in the membership hash,
+atomic private assignment/audit/product commits plus invitation/Google projection
+revocation, wide staged batches, multi-owner effect preparation and attribution,
+normal role/remove/grants/invitation UI on both platforms,14-language review,
+and semantic outcome/cancellation resolution for stale frozen attempts. Until
+that composition exists, normal buttons must not call the raw low-level batch
+and must not claim these foundations are a completed user operation.
+
+Source inspection also corrected the server's ACL access-revision validator:
+ordinary role/permission changes may carry the unchanged access revision;
+replacing grants advances it. Category revisions still require an increment.
+
+All production/Paddle/3.3.5/149 state is unchanged. Floors0, cutover off,
+GENESIS_DEPLOY_ANDROID=false. No push/deploy/device/Play operations occurred.
+
+
+## 22 November: complete category rename and permissions (source-only)
+
+Ordinary category PATCH now preserves its title with permissions as one durable
+operation. A local privateTitle is mandatory when rename is declared. Both review
+fingerprints and all atomic operation pages use an explicit technical projection;
+private titles and their hashes do not enter the network plan. JS/PHP/Kotlin
+wire codecs admit only the rename flag and reject the private field. The actual
+new name lives in the encrypted immutable category version. Other fields remain
+byte-equivalent under the normal effect verifier.
+
+The owner independently decrypts old/proposed category versions, verifies the
+complete declared effects and returns local before/after text for explicit review.
+Web/native initial review shows the saved intended name; owner review shows the
+verified change before approval. A restart/cancel/fresh review preserves the whole
+original operation, including title. Text labels exist on all14 languages.
+No compiler/typecheck/lint/tests/build/CI were run. This is source integration,
+not acceptance; coverage9/20, cutover/floors off. Pending: ordinary invitations,
+foreign-writer readback, very-wide transport/local records, then remaining prompt.
+
+
+## 22 November: ordinary invitation issue/revoke (source-only)
+
+Ordinary space/project invitations now use the existing signed service from the
+normal web/native model. The complete raw request precedes all IO; a stable
+technical UUID, fixed service intent and exact readback prevent reissuing after
+an unknown response. Receipt plus fresh invitation state must match recipient,
+role, permissions and creator. Retained custody understands space defaults/null
+and project roles. Issuance/revocation grant no membership or keys.
+
+The service checks the same current business invite permission and escalation
+rules as the original routes. A current authenticated directory device may issue
+routing metadata; it gains no directory-authority capability. Project issuance
+respects the caller transaction and uses its prepared UUID. Legacy callers retain
+their original behavior. Signed service history records the private-mode routing
+event instead of writing a new legacy audit content row.
+
+Acceptance/listing/pending key-access UI and private activity presentation still
+need integration. No compiler/lint/tests/build/CI were run; coverage remains9/20.

@@ -1,0 +1,60 @@
+#genesis-app-content{display:contents;}
+.private-vault-gate{position:fixed;inset:0;z-index:11000;display:grid;place-items:center;overflow-y:auto;padding:clamp(16px,4vw,40px);background:var(--surface);color:var(--ink);}
+dialog.private-membership-gate{box-sizing:border-box;width:100%;max-width:none;height:100%;max-height:none;margin:0;border:0;border-radius:0;}
+.private-vault-dialog{width:min(620px,100%);grid-template-columns:32px minmax(0,1fr);border:0;background:var(--surface);box-shadow:none;gap:20px;}
+.private-vault-gate>.private-vault-dialog:not(.private-membership-dialog){max-width:620px;min-width:0;}
+.private-vault-dialog>.text-button{grid-column:1 / -1;justify-self:start;min-height:44px;max-width:100%;font-size:16px;line-height:1.5;text-align:start;white-space:normal;word-break:normal;overflow-wrap:normal;}
+.private-vault-dialog>.private-personal-device-entry{grid-column:1 / -1;display:grid;grid-template-columns:minmax(0,1fr);width:100%;min-width:0;max-width:100%;gap:16px;}
+.private-personal-device-entry :is(h3,p){min-width:0;margin:0;word-break:normal;overflow-wrap:normal;hyphens:none;}
+.private-personal-device-entry h3{font-size:20px;line-height:1.35;}
+.private-personal-device-entry p{font-size:15px;line-height:1.6;}
+.private-personal-device-entry .workspace-recovery-field{width:100%;min-width:0;max-width:100%;}
+.private-personal-device-entry .workspace-recovery-field :is(input,textarea){box-sizing:border-box;width:100%;max-width:100%;min-width:0;min-height:44px;padding:12px;color:var(--ink);background:var(--surface);border:1px solid color-mix(in srgb,var(--ink-soft) 35%,transparent);border-radius:var(--ui-surface-radius);font:inherit;line-height:1.5;}
+.private-personal-device-entry .backup-check{display:flex;align-items:flex-start;gap:12px;min-height:44px;font-size:15px;line-height:1.6;}
+.private-personal-device-entry .backup-check input{flex:none;width:20px;height:20px;margin:3px 0;}
+.private-personal-device-entry>button{justify-self:start;max-width:100%;min-height:44px;padding:8px 12px;font:inherit;line-height:1.5;white-space:normal;word-break:normal;overflow-wrap:normal;}
+.private-personal-device-entry>.private-shared-fingerprint{display:block;min-width:0;max-width:100%;overflow-x:auto;white-space:nowrap;}
+.private-vault-gate:has(.private-personal-device-entry){align-items:start;}
+.private-vault-dialog:has(.private-personal-device-entry){max-height:none;overflow:visible;}
+.private-vault-icon{width:30px;height:30px;margin-top:8px;color:var(--ink-soft);}
+.private-vault-dialog .workspace-recovery-heading{padding-right:0;}
+.private-vault-dialog .workspace-recovery-heading h2{font-size:clamp(26px,4.5vw,36px);line-height:1.15;}
+.private-vault-dialog .workspace-recovery-heading p,.private-vault-dialog .workspace-recovery-hint,.private-vault-dialog .workspace-recovery-error{font-size:15px;line-height:1.6;}
+.private-vault-dialog .workspace-recovery-field{font-size:14px;letter-spacing:normal;text-transform:none;}
+.private-vault-dialog .workspace-recovery-field>div{background:var(--surface);}
+.private-vault-dialog .workspace-recovery-field input{font-size:16px;min-height:44px;max-width:100%;}
+.private-vault-dialog input[type=file]{font:inherit;color:var(--ink);padding:8px 0;}
+.private-vault-dialog input::file-selector-button{font:inherit;min-height:44px;margin-inline-end:12px;padding:8px 12px;border:0;border-radius:var(--ui-surface-radius);background:var(--surface-raised,var(--surface));color:var(--ink);}
+.private-vault-dialog .workspace-recovery-privacy{font-size:13px;line-height:1.55;text-align:start;}
+.private-vault-offline{grid-column:1 / -1;min-height:44px;white-space:normal;}
+.private-vault-dialog .workspace-recovery-actions{display:flex;flex-wrap:wrap;}
+.private-vault-dialog .workspace-recovery-actions button{min-height:44px;white-space:normal;font-size:16px;line-height:1.5;}
+.private-vault-dialog :is(input,button):focus-visible{outline:2px solid var(--teal);outline-offset:3px;}
+.private-migration-dialog{grid-template-columns:minmax(0,1fr);}
+.private-migration-dialog :is(p,label,button,small){min-width:0;word-break:normal;overflow-wrap:normal;hyphens:none;}
+.private-migration-dialog>p{margin:0;font-size:16px;line-height:1.6;}
+.private-migration-dialog>button{min-height:44px;white-space:normal;}
+@media(max-width:480px){.private-vault-dialog{padding:12px 0;grid-template-columns:24px minmax(0,1fr);gap:16px 12px;}.private-vault-icon{width:24px;height:24px;}.private-vault-dialog .workspace-recovery-actions{flex-direction:column-reverse;}.private-vault-dialog .workspace-recovery-actions button{width:100%;}}
+@media(max-width:480px){.private-migration-dialog{grid-template-columns:minmax(0,1fr);}}
+.private-membership-dialog{width:min(72ch,100%);max-height:none;padding:clamp(16px,3vw,40px);gap:20px;border:var(--ui-popup-border-width,2px) solid var(--ui-popup-border,var(--gold));border-radius:var(--ui-surface-radius,10px);}
+.private-membership-dialog .backup-check{display:flex;align-items:flex-start;gap:12px;min-height:44px;margin:0;font-size:16px;line-height:1.6;}
+.private-membership-dialog .backup-check input{flex:0 0 20px;width:20px;height:20px;min-height:20px;margin:3px 0;}
+.private-membership-dialog section{display:grid;gap:12px;min-width:0;}
+.private-membership-dialog :is(h3,h4,p,dl){margin:0;}
+.private-membership-dialog :is(h3,h4){margin-block-start:8px;}
+.private-membership-dialog :is(button,input,select){font:inherit;font-size:16px;min-height:44px;max-width:100%;}
+.private-membership-dialog button{white-space:normal;}
+.private-membership-dialog input[type=checkbox]{min-height:auto;}
+.private-membership-code{display:block;max-width:100%;overflow-x:auto;white-space:nowrap;font-size:14px;line-height:1.6;}
+.private-membership-roster{list-style:none;display:grid;gap:12px;margin:0;padding:0;}
+.private-membership-roster>li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;}
+.private-membership-roster small{grid-column:1 / -1;min-width:0;}
+.private-membership-dialog dl{display:flex;gap:12px 24px;flex-wrap:wrap;}
+.private-membership-dialog dl>div{display:flex;gap:8px;}
+.private-membership-dialog dd{margin:0;font-variant-numeric:tabular-nums;}
+.private-membership-dialog nav{align-items:center;justify-content:space-between;}
+.private-membership-dialog nav span{font-variant-numeric:tabular-nums;}
+.private-membership-dialog summary{min-height:44px;cursor:pointer;line-height:1.6;padding-block:10px;}
+.private-membership-entry{display:grid;gap:12px;margin-block-start:24px;}
+.private-membership-entry :is(button,input){min-height:44px;max-width:100%;font:inherit;font-size:16px;}
+@media(max-width:480px){.private-membership-dialog .workspace-recovery-actions{flex-direction:row;}.private-membership-dialog .workspace-recovery-actions button{width:auto;flex:1 1 120px;}.private-membership-roster>li{grid-template-columns:minmax(0,1fr);}.private-membership-roster small{grid-column:auto;}}

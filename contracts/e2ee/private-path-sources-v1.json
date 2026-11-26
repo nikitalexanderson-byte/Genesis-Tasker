@@ -1,0 +1,938 @@
+{
+  "version": 1,
+  "paths": [
+    {
+      "id": "personal.local-work",
+      "scope": "personal",
+      "domains": [
+        "draft",
+        "outbox",
+        "local-snapshot",
+        "workspace"
+      ],
+      "server": [
+        "shared_saved_views",
+        "shared_space_ui",
+        "shared_project_imports",
+        "shared_task_transfers",
+        "shared_bulk_operations",
+        "shared_automation_operations",
+        "shared_template_operations",
+        "shared_custom_field_receipts",
+        "shared_planning_receipts",
+        "shared_mutation_receipts"
+      ]
+    },
+    {
+      "id": "project.content",
+      "scope": "project",
+      "domains": [
+        "shared-project",
+        "shared-comment"
+      ],
+      "server": [
+        "shared_projects",
+        "shared_project_statuses",
+        "shared_project_categories",
+        "shared_tasks",
+        "shared_comments",
+        "shared_comment_mentions",
+        "shared_project_comments",
+        "shared_task_labels",
+        "shared_task_dependencies",
+        "shared_task_planning",
+        "shared_task_approvals",
+        "shared_task_reviews",
+        "shared_custom_field_values",
+        "shared_project_labels",
+        "shared_task_watchers",
+        "shared_notification_task_state",
+        "shared_google_projection_links",
+        "shared_templates",
+        "shared_custom_fields",
+        "shared_custom_field_versions"
+      ]
+    },
+    {
+      "id": "project.files",
+      "scope": "project",
+      "domains": [
+        "attachment",
+        "shared-project"
+      ],
+      "server": [
+        "shared_task_attachments",
+        "shared_task_images"
+      ]
+    },
+    {
+      "id": "project.mindmaps",
+      "scope": "project",
+      "domains": [
+        "mindmap",
+        "attachment"
+      ],
+      "server": [
+        "shared_mindmaps",
+        "shared_mindmap_versions",
+        "shared_mindmap_deletions",
+        "shared_mindmap_deletion_scopes",
+        "shared_mindmap_conversions",
+        "shared_mindmap_receipts"
+      ]
+    },
+    {
+      "id": "project.automation",
+      "scope": "project",
+      "domains": [
+        "shared-project"
+      ],
+      "server": [
+        "shared_task_series",
+        "shared_series_instances",
+        "shared_automation_rules",
+        "shared_automation_runs",
+        "shared_project_workflows",
+        "shared_project_workflow_versions",
+        "shared_automation_operations"
+      ]
+    },
+    {
+      "id": "project.history",
+      "scope": "project",
+      "domains": [
+        "shared-project",
+        "attachment"
+      ],
+      "server": [
+        "shared_audit_events",
+        "shared_project_planning",
+        "shared_project_review_policies",
+        "shared_sprints",
+        "shared_trash",
+        "shared_bulk_items",
+        "shared_data_import_records",
+        "shared_template_sources",
+        "shared_project_imports",
+        "shared_task_transfers",
+        "shared_task_query_versions",
+        "shared_bulk_operations",
+        "shared_template_operations",
+        "shared_mutation_receipts",
+        "shared_custom_field_receipts",
+        "shared_planning_receipts",
+        "shared_workspace_inbox_relocations",
+        "shared_workspace_list_relocations",
+        "shared_workspace_scope_relocations",
+        "shared_workspace_task_relocations"
+      ]
+    },
+    {
+      "id": "project.local-work",
+      "scope": "project",
+      "domains": [
+        "shared-project",
+        "shared-comment",
+        "mindmap",
+        "attachment"
+      ],
+      "server": []
+    },
+    {
+      "id": "space.content",
+      "scope": "space",
+      "domains": [
+        "shared-project",
+        "attachment"
+      ],
+      "server": [
+        "shared_spaces",
+        "shared_space_labels",
+        "shared_space_project_categories",
+        "shared_member_categories",
+        "shared_templates",
+        "shared_custom_fields",
+        "shared_custom_field_versions",
+        "shared_saved_views",
+        "shared_data_imports",
+        "shared_data_import_records",
+        "shared_template_sources",
+        "shared_bulk_operations",
+        "shared_automation_operations",
+        "shared_template_operations",
+        "shared_custom_field_receipts",
+        "shared_mutation_receipts"
+      ]
+    },
+    {
+      "id": "space.mindmaps",
+      "scope": "space",
+      "domains": [
+        "mindmap",
+        "attachment"
+      ],
+      "server": [
+        "shared_mindmaps",
+        "shared_mindmap_versions",
+        "shared_mindmap_deletions",
+        "shared_mindmap_deletion_scopes",
+        "shared_mindmap_conversions",
+        "shared_mindmap_receipts"
+      ]
+    },
+    {
+      "id": "space.local-work",
+      "scope": "space",
+      "domains": [
+        "shared-project",
+        "shared-comment",
+        "mindmap",
+        "attachment"
+      ],
+      "server": []
+    }
+  ],
+  "tables": [
+    {
+      "table": "shared_member_categories",
+      "columns": [
+        "id",
+        "space_id",
+        "title",
+        "permissions_json",
+        "revision"
+      ]
+    },
+    {
+      "table": "shared_audit_events",
+      "columns": [
+        "id",
+        "project_id",
+        "actor_id",
+        "action",
+        "object_id",
+        "created_at",
+        "task_id",
+        "board_id",
+        "details_json"
+      ]
+    },
+    {
+      "table": "shared_automation_operations",
+      "columns": [
+        "actor_id",
+        "operation_id",
+        "request_hash",
+        "result_json",
+        "created_at"
+      ]
+    },
+    {
+      "table": "shared_automation_rules",
+      "columns": [
+        "id",
+        "project_id",
+        "owner_id",
+        "title",
+        "definition_json",
+        "enabled",
+        "revision",
+        "deleted_at",
+        "cursor_date",
+        "scan_after_id",
+        "checked_at",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    {
+      "table": "shared_automation_runs",
+      "columns": [
+        "id",
+        "rule_id",
+        "rule_revision",
+        "trigger_key",
+        "task_id",
+        "task_revision",
+        "chain_id",
+        "payload_json",
+        "state",
+        "attempts",
+        "retry_count",
+        "error_code",
+        "result_json",
+        "created_at",
+        "finished_at"
+      ]
+    },
+    {
+      "table": "shared_bulk_items",
+      "columns": [
+        "id",
+        "operation_id",
+        "task_id",
+        "project_id",
+        "root_id",
+        "expected_revision",
+        "expected_parent_id",
+        "depth",
+        "selected",
+        "state",
+        "error_code"
+      ]
+    },
+    {
+      "table": "shared_bulk_operations",
+      "columns": [
+        "id",
+        "actor_id",
+        "request_id",
+        "payload_hash",
+        "payload",
+        "state",
+        "error_code",
+        "batch_number",
+        "expires_at",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    {
+      "table": "shared_comment_mentions",
+      "columns": [
+        "comment_id",
+        "user_id"
+      ]
+    },
+    {
+      "table": "shared_comments",
+      "columns": [
+        "id",
+        "task_id",
+        "author_id",
+        "body",
+        "created_at"
+      ]
+    },
+    {
+      "table": "shared_custom_field_receipts",
+      "columns": [
+        "actor_id",
+        "operation_id",
+        "space_id",
+        "payload_hash",
+        "receipt_json"
+      ]
+    },
+    {
+      "table": "shared_custom_field_values",
+      "columns": [
+        "task_id",
+        "field_id",
+        "value_json"
+      ]
+    },
+    {
+      "table": "shared_custom_field_versions",
+      "columns": [
+        "field_id",
+        "revision",
+        "definition_json",
+        "actor_id",
+        "created_at"
+      ]
+    },
+    {
+      "table": "shared_custom_fields",
+      "columns": [
+        "id",
+        "space_id",
+        "project_id",
+        "type",
+        "definition_json",
+        "position",
+        "required",
+        "show_card",
+        "show_list",
+        "archived_at",
+        "predecessor_id",
+        "revision",
+        "created_by",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    {
+      "table": "shared_data_import_records",
+      "columns": [
+        "import_id",
+        "kind",
+        "source_key",
+        "target_id",
+        "project_id",
+        "initial_revision",
+        "payload_json"
+      ]
+    },
+    {
+      "table": "shared_data_imports",
+      "columns": [
+        "id",
+        "actor_id",
+        "space_id",
+        "operation_id",
+        "source_hash",
+        "destination_key",
+        "request_hash",
+        "state",
+        "receipt_json",
+        "baseline_json",
+        "created_at",
+        "undone_at"
+      ]
+    },
+    {
+      "table": "shared_google_projection_links",
+      "columns": [
+        "task_id",
+        "user_id",
+        "destination",
+        "google_id",
+        "synced_revision",
+        "synced_at",
+        "google_list_id"
+      ]
+    },
+    {
+      "table": "shared_mindmap_conversions",
+      "columns": [
+        "space_id",
+        "map_id",
+        "node_id",
+        "project_id",
+        "task_id"
+      ]
+    },
+    {
+      "table": "shared_mindmap_deletion_scopes",
+      "columns": [
+        "space_id",
+        "map_id",
+        "project_id"
+      ]
+    },
+    {
+      "table": "shared_mindmap_deletions",
+      "columns": [
+        "space_id",
+        "map_id"
+      ]
+    },
+    {
+      "table": "shared_mindmap_receipts",
+      "columns": [
+        "space_id",
+        "map_id",
+        "operation_id",
+        "payload_hash",
+        "revision"
+      ]
+    },
+    {
+      "table": "shared_mindmap_versions",
+      "columns": [
+        "space_id",
+        "map_id",
+        "revision",
+        "content",
+        "updated_at",
+        "project_id"
+      ]
+    },
+    {
+      "table": "shared_mindmaps",
+      "columns": [
+        "space_id",
+        "id",
+        "revision",
+        "content",
+        "updated_at",
+        "project_id"
+      ]
+    },
+    {
+      "table": "shared_mutation_receipts",
+      "columns": [
+        "user_id",
+        "request_id",
+        "action",
+        "resource_id",
+        "response_json",
+        "created_at",
+        "payload_hash"
+      ]
+    },
+    {
+      "table": "shared_notification_task_state",
+      "columns": [
+        "task_id",
+        "due_date",
+        "due_version",
+        "approval_version",
+        "completed",
+        "imported"
+      ]
+    },
+    {
+      "table": "shared_planning_receipts",
+      "columns": [
+        "actor_id",
+        "request_id",
+        "project_id",
+        "operation",
+        "payload_hash",
+        "response_json",
+        "created_at"
+      ]
+    },
+    {
+      "table": "shared_project_categories",
+      "columns": [
+        "id",
+        "project_id",
+        "title",
+        "color",
+        "position",
+        "revision"
+      ]
+    },
+    {
+      "table": "shared_project_comments",
+      "columns": [
+        "id",
+        "project_id",
+        "board_id",
+        "author_id",
+        "body",
+        "mention_ids_json",
+        "created_at"
+      ]
+    },
+    {
+      "table": "shared_project_imports",
+      "columns": [
+        "source_user_id",
+        "transfer_id",
+        "payload_hash",
+        "root_project_id",
+        "receipt_json",
+        "created_at"
+      ]
+    },
+    {
+      "table": "shared_project_labels",
+      "columns": [
+        "project_id",
+        "label_id"
+      ]
+    },
+    {
+      "table": "shared_project_planning",
+      "columns": [
+        "project_id",
+        "enabled",
+        "estimate_unit",
+        "revision",
+        "updated_at",
+        "updated_by"
+      ]
+    },
+    {
+      "table": "shared_project_review_policies",
+      "columns": [
+        "project_id",
+        "revision",
+        "policy_json"
+      ]
+    },
+    {
+      "table": "shared_project_statuses",
+      "columns": [
+        "id",
+        "project_id",
+        "title",
+        "position",
+        "is_done",
+        "revision",
+        "color",
+        "image_url",
+        "task_title_lines",
+        "visible_task_count",
+        "is_chaos"
+      ]
+    },
+    {
+      "table": "shared_project_workflow_versions",
+      "columns": [
+        "project_id",
+        "revision",
+        "enabled",
+        "definition_json",
+        "created_at",
+        "actor_id"
+      ]
+    },
+    {
+      "table": "shared_project_workflows",
+      "columns": [
+        "project_id",
+        "enabled",
+        "definition_json",
+        "revision",
+        "updated_at",
+        "updated_by"
+      ]
+    },
+    {
+      "table": "shared_projects",
+      "columns": [
+        "id",
+        "space_id",
+        "parent_id",
+        "title",
+        "description",
+        "layout",
+        "is_inbox",
+        "created_by",
+        "revision",
+        "archived_at",
+        "created_at",
+        "updated_at",
+        "tags_json",
+        "kind",
+        "board_status_id",
+        "category_id"
+      ]
+    },
+    {
+      "table": "shared_saved_views",
+      "columns": [
+        "id",
+        "owner_id",
+        "space_id",
+        "visibility",
+        "payload",
+        "revision",
+        "created_at",
+        "updated_at",
+        "deleted_at"
+      ]
+    },
+    {
+      "table": "shared_series_instances",
+      "columns": [
+        "series_id",
+        "occurrence_key",
+        "task_id",
+        "original_date",
+        "ordinal",
+        "state",
+        "created_at"
+      ]
+    },
+    {
+      "table": "shared_space_labels",
+      "columns": [
+        "id",
+        "space_id",
+        "title",
+        "color",
+        "position",
+        "revision"
+      ]
+    },
+    {
+      "table": "shared_space_project_categories",
+      "columns": [
+        "id",
+        "space_id",
+        "title",
+        "color",
+        "position",
+        "revision"
+      ]
+    },
+    {
+      "table": "shared_space_ui",
+      "columns": [
+        "user_id",
+        "space_id",
+        "expanded_json",
+        "updated_at"
+      ]
+    },
+    {
+      "table": "shared_spaces",
+      "columns": [
+        "id",
+        "title",
+        "created_by",
+        "created_at",
+        "updated_at",
+        "description",
+        "revision",
+        "cover_image",
+        "cover_x",
+        "cover_y"
+      ]
+    },
+    {
+      "table": "shared_sprints",
+      "columns": [
+        "id",
+        "project_id",
+        "state",
+        "start_date",
+        "end_date",
+        "content_json",
+        "estimate_unit",
+        "revision",
+        "created_at",
+        "updated_at",
+        "started_at",
+        "completed_at",
+        "created_by"
+      ]
+    },
+    {
+      "table": "shared_task_approvals",
+      "columns": [
+        "id",
+        "task_id",
+        "user_id",
+        "approved_at"
+      ]
+    },
+    {
+      "table": "shared_task_attachments",
+      "columns": [
+        "id",
+        "task_id",
+        "filename_ciphertext",
+        "mime_type",
+        "byte_size",
+        "ciphertext",
+        "created_at"
+      ]
+    },
+    {
+      "table": "shared_task_dependencies",
+      "columns": [
+        "task_id",
+        "predecessor_id"
+      ]
+    },
+    {
+      "table": "shared_task_images",
+      "columns": [
+        "task_id",
+        "mime_type",
+        "byte_size",
+        "ciphertext",
+        "updated_at"
+      ]
+    },
+    {
+      "table": "shared_task_labels",
+      "columns": [
+        "task_id",
+        "label_id"
+      ]
+    },
+    {
+      "table": "shared_task_planning",
+      "columns": [
+        "task_id",
+        "sprint_id",
+        "estimates_json"
+      ]
+    },
+    {
+      "table": "shared_task_query_versions",
+      "columns": [
+        "project_id",
+        "version"
+      ]
+    },
+    {
+      "table": "shared_task_reviews",
+      "columns": [
+        "task_id",
+        "user_id",
+        "kind",
+        "task_revision",
+        "reviewed_at"
+      ]
+    },
+    {
+      "table": "shared_task_series",
+      "columns": [
+        "id",
+        "project_id",
+        "source_task_id",
+        "owner_id",
+        "rule_json",
+        "template_json",
+        "paused",
+        "cursor_date",
+        "generated_count",
+        "revision",
+        "last_error",
+        "checked_at",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    {
+      "table": "shared_task_transfers",
+      "columns": [
+        "source_user_id",
+        "source_task_id",
+        "target_project_id",
+        "target_task_id",
+        "created_at"
+      ]
+    },
+    {
+      "table": "shared_task_watchers",
+      "columns": [
+        "task_id",
+        "user_id",
+        "created_at",
+        "watching"
+      ]
+    },
+    {
+      "table": "shared_tasks",
+      "columns": [
+        "id",
+        "project_id",
+        "status_id",
+        "category_id",
+        "title",
+        "description",
+        "due_date",
+        "assignee_id",
+        "created_by",
+        "updated_by",
+        "completed_by",
+        "completed_at",
+        "position",
+        "revision",
+        "created_at",
+        "updated_at",
+        "tags_json",
+        "start_date",
+        "start_time",
+        "end_time",
+        "entry_type",
+        "priority",
+        "parent_task_id",
+        "checklists_json",
+        "archived_at",
+        "archive_root_id"
+      ]
+    },
+    {
+      "table": "shared_template_operations",
+      "columns": [
+        "actor_id",
+        "operation_id",
+        "kind",
+        "request_hash",
+        "result_json",
+        "created_at"
+      ]
+    },
+    {
+      "table": "shared_template_sources",
+      "columns": [
+        "template_id",
+        "project_id"
+      ]
+    },
+    {
+      "table": "shared_templates",
+      "columns": [
+        "id",
+        "space_id",
+        "project_id",
+        "owner_id",
+        "title",
+        "kind",
+        "manifest_json",
+        "source_notices_json",
+        "project_count",
+        "task_count",
+        "revision",
+        "deleted_at",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    {
+      "table": "shared_trash",
+      "columns": [
+        "kind",
+        "object_id",
+        "space_id",
+        "project_id",
+        "root_id",
+        "deleted_at",
+        "expires_at",
+        "retention_days",
+        "previous_archived_at"
+      ]
+    },
+    {
+      "table": "shared_workspace_inbox_relocations",
+      "columns": [
+        "inbox_project_id",
+        "destination_project_id",
+        "recovery_project_created",
+        "relocated_at"
+      ]
+    },
+    {
+      "table": "shared_workspace_list_relocations",
+      "columns": [
+        "project_id",
+        "original_parent_id",
+        "original_board_status_id",
+        "destination_parent_id"
+      ]
+    },
+    {
+      "table": "shared_workspace_scope_relocations",
+      "columns": [
+        "kind",
+        "object_id",
+        "original_project_id",
+        "destination_project_id",
+        "original_revision",
+        "original_required"
+      ]
+    },
+    {
+      "table": "shared_workspace_task_relocations",
+      "columns": [
+        "task_id",
+        "original_project_id",
+        "original_status_id",
+        "destination_project_id",
+        "original_revision",
+        "original_updated_at"
+      ]
+    }
+  ]
+}

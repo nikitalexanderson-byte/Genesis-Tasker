@@ -16,6 +16,7 @@ internal class NativeBackupMutationGuard(private val scope: String) {
     private val epoch=NativeBackupEpoch.current()
     fun check() {
         ru.genesis.calendar.security.UpdateGate.requireOpen()
+        check(!ru.genesis.calendar.security.NativePrivateProducts.isProtected(scope)){"E2EE_PRIVATE_STORAGE_REQUIRED"}
         if(scope.startsWith("account-")&&epoch!=NativeBackupEpoch.current())
             throw CancellationException("Backup reconciliation retired this local writer")
     }

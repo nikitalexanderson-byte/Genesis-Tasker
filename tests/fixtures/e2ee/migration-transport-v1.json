@@ -1,0 +1,588 @@
+[
+  {
+    "protocol": 1,
+    "synthetic": true,
+    "platform": "web",
+    "bootstrap": {
+      "command": {
+        "protocol": 1,
+        "ownerId": "owner",
+        "scopeId": "personal:owner",
+        "deviceId": "device",
+        "action": "bootstrap",
+        "expectedRevision": 0,
+        "checkpointHash": "genesis",
+        "securityEpoch": 1,
+        "operationId": "bootstrap",
+        "payload": {
+          "kind": "personal",
+          "resourceId": "owner",
+          "keyId": "root-one",
+          "generation": 1,
+          "recoveryKit": {
+            "protocol": 1,
+            "ownerId": "owner",
+            "authority": {
+              "signingKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEI3d1ZeuzRYpBlo4-DWnT9VEdP9-BF9x_aUIWq1ldynP2ScWgsCZZPzvDgoNa1ABRdSDQny-naGlxXX1_oZiwnA",
+              "receivingKey": "BIQQvEBO5nucBBSS_PqAVsFRG16FbL_UdNXz_Oy0fl7xFzDtJJG3LGyExmXr7QkfrPej9eZHiNLA7j-GcM0rI3o"
+            },
+            "protectedKeys": {
+              "protocol": 1,
+              "ownerId": "owner",
+              "purpose": "recovery-authority",
+              "salt": "Yw3Q6SrkCCKQJa3d1uKj2r6tJNeJbAi-8tTG1Mln5hw",
+              "nonce": "hLMB3-KXAyBPOri0",
+              "ciphertext": "SgAuS5xSROS2WWbPmhgJdBlY2NsDE-Z_OAKoBNI2X1gRy-kEpzgVZ6nSlmZJmg5ZcaKAsS_tmsnUCGfWvJEWsW2U7HGXnDu1hYZM2ww5hhY34HfPWI_IKtxoR24Rt3MrbUQ57iCHd8IgMtIzVA8AvYjNS8xjkVk3cYUTc-uPvJGQzLlpl2vzPNn-Wy12-nt59VVl2M4XTYCyKEDz92ImEGmziwYtvlR9I4XFw58nuF6S9jx_fBfHR60FKs1hjR4wDcLmGqlKxknJQQoLc9goNuMVkvd4cv4okp9y1lNT8YsbtryXT9pKHu9DZ0c-NHLsnBu53aeP8gv15m8JGfbzomX3eXvqOOb7yJBwjVmJGeiuRf635yOi9UWf8wu2rsUDtlvi7hZ6d1Id2JNoO3EotgowzT4_jwaBdeEHA5YU2CFol_uRSSXazZQvq8W-TwWoiNW-sylFK055wm-OoryURrXO5jeAq-fB5bL2GNw-T80Xf17dbF0B9fJ3eyr8Rg2bGUpf5FYe0W7YLt2ZEOm1Ojzlm9Mi7svIFnAzI_PRLpcPa-WFKRD8zWAIMRvUtT3b4gxR3HrjxeaSaQ-MN66Id8sdPu5pXmqwR8VHwa9eVbHQEX30T3PVjUR2o0Vko4uH1NQ67s99aH1F1NjotfM9lBNNz6WAsehD0iUAHr-T-t2hmOJnxU9S6UHARkjFKvqaRg"
+            }
+          },
+          "deviceKeys": {
+            "signingKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEUzuTjdlhkyIDdHxAXhYv8MkTmmmRYYGHd3PkEow5R-hUJbiKVSkPkEZGrROD-DvSR-035YrIkWy0MxfyexRucA",
+            "receivingKey": "BAKz1cbrZ9puChWcTDujYLMKuHWCLeRDwIChr2LL0raxIZ3KbOTs_3MduhtKJmMyD5NzBegzUS9ukCKNUT6LjOI"
+          },
+          "deviceCapsule": {
+            "suite": "DHKEM-P256-HKDFSHA256-A256GCM",
+            "enc": "BH0F0uYSZf1noIRQDyhSMA0_Dib6iRh4d11VVHzlvKn1_ZiCFX2Rz2Bhks_GsDSYdahwCXIK0RlX6zDbBM6rxvk",
+            "ciphertext": "VHGCZp9PO6kamAaSn7miXG_Lab6M2YMjhVDBL0x-xTEzad7SNEc_1-ro38XePkqx"
+          },
+          "recoveryCapsule": {
+            "suite": "DHKEM-P256-HKDFSHA256-A256GCM",
+            "enc": "BEZVD3lM_nxixoks63vvhcElcpZw8G4XS7aoVSTn4HuQNA4_qggYHE41bEzrDHfhJSvWopkjMikL-ZpYHkuM-cQ",
+            "ciphertext": "vfV8tEkwn-wwMSjn2928MOMIlLTn--GfMmDNTUDxWwU_0sJDpa5C5GuX0fRdd4ey"
+          },
+          "selfProof": "u19L3wd8BXs5s1gRbLh2GcapeqD8072QfLmWj4NRFiEnhuD9Tut0fltukaRyZGMMNn7gLUcCuc3nJlhRMKOnyg"
+        }
+      },
+      "signature": "3-Iha_9R7TByWO9QfbsfBa8GIwy_PTXuSX3OJQhRc7qluFpIGnTTF2MdqscU3Sn4P4hpl4SM_LXm8mJknIYxmQ"
+    },
+    "reads": [
+      {
+        "command": {
+          "protocol": 1,
+          "ownerId": "owner",
+          "scopeId": "personal:owner",
+          "deviceId": "device",
+          "action": "read",
+          "expectedRevision": 1,
+          "checkpointHash": "0vRpQolv9D-MROt9m3uojj8il6hys57hCKf-JbkJH4Q",
+          "securityEpoch": 1,
+          "operationId": "377b1823-1c68-465a-8293-83a7b6f97255",
+          "payload": {
+            "domain": "workspace",
+            "after": "",
+            "limit": 50
+          }
+        },
+        "signature": "kaLs_OOnGRB-pkfVk5LAIXEyZ5BhpKDB0vtxvfU4gt-a-qC7T7qCyuzqSt_06kllId0K0c2w9ac7WN024SYF4g"
+      },
+      {
+        "command": {
+          "protocol": 1,
+          "ownerId": "owner",
+          "scopeId": "personal:owner",
+          "deviceId": "device",
+          "action": "read",
+          "expectedRevision": 1,
+          "checkpointHash": "0vRpQolv9D-MROt9m3uojj8il6hys57hCKf-JbkJH4Q",
+          "securityEpoch": 1,
+          "operationId": "336c3741-e686-414d-86eb-2b0a6289edb8",
+          "payload": {
+            "domain": "attachment",
+            "after": "",
+            "limit": 50
+          }
+        },
+        "signature": "uu3gBg_EV7HQkfDKjyRoQOl8AoFpCGyZUYwTsxQiPGG6trd_3a_d0aTd_x3Cb5YyBTThoCs6hduKgLwJdP3kJw"
+      }
+    ],
+    "legacyRead": {
+      "command": {
+        "protocol": 1,
+        "ownerId": "owner",
+        "scopeId": "personal:owner",
+        "deviceId": "device",
+        "action": "legacy-workspace",
+        "expectedRevision": 1,
+        "checkpointHash": "0vRpQolv9D-MROt9m3uojj8il6hys57hCKf-JbkJH4Q",
+        "securityEpoch": 1,
+        "operationId": "eb501c5f-611a-47a1-9258-abb2b39b4ca9",
+        "payload": {
+          "migrationId": "web-migration-transport",
+          "fence": 1,
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      },
+      "signature": "yEWXMW7p_Y_s7OrTYPFaePc81CMbiWtN8hsRswEBUb5dqRGR3ZjJeCodzBnBDaTxAFiEOYUAoRuGnOY-TqSKnQ"
+    },
+    "auroraRead": {
+      "command": {
+        "protocol": 1,
+        "ownerId": "owner",
+        "scopeId": "personal:owner",
+        "deviceId": "device",
+        "action": "legacy-aurora",
+        "expectedRevision": 1,
+        "checkpointHash": "0vRpQolv9D-MROt9m3uojj8il6hys57hCKf-JbkJH4Q",
+        "securityEpoch": 1,
+        "operationId": "8ffe6401-e225-4c8f-9997-c43d2b9174f7",
+        "payload": {
+          "migrationId": "web-migration-transport",
+          "fence": 1,
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      },
+      "signature": "RqIwgzRJi1ZpjEmcVf4oQhmtH5pt0nb6e3L06JFGBbiI2LaDXepwmbArf4QsTufVtxi2WdibXtBNBRk-va95TA"
+    },
+    "stoicheionRead": {
+      "command": {
+        "protocol": 1,
+        "ownerId": "owner",
+        "scopeId": "personal:owner",
+        "deviceId": "device",
+        "action": "legacy-stoicheion",
+        "expectedRevision": 1,
+        "checkpointHash": "0vRpQolv9D-MROt9m3uojj8il6hys57hCKf-JbkJH4Q",
+        "securityEpoch": 1,
+        "operationId": "6bbafdb8-be35-4943-beda-e2b9be133d34",
+        "payload": {
+          "migrationId": "web-migration-transport",
+          "fence": 1,
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      },
+      "signature": "s4dIT4GiazrgbW3mJHs8ufO-21dOJiCeX57hMuDkposCEJ7Oza1ENWFpVeiRJbdVxXcbUh3Fc61s45EIYNCqtw"
+    },
+    "adviceRead": {
+      "command": {
+        "protocol": 1,
+        "ownerId": "owner",
+        "scopeId": "personal:owner",
+        "deviceId": "device",
+        "action": "legacy-advice",
+        "expectedRevision": 1,
+        "checkpointHash": "0vRpQolv9D-MROt9m3uojj8il6hys57hCKf-JbkJH4Q",
+        "securityEpoch": 1,
+        "operationId": "6ae831c7-c496-4a02-8a5b-54fc56870a78",
+        "payload": {
+          "migrationId": "web-migration-transport",
+          "fence": 1,
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      },
+      "signature": "sd1zfdVp5qjctzg0_RvDE3SLuqWYyCIYWH4vYSgLt1KxIf2gET-CcCkV93X-B-6297tFITpxxhpROElg81Gdww"
+    },
+    "tasksRead": {
+      "command": {
+        "protocol": 1,
+        "ownerId": "owner",
+        "scopeId": "personal:owner",
+        "deviceId": "device",
+        "action": "legacy-tasks",
+        "expectedRevision": 1,
+        "checkpointHash": "0vRpQolv9D-MROt9m3uojj8il6hys57hCKf-JbkJH4Q",
+        "securityEpoch": 1,
+        "operationId": "d2ab87c6-9a6d-4e22-a78e-130e23282242",
+        "payload": {
+          "migrationId": "web-migration-transport",
+          "fence": 1,
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      },
+      "signature": "BN3nFRv_GbrdRdcvHsHhaV2SXZDK17lVaVr7a-8hd7i8sFd9y1cCWEagwO0N4JxdUYzE_mhbeuFuStkU8PbHCA"
+    },
+    "diaryRead": {
+      "command": {
+        "protocol": 1,
+        "ownerId": "owner",
+        "scopeId": "personal:owner",
+        "deviceId": "device",
+        "action": "legacy-diary",
+        "expectedRevision": 1,
+        "checkpointHash": "0vRpQolv9D-MROt9m3uojj8il6hys57hCKf-JbkJH4Q",
+        "securityEpoch": 1,
+        "operationId": "d5ea57cc-d20b-4e4f-989a-f03eb4a92566",
+        "payload": {
+          "migrationId": "web-migration-transport",
+          "fence": 1,
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      },
+      "signature": "FJtdh2Mm4CEz8JgBojcAX66YikYtYlaxXAY8i9J5OuSxg8BpOcS_D3OdKFd0HHbAfmpY0CX2zIx4IzNPWxab5g"
+    },
+    "mindmapsRead": {
+      "command": {
+        "protocol": 1,
+        "ownerId": "owner",
+        "scopeId": "personal:owner",
+        "deviceId": "device",
+        "action": "legacy-mindmaps",
+        "expectedRevision": 1,
+        "checkpointHash": "0vRpQolv9D-MROt9m3uojj8il6hys57hCKf-JbkJH4Q",
+        "securityEpoch": 1,
+        "operationId": "31f74f37-7586-47b6-be2f-cac94b1efa8c",
+        "payload": {
+          "migrationId": "web-migration-transport",
+          "fence": 1,
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      },
+      "signature": "blLM7dM3DtJY3bZoHkXocA25RwQwLl-ZLBYJNdTP85uFoyrCReQnxcQdld4LmYyE5BS7eYmlzaQRMljA2eGUkg"
+    },
+    "mindmapsPageRead": {
+      "command": {
+        "protocol": 1,
+        "ownerId": "owner",
+        "scopeId": "personal:owner",
+        "deviceId": "device",
+        "action": "legacy-mindmaps",
+        "expectedRevision": 1,
+        "checkpointHash": "0vRpQolv9D-MROt9m3uojj8il6hys57hCKf-JbkJH4Q",
+        "securityEpoch": 1,
+        "operationId": "9f1ebe1b-6c37-4a24-acdf-65dcdd2b9797",
+        "payload": {
+          "migrationId": "web-migration-transport",
+          "fence": 1,
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "table": "versions",
+          "offset": 128
+        }
+      },
+      "signature": "U3qvhef002rYEt_qay9klAVUoFyJXhSq0AF9CwaqhSxurAHCx5k2eQ5Tsdla-_4IOMqcnThkWLB0DZvJrStnAg"
+    },
+    "physisPageRead": {
+      "command": {
+        "protocol": 1,
+        "ownerId": "owner",
+        "scopeId": "personal:owner",
+        "deviceId": "device",
+        "action": "legacy-physis",
+        "expectedRevision": 1,
+        "checkpointHash": "0vRpQolv9D-MROt9m3uojj8il6hys57hCKf-JbkJH4Q",
+        "securityEpoch": 1,
+        "operationId": "c4c0d54e-3bdb-4077-baa2-9a1733bf283a",
+        "payload": {
+          "migrationId": "web-migration-transport",
+          "fence": 1,
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "table": "records",
+          "offset": 128
+        }
+      },
+      "signature": "wyLHTp41b9XVaf30MOJr5btjyjqDA-MLni5AJRz6pVJ0Op-SDSd5ESM8XE7aj3db1z_jzC-Oc4Pv9buRZI7okQ"
+    },
+    "archiveRead": {
+      "command": {
+        "protocol": 1,
+        "ownerId": "owner",
+        "scopeId": "personal:owner",
+        "deviceId": "device",
+        "action": "legacy-archives",
+        "expectedRevision": 1,
+        "checkpointHash": "0vRpQolv9D-MROt9m3uojj8il6hys57hCKf-JbkJH4Q",
+        "securityEpoch": 1,
+        "operationId": "918624fb-d6c2-4e8d-98df-195252d44cea",
+        "payload": {
+          "migrationId": "web-migration-transport",
+          "fence": 1,
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "table": "stages",
+          "offset": 0,
+          "byteOffset": 1048576
+        }
+      },
+      "signature": "CBwHEXM3w8LWrVWxJEc0BU0CrerH4j8M1G7snfZizIjjQQTuV39vAhz8VAZMzp92hNbIRLaihmIMSzUMbkNfrQ"
+    }
+  },
+  {
+    "adviceRead": {
+      "signature": "vXjrT2FHZdMst9m1PULAqTShGQO42_pnIEQ9NGSZB7WVxqqCOQszMcB15W7Bcxa4ehNjqLXVujit945nZsxl-Q",
+      "command": {
+        "protocol": 1,
+        "scopeId": "personal:owner",
+        "checkpointHash": "d2Ma0DssH0SzVJgj2Gv_2LcmY3kEWvk8yIlt4rcE-HY",
+        "payload": {
+          "migrationId": "native-migration-transport",
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "fence": 1
+        },
+        "action": "legacy-advice",
+        "operationId": "cca33bea-f6d0-416c-9dec-153a2581fe9e",
+        "expectedRevision": 1,
+        "ownerId": "owner",
+        "deviceId": "device",
+        "securityEpoch": 1
+      }
+    },
+    "physisPageRead": {
+      "signature": "5QGdAaEmcsqRhk__8ptsAlD4QEuJcfTdNzjr3L7AhaXfv9jOD7i2SPPUu-sD2hN_JhwEREMNSPupvEqR8VF1RA",
+      "command": {
+        "protocol": 1,
+        "scopeId": "personal:owner",
+        "checkpointHash": "d2Ma0DssH0SzVJgj2Gv_2LcmY3kEWvk8yIlt4rcE-HY",
+        "payload": {
+          "migrationId": "native-migration-transport",
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "offset": 128,
+          "fence": 1,
+          "table": "records"
+        },
+        "action": "legacy-physis",
+        "operationId": "bcf81978-0a71-47fa-8d1f-e5a94c440057",
+        "expectedRevision": 1,
+        "ownerId": "owner",
+        "deviceId": "device",
+        "securityEpoch": 1
+      }
+    },
+    "reads": [
+      {
+        "signature": "jFOW-rLF7dGsvUntADa0u4L0rxvZccU0rfoqQhOCR_SwD3GN5qMY-xJM2jjazrAyxnaDVo-7-KPZWFyHLmWMBQ",
+        "command": {
+          "protocol": 1,
+          "scopeId": "personal:owner",
+          "checkpointHash": "d2Ma0DssH0SzVJgj2Gv_2LcmY3kEWvk8yIlt4rcE-HY",
+          "payload": {
+            "domain": "workspace",
+            "limit": 50,
+            "after": ""
+          },
+          "action": "read",
+          "operationId": "c7d0ad72-1d5f-436d-aa85-e3a75bd8e294",
+          "expectedRevision": 1,
+          "ownerId": "owner",
+          "deviceId": "device",
+          "securityEpoch": 1
+        }
+      },
+      {
+        "signature": "XdONymnEuVXFA43yivqyU5QoQ2aRN3X9d5OLL8jEq_AQGWKLztAOYQderynIkJE56LOOLEvSyDsTAPk0U1oTcA",
+        "command": {
+          "protocol": 1,
+          "scopeId": "personal:owner",
+          "checkpointHash": "d2Ma0DssH0SzVJgj2Gv_2LcmY3kEWvk8yIlt4rcE-HY",
+          "payload": {
+            "domain": "attachment",
+            "limit": 50,
+            "after": ""
+          },
+          "action": "read",
+          "operationId": "27f0f4f7-c34e-4ec3-a817-c5f874e87b24",
+          "expectedRevision": 1,
+          "ownerId": "owner",
+          "deviceId": "device",
+          "securityEpoch": 1
+        }
+      }
+    ],
+    "bootstrap": {
+      "signature": "lMz36m50gNcPF9NHve8wRfTNow1AIplK1jk0YAmHfzI3ImRtMPkpdXa516nYB_wBuRQO7Ibwci6SmkummlYeKA",
+      "command": {
+        "protocol": 1,
+        "scopeId": "personal:owner",
+        "checkpointHash": "genesis",
+        "payload": {
+          "generation": 1,
+          "deviceKeys": {
+            "signingKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEbfo048xueylEQ6EBouBqHn9R3gW7IORrZqErb-IoV993rpFUfxN3qZ-yBM2V6OFHfOZnkXIwSPUQaQgFnJttHw",
+            "receivingKey": "BJBdL6rgymMOgqLbAXD094KTq37MXodyxgyebKwuTpUVdw7Tg1gWSrHB1LJPZ-g5mAsQ8l4GaQ5yQ17AOAx6-i8"
+          },
+          "resourceId": "owner",
+          "recoveryKit": {
+            "protocol": 1,
+            "protectedKeys": {
+              "protocol": 1,
+              "ciphertext": "SiP1AHQGj0Bt7PmxEGNqD_cIFLf3GuYcne15Wov_nTlePBghCQPnJ6Rb6ynBqThrtWVsCwenMfQJPClWMwbpRYH2YlOd-q4MFqiv2VRyOiKCQ0BUBlOZ2diS-hqBljUwT8Sri7pjplTtOxV920KeI5843PqVERadwb0CFuvFzU5j5nojC58p7wUbwL9KjKAfkBSYKLln5XgAzoZG7eic2jaYHwt205Cm5iJru_CXRc3GaNGD6uHdhNY-ygbLkAhz7B67fCB5r5BYh5ix9_vrcdU8NlAq4l9ZOd5UdRUsIZJ9QXElx-IbBOvY6R2x6AbnGz9Oly77KC6JlZC9EUBPC8J_Zt2RTjh6zs4mtufTVdIp_6bnh9lefZaBZF8ET2ryE5pdHOQoOGuUV2FoeB4IVxWYmI2tZkkyjVSinjeXjDHgc1sdXPxbkP_za0eq1zCi69vPxlYDyIx3n-G6AJhE0Y_Qe4KmQrEVMd8Fqx2RgjNa3L3QMCRnBs3EnnuEoR0199ZSjYH6nDNyHrXjV1gx9TlYkC4CrD2Wgl5O6_BeoMJemZz0gYc5wuFxSG5MoCUIzfSO",
+              "salt": "vGQh2_tRZWvLT6hNpUTGIpv1xdQQeL6Srl7H99xPANQ",
+              "purpose": "recovery-authority",
+              "ownerId": "owner",
+              "nonce": "C9mUmThZGNTCGh2G"
+            },
+            "authority": {
+              "signingKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEbT68O0adocCp0otyhL6e_PQdlv6o6ecNZjCk7jjuEae5ZJI6o6p6NV3h66fCzQCaJjHbiVZG40kbAMLy-JpShw",
+              "receivingKey": "BAo54MgeevJsRBxXj3m272OiHJfbeDLOltntfUdxk7EFqvgtuvN-yp2kLt1E9VDjAndlM5akVHQIo956K1G-qsU"
+            },
+            "ownerId": "owner"
+          },
+          "deviceCapsule": {
+            "ciphertext": "wz4FDjulvfMtmYjNZPoSJxT7Z4R7NnWfi5ZrwECOIiyR6meJc3rAS8b3cBEoD4zS",
+            "suite": "DHKEM-P256-HKDFSHA256-A256GCM",
+            "enc": "BPSWfAdbWiZH7YMw2RCSwAiXmnghpL7c74lZKaBSqcYQXIyWtBjkbEaFauLchQwqe7_9HO5YKdGuCVeDaZy99BI"
+          },
+          "recoveryCapsule": {
+            "ciphertext": "Et4ND5O8Ca1_36bhbVvqAcvTWuTkC7oubKzlx0iNcjnPiFxsRFyC-AmPd2LI0fGQ",
+            "suite": "DHKEM-P256-HKDFSHA256-A256GCM",
+            "enc": "BIcpiUzwlImKk1RoZQtBKosE4qLW-7ToaTMamql61wVv_ymg-l0BgFASXm-XHI-bEgA6_gf0OtXFqiWWrmsUy3w"
+          },
+          "kind": "personal",
+          "selfProof": "Wi4ZfhEh4kq9_o1egP9Nyy3y0DJDCK-GZ3avzrVvbu9vEg7Hmv3uYhfJzxTs3eGS5QGpGJONRixUkYXgUltwuw",
+          "keyId": "root-one"
+        },
+        "action": "bootstrap",
+        "operationId": "bootstrap",
+        "expectedRevision": 0,
+        "ownerId": "owner",
+        "deviceId": "device",
+        "securityEpoch": 1
+      }
+    },
+    "auroraRead": {
+      "signature": "DnCteDm2K_PybzB16BQKPEapHjr8-llL8IdIN7pPBZq6RBYvq05GK8EVAieD83-V1quF6nJbCMCITimD3UxdOA",
+      "command": {
+        "protocol": 1,
+        "scopeId": "personal:owner",
+        "checkpointHash": "d2Ma0DssH0SzVJgj2Gv_2LcmY3kEWvk8yIlt4rcE-HY",
+        "payload": {
+          "migrationId": "native-migration-transport",
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "fence": 1
+        },
+        "action": "legacy-aurora",
+        "operationId": "706ee13d-e763-443e-9d20-e77d59ae25b2",
+        "expectedRevision": 1,
+        "ownerId": "owner",
+        "deviceId": "device",
+        "securityEpoch": 1
+      }
+    },
+    "platform": "native",
+    "mindmapsRead": {
+      "signature": "AN-tb165L3GvtUnIc4gwbpUnEIaNNy8eHyaj2YOS5v9_dhJqOHlli2aOlIjD5oNQVeMcbL8qJwr1H03MbCqSjQ",
+      "command": {
+        "protocol": 1,
+        "scopeId": "personal:owner",
+        "checkpointHash": "d2Ma0DssH0SzVJgj2Gv_2LcmY3kEWvk8yIlt4rcE-HY",
+        "payload": {
+          "migrationId": "native-migration-transport",
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "fence": 1
+        },
+        "action": "legacy-mindmaps",
+        "operationId": "abcaea05-8c4b-4183-96fd-b2ffff221ca3",
+        "expectedRevision": 1,
+        "ownerId": "owner",
+        "deviceId": "device",
+        "securityEpoch": 1
+      }
+    },
+    "legacyRead": {
+      "signature": "UX6wrw5jYvZgITAOgnWk28370ZPrdLK1H0QdVHvfACoFJi5BzGYTIBz21v7M6uYWrZ_IratYa2ymsSsdwHpo_w",
+      "command": {
+        "protocol": 1,
+        "scopeId": "personal:owner",
+        "checkpointHash": "d2Ma0DssH0SzVJgj2Gv_2LcmY3kEWvk8yIlt4rcE-HY",
+        "payload": {
+          "migrationId": "native-migration-transport",
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "fence": 1
+        },
+        "action": "legacy-workspace",
+        "operationId": "cf792986-359a-4b71-bdce-025f6f3b8ddb",
+        "expectedRevision": 1,
+        "ownerId": "owner",
+        "deviceId": "device",
+        "securityEpoch": 1
+      }
+    },
+    "synthetic": true,
+    "protocol": 1,
+    "diaryRead": {
+      "signature": "v-6go6WbbiO7QLPig53opx8tOvhf_jovjI7HgOTUY-eE7lM5LPbmG-ABcCR1P6uoxYVDwnTyJv41sd9On3BTCA",
+      "command": {
+        "protocol": 1,
+        "scopeId": "personal:owner",
+        "checkpointHash": "d2Ma0DssH0SzVJgj2Gv_2LcmY3kEWvk8yIlt4rcE-HY",
+        "payload": {
+          "migrationId": "native-migration-transport",
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "fence": 1
+        },
+        "action": "legacy-diary",
+        "operationId": "42e378b0-3f7b-4aba-8d26-94cf390a929d",
+        "expectedRevision": 1,
+        "ownerId": "owner",
+        "deviceId": "device",
+        "securityEpoch": 1
+      }
+    },
+    "stoicheionRead": {
+      "signature": "7uPYShnlOH5cgT23eSzgFWL9yc1Y29oZ8yxYyy95hgje8vclHeP-o5OMGyTnlXkJt9dFuvC9fgYM-zagIGGJ1A",
+      "command": {
+        "protocol": 1,
+        "scopeId": "personal:owner",
+        "checkpointHash": "d2Ma0DssH0SzVJgj2Gv_2LcmY3kEWvk8yIlt4rcE-HY",
+        "payload": {
+          "migrationId": "native-migration-transport",
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "fence": 1
+        },
+        "action": "legacy-stoicheion",
+        "operationId": "b344c84f-8afd-4243-94cb-88afd3ad70f4",
+        "expectedRevision": 1,
+        "ownerId": "owner",
+        "deviceId": "device",
+        "securityEpoch": 1
+      }
+    },
+    "archiveRead": {
+      "signature": "b6k9KAi0-kiN_CzbQP1b2rkgkKXZaju2fylQUq0m3Wmr2sWz1MnxeunY5EqUvuB-hmior1NbKmSwqp2aeZo9ZA",
+      "command": {
+        "protocol": 1,
+        "scopeId": "personal:owner",
+        "checkpointHash": "d2Ma0DssH0SzVJgj2Gv_2LcmY3kEWvk8yIlt4rcE-HY",
+        "payload": {
+          "migrationId": "native-migration-transport",
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "offset": 0,
+          "byteOffset": 1048576,
+          "fence": 1,
+          "table": "stages"
+        },
+        "action": "legacy-archives",
+        "operationId": "f9fd328a-3615-4d70-896f-9a87d51827cb",
+        "expectedRevision": 1,
+        "ownerId": "owner",
+        "deviceId": "device",
+        "securityEpoch": 1
+      }
+    },
+    "tasksRead": {
+      "signature": "q8KSnUEPkyWWXZiHsL4bYDUsOUQDO6UF8XgAqgycnlvqvJDEMIs0fTu11fCJS6AqlSI4M64jVrzSnUGLH6k4pQ",
+      "command": {
+        "protocol": 1,
+        "scopeId": "personal:owner",
+        "checkpointHash": "d2Ma0DssH0SzVJgj2Gv_2LcmY3kEWvk8yIlt4rcE-HY",
+        "payload": {
+          "migrationId": "native-migration-transport",
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "fence": 1
+        },
+        "action": "legacy-tasks",
+        "operationId": "7ec9af13-0e72-4b9b-b2bc-8b135eace401",
+        "expectedRevision": 1,
+        "ownerId": "owner",
+        "deviceId": "device",
+        "securityEpoch": 1
+      }
+    },
+    "mindmapsPageRead": {
+      "signature": "OKSrWK0XMtqQ5xzLEbEHDYR5QpgJeN2iahYLvo_9vLLpx8qx-ctZTwgDa26x-EBqR2kiHbXTswPPkex42Q9GTw",
+      "command": {
+        "protocol": 1,
+        "scopeId": "personal:owner",
+        "checkpointHash": "d2Ma0DssH0SzVJgj2Gv_2LcmY3kEWvk8yIlt4rcE-HY",
+        "payload": {
+          "migrationId": "native-migration-transport",
+          "sourceHash": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "offset": 128,
+          "fence": 1,
+          "table": "versions"
+        },
+        "action": "legacy-mindmaps",
+        "operationId": "ae186637-69d6-49e0-8fb7-2766cbd271c4",
+        "expectedRevision": 1,
+        "ownerId": "owner",
+        "deviceId": "device",
+        "securityEpoch": 1
+      }
+    }
+  }
+]

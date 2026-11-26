@@ -1,0 +1,128 @@
+{
+ "en": {
+  "title": "External Google copy",
+  "send": "Send this copy",
+  "pending": "Saved copies",
+  "complete": "The external copy is confirmed.",
+  "uncertain": "The result is uncertain. Check the saved copy again; another task will not be created automatically.",
+  "error": "Could not send the copy. Its content is retained on this device.",
+  "review": "Review the saved copy"
+ },
+ "ru": {
+  "title": "Внешняя копия Google",
+  "send": "Отправить эту копию",
+  "pending": "Сохранённые копии",
+  "complete": "Внешняя копия подтверждена.",
+  "uncertain": "Результат пока неизвестен. Повторно проверьте сохранённую копию: новая задача автоматически не создаётся.",
+  "error": "Не удалось отправить копию. Её содержимое сохранено на этом устройстве.",
+  "review": "Просмотреть сохранённую копию"
+ },
+ "de": {
+  "title": "Externe Google-Kopie",
+  "send": "Diese Kopie senden",
+  "pending": "Gespeicherte Kopien",
+  "complete": "Die externe Kopie ist bestätigt.",
+  "uncertain": "Das Ergebnis ist unklar. Prüfen Sie die gespeicherte Kopie erneut; eine weitere Aufgabe wird nicht automatisch erstellt.",
+  "error": "Die Kopie konnte nicht gesendet werden. Ihr Inhalt bleibt auf diesem Gerät.",
+  "review": "Gespeicherte Kopie prüfen"
+ },
+ "el": {
+  "title": "Εξωτερικό αντίγραφο Google",
+  "send": "Αποστολή αυτού του αντιγράφου",
+  "pending": "Αποθηκευμένα αντίγραφα",
+  "complete": "Το εξωτερικό αντίγραφο επιβεβαιώθηκε.",
+  "uncertain": "Το αποτέλεσμα είναι αβέβαιο. Ελέγξτε ξανά το αποθηκευμένο αντίγραφο· δεν δημιουργείται αυτόματα άλλη εργασία.",
+  "error": "Δεν ήταν δυνατή η αποστολή. Το περιεχόμενο παραμένει στη συσκευή.",
+  "review": "Έλεγχος αποθηκευμένου αντιγράφου"
+ },
+ "es": {
+  "title": "Copia externa de Google",
+  "send": "Enviar esta copia",
+  "pending": "Copias guardadas",
+  "complete": "La copia externa está confirmada.",
+  "uncertain": "El resultado es incierto. Comprueba de nuevo la copia guardada; no se creará otra tarea automáticamente.",
+  "error": "No se pudo enviar la copia. Su contenido se conserva en este dispositivo.",
+  "review": "Revisar la copia guardada"
+ },
+ "fr": {
+  "title": "Copie externe Google",
+  "send": "Envoyer cette copie",
+  "pending": "Copies conservées",
+  "complete": "La copie externe est confirmée.",
+  "uncertain": "Le résultat est incertain. Vérifiez à nouveau la copie conservée ; aucune autre tâche ne sera créée automatiquement.",
+  "error": "Impossible d’envoyer la copie. Son contenu reste sur cet appareil.",
+  "review": "Examiner la copie conservée"
+ },
+ "it": {
+  "title": "Copia esterna Google",
+  "send": "Invia questa copia",
+  "pending": "Copie salvate",
+  "complete": "La copia esterna è confermata.",
+  "uncertain": "Il risultato è incerto. Controlla di nuovo la copia salvata: non verrà creata automaticamente un’altra attività.",
+  "error": "Impossibile inviare la copia. Il contenuto resta su questo dispositivo.",
+  "review": "Esamina la copia salvata"
+ },
+ "ja": {
+  "title": "Googleへの外部コピー",
+  "send": "このコピーを送信",
+  "pending": "保存済みのコピー",
+  "complete": "外部コピーを確認しました。",
+  "uncertain": "結果は不明です。保存済みのコピーを再確認してください。別のタスクを自動作成することはありません。",
+  "error": "コピーを送信できませんでした。内容はこの端末に保存されています。",
+  "review": "保存済みのコピーを確認"
+ },
+ "pl": {
+  "title": "Zewnętrzna kopia Google",
+  "send": "Wyślij tę kopię",
+  "pending": "Zapisane kopie",
+  "complete": "Kopia zewnętrzna została potwierdzona.",
+  "uncertain": "Wynik jest niepewny. Sprawdź ponownie zapisaną kopię; kolejne zadanie nie zostanie utworzone automatycznie.",
+  "error": "Nie można wysłać kopii. Jej treść pozostaje na tym urządzeniu.",
+  "review": "Przejrzyj zapisaną kopię"
+ },
+ "pt": {
+  "title": "Cópia externa do Google",
+  "send": "Enviar esta cópia",
+  "pending": "Cópias guardadas",
+  "complete": "A cópia externa foi confirmada.",
+  "uncertain": "O resultado é incerto. Verifique novamente a cópia guardada; outra tarefa não será criada automaticamente.",
+  "error": "Não foi possível enviar a cópia. O conteúdo permanece neste dispositivo.",
+  "review": "Rever a cópia guardada"
+ },
+ "sr": {
+  "title": "Спољна Google копија",
+  "send": "Пошаљи ову копију",
+  "pending": "Сачуване копије",
+  "complete": "Спољна копија је потврђена.",
+  "uncertain": "Резултат је неизвестан. Поново проверите сачувану копију; нови задатак се неће аутоматски креирати.",
+  "error": "Копија није послата. Садржај је сачуван на овом уређају.",
+  "review": "Прегледај сачувану копију"
+ },
+ "tr": {
+  "title": "Harici Google kopyası",
+  "send": "Bu kopyayı gönder",
+  "pending": "Saklanan kopyalar",
+  "complete": "Harici kopya doğrulandı.",
+  "uncertain": "Sonuç belirsiz. Saklanan kopyayı yeniden kontrol edin; başka bir görev otomatik oluşturulmayacak.",
+  "error": "Kopya gönderilemedi. İçerik bu cihazda saklanıyor.",
+  "review": "Saklanan kopyayı incele"
+ },
+ "uk": {
+  "title": "Зовнішня копія Google",
+  "send": "Надіслати цю копію",
+  "pending": "Збережені копії",
+  "complete": "Зовнішню копію підтверджено.",
+  "uncertain": "Результат поки невідомий. Повторно перевірте збережену копію: нове завдання автоматично не створюється.",
+  "error": "Не вдалося надіслати копію. Її вміст збережено на цьому пристрої.",
+  "review": "Переглянути збережену копію"
+ },
+ "zh": {
+  "title": "Google 外部副本",
+  "send": "发送此副本",
+  "pending": "已保存的副本",
+  "complete": "已确认外部副本。",
+  "uncertain": "结果不确定。请重新检查已保存的副本；系统不会自动创建另一个任务。",
+  "error": "无法发送副本。内容仍保存在此设备上。",
+  "review": "查看已保存的副本"
+ }
+}

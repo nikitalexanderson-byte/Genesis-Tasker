@@ -1,0 +1,296 @@
+{
+  "warning": "PUBLIC SYNTHETIC FIXTURE; NEVER USE FOR USER DATA",
+  "origin": "WebCrypto + @hpke/core 1.10.1",
+  "secret": "RoW6yGSaY7Il5whUVq2diy3FWeo6SSVUKwUbqJkXE6A",
+  "recoveryKit": {
+    "protocol": 1,
+    "ownerId": "fixture-runtime-owner",
+    "authority": {
+      "signingKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEzOmEZTlXr_hmcO6qGGH_KAax540mX2_sN-mgtVQmiErW5sufFsdGnFKexIRB17ZNLeu_Y0biSIgsTPqjhuwHLQ",
+      "receivingKey": "BOeXbMwghQxIeirKLLdsLN1E6P7J6dRPDB85rjpp_C5umywRhKIVjGrKLu4r7ScnP8eSsIfBhJ112OBdPmIlLOU"
+    },
+    "protectedKeys": {
+      "protocol": 1,
+      "ownerId": "fixture-runtime-owner",
+      "purpose": "recovery-authority",
+      "salt": "h3ce9hsm2uJaSbYoLdGb0hpyBb_tRFqpJPbSZwSEz1w",
+      "nonce": "Uzgr03ANA5cIJqzY",
+      "ciphertext": "6SyzvKO6uhCIBw20FXOyv5BIxjcnt9VkH8z_s3ZPUvcgVkc32cjAiBLG9TfK30H4-WRml2GJWwM-dgrQAf3Ml_iSxKRoy2NdaVUO9EsGEFnpjK9jE65_MdbP0nlKL6IA1iN0sqztqi7FQuJ41aygDYGDWw-ar3XAGAlYOmBa659PUTjTQ9jaW0teid9wkqx6f9phRa7InxhiOysM8PHrXqsjKEmPWQYGTSfQ-kiGs-9IfI615yq6a_l93qHcFTehcOe-vtAeDI_uXYsZ3GCMeZTlXwTrLv9Qj9Y1nhYFPz5VpIIe4Gmiu0Id2pkkxlMfi4a0afhh9p5-wpZWD9IJ32hMTjmsj5hv76_zDiC-NYDZGaTfl9DHB8AMNn30hB8pvkTBHZ9iGEgauFjKeY8Wlpg9bJigWvM-9iPrjMTwHMOgJw0P7vAYt5s9ISf1-K6VYVvhGTXua1xp3bcwQScsXO9jeYG14_3Z5tvkjjaFW_fkn_j86GcpbTLvouiMMw-SoGeh1nNS4dSwt7YRBPbTAu2hgK5JsE1HHkzoGf1fSk_mTBm_snv_LYYvqM4DBqPoQOJbpBQbqcbEXBnqldyKlXRlJtDjlZBGW-8E5-7HGVgz4_5GD2FDmLg7l57D17v4Sf9hVvydlOc__4u07HbuwUeA7EMTpb4Pir29s1dY3HfTygwQq1Ie25tzEG7xCADI8g"
+    }
+  },
+  "device": {
+    "signingKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAErma8O1MzmMTlo21Cst5jEDljCZQuQbL2WeJawjx7x7dyixZuYbNwyz-K_It9tyE3V7XIx8Z6a5xlI7Zjm23pfA",
+    "receivingKey": "BOdf5fzf_xh6WXgAHQhD6f4KqH1YRXoFm-tlLkQUGl7MxytnEXukbwOtmbFFXTXPYViQLnUor-z60P25ddM85bQ",
+    "signingPrivate": "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgQNHi9KLsXcOGpO3SOarZdFLBZ3BiHzyX0Gv81ybxzJShRANCAASuZrw7UzOYxOWjbUKy3mMQOWMJlC5BsvZZ4lrCPHvHt3KLFm5hs3DLP4r8i323ITdXtcjHxnprnGUjtmObbel8",
+    "receivingPrivate": "j90xzUlCmjX-3aARD0FdnFB7ZyRFUOKalPYQzeGhK2g"
+  },
+  "root": "ZjPRzJsYV8EOSr2wfAM8eezSKWWgy3tbdOF1FWS11Ac",
+  "rootContext": {
+    "ownerId": "fixture-runtime-owner",
+    "scopeId": "personal:fixture-runtime-owner",
+    "cryptoEpoch": 1,
+    "keyId": "fresh-key-one",
+    "recipientId": "fixture-device"
+  },
+  "rootCapsule": {
+    "suite": "DHKEM-P256-HKDFSHA256-A256GCM",
+    "enc": "BFdpMdS0Sk3n0WXO0HyvCo3sbnbmGbZy8I98LO4O7xfxHug5QMiaTtRadeQcPO2SMF4F93_HVuGKAzTmMr0UwzM",
+    "ciphertext": "FW2jfDQtSqZsg5Gla2FhbUAvtC2V5e_Z0rep4ZTGrRvUHzxx3Va-pVVFBZBEZ_-n"
+  },
+  "plaintext": "UFVCTElDIFNZTlRIRVRJQyBCVU5ETEUg4oCUINCi0LXRgdGCINCy0L7RgdGB0YLQsNC90L7QstC70LXQvdC40Y8",
+  "bundle": {
+    "protocol": 1,
+    "ownerId": "fixture-runtime-owner",
+    "purpose": "device-vault",
+    "salt": "i7SXYEK9q3anwBPhtIdZY1GuIivOUwSrLAIe7IRzK7g",
+    "nonce": "aFq8VoQQS6Sl-t64",
+    "ciphertext": "iQLsaaRDSc2cL7t-bBeeQBlj-XH5VEcs2m5TSAdF-tlhMkRFepA0gJ1rO6TeQmUAo0IH7JrfrtLL4szyUbBzeCxntLG0ol99qEZPBFuTPjFf"
+  },
+  "signedCommand": {
+    "command": {
+      "protocol": 1,
+      "ownerId": "fixture-runtime-owner",
+      "scopeId": "personal:fixture-runtime-owner",
+      "deviceId": "fixture-device",
+      "action": "read",
+      "expectedRevision": 7,
+      "checkpointHash": "GxsbGxsbGxsbGxsbGxsbGxsbGxsbGxsbGxsbGxsbGxs",
+      "securityEpoch": 3,
+      "operationId": "fixture-op",
+      "payload": {
+        "domain": "workspace",
+        "after": "",
+        "limit": 10
+      }
+    },
+    "signature": "59XG7GBgHls9zQpNN5MMtdzSSJ6YSpPiRLB2lJzlnw9OiC2LfE01wmE2TeXktQ7j-l79f1HnGx4pQ1E6NNz_gQ"
+  },
+  "commandBytes": "R0VORVNJUy1FMkVFLUNPTU1BTkQAdjEABgAAAAoEAAAABmFjdGlvbgQAAAAEcmVhZAQAAAAOY2hlY2twb2ludEhhc2gEAAAAK0d4c2JHeHNiR3hzYkd4c2JHeHNiR3hzYkd4c2JHeHNiR3hzYkd4c2JHeHMEAAAACGRldmljZUlkBAAAAA5maXh0dXJlLWRldmljZQQAAAAQZXhwZWN0ZWRSZXZpc2lvbgMAAAAAAAAABwQAAAALb3BlcmF0aW9uSWQEAAAACmZpeHR1cmUtb3AEAAAAB293bmVySWQEAAAAFWZpeHR1cmUtcnVudGltZS1vd25lcgQAAAAHcGF5bG9hZAYAAAADBAAAAAVhZnRlcgQAAAAABAAAAAZkb21haW4EAAAACXdvcmtzcGFjZQQAAAAFbGltaXQDAAAAAAAAAAoEAAAACHByb3RvY29sAwAAAAAAAAABBAAAAAdzY29wZUlkBAAAAB5wZXJzb25hbDpmaXh0dXJlLXJ1bnRpbWUtb3duZXIEAAAADXNlY3VyaXR5RXBvY2gDAAAAAAAAAAM",
+  "commandHash": "XxoP4Rd087XgNgs8kUwsT3kHoQUVAQ15VM3gSgny4KE",
+  "file": {
+    "manifest": {
+      "context": {
+        "cryptoProtocol": 1,
+        "suite": "A256KW-A256GCM-ES256",
+        "ownerId": "fixture-runtime-owner",
+        "scopeId": "personal:fixture-runtime-owner",
+        "domain": "attachment",
+        "objectId": "interop-file",
+        "schemaVersion": 1,
+        "dataGeneration": 1,
+        "writerProtocol": 9,
+        "cryptoEpoch": 1,
+        "securityEpoch": 1,
+        "revision": 1,
+        "keyId": "fresh-key-one",
+        "deviceId": "fixture-device",
+        "operationId": "interop-file-op"
+      },
+      "wrappedKey": "1vRWWEYH2m8Xv7VFXbrarwYaG9mxoXMmcC3Y-orbmOXUOnZP8QVTGQ",
+      "nonce": "lyhyDsmKTlxxIuJL",
+      "ciphertext": "_s8If6yg52qH7IRvmgymGznNHDr_8efBlern791Ah-SIpdae9Lt76bkmGpk4Fd1QyOfRVt587zVZ-CvvAXcNsdKmWdfOYm90dPSx5HNr1KY_niybCno0_KqjTEUNzoqu8Udd-OVfs8XsopMFNVwzqJlRza-0o15M2W9YMqa1YQjUrYpxmEtLH4hAuH1F0ZwsjoG2PYxjfcnm_0kDMPq6fAcEWrh1EO2hiYaOxePjE-fGxcjzQ9O6oKYncLL95GHOafqIRjx8F0h5fVwJm9J7ftMjBXrTO_NLjYWXy_YAadDbRdhbwTQQ1-T8tSsLNY__IHQKI2C7U8NudRSBJzAlTHuYkVZasUzHmOAoE25JiEiO3p8AEovgcrg7ZmFpl0qf-mtjrtUlgZB_E2XleI0ZK8Kl0PihF__1pevHvHv63fQGUt1hC8rWf9b530s6jf8TFs1mTL9nIAeWv9UGmKEO9tdhiUNIw0i1DjYWGttZb6rxYUZe7E1tHwTC9lQSu0nclBi_",
+      "signature": "FvWFA6StDJ0t2Oak2Pi9frhD87pfT1lIQuUrQTa3LBHwLubZ_1iYUmmpeuMwn4x1Q5xEevZgGXf_5AhNWYR6RA"
+    },
+    "chunks": [
+      {
+        "context": {
+          "cryptoProtocol": 1,
+          "suite": "A256KW-A256GCM-ES256",
+          "ownerId": "fixture-runtime-owner",
+          "scopeId": "personal:fixture-runtime-owner",
+          "domain": "attachment",
+          "objectId": "a946dd31-80c3-489f-bd78-2c06cf1178bc:000000",
+          "schemaVersion": 1,
+          "dataGeneration": 1,
+          "writerProtocol": 9,
+          "cryptoEpoch": 1,
+          "securityEpoch": 1,
+          "revision": 1,
+          "keyId": "fresh-key-one",
+          "deviceId": "fixture-device",
+          "operationId": "5817266d-1dfd-4cf8-9abb-798aee02d312"
+        },
+        "wrappedKey": "TCG_JPYYshpXexPEn1QN7VQBFv4HvpSyBRHeOXe-SrVsxFiyosPDeg",
+        "nonce": "d5aNeGTEN3ik95d_",
+        "ciphertext": "F1gSJbxU1hjIqoY9dEE5PVr2UlM9kPGu9rqF3KkxHfQlgILHEQn66DsF3VD9roieDR2TWQjgKmn5sdBIR_EXqrBLaRtkODVTL58qbeWYi4lN",
+        "signature": "yX2c-AslANVp02t5MPaEGfzIeIQazn-hF_SUzE6zj1cwhLNaSebbA05XBPWGAQ8cdNtDcafgTJ1dU12JiqKb-g"
+      }
+    ]
+  },
+  "retiredHeads": [
+    {
+      "domain": "attachment",
+      "objectId": "a946dd31-80c3-489f-bd78-2c06cf1178bc:000000",
+      "revision": 1,
+      "payloadHash": "BiY50z-krNYHXWzecZdBa6wVmUDfBnGAVm6V3W3TSD8"
+    },
+    {
+      "domain": "attachment",
+      "objectId": "interop-file",
+      "revision": 1,
+      "payloadHash": "K25yyjTprKjGs0ySVuqpzMolkI2ZMDbsZo4zxQaisqY"
+    }
+  ],
+  "directory": {
+    "events": [
+      {
+        "command": {
+          "protocol": 1,
+          "ownerId": "fixture-runtime-owner",
+          "scopeId": "personal:fixture-runtime-owner",
+          "deviceId": "fixture-device",
+          "action": "bootstrap",
+          "expectedRevision": 0,
+          "checkpointHash": "genesis",
+          "securityEpoch": 1,
+          "operationId": "fixture-bootstrap",
+          "payload": {
+            "kind": "personal",
+            "resourceId": "fixture-runtime-owner",
+            "keyId": "fresh-key-one",
+            "generation": 1,
+            "recoveryKit": {
+              "protocol": 1,
+              "ownerId": "fixture-runtime-owner",
+              "authority": {
+                "signingKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEzOmEZTlXr_hmcO6qGGH_KAax540mX2_sN-mgtVQmiErW5sufFsdGnFKexIRB17ZNLeu_Y0biSIgsTPqjhuwHLQ",
+                "receivingKey": "BOeXbMwghQxIeirKLLdsLN1E6P7J6dRPDB85rjpp_C5umywRhKIVjGrKLu4r7ScnP8eSsIfBhJ112OBdPmIlLOU"
+              },
+              "protectedKeys": {
+                "protocol": 1,
+                "ownerId": "fixture-runtime-owner",
+                "purpose": "recovery-authority",
+                "salt": "h3ce9hsm2uJaSbYoLdGb0hpyBb_tRFqpJPbSZwSEz1w",
+                "nonce": "Uzgr03ANA5cIJqzY",
+                "ciphertext": "6SyzvKO6uhCIBw20FXOyv5BIxjcnt9VkH8z_s3ZPUvcgVkc32cjAiBLG9TfK30H4-WRml2GJWwM-dgrQAf3Ml_iSxKRoy2NdaVUO9EsGEFnpjK9jE65_MdbP0nlKL6IA1iN0sqztqi7FQuJ41aygDYGDWw-ar3XAGAlYOmBa659PUTjTQ9jaW0teid9wkqx6f9phRa7InxhiOysM8PHrXqsjKEmPWQYGTSfQ-kiGs-9IfI615yq6a_l93qHcFTehcOe-vtAeDI_uXYsZ3GCMeZTlXwTrLv9Qj9Y1nhYFPz5VpIIe4Gmiu0Id2pkkxlMfi4a0afhh9p5-wpZWD9IJ32hMTjmsj5hv76_zDiC-NYDZGaTfl9DHB8AMNn30hB8pvkTBHZ9iGEgauFjKeY8Wlpg9bJigWvM-9iPrjMTwHMOgJw0P7vAYt5s9ISf1-K6VYVvhGTXua1xp3bcwQScsXO9jeYG14_3Z5tvkjjaFW_fkn_j86GcpbTLvouiMMw-SoGeh1nNS4dSwt7YRBPbTAu2hgK5JsE1HHkzoGf1fSk_mTBm_snv_LYYvqM4DBqPoQOJbpBQbqcbEXBnqldyKlXRlJtDjlZBGW-8E5-7HGVgz4_5GD2FDmLg7l57D17v4Sf9hVvydlOc__4u07HbuwUeA7EMTpb4Pir29s1dY3HfTygwQq1Ie25tzEG7xCADI8g"
+              }
+            },
+            "recoveryCapsule": {
+              "suite": "DHKEM-P256-HKDFSHA256-A256GCM",
+              "enc": "BAMSnYuN1nD8HcR5fwbbCKYiGmbgjvIdum7UQcBtusUTgzagIq2LFriTfjTDNDqzuZpohZzHc0Dx4c3jhTiuizI",
+              "ciphertext": "stW1UjQ81aH6TR872gZCoRDXUZkhTWZNEPkQdHPZpEBMsxBryqFKAYL92_5wYml8"
+            },
+            "deviceKeys": {
+              "signingKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAErma8O1MzmMTlo21Cst5jEDljCZQuQbL2WeJawjx7x7dyixZuYbNwyz-K_It9tyE3V7XIx8Z6a5xlI7Zjm23pfA",
+              "receivingKey": "BOdf5fzf_xh6WXgAHQhD6f4KqH1YRXoFm-tlLkQUGl7MxytnEXukbwOtmbFFXTXPYViQLnUor-z60P25ddM85bQ"
+            },
+            "deviceCapsule": {
+              "suite": "DHKEM-P256-HKDFSHA256-A256GCM",
+              "enc": "BFdpMdS0Sk3n0WXO0HyvCo3sbnbmGbZy8I98LO4O7xfxHug5QMiaTtRadeQcPO2SMF4F93_HVuGKAzTmMr0UwzM",
+              "ciphertext": "FW2jfDQtSqZsg5Gla2FhbUAvtC2V5e_Z0rep4ZTGrRvUHzxx3Va-pVVFBZBEZ_-n"
+            },
+            "selfProof": "Jz7asl-gfzESMV-CKYuihfjkDaON281_hQsmvwScSOPrqsswZmJLsmAZ73uKMpxA0gZU1jTRPJjUja1CqrWCrg"
+          }
+        },
+        "signature": "MDtAx_zuNy1rRDO6D33Fs8wtLcCye-2wKB-tNzt4YIx-3qIjOtnap-8scuU6gK1IGwkBgsXKfQfy4dXuljnGSw"
+      },
+      {
+        "command": {
+          "protocol": 1,
+          "ownerId": "fixture-runtime-owner",
+          "scopeId": "personal:fixture-runtime-owner",
+          "deviceId": "fixture-device",
+          "action": "migration-commit",
+          "expectedRevision": 1,
+          "checkpointHash": "aniGKesz3EeWqIbweAFNuCE96ViEaJDIDHJ7czLbC4k",
+          "securityEpoch": 1,
+          "operationId": "468b090d-4d22-48e8-9b70-969a3e1c7e24",
+          "payload": {
+            "migrationId": "fixture-migration",
+            "fence": 1,
+            "manifestHash": "SejjKXVFwVq2p5Rxp6NNQ-JKjxyyXqPYQXxh9pkmej8",
+            "objectCount": 0,
+            "verifiedCheckpoint": "BAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ",
+            "generation": 1
+          }
+        },
+        "signature": "7IBE4za0D-lf3-GuDe-sdgTbd9lRarzmI5xirfPAOHRfyF92rGMW3lle8g3O7RyEjuuYDAbIPjbJB8ptMqEk5w"
+      },
+      {
+        "command": {
+          "protocol": 1,
+          "ownerId": "fixture-runtime-owner",
+          "scopeId": "personal:fixture-runtime-owner",
+          "deviceId": "fixture-device",
+          "action": "enroll",
+          "expectedRevision": 2,
+          "checkpointHash": "Pr0RSUZL_tpWz_mJpXljLDAG6I056UUsuRy4_Tq4y7g",
+          "securityEpoch": 1,
+          "operationId": "25883fc8-fe84-4228-9526-01e6b4bf50b9",
+          "payload": {
+            "challenge": {
+              "id": "fixture-challenge",
+              "scopeId": "personal:fixture-runtime-owner",
+              "userId": "fixture-runtime-owner",
+              "role": "owner",
+              "sessionHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "deviceId": "fixture-second",
+              "signingKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEBDc-I2yE4E9WMLM6hm7JmW9op_uUD_PZnJXbU3NbYEJET5M9LZvjsFAG4alOh8w5SNW1SrHJIdS_LqLzL0yDtw",
+              "receivingKey": "BMCIQHeLSeet_Xrs2RR3yvw9VsrWndbqdWVDkmT17sZW97Ga0KVs7BMoMnskgTb9KDlzBB6AnEafpiTN5hz2_f8",
+              "nonce": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "expiresAt": 2000000000
+            },
+            "capsule": {
+              "suite": "DHKEM-P256-HKDFSHA256-A256GCM",
+              "enc": "BCCrqBTwy3Y7nh6Z80p9AI7Ks9uYYUXJBRtL4d6-Igiqo0r1u8wWbuFnPg1oQ3n1bW3F2M-X-LBEuff-vyiBSDY",
+              "ciphertext": "lRHHMO7cFkXmLyVEpskbjTRmfXUkH07hmbUZA4P_yFHQ7MhkN4shTfaOL1Yx4d0I"
+            },
+            "historyCapsules": [],
+            "selfProof": "hWNAo84fW8lRvzbYe-TR0XpKMOLY4v2VoOWJ6ccBFF_aTGYJ00m9iKn3OJ0C7aZ7YvwCyIIUDVIZg8znLOxM7A"
+          }
+        },
+        "signature": "BaYzXVS-Nu_4JLLzKpAQbu0xKhRIEz7HW4kRuxucvRLJ3DxjAwDVClZavLBQItfKiXp83VwaPXbygu2z8OJjpQ"
+      },
+      {
+        "command": {
+          "protocol": 1,
+          "ownerId": "fixture-runtime-owner",
+          "scopeId": "personal:fixture-runtime-owner",
+          "deviceId": "fixture-device",
+          "action": "rotate",
+          "expectedRevision": 3,
+          "checkpointHash": "oMm20LpRlkYzAyy5LkksEDE1ZtOW3eDmdTt-ZomAhDQ",
+          "securityEpoch": 1,
+          "operationId": "8cf4f423-4169-4be9-a755-aee598275ad5",
+          "payload": {
+            "revokedDeviceIds": [
+              "fixture-device"
+            ],
+            "cryptoEpoch": 2,
+            "securityEpoch": 2,
+            "keyId": "fresh-key-two",
+            "retiredManifestHash": "qkjAdLKE4YynKPsNmqN10aUZ5fYyzF6va-zu6aKqKsw",
+            "retiredObjectCount": 2,
+            "capsules": [
+              {
+                "deviceId": "fixture-second",
+                "capsule": {
+                  "suite": "DHKEM-P256-HKDFSHA256-A256GCM",
+                  "enc": "BKA_HgpQcBogTAElGeFxRkVMQ6YGfQtpi_wVmhuX13NJua1FoYWXmdhNxJqVN119pdGEADxRJ0EuTl3pyUPX9vw",
+                  "ciphertext": "EScCNFj70EkKS2gKGRVOzvzIueDLU1SwcMx-sYTqdVQTgvNbkwtb6SZhXcyW6dQp"
+                }
+              }
+            ],
+            "recoveryCapsule": {
+              "suite": "DHKEM-P256-HKDFSHA256-A256GCM",
+              "enc": "BKcD-F3A5t55KtzWzeZrP0svuXFqrA0O3gp-4jIqbN9UUhofb_Q_HzGnNMEPjIVEZoUNWKdwSg2atwaSzjB0lh8",
+              "ciphertext": "ftfs_VqgqU_Q-6HQZ03Eik2PLnSxmksQfWyiODY-zi0OajXPx87Cxodpl2opKet6"
+            }
+          }
+        },
+        "signature": "mNRBYeApIh_cgV2eSdx4EhfhO98NE74RXsdgt4G3o4srcDLNh-NLJCocL-iAmBSDCzBN-vdbDirHkwaKuq9vmg"
+      }
+    ],
+    "checkpoint": {
+      "revision": 4,
+      "hash": "EWoLXpfSzb-7JNKVX62rnDci0GPQXD98m8YSetgGoPo"
+    }
+  },
+  "secondDevice": {
+    "signingKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEBDc-I2yE4E9WMLM6hm7JmW9op_uUD_PZnJXbU3NbYEJET5M9LZvjsFAG4alOh8w5SNW1SrHJIdS_LqLzL0yDtw",
+    "receivingKey": "BMCIQHeLSeet_Xrs2RR3yvw9VsrWndbqdWVDkmT17sZW97Ga0KVs7BMoMnskgTb9KDlzBB6AnEafpiTN5hz2_f8",
+    "signingPrivate": "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgTer_rVsQaeXF-XTYKMxMhYzmQevIN0NiZOjaeD9wGCihRANCAAQENz4jbITgT1YwszqGbsmZb2in-5QP89mcldtTc1tgQkRPkz0tm-OwUAbhqU6HzDlI1bVKsckh1L8uovMvTIO3",
+    "receivingPrivate": "lIYnYY2y23IUrlmblD5JUiXvXLQbYoX3jfCM-axQ3_Y"
+  },
+  "newRoot": "Oe7XelWisXYa0j52V-P-60_FS40jYblX17KIOx_EucM"
+}

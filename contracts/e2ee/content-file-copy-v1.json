@@ -1,0 +1,114 @@
+{
+  "en": {
+    "download": "Save selected file",
+    "binary": "This version has no JSON preview. Its original bytes can be saved as a file.",
+    "notice": "The selected file is decrypted. Saving it creates an unencrypted copy outside GENESIS.",
+    "file": "File",
+    "current": "Current version",
+    "version": "Version"
+  },
+  "ru": {
+    "download": "Сохранить выбранный файл",
+    "binary": "Для этой версии нет JSON-предпросмотра. Исходные байты можно сохранить в файл.",
+    "notice": "Выбранный файл расшифрован. При сохранении создаётся незашифрованная копия вне GENESIS.",
+    "file": "Файл",
+    "current": "Текущая версия",
+    "version": "Версия"
+  },
+  "de": {
+    "download": "Ausgewählte Datei speichern",
+    "binary": "Für diese Version gibt es keine JSON-Vorschau. Die Originalbytes können als Datei gespeichert werden.",
+    "notice": "Die ausgewählte Datei ist entschlüsselt. Beim Speichern entsteht eine unverschlüsselte Kopie außerhalb von GENESIS.",
+    "file": "Datei",
+    "current": "Aktuelle Version",
+    "version": "Version"
+  },
+  "el": {
+    "download": "Αποθήκευση επιλεγμένου αρχείου",
+    "binary": "Αυτή η έκδοση δεν έχει προεπισκόπηση JSON. Τα αρχικά bytes μπορούν να αποθηκευτούν σε αρχείο.",
+    "notice": "Το επιλεγμένο αρχείο έχει αποκρυπτογραφηθεί. Η αποθήκευση δημιουργεί μη κρυπτογραφημένο αντίγραφο εκτός GENESIS.",
+    "file": "Αρχείο",
+    "current": "Τρέχουσα έκδοση",
+    "version": "Έκδοση"
+  },
+  "es": {
+    "download": "Guardar archivo seleccionado",
+    "binary": "Esta versión no tiene vista previa JSON. Los bytes originales pueden guardarse como archivo.",
+    "notice": "El archivo seleccionado está descifrado. Al guardarlo se crea una copia sin cifrar fuera de GENESIS.",
+    "file": "Archivo",
+    "current": "Versión actual",
+    "version": "Versión"
+  },
+  "fr": {
+    "download": "Enregistrer le fichier sélectionné",
+    "binary": "Cette version n'a pas d'aperçu JSON. Ses octets d'origine peuvent être enregistrés dans un fichier.",
+    "notice": "Le fichier sélectionné est déchiffré. L'enregistrement crée une copie non chiffrée en dehors de GENESIS.",
+    "file": "Fichier",
+    "current": "Version actuelle",
+    "version": "Version"
+  },
+  "it": {
+    "download": "Salva il file selezionato",
+    "binary": "Questa versione non ha un'anteprima JSON. I byte originali possono essere salvati come file.",
+    "notice": "Il file selezionato è decifrato. Il salvataggio crea una copia non cifrata fuori da GENESIS.",
+    "file": "File",
+    "current": "Versione attuale",
+    "version": "Versione"
+  },
+  "ja": {
+    "download": "選択したファイルを保存",
+    "binary": "このバージョンにはJSONプレビューがありません。元のバイト列をファイルに保存できます。",
+    "notice": "選択したファイルは復号されています。保存すると、GENESISの外部に暗号化されていないコピーが作成されます。",
+    "file": "ファイル",
+    "current": "現在のバージョン",
+    "version": "バージョン"
+  },
+  "pl": {
+    "download": "Zapisz wybrany plik",
+    "binary": "Ta wersja nie ma podglądu JSON. Oryginalne bajty można zapisać jako plik.",
+    "notice": "Wybrany plik jest odszyfrowany. Zapisanie tworzy niezaszyfrowaną kopię poza GENESIS.",
+    "file": "Plik",
+    "current": "Bieżąca wersja",
+    "version": "Wersja"
+  },
+  "pt": {
+    "download": "Guardar ficheiro selecionado",
+    "binary": "Esta versão não tem pré-visualização JSON. Os bytes originais podem ser guardados num ficheiro.",
+    "notice": "O ficheiro selecionado está desencriptado. Guardá-lo cria uma cópia não encriptada fora do GENESIS.",
+    "file": "Ficheiro",
+    "current": "Versão atual",
+    "version": "Versão"
+  },
+  "sr": {
+    "download": "Сачувај изабрану датотеку",
+    "binary": "За ову верзију нема JSON прегледа. Изворни бајтови могу да се сачувају као датотека.",
+    "notice": "Изабрана датотека је дешифрована. Чување прави нешифровану копију ван GENESIS-а.",
+    "file": "Датотека",
+    "current": "Тренутна верзија",
+    "version": "Верзија"
+  },
+  "tr": {
+    "download": "Seçili dosyayı kaydet",
+    "binary": "Bu sürümün JSON önizlemesi yoktur. Özgün baytlar dosya olarak kaydedilebilir.",
+    "notice": "Seçili dosyanın şifresi çözülmüştür. Kaydetmek, GENESIS dışında şifrelenmemiş bir kopya oluşturur.",
+    "file": "Dosya",
+    "current": "Geçerli sürüm",
+    "version": "Sürüm"
+  },
+  "uk": {
+    "download": "Зберегти вибраний файл",
+    "binary": "Для цієї версії немає JSON-перегляду. Початкові байти можна зберегти у файл.",
+    "notice": "Вибраний файл розшифровано. Під час збереження створюється незашифрована копія поза GENESIS.",
+    "file": "Файл",
+    "current": "Поточна версія",
+    "version": "Версія"
+  },
+  "zh": {
+    "download": "保存所选文件",
+    "binary": "此版本没有JSON预览。可以将原始字节保存为文件。",
+    "notice": "所选文件已解密。保存会在GENESIS外部创建未加密的副本。",
+    "file": "文件",
+    "current": "当前版本",
+    "version": "版本"
+  }
+}

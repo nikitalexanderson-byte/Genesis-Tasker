@@ -1044,9 +1044,10 @@ export function browserLanguage(): Language {
   if(publicRoute?.explicitLanguage)return publicRoute.language;
   const requested = new URLSearchParams(window.location.search).get("lang");
   if (requested && (LANGUAGES as readonly string[]).includes(requested)) return requested as Language;
-  if(publicRoute)return publicRoute.language;
+  if(publicRoute&&publicRoute.page!=='home'&&publicRoute.page!=='login')return publicRoute.language;
   const stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
   if (stored && (LANGUAGES as readonly string[]).includes(stored)) return stored as Language;
+  if(publicRoute)return publicRoute.language;
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const country = regionFromLocales(window.navigator.languages?.length
     ? window.navigator.languages : [window.navigator.language]);

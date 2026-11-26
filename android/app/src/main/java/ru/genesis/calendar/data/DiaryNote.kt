@@ -50,11 +50,13 @@ internal class DiaryNote private constructor(private val source: String) {
                 .put("archived", false).put("pinned", false).put("reaction", JSONObject.NULL)
         }
         fun create(body: String, title: String = ""): DiaryNote = parse(newDraftJson().put("body", body).put("title", title))
-        fun parse(input: JSONObject): DiaryNote {
+        fun parse(input: JSONObject): DiaryNote = checked(input,false)
+        fun parseDraft(input:JSONObject):DiaryNote = checked(input,true)
+        private fun checked(input:JSONObject,allowBlankBody:Boolean):DiaryNote {
             require(input.opt("version") is Number && input.getDouble("version") == 1.0) { "DIARY_UNKNOWN_SCHEMA" }
             fun text(key: String, max: Int): String = (input.opt(key) as? String).also { require(it != null && it.length <= max) { "DIARY_INVALID_NOTE" } }!!
             require(idPattern.matches(text("id", 100))) { "DIARY_INVALID_NOTE" }
-            text("title", 200); require(text("body", 30_000).isNotBlank()) { "DIARY_INVALID_NOTE" }
+            text("title", 200); require(text("body", 30_000).isNotBlank()||allowBlankBody) { "DIARY_INVALID_NOTE" }
             require(text("color", 10) in colors && validDate(input.opt("createdAt")) && validDate(input.opt("updatedAt"))) { "DIARY_INVALID_NOTE" }
             require(!input.has("customColor") || input.isNull("customColor") ||
                 (input.opt("customColor") as? String)?.matches(Regex("#[a-fA-F0-9]{6}")) == true) { "DIARY_INVALID_NOTE" }

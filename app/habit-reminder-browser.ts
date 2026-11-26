@@ -7,6 +7,7 @@ import { presentWebReminder } from "./web-reminder-presentation";
 import { privateDeviceAccessBlocked } from "./local-sign-out";
 import { translateText, type Language } from "./i18n";
 import type { HabitWorkspace } from "./habits";
+import {withPersonalReminderOperation} from './cloud-sync';
 
 export type HabitReminderIntent = { userId: string; deliveryId?: string; target?: HabitReminderRow; action: string };
 export async function habitReminderWorkerIntent(id: string, userId: string, acknowledge = false): Promise<HabitReminderIntent | null> {
@@ -29,12 +30,13 @@ async function eventReceipt(key: string,userId: string,action: "reserve"|"commit
   return new Promise<boolean>(resolve=>{
     const channel=new MessageChannel();const timer=setTimeout(()=>{channel.port1.close();resolve(false);},3000);
     channel.port1.onmessage=event=>{clearTimeout(timer);channel.port1.close();resolve(event.data===true);};
-    worker.postMessage({type:"GENESIS_HABIT_EVENT_RECEIPT",key:hash,userId,action},[channel.port2]);
+    worker.postMessage({type:"GENESIS_HABIT_EVENT_RECEIPT",key:hash,userId,action,ownerPermit:1},[channel.port2]);
   });
 }
 const snoozesKey = (userId: string) => `genesis.habit-reminder.snoozes.${userId}`;
 type Snooze = { row: HabitReminderRow; due: string };
-export function snoozeLocalHabitReminder(userId: string, row: HabitReminderRow, workspace: HabitWorkspace, now = new Date()) {
+export async function snoozeLocalHabitReminder(userId: string, row: HabitReminderRow, workspace: HabitWorkspace, now = new Date()) {
+ return withPersonalReminderOperation(userId,async()=>{
   const target = habitReminderTarget(row), action = target && habitReminderAction(workspace, target, now);
   if (!target || action === "unavailable" || action === "stale" || action === "completed") throw Error("HABIT_REMINDER_SNOOZE_UNAVAILABLE");
   const snoozes = JSON.parse(localStorage.getItem(snoozesKey(userId)) || "{}") as Record<string, Snooze>;
@@ -47,6 +49,7 @@ export function snoozeLocalHabitReminder(userId: string, row: HabitReminderRow, 
   if (date !== row.date || !row.allowDuringQuietHours && isHabitNotificationQuietTime(localTime, workspace.habitSettings.notifications)) throw Error("HABIT_REMINDER_SNOOZE_UNAVAILABLE");
   snoozes[row.id] = { row, due: due.toISOString() };localStorage.setItem(snoozesKey(userId), JSON.stringify(snoozes));
   window.dispatchEvent(new Event("genesis:habit-reminders-changed"));
+ });
 }
 
 /** Honest open-tab fallback. When a current push schedule is active it is not run concurrently. */
@@ -59,7 +62,7 @@ export function scheduleHabitReminderFallback(userId: string, getWorkspace: () =
     const snoozes = JSON.parse(localStorage.getItem(snoozesKey(userId)) || "{}") as Record<string, Snooze>;
     for (const [key, value] of Object.entries(snoozes)) if (Number.isFinite(Date.parse(value.due))) rows.push({ row: value.row, due: value.due, key: `snooze:${key}` });
   } catch { /* A malformed local snooze never changes personal habit data. */ }
-  const deliver = async (item: typeof rows[number]) => withHabitTimerLock(`habit-reminder:${userId}`, async () => {
+  const deliver = async (item: typeof rows[number]) => withPersonalReminderOperation(userId,permit=>withHabitTimerLock(`habit-reminder:${userId}`, async () => {
     if (!active || privateDeviceAccessBlocked()) return;
     const live = getWorkspace(), target = habitReminderTarget(item.row);
     if (target && ["unavailable","stale","completed"].includes(habitReminderAction(live, target))) return;
@@ -68,7 +71,7 @@ export function scheduleHabitReminderFallback(userId: string, getWorkspace: () =
     const receipts = JSON.parse(localStorage.getItem(receiptsKey(userId)) || "{}") as Record<string, number>;
     const start = new Date();start.setHours(0,0,0,0);
     if (receipts[item.key] || Object.values(receipts).filter(at => at >= start.getTime()).length >= habitReminderFrequency(userId).maxPerDay
-      || item.row.kind === "goal" && hasNotificationFatigue()) return;
+      || item.row.kind === "goal" && hasNotificationFatigue(userId)) return;
     // A goal may have been reached without rebuilding the timers yet.
     if (item.row.kind === "goal" && !buildHabitReminderPlan(live, new Date(), undefined, 1).rows.some(row => row.id === item.row.id)) return;
     const habit = target && live.habits.find(value => value.id === target.habitId);
@@ -88,11 +91,11 @@ export function scheduleHabitReminderFallback(userId: string, getWorkspace: () =
     else { const notification = new Notification(habit?.title ?? "GENESIS", options);
       notification.onclick = () => { window.focus();window.dispatchEvent(new CustomEvent("genesis:local-habit-reminder", { detail: { userId, target:item.row, action:"open" } })); }; }
     receipts[item.key] = Date.now();
-    recordHabitReminderTelemetry("delivered",item.key,item.row.kind==="goal");
+    await recordHabitReminderTelemetry("delivered",item.key,item.row.kind==="goal",userId,permit);
     localStorage.setItem(receiptsKey(userId), JSON.stringify(Object.fromEntries(Object.entries(receipts).filter(([,at]) => at > Date.now() - 7*86400000))));
     await eventReceipt(item.key,userId,"commit");
     } catch(error) {await eventReceipt(item.key,userId,"release");throw error;}
-  });
+  }));
   const timers = rows.flatMap(item => {
     const delay = Date.parse(item.due) - Date.now();
     return delay < -5*60_000 || delay > 24*3600000 ? [] : [window.setTimeout(() => void deliver(item).catch(() => undefined), Math.max(0, delay))];

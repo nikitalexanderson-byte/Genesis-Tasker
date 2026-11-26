@@ -219,13 +219,13 @@ function genesisHabitReminderMaintenance(): void
 {
     $db=genesisDb();genesisBeginWriteTransaction($db);
     try{
-        $q=$db->prepare('SELECT user_id FROM habit_reminder_profiles WHERE needs_refresh=0 AND expires_at<=? LIMIT 100');
+        $q=$db->prepare('SELECT user_id FROM habit_reminder_profiles p WHERE needs_refresh=0 AND expires_at<=? AND '.genesisE2eeLegacyAvailableSql('personal','p.user_id').' LIMIT 100');
         $q->execute([genesisNow()]);$expired=$q->fetchAll(PDO::FETCH_COLUMN);$q->closeCursor();
         foreach($expired as $userId){
             genesisHabitReminderCancelDeliveries($userId);
             $db->prepare('UPDATE habit_reminder_profiles SET needs_refresh=1,encrypted_plan=NULL,updated_at=? WHERE user_id=?')->execute([genesisNow(),$userId]);
         }
-        $q=$db->prepare("SELECT id FROM habit_reminder_deliveries WHERE expires_at<? AND state<>'sending' LIMIT 500");
+        $q=$db->prepare("SELECT id FROM habit_reminder_deliveries d WHERE expires_at<? AND state<>'sending' AND ".genesisE2eeLegacyAvailableSql('personal','d.user_id')." LIMIT 500");
         $q->execute([gmdate('Y-m-d\TH:i:s\Z',time()-7*86400)]);$ids=$q->fetchAll(PDO::FETCH_COLUMN);$q->closeCursor();
         foreach($ids as $id){
             $db->prepare("DELETE FROM background_jobs WHERE kind='habit-notification' AND unique_key=? AND state<>'running'")->execute(['habit-notification:'.$id]);

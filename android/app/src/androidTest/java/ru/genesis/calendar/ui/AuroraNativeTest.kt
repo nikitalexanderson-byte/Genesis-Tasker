@@ -22,6 +22,8 @@ import org.json.JSONTokener
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Before
+import org.junit.After
 import ru.genesis.calendar.GenesisApplication
 import ru.genesis.calendar.BuildConfig
 import ru.genesis.calendar.PagerTestActivity
@@ -59,6 +61,12 @@ private class AuroraSyntheticGateway: AuroraGateway{
 
 class AuroraNativeTest{
     @get:Rule val compose=createAndroidComposeRule<PagerTestActivity>()
+    @Before fun bindSyntheticScope(){
+        val app=compose.activity.application as GenesisApplication
+        check(BuildConfig.DEBUG && app.packageName.contains(".qa"))
+        app.activateAccount("aurora-native-operation-qa")
+    }
+    @After fun releaseSyntheticScope(){(compose.activity.application as GenesisApplication).activateAccount(null)}
     private val args get()=InstrumentationRegistry.getArguments()
     private val dark get()=args.getString("genesisEvening")=="true"
     private fun source():JSONObject{
@@ -76,6 +84,12 @@ class AuroraNativeTest{
         compose.waitUntil(10000){result.get()!=null};return result.get()!!
     }
     private fun body()=domString("document.body.innerText")
+    /** Current entry is Gno; reach the preserved older route through its archive. */
+    private fun openLegacyArchive(){
+        compose.waitUntil(30000){runCatching{domString("String(!!document.querySelector('.gno-history'))")=="true"}.getOrDefault(false)}
+        assertEquals("opened",domString("(()=>{const history=document.querySelector('.gno-history');history.open=true;const button=[...history.querySelectorAll('button')].find(x=>x.textContent==='Прежние расчёты и прогнозы');if(!button)return 'missing';button.click();return 'opened'})()"))
+        compose.waitUntil(30000){runCatching{domString("String(!!document.querySelector('.aurora-dialog'))")=="true"}.getOrDefault(false)}
+    }
     private fun visualFrame(){
         val ready=AtomicBoolean(false)
         onView(isAssignableFrom(WebView::class.java)).perform(object:ViewAction{
@@ -87,9 +101,9 @@ class AuroraNativeTest{
     private fun capture(label:String){captureNativeWindow(File(compose.activity.getExternalFilesDir(null),"aurora-${if(dark)"dark" else "light"}-${args.getString("genesisFontScale","1")}-$label.png"))}
     @Test fun emptyWindowFitsContentAndExpandsForAnActivePass() {
         val app=compose.activity.application as GenesisApplication
-        check(BuildConfig.DEBUG && app.packageName.endsWith(".qa328.debug"))
+        check(BuildConfig.DEBUG && app.packageName.contains(".qa"))
         val gateway=AuroraSyntheticGateway()
-        runBlocking{for(kind in listOf("aurora-cache","aurora-pending","aurora-account-key"))app.database.dao().deleteDocument(app.workspaceScope,kind)}
+        runBlocking{for(kind in app.database.dao().documentKinds(app.workspaceScope).filter{it=="aurora-account-key"||ru.genesis.calendar.auth.AuroraProtocol.cacheKey("aurora-synthetic-resize",it)!=null})app.database.dao().deleteDocument(app.workspaceScope,kind)}
         var active by mutableStateOf(false)
         compose.setContent {
             val density=LocalDensity.current
@@ -100,13 +114,19 @@ class AuroraNativeTest{
                 }
             }
         }
+        openLegacyArchive()
         compose.waitUntil(30000){runCatching{domString("String(!!document.querySelector('.aurora-empty'))")=="true"}.getOrDefault(false)}
+        capture("empty-initial")
+        File(compose.activity.getExternalFilesDir(null),"aurora-empty-initial.json").writeText(domString("JSON.stringify({viewport:[innerWidth,innerHeight],dialog:document.querySelector('.aurora-dialog').getBoundingClientRect().toJSON(),scroll:document.querySelector('.aurora-dialog').scrollHeight})"))
+        compose.waitUntil(10000){domString("String(Math.abs(document.querySelector('.aurora-dialog').scrollHeight-innerHeight)<3)")=="true"}
         visualFrame()
         val empty=compose.onNodeWithTag("aurora-native-dialog").getUnclippedBoundsInRoot()
         assertEquals("The empty action fills the content width","true",domString("String(Math.abs(document.querySelector('.aurora-new-pass').getBoundingClientRect().width-(document.querySelector('.aurora-dialog').clientWidth-16))<2)"))
-        assertEquals("The empty dialog has no unused viewport height","true",domString("String(Math.abs(document.querySelector('.aurora-dialog').scrollHeight-innerHeight)<3)"))
         capture("empty-content-sized")
+        val emptyLayout=domString("JSON.stringify({viewport:[innerWidth,innerHeight],dialog:document.querySelector('.aurora-dialog').getBoundingClientRect().toJSON(),scroll:document.querySelector('.aurora-dialog').scrollHeight})")
+        assertEquals("The empty dialog has no unused viewport height: $emptyLayout","true",domString("String(Math.abs(document.querySelector('.aurora-dialog').scrollHeight-innerHeight)<3)"))
         compose.runOnIdle { active=true }
+        openLegacyArchive()
         compose.waitUntil(30000){runCatching{body().contains("Выберите карты для работы")}.getOrDefault(false)}
         visualFrame()
         val expanded=compose.onNodeWithTag("aurora-native-dialog").getUnclippedBoundsInRoot()
@@ -118,7 +138,7 @@ class AuroraNativeTest{
     @Test fun localBundleKeepsActualDrawAndEncryptedProgressOnCloseAndOfflineReopen(){
         val app=compose.activity.application as GenesisApplication
         val gateway=AuroraSyntheticGateway()
-        runBlocking{for(kind in listOf("aurora-cache","aurora-pending","aurora-account-key"))app.database.dao().deleteDocument(app.workspaceScope,kind)}
+        runBlocking{for(kind in app.database.dao().documentKinds(app.workspaceScope).filter{it=="aurora-account-key"||ru.genesis.calendar.auth.AuroraProtocol.cacheKey("aurora-synthetic-owner",it)!=null})app.database.dao().deleteDocument(app.workspaceScope,kind)}
         var open by mutableStateOf(true)
         compose.setContent{
             val density=LocalDensity.current
@@ -129,6 +149,7 @@ class AuroraNativeTest{
                 }
             }
         }
+        openLegacyArchive()
         compose.waitUntil(30000){runCatching{body().contains("Выберите карты для работы")}.getOrDefault(false)}
         val first=body();assertTrue(first.contains("сохранённый расклад из девяти карт"))
         assertEquals("true",domString("String(document.querySelectorAll('.aurora-sector[data-state=negative]').length>0)"))
@@ -142,6 +163,7 @@ class AuroraNativeTest{
         capture("source")
         val device=UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         for(selector in listOf(".aurora-sector[data-state=negative]", ".aurora-footer>.primary-button")) {
+            compose.waitUntil(10000){domString("String(!!document.querySelector('$selector')&&!document.querySelector('$selector').matches(':disabled')&&!document.querySelector('$selector').closest('[inert]'))")=="true"}
             // A WebView virtual text node can exist while its bounds are stale or
             // offscreen. Measure the actual footer and retain a real device touch.
             domString("(()=>{document.querySelector('$selector').scrollIntoView({block:'center'});return 'ready'})()")
@@ -163,13 +185,21 @@ class AuroraNativeTest{
             capture("next-control")
             assertTrue(device.click(touch.get()[0],touch.get()[1]))
         }
-        compose.waitUntil(10000){domString("document.querySelector('.aurora-stage h3')?.textContent??''")=="Направление изменения"}
+        try {compose.waitUntil(10000){domString("document.querySelector('.aurora-stage h3')?.textContent??''")=="Направление изменения"}}
+        catch(error:Throwable){
+            capture("next-failed")
+            File(compose.activity.getExternalFilesDir(null),"aurora-next-failed.json").writeText(domString("JSON.stringify({heading:document.querySelector('.aurora-stage h3')?.textContent,stage:document.querySelector('.aurora-stage')?.dataset.stage,text:document.body.innerText})"))
+            throw error
+        }
         capture("secondary")
+        compose.onNodeWithTag("aurora-native-close",useUnmergedTree=true).performClick()
+        compose.waitUntil(30000){runCatching{domString("String(!!document.querySelector('.gno-dialog'))")=="true"}.getOrDefault(false)}
         compose.onNodeWithTag("aurora-native-close",useUnmergedTree=true).performClick()
         compose.waitUntil(10000){!open&&compose.onAllNodesWithTag("aurora-native-dialog").fetchSemanticsNodes().isEmpty()};assertNotNull(gateway.envelope)
         assertFalse(gateway.envelope.toString().contains("Направление изменения"))
         gateway.offline=true
         compose.runOnIdle{open=true}
+        openLegacyArchive()
         compose.waitUntil(30000){runCatching{domString("document.querySelector('.aurora-stage h3')?.textContent??''")=="Направление изменения"}.getOrDefault(false)}
         assertTrue(body().contains("ожидает связи"));capture("offline-restored")
     }

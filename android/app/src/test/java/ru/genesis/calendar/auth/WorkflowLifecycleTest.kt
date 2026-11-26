@@ -115,6 +115,18 @@ class WorkflowLifecycleTest {
         rejected { WorkflowLifecycle.history(null, bad, null, 50) }
         rejected { WorkflowLifecycle.history(null, page(50, 2, true), null, 50) }
     }
+    @Test fun privateHistoryKeepsLegacyRevisionNumbersWithoutReusingLiveKeys() {
+        val live = page(4, 2, true).put("archivedVersions", JSONArray())
+        val first = WorkflowLifecycle.history(null, live, null, 4)
+        val tail = page(2, 1, false).put("archivedVersions", page(4, 2, false).getJSONArray("versions"))
+        val complete = WorkflowLifecycle.history(first, tail, 3, 4)
+        val rows = WorkflowLifecycle.rows(complete.getJSONArray("versions"))
+        assertEquals(listOf("current:4", "current:3", "current:2", "migration:4", "migration:3"), rows.map(WorkflowLifecycle::historyKey))
+        assertTrue(complete.isNull("nextCursor"))
+        assertFalse(complete.toString().contains("do-not-cache"))
+        rejected { WorkflowLifecycle.history(null, live.put("archivedVersions", page(4, 2, false).getJSONArray("versions")), null, 4) }
+        rejected { WorkflowLifecycle.history(first, tail.put("archivedVersions", page(4, 1, false).getJSONArray("versions").put(page(4, 1, false).getJSONArray("versions").getJSONObject(0))), 3, 4) }
+    }
     @Test fun workflowFailuresRetainLegacyOutboxClassificationAndOnlySafeDetails() {
         val failure = workflowFailure(409, JSONObject().put("error", "WORKFLOW_REQUIRED_FIELDS").put("details", JSONObject()
             .put("statusId", "open").put("fields", JSONArray().put("storyPoints").put("custom:zero").put("<script>"))

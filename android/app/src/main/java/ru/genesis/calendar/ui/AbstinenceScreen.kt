@@ -29,6 +29,7 @@ import ru.genesis.calendar.domain.trackers.*
 @Composable
 internal fun AbstinenceScreen(app: GenesisApplication, onBack: () -> Unit) {
     val repo = remember(app, app.workspaceScope) { TrackersRepository(app) }
+    val migrationOwner=rememberLegacyMigrationOwner(app.workspaceScope)
     val preferences = remember(app, app.workspaceScope) { LocalPreferences(app, app.workspaceScope) }
     val prefs by preferences.values.collectAsStateWithLifecycle(initialValue = UiPreferences())
     val scope = rememberCoroutineScope()
@@ -42,6 +43,12 @@ internal fun AbstinenceScreen(app: GenesisApplication, onBack: () -> Unit) {
     var observation by remember(repo, date) { mutableStateOf<Pair<AddictionTracker, AddictionEntry?>?>(null) }
     var deleting by remember(repo) { mutableStateOf<AddictionTracker?>(null) }
     var actionsOpen by remember { mutableStateOf(false) }
+    RememberMigrationForm(migrationOwner,repo,"abstinence-management",{!busy&&data!=null}){
+        org.json.JSONObject().put("workspace",data?.let{org.json.JSONObject(TrackersDocument.encode(it))}?:org.json.JSONObject.NULL)
+            .put("revision",data?.revision?:org.json.JSONObject.NULL).put("date",dateValue).put("actionsOpen",actionsOpen)
+            .put("editing",editing?.id?:org.json.JSONObject.NULL).put("observation",observation?.first?.id?:org.json.JSONObject.NULL)
+            .put("deleting",deleting?.id?:org.json.JSONObject.NULL).put("busy",busy)
+    }
     LaunchedEffect(repo, retry) {
         try { repo.workspace.collect { data = it; error = null } }
         catch (cancelled: CancellationException) { throw cancelled }
@@ -154,11 +161,11 @@ internal fun AbstinenceScreen(app: GenesisApplication, onBack: () -> Unit) {
             }
         }
     }
-    editing?.let { tracker -> AbstinenceTrackerEditor(tracker, busy, error, { if (!busy) editing = null }) { next ->
+    editing?.let { tracker -> AbstinenceTrackerEditor(tracker, busy, error, { if (!busy) editing = null },migrationOwner) { next ->
         save({ editing = null }) { repo.saveAddiction(next) }
     } }
     observation?.let { (tracker, entry) ->
-        AbstinenceObservationEditor(tracker, entry, busy, error, { if (!busy) observation = null }) { clean, relapse, craving, trigger, note ->
+        AbstinenceObservationEditor(tracker, entry, busy, error, { if (!busy) observation = null },date,migrationOwner) { clean, relapse, craving, trigger, note ->
             save({ observation = null }) { repo.saveAbstinence(tracker.id, date, clean, relapse, craving, trigger, note, entry?.entity?.version ?: 0) }
         }
     }
@@ -170,7 +177,7 @@ internal fun AbstinenceScreen(app: GenesisApplication, onBack: () -> Unit) {
 
 @Composable
 private fun AbstinenceTrackerEditor(tracker: AddictionTracker, busy: Boolean, error: String?, onDismiss: () -> Unit,
-    onSave: (AddictionTracker) -> Unit) {
+    migrationOwner:String?,onSave: (AddictionTracker) -> Unit) {
     var behavior by rememberSaveable(tracker.id) { mutableStateOf(tracker.trackedBehavior) }
     var description by rememberSaveable(tracker.id) { mutableStateOf(tracker.description) }
     var points by rememberSaveable(tracker.id) { mutableStateOf(tracker.cleanDayPoints.toString()) }
@@ -178,6 +185,12 @@ private fun AbstinenceTrackerEditor(tracker: AddictionTracker, busy: Boolean, er
     var schedule by remember(tracker.id) { mutableStateOf(tracker.schedule) }
     var forever by rememberSaveable(tracker.id) { mutableStateOf(tracker.schedule.endDate == null) }
     var zone by rememberSaveable(tracker.id) { mutableStateOf(schedule.timezone) }
+    RememberMigrationForm(migrationOwner,tracker.id,"abstinence-tracker",{!busy}){
+        org.json.JSONObject().put("baseline",org.json.JSONObject(TrackersDocument.encode(LocalTrackersWorkspace(addictionTrackers=listOf(tracker),addictionDataLoaded=true))))
+            .put("workingTracker",org.json.JSONObject(TrackersDocument.encode(LocalTrackersWorkspace(addictionTrackers=listOf(tracker.copy(schedule=schedule)),addictionDataLoaded=true))))
+            .put("behavior",behavior).put("description",description).put("points",points).put("penalty",penalty)
+            .put("forever",forever).put("zone",zone).put("busy",busy)
+    }
     val mode = when (schedule.recurrence.mode) { "classic" -> CalendarMode.PROFANE; "lunar" -> CalendarMode.LUNAR; else -> CalendarMode.SACRED }
     val valid = behavior.isNotBlank() && points.toIntOrNull() in 0..100 && penalty.toIntOrNull() in 0..100 && runCatching { ZoneId.of(zone) }.isSuccess
     Dialog(onDismissRequest = { if (!busy) onDismiss() }) { GenesisModalFrame({ if (!busy) onDismiss() }) {

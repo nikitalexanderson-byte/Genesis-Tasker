@@ -10,6 +10,7 @@ import tseslint from "typescript-eslint";
 const eslintConfig = defineConfig([
   globalIgnores([
     ".next/**",
+    "demo-output/**",
     "dist/**",
     "dist-web/**",
     "out/**",
@@ -17,6 +18,7 @@ const eslintConfig = defineConfig([
     "android/**/build/**",
     "work/**", "outputs/**", "output/**", "_incoming/**", ".playwright-cli/**",
     "next-env.d.ts",
+    "public/e2ee-legacy-transport-worker.js", // Generated classic bundle; lint its TypeScript source and verify byte drift.
   ]),
   eslint.configs.recommended,
   ...tseslint.configs.recommended,

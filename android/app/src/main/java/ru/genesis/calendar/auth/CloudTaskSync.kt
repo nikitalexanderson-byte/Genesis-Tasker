@@ -1,6 +1,6 @@
 package ru.genesis.calendar.auth
 
-import androidx.room.withTransaction
+import ru.genesis.calendar.data.withTransaction
 import org.json.JSONObject
 import ru.genesis.calendar.data.GenesisDatabase
 import ru.genesis.calendar.data.LocalCipher
@@ -13,24 +13,36 @@ internal interface CloudTaskTransport {
 
 /** Outbox upload uses the same Google-task routes as the website; account drafts never cross scopes. */
 internal class CloudTaskSync(private val db: GenesisDatabase, private val transport: CloudTaskTransport) {
-    suspend fun flush(scope: String): Int {
-        require(scope.startsWith("account-") && scope.length == 40)
+    suspend fun flush(scope: String,requireCurrent:()->Unit={}): Int {
+        require(scope.matches(Regex("account-[a-f0-9]{32}")))
+        return ru.genesis.calendar.data.NativeLegacyOperationPermit.run(db,scope,{
+            ru.genesis.calendar.security.UpdateGate.requireOpen();requireCurrent()
+        }) { flushHeld(scope) }
+    }
+    private suspend fun flushHeld(scope:String):Int {
+        fun current()=requireNotNull(ru.genesis.calendar.data.NativeLegacyOperationPermit.current()){"E2EE_INVALID_LEGACY_OPERATION"}.check()
+        current()
         val dao = db.dao()
         val cipher = LocalCipher()
         var sent = 0
         for (entry in dao.outbox(scope).filterNot { it.entityId in setOf("workspace-structure", "habits", "trackers") }) {
+            current()
             val row = dao.task(scope, entry.entityId) ?: continue
             if (row.revision != entry.revision) continue
             val local = JSONObject(cipher.decrypt(row.encrypted, "$scope/${row.id}"))
+            current()
             if (row.deleted) {
                 transport.delete(row.id, local)
+                current()
                 db.withTransaction {
+                    current()
                     if (dao.task(scope, row.id)?.revision == entry.revision)
                         sent += dao.acknowledgeOutbox(scope, row.id, entry.revision, entry.operationId)
                 }
                 continue
             }
             val response = transport.put(row.id, local)
+            current()
             val saved = response.getJSONObject("task")
             require(saved.getString("id") == row.id) { "Google returned another task" }
             val merged = JSONObject(local.toString())
@@ -39,6 +51,7 @@ internal class CloudTaskSync(private val db: GenesisDatabase, private val transp
             merged.remove("mindmapCreationPayload")
             val valid = CloudAccountSnapshot.nativeTaskJson(merged)
             db.withTransaction {
+                current()
                 val latest = dao.task(scope, row.id)
                 if (latest?.revision == entry.revision && !latest.deleted) {
                     dao.putTask(TaskRecord(scope, row.id, cipher.encrypt(valid.toString(), "$scope/${row.id}"),
@@ -53,6 +66,7 @@ internal class CloudTaskSync(private val db: GenesisDatabase, private val transp
                 }
             }
         }
+        current()
         return sent
     }
 }

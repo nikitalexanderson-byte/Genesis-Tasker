@@ -19,6 +19,21 @@ try{
  $visible=genesisSharedDataExport($viewer,$space,['scope'=>'tree','projectId'=>$pid]);daCheck($visible['projectCount']===1&&!str_contains($visible['content'],'Never expose this title')&&!str_contains($visible['content'],$hidden['id']),'Tree export leaked an inaccessible child');
  $definition=['schemaVersion'=>1,'trigger'=>['type'=>'due','time'=>'00:00'],'conditions'=>[],'actions'=>[['type'=>'priority','value'=>2]],'calendarMode'=>'profane','calendarContext'=>$context];$rule=genesisSharedSaveAutomation($owner,$pid,['operationId'=>genesisUuid(),'title'=>'Due fixture','enabled'=>true,'definition'=>$definition]);
  $preview=genesisSharedDataPreview($editor,$command);daCheck($preview['canApply'],'Editor append blocked');$apply=[...$command,'operationId'=>genesisUuid(),'fingerprint'=>$preview['fingerprint']];$receipt=genesisSharedDataApply($editor,$apply);daCheck($receipt['projectCount']===0,'Append created or replaced a project');$task=$receipt['taskIds']['task'];
+ $scope=['kind'=>'project','resource_id'=>$pid];
+ $importRows=$db->prepare('SELECT '.genesisE2eeProjectImportVisibleSql().' AS visible FROM shared_data_import_records r WHERE r.project_id=? AND r.import_id=?');
+ $readVisibility=static function()use($importRows,$pid,$receipt):array{
+     $importRows->execute([$pid,$receipt['importId']]);
+     try{return array_map('intval',$importRows->fetchAll(PDO::FETCH_COLUMN));}finally{$importRows->closeCursor();}
+ };
+ $visible=$readVisibility();
+ daCheck($visible!==[]&&count(array_unique($visible))===1&&$visible[0]===1,'Active history lost its project visibility');
+ $before=genesisE2eeSourceHash($db,$scope);
+ $db->beginTransaction();
+ try{
+     $db->prepare("UPDATE shared_data_imports SET state='removed' WHERE id=?")->execute([$receipt['importId']]);
+     daCheck($readVisibility()===array_fill(0,count($visible),0)&&genesisE2eeSourceHash($db,$scope)!==$before,'Removed import visibility did not change the project snapshot');
+ }finally{$db->rollBack();}
+ daCheck($readVisibility()===$visible&&genesisE2eeSourceHash($db,$scope)===$before,'Visibility check changed the retained import');
  daCheck(count(genesisDataRows('SELECT * FROM shared_project_comments WHERE project_id=?',[$pid]))===1,'Project comment not imported');$comments=genesisSharedProjectComments($viewer,$pid);daCheck($comments[0]['importedAuthorName']==='Source author'&&$comments[0]['authorId']===$editor,'Source author impersonated a current member');
  genesisAutomationScan();daCheck(count(genesisDataRows('SELECT id FROM shared_automation_runs WHERE rule_id=?',[$rule['id']]))===0,'Due scan activated untouched historical import');
  $db->prepare('DELETE FROM shared_project_members WHERE project_id=? AND user_id=?')->execute([$pid,$editor]);daReject(fn()=>genesisSharedDataApply($editor,$apply),'SHARED_PROJECT_NOT_FOUND');daReject(fn()=>genesisSharedDataUndo($editor,$receipt['importId']),'SHARED_PROJECT_NOT_FOUND');daCheck(genesisSharedDataImports($editor,$space)['imports']===[],'History leaked revoked import metadata');

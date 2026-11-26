@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { deleteHabitReminderDevice, loadHabitReminderStatus, refreshHabitReminderPlan, registerHabitReminderDevice, type HabitReminderStatus } from "./cloud-sync";
+import { deleteHabitReminderDevice, loadHabitReminderStatus, refreshHabitReminderPlan, registerHabitReminderDevice, saveReminderLocalValue, type HabitReminderStatus } from "./cloud-sync";
 import { habitReminderFrequency, habitReminderFrequencyKey, type HabitReminderFrequency } from "./habit-reminder-device";
 import { runtimeLocale, translateText, type Language } from "./i18n";
 import "./habit-reminders.css";
 import { waitForSharedPush } from "./shared-push-device";
+import {useReminderMigrationCapture,useReminderMigrationTask} from './reminder-migration-editors';
 
 export function HabitReminderSettings({ userId, language }: { userId: string; language: Language }) {
   const t = (text: string) => translateText(text, language);
@@ -12,6 +13,8 @@ export function HabitReminderSettings({ userId, language }: { userId: string; la
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
   const alive = useRef(true);
   const operation = useRef<AbortController|null>(null);
+  const migrationTask=useReminderMigrationTask(userId);
+  useReminderMigrationCapture(userId,'habit-reminder-settings',()=>({status,frequency,busy,error,requestPending:operation.current!==null&&!operation.current.signal.aborted}));
   const supported = typeof window !== "undefined" && window.isSecureContext && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
   const enabled = Boolean(status?.device?.enabled);
   const load = useCallback(async () => {
@@ -20,7 +23,7 @@ export function HabitReminderSettings({ userId, language }: { userId: string; la
     setStatus(value);
     if (value.device?.enabled) {
       const saved = { maxPerDay: Number(value.device.max_per_day), snoozeMinutes: Number(value.device.snooze_minutes) };
-      setFrequency(saved); localStorage.setItem(habitReminderFrequencyKey(userId), JSON.stringify(saved));
+      await saveReminderLocalValue(userId,habitReminderFrequencyKey(userId),JSON.stringify(saved));if(alive.current)setFrequency(saved);
     }
   }, [userId]);
   useEffect(() => {
@@ -32,7 +35,7 @@ export function HabitReminderSettings({ userId, language }: { userId: string; la
     if (busy) return;
     operation.current=new AbortController();
     setBusy(true); setError("");
-    try { await action(); }
+    try { await migrationTask(action); }
     catch { if(alive.current)await load().catch(()=>undefined);if (alive.current) setError(t("Не удалось изменить напоминания. Проверьте разрешение браузера и сеть, затем повторите.")); }
     finally { if (alive.current) setBusy(false); }
   };
@@ -65,7 +68,7 @@ export function HabitReminderSettings({ userId, language }: { userId: string; la
   });
   const change = (next: HabitReminderFrequency) => run(async () => {
     if (enabled) await register(next, false);
-    localStorage.setItem(habitReminderFrequencyKey(userId), JSON.stringify(next));setFrequency(next);
+    await saveReminderLocalValue(userId,habitReminderFrequencyKey(userId),JSON.stringify(next));if(alive.current)setFrequency(next);
     window.dispatchEvent(new Event("genesis:habit-reminders-changed"));
   });
   return <div className="habit-background-settings">

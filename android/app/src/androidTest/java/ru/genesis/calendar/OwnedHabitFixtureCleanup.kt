@@ -1,6 +1,6 @@
 package ru.genesis.calendar
 
-import androidx.room.withTransaction
+import ru.genesis.calendar.data.withTransaction
 import kotlinx.coroutines.runBlocking
 import ru.genesis.calendar.data.DocumentRecord
 import ru.genesis.calendar.data.HabitDocument

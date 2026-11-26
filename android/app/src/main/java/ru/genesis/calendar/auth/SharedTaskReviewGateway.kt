@@ -4,6 +4,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 interface SharedTaskReviewGateway {
+    suspend fun sharedTaskApprovalPreview(project:String,task:String):JSONObject?=null
+    suspend fun sharedTaskApproveReviewed(project:String,task:String,review:JSONObject,requestId:String):JSONObject=throw UnsupportedOperationException("sharedTaskApproveReviewed")
     suspend fun sharedTaskApprove(project: String, task: String): JSONObject = throw UnsupportedOperationException("sharedTaskApprove")
     suspend fun sharedTaskReview(project: String, task: String, command: JSONObject): JSONObject = throw UnsupportedOperationException("sharedTaskReview")
     suspend fun sharedTaskApprovers(project: String, task: String, command: JSONObject): JSONObject = throw UnsupportedOperationException("sharedTaskApprovers")

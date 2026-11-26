@@ -58,10 +58,13 @@ internal object SleepReminderScheduler {
             .map { it to plannedAt(plan,it) }.firstOrNull { it.second > now }
     }
 
-    suspend fun restore(context: Context) = mutex.withLock {
+    suspend fun restore(context: Context) {
         val app = context.applicationContext as GenesisApplication
         val scope = app.workspaceScope
+      legacyReminderOperation(context,scope){current->mutex.withLock {
+        current()
         val plans = TrackersRepository(app).workspace.first().sleepPlans
+        current()
         val alarms = context.getSystemService(AlarmManager::class.java)
         val future = plans.mapNotNull { plan -> next(plan,Instant.now())?.let { (date,at) ->
             Triple(uri(scope,plan.id,date),at,plan)
@@ -81,16 +84,22 @@ internal object SleepReminderScheduler {
             }
         }
         storage.edit().putStringSet("alarms",keys).apply()
+      }}
     }
 
     suspend fun deliver(context: Context, intent: Intent) {
+        val scope=(context.applicationContext as GenesisApplication).workspaceScope
+        legacyReminderOperation(context,scope){current->mutex.withLock{current();deliverLocked(context,intent,scope,current)}}
+    }
+    private suspend fun deliverLocked(context: Context, intent: Intent,scope:String,current:()->Unit) {
         val raw=intent.data ?: return
         val app=context.applicationContext as GenesisApplication
         if (intent.action!=ACTION || raw.scheme!="genesis" || raw.authority!="sleep-reminder") return
         val parts=raw.pathSegments
-        if (parts.size!=3 || parts[0]!=app.workspaceScope) return
+        if (parts.size!=3 || parts[0]!=scope) return
         val date=runCatching { LocalDate.parse(parts[2]) }.getOrNull() ?: return
         val plan=TrackersRepository(app).workspace.first().sleepPlans.firstOrNull { it.id==parts[1] } ?: return
+        current()
         if (!plan.active || !plan.reminderEnabled || date < plan.schedule.startDate ||
             plan.schedule.endDate?.let { date > it } == true) return
         val zone=runCatching { ZoneId.of(plan.schedule.timezone) }.getOrNull() ?: return
@@ -106,13 +115,14 @@ internal object SleepReminderScheduler {
         val manager=NotificationManagerCompat.from(context)
         if (!manager.areNotificationsEnabled() || Build.VERSION.SDK_INT>=33 &&
             context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED) return
-        val english=LocalPreferences(context,app.workspaceScope).values.first().language=="en"
+        val english=LocalPreferences(context,scope).values.first().language=="en"
+        current()
         val notifications=context.getSystemService(NotificationManager::class.java)
         notifications.createNotificationChannel(NotificationChannel(CHANNEL,
             if(english)"Sleep plan" else "План сна",NotificationManager.IMPORTANCE_DEFAULT))
         if (notifications.getNotificationChannel(CHANNEL)?.importance==NotificationManager.IMPORTANCE_NONE) return
         val open=PendingIntent.getActivity(context,7410,Intent(context,MainActivity::class.java).apply {
-            putExtra("scope",app.workspaceScope);putExtra("openSection","sleep")
+            putExtra("scope",scope);putExtra("openSection","sleep")
             flags=Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         },PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val note=NotificationCompat.Builder(context,CHANNEL).setSmallIcon(R.drawable.ic_notification)

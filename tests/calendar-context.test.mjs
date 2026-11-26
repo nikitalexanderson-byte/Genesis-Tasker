@@ -1,6 +1,34 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { addCivilDays, calendarContext, civilDayNumber, isCivilDate, momentCivilDate, resolveCalendarWallTime } from "../app/calendar-context.ts";
+import { addCivilDays, calendarContext, civilDayNumber, deviceTimeZone, isCivilDate, momentCivilDate, resolveCalendarWallTime } from "../app/calendar-context.ts";
+
+test("Android zero-offset aliases preserve civil dates while ambiguous and nonzero shorthand stay rejected", () => {
+  for (const timeZone of ["UTC", "GMT", "+00:00"]) {
+    assert.equal(calendarContext({ timeZone }).timeZone, "UTC");
+    assert.equal(momentCivilDate(new Date("2026-01-15T23:59:00Z"), timeZone), "2026-01-15");
+    assert.equal(momentCivilDate(new Date("2026-07-15T00:01:00Z"), timeZone), "2026-07-15");
+  }
+  for (const timeZone of ["MSK", "+03:00", "-05:00", "+00:01", "GMT+0", "UTC "]) {
+    assert.throws(() => calendarContext({ timeZone }), /INVALID_CALENDAR_TIME_ZONE/);
+  }
+});
+
+test("the observed WebView124 default +00:00 initializes shared calendars without changing the device zone", () => {
+  const actual = Intl.DateTimeFormat;
+  Intl.DateTimeFormat = function (...args) {
+    const formatter = new actual(...args);
+    if (args.length === 0) Object.defineProperty(formatter, "resolvedOptions", {
+      value: () => ({ ...actual.prototype.resolvedOptions.call(formatter), timeZone: "+00:00" }),
+    });
+    return formatter;
+  };
+  try {
+    assert.equal(deviceTimeZone(), "UTC");
+    assert.equal(calendarContext().timeZone, "UTC");
+    assert.equal(momentCivilDate(new Date("2026-01-15T23:59:00Z")), "2026-01-15");
+    assert.equal(Intl.DateTimeFormat().resolvedOptions().timeZone, "+00:00");
+  } finally { Intl.DateTimeFormat = actual; }
+});
 
 test("calendar dates are strict civil values across leap and year boundaries", () => {
   assert.equal(isCivilDate("2023-02-29"), false);

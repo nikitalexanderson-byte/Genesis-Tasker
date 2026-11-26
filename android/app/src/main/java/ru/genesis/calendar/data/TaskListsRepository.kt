@@ -1,6 +1,6 @@
 package ru.genesis.calendar.data
 
-import androidx.room.withTransaction
+import ru.genesis.calendar.data.withTransaction
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlinx.coroutines.Dispatchers
@@ -30,23 +30,33 @@ data class GoogleTaskList(val id: String, val title: String, val accountId: Stri
 class TaskListsRepository(private val app: GenesisApplication, private val accountScope: String = app.workspaceScope) {
     private val cipher = LocalCipher()
     private val kind = "task-lists"
-    val lists = app.database.dao().observeDocument(accountScope, kind).map { row ->
+    val lists = PrivatePersonalDocuments.observeSnapshot(accountScope,app.database.dao().observeDocument(accountScope, kind).map { row ->
         if (row == null) emptyList() else decode(cipher.decrypt(row.encrypted, "$accountScope/$kind"))
-    }.flowOn(Dispatchers.IO)
+    }){snapshot->decode(snapshot.getJSONArray("taskLists").toString())}.flowOn(Dispatchers.IO)
 
-    suspend fun rememberCreated(list: GoogleTaskList) = app.database.withTransaction {
+    suspend fun rememberCreated(list: GoogleTaskList) {
+      if(PrivatePersonalDocuments.isProtected(accountScope))return ru.genesis.calendar.security.NativePrivateProducts.mutate(accountScope){snapshot->
+        val previous=decode(snapshot.getJSONArray("taskLists").toString());snapshot.put("taskLists",JSONArray((previous.filterNot{it.id==list.id&&it.accountId==list.accountId}+list).map{it.json()})) to Unit
+      }
+      app.database.withTransaction {
         require(app.workspaceScope == accountScope) { "Аккаунт изменился. Откройте форму заново." }
         val row = app.database.dao().document(accountScope, kind)
         val previous = row?.let { decode(cipher.decrypt(it.encrypted, "$accountScope/$kind")) }.orEmpty()
         store(app.database, accountScope, previous.filterNot { it.id == list.id && it.accountId == list.accountId } + list,
             (row?.revision ?: 0) + 1)
+      }
     }
-    suspend fun rememberRemoved(list: GoogleTaskList) = app.database.withTransaction {
+    suspend fun rememberRemoved(list: GoogleTaskList) {
+      if(PrivatePersonalDocuments.isProtected(accountScope))return ru.genesis.calendar.security.NativePrivateProducts.mutate(accountScope){snapshot->
+        val previous=decode(snapshot.getJSONArray("taskLists").toString());snapshot.put("taskLists",JSONArray(previous.filterNot{it.id==list.id&&it.accountId==list.accountId}.map{it.json()})) to Unit
+      }
+      app.database.withTransaction {
         require(app.workspaceScope == accountScope) { "Аккаунт изменился. Откройте форму заново." }
         val row = app.database.dao().document(accountScope, kind) ?: return@withTransaction
         val previous = decode(cipher.decrypt(row.encrypted, "$accountScope/$kind"))
         store(app.database, accountScope, previous.filterNot { it.id == list.id && it.accountId == list.accountId },
             row.revision + 1)
+      }
     }
 
     companion object {

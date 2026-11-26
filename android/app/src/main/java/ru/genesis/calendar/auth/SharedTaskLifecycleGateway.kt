@@ -24,6 +24,7 @@ internal fun allowedSharedTaskExtensionRoute(method: String, path: String): Bool
         path.matches(Regex("/shared/projects/$id/tasks/$id/archive")) -> method == "POST"
         path.matches(Regex("/shared/projects/$id/tasks/$id")) -> method == "DELETE"
         path.matches(Regex("/shared/projects/$id/tasks/$id/approve")) -> method == "POST"
+        path.matches(Regex("/shared/projects/$id/tasks/$id/approval-preview")) -> method == "POST"
         path.matches(Regex("/shared/projects/$id/tasks/$id/reviews")) -> method == "PATCH"
         path.matches(Regex("/shared/projects/$id/review-settings")) -> method in setOf("GET", "PATCH")
         path.matches(Regex("/shared/projects/$id/tasks/$id/series")) -> method in setOf("GET", "POST")

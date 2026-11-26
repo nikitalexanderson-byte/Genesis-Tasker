@@ -1,8 +1,9 @@
 "use client";
 import { DialogCloseButton } from "./DialogCloseButton";
-import { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { Fragment, lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { GenesisProject, GenesisTask } from "./cloud-sync";
-import { GenesisApiError, LOCAL_SESSION_ENDED_EVENT } from "./cloud-sync";
+import { GenesisApiError, LOCAL_SESSION_ENDED_EVENT, usesPrivateProductStorage } from "./cloud-sync";
+import {usePersonalMigrationSource} from './use-personal-migration-source';
 import { useDialogAccessibility } from "./use-dialog-accessibility";
 import { ExperimentalIcon } from "./ExperimentalIcon";
 import { IconActionButton } from "./IconActionButton";
@@ -116,6 +117,14 @@ export default function Mindmaps(props: Props) {
   const alive = useRef(true);
   const panelHistory = useRef(false);
   const isMobile = useSyncExternalStore(subscribeMobile, mobileSnapshot, serverSnapshot);
+  const migrationCapture=useRef<()=>{document:Mindmap|null;revision:number;state:unknown}>(()=>({document:null,revision:0,state:{}}));
+  useLayoutEffect(()=>{migrationCapture.current=()=>({document:current.current,revision:record?.revision??0,state:{records,record,ideaDraft,inlineNodeId,
+    selected,selectedLink,view:latestView.current,dialog,title,template,text,preview,versions,history:editHistory.captureMigration(),parent,linkTo,linkLabel,tagDraft,
+    pickerQuery,pickerTask,pickerDate,importAsIdeas,journal,nodeDialogBaseline:nodeDialogBaseline.current}});});
+  useLayoutEffect(()=>repository.registerMigrationEditor(()=>migrationCapture.current()),[repository]);
+  usePersonalMigrationSource(!props.spaceId&&!usesPrivateProductStorage(props.userId)?props.userId:null,'mindmaps',()=>({
+    ...repository.captureMigration(records),settled:!loading&&!busy,
+  }),repository);
   const onStatus = (state: SaveState, message?: string) => { if (alive.current) { setStatus(state); if (message) setError(message === "MAP_REVISION_CONFLICT" ? "Другая вкладка изменила карту. Ваш текст сохранён отдельно. Откройте историю или сохраните этот вариант отдельной картой." : message); } };
   const fail = (e: unknown) => { if (alive.current) setError(e instanceof Error ? e.message : "Не удалось выполнить действие."); };
   const refresh = async () => { setLoading(true); try { const list = await repository.list(); if (alive.current) setRecords(list); } catch (e) { fail(e); } finally { if (alive.current) setLoading(false); } };
@@ -497,7 +506,7 @@ export default function Mindmaps(props: Props) {
       {dialog === "paste" && map && node ? <><p>Одна строка — одна мысль; два пробела или табуляция — один уровень. Пустые строки пропускаются. До 200 мыслей за вставку.</p><textarea aria-label="Текст для вставки" rows={8} value={text} maxLength={100000} onChange={e=>{setText(e.target.value);setPreview(null);}} /><button type="button" onClick={()=>{try {const nodes=parseOutline(text,node.id);setPreview(validateMindmap({...map,nodes:[...map.nodes,...nodes]}));}catch(e){fail(e);}}}>Предпросмотр вставки</button>{preview?.id===map.id ? <><pre>{mapMarkdown(preview,titleFor)}</pre><button type="button" className="primary-button" onClick={()=>{change(preview);setPreview(null);setDialog(null);}}>Добавить мысли</button></> : null}</> : null}
       {dialog === "import" ? <><p>Собственный JSON GENESIS v1, до 2 МБ. Импорт не создаёт задач и не предоставляет доступ.</p><input type="file" accept=".json,application/json" aria-label="Выберите JSON карты" onChange={async e=>{const file=e.target.files?.[0];if(!file||!transfer.check())return;setPreview(null);try{if(file.size>2_000_000)throw new Error("Файл больше 2 МБ.");const text=await file.text();if(!transfer.check())return;setPreview(importMindmap(text));}catch(e){fail(e);}}}/>{preview ? <><h3>{preview.title}</h3><p>{preview.nodes.length} узлов · {preview.links.length} связей. Недоступные ссылки останутся помеченными; прав они не дают.</p><pre>{mapMarkdown(preview,titleFor)}</pre><label><input type="checkbox" checked={importAsIdeas} onChange={e=>setImportAsIdeas(e.target.checked)}/>Превратить недоступные ссылки в мысли</label><button type="button" className="primary-button" onClick={()=>{if(!transfer.check())return;const copy=validateMindmap({...preview,id:mapId(),nodes:preview.nodes.map(n=>importAsIdeas && ((n.kind==="task" && !resolveMapTask(n,props.tasks)) || (n.kind==="project" && !props.projects.some(p=>p.id===n.refId))) ? {id:n.id,parentId:n.parentId,kind:"idea",text:"Недоступная ссылка",note:n.note}:n),projectId:props.projects.some(p=>p.id===preview.projectId)?preview.projectId:null});setDialog(null);void open({document:copy,revision:0,updatedAt:""});change(copy,false);}}>Импортировать отдельную карту</button></> : null}</> : null}
       {dialog === "export" && map ? <><p>Файл будет незашифрованным. JSON содержит мысли, пояснения и ID ссылок; Markdown и SVG также содержат доступные названия задач и проектов. Храните файл в безопасном месте.</p><p>Для PDF выберите «Сохранить как PDF» в окне печати. Обзор сохраняет цвета и связи; структура содержит полные названия и пояснения.</p><div className="mindmap-export-group" role="group" aria-label={translateText("Экспортировать")}><strong>{translateText("Экспортировать")}</strong><div className="mindmap-export-formats">{["JSON","Markdown","SVG","PDF"].map(format=><button type="button" key={format} onClick={()=>{ if(!transfer.check())return;if(format==="PDF"){try {printMindmap(map,titleFor,view);}catch(e){fail(e);}return;}download(`GENESIS-map.${format==='JSON'?'json':format==='SVG'?'svg':'md'}`,format==='JSON'?exportMindmap(map):format==='SVG'?mapSvg(map,titleFor,view):mapMarkdown(map,titleFor),format==='SVG'?'image/svg+xml':'text/plain;charset=utf-8');}} data-no-translate>{format}</button>)}</div></div></> : null}
-      {dialog === "history" && map ? <><p>Последние 20 подтверждённых версий. Восстановление меняет только карту; задачи не откатываются.</p>{versions.map(v=><article key={v.revision}><h3>Версия {v.revision}</h3><p>{v.updatedAt} · {v.document.title} · {v.document.nodes.length} узлов</p><details><summary>Посмотреть содержимое</summary><pre>{mapMarkdown(v.document,titleFor)}</pre></details><button type="button" disabled={props.readOnly} onClick={()=>{change(v.document);setDialog(null);}}>Восстановить эту версию карты</button></article>)}</> : null}
+      {dialog === "history" && map ? <><p>Последние 20 подтверждённых версий. Восстановление меняет только карту; задачи не откатываются.</p>{versions.map(v=><article key={`${v.historyOrigin ?? "current"}:${v.revision}`}><h3>Версия {v.revision}</h3><p>{v.updatedAt} · {v.document.title} · {v.document.nodes.length} узлов</p><details><summary>Посмотреть содержимое</summary><pre>{mapMarkdown(v.document,titleFor)}</pre></details><button type="button" disabled={props.readOnly} onClick={()=>{change(v.document);setDialog(null);}}>Восстановить эту версию карты</button></article>)}</> : null}
     </Dialog> : null}
   </section>;
 }

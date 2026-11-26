@@ -18,7 +18,7 @@ export type AutomationSummary=Omit<AutomationRule,"definition">;
 export type AutomationSave={operationId:string;expectedRevision?:number;title?:string;ownerId?:string;enabled?:boolean;deleted?:boolean;definition?:AutomationDefinition};
 export type AutomationEffects={updated:boolean;patch:Record<string,unknown>;createdTaskCount:number;notifications:number;notices:string[]};
 export type AutomationPreview={matches:boolean;ownerId:string;taskId:string|null;taskRevision:number|null;effects:AutomationEffects|null;dryRun:true};
-export type AutomationRun={id:string;ruleId:string;revision:number;taskId:string|null;taskTitle:string|null;state:"pending"|"succeeded"|"skipped"|"cancelled"|"failed";attempts:number;retryCount:number;errorCode:string|null;result:AutomationEffects|null;createdAt:string;finishedAt:string|null};
+export type AutomationRun={id:string;ruleId:string;revision:number;taskId:string|null;taskTitle:string|null;state:"pending"|"succeeded"|"skipped"|"cancelled"|"failed";attempts:number;retryCount:number;errorCode:string|null;result:AutomationEffects|null;createdAt:string;finishedAt:string|null;historyOnly?:boolean};
 export function initialAutomation(mode:CalendarMode):AutomationDefinition {
  const context=calendarContext();
  return {schemaVersion:1,trigger:{type:"created"},conditions:[],actions:[{type:"priority",value:1}],calendarMode:mode,calendarContext:context};

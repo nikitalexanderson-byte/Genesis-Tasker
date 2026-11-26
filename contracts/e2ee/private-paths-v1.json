@@ -1,0 +1,552 @@
+{
+  "version": 1,
+  "remoteDomains": {
+    "personal": [
+      "workspace",
+      "diary",
+      "dream-journal",
+      "mindmap",
+      "physis",
+      "aurora",
+      "stoicheion",
+      "attachment",
+      "local-snapshot",
+      "outbox",
+      "draft",
+      "key-check"
+    ],
+    "project": [
+      "shared-project",
+      "shared-comment",
+      "mindmap",
+      "attachment",
+      "key-check"
+    ],
+    "space": [
+      "shared-project",
+      "shared-comment",
+      "mindmap",
+      "attachment",
+      "key-check"
+    ]
+  },
+  "paths": [
+    {
+      "id": "personal.workspace",
+      "scope": "personal",
+      "domains": [
+        "workspace"
+      ],
+      "web": [
+        "app/workspace-storage.ts",
+        "app/cloud-sync.ts",
+        "app/habits.ts"
+      ],
+      "native": [
+        "data/GenesisDatabase.kt",
+        "auth/CloudWorkspaceSync.kt"
+      ],
+      "server": [
+        "workspace_blobs",
+        "projects",
+        "categories"
+      ],
+      "contents": "Projects, categories, habits, all tracker/history/timer/reward collections, sync base and tombstones"
+    },
+    {
+      "id": "personal.tasks",
+      "scope": "personal",
+      "domains": [
+        "workspace"
+      ],
+      "web": [
+        "app/cloud-sync.ts",
+        "app/task-sync-policy.ts"
+      ],
+      "native": [
+        "data/GenesisDatabase.kt",
+        "auth/CloudTaskSync.kt"
+      ],
+      "server": [
+        "tasks",
+        "task_deletions",
+        "task_links",
+        "personal_recovered_tasks",
+        "personal_recovered_task_deletions",
+        "personal_task_creations",
+        "personal_task_creation_targets"
+      ],
+      "contents": "GENESIS tasks, recurrence, links, recovered copies, creation journals and offline task changes; external copies require separate consent"
+    },
+    {
+      "id": "personal.diary",
+      "scope": "personal",
+      "domains": [
+        "diary",
+        "attachment"
+      ],
+      "web": [
+        "app/diary-storage.ts",
+        "app/dream-export.ts"
+      ],
+      "native": [
+        "data/DiaryRoomStore.kt",
+        "auth/DiaryProtocol.kt"
+      ],
+      "server": [
+        "personal_diary_notes",
+        "personal_diary_deletions",
+        "personal_diary_settings",
+        "personal_diary_dreams",
+        "dream_journal_preferences",
+        "personal_diary_advice_references"
+      ],
+      "contents": "Notes, dreams, settings, references, deleted IDs, drafts and attachments"
+    },
+    {
+      "id": "personal.mindmaps",
+      "scope": "personal",
+      "domains": [
+        "mindmap",
+        "attachment"
+      ],
+      "web": [
+        "app/mindmaps-storage.ts"
+      ],
+      "native": [
+        "data/GenesisDatabase.kt"
+      ],
+      "server": [
+        "personal_mindmaps",
+        "personal_mindmap_versions",
+        "personal_mindmap_deletions",
+        "personal_mindmap_receipts"
+      ],
+      "contents": "All maps/versions, embedded files, view/conversion journals and pending requests"
+    },
+    {
+      "id": "personal.physis",
+      "scope": "personal",
+      "domains": [
+        "physis",
+        "attachment"
+      ],
+      "web": [
+        "app/physis/store.ts",
+        "app/physis/account-session.ts",
+        "app/physis/crypto.ts"
+      ],
+      "native": [
+        "data/GenesisDatabase.kt"
+      ],
+      "server": [
+        "physis_owners",
+        "physis_records",
+        "physis_used_ids",
+        "physis_receipts"
+      ],
+      "contents": "Account-v2 and independent legacy vault data, pending edits/deletions and rotation; locked sources must block completeness"
+    },
+    {
+      "id": "personal.aurora",
+      "scope": "personal",
+      "domains": [
+        "aurora",
+        "attachment"
+      ],
+      "web": [
+        "app/aurora/repository.ts"
+      ],
+      "native": [
+        "data/GenesisDatabase.kt",
+        "auth/AuroraProtocol.kt"
+      ],
+      "server": [
+        "aurora_workspaces",
+        "future_modeling_results"
+      ],
+      "contents": "Sessions, personal learning, results, base/pending copy and removed IDs; assistant processing is a separate external boundary"
+    },
+    {
+      "id": "personal.stoicheion",
+      "scope": "personal",
+      "domains": [
+        "stoicheion",
+        "attachment"
+      ],
+      "web": [
+        "app/stoicheion-restoration-storage.ts",
+        "app/cloud-sync.ts"
+      ],
+      "native": [
+        "data/GenesisDatabase.kt",
+        "auth/AuthController.kt"
+      ],
+      "server": [
+        "stoicheion_workspaces",
+        "stoicheion_draws",
+        "stoicheion_spread_cards",
+        "stoicheion_timeline_draws",
+        "stoicheion_timeline_sessions",
+        "stoicheion_timeline_card_windows"
+      ],
+      "contents": "Private work, draws, timelines, pending choices and history; server quota authority is excluded"
+    },
+    {
+      "id": "personal.advice",
+      "scope": "personal",
+      "domains": [
+        "workspace"
+      ],
+      "web": [
+        "app/cloud-sync.ts"
+      ],
+      "native": [
+        "data/GenesisDatabase.kt"
+      ],
+      "server": [
+        "daily_advice_days",
+        "daily_advice_entries",
+        "daily_advice_extra_entries",
+        "user_metrics"
+      ],
+      "contents": "Personal selections, saved advice, preference-derived state and private metrics; public artwork is excluded"
+    },
+    {
+      "id": "personal.local-work",
+      "scope": "personal",
+      "domains": [
+        "draft",
+        "outbox",
+        "local-snapshot",
+        "workspace"
+      ],
+      "web": [
+        "app/shared-editor-indexed-storage.ts",
+        "app/shared-work-draft-journal.ts",
+        "app/cloud-sync.ts",
+        "app/habit-timer-storage.ts"
+      ],
+      "native": [
+        "data/GenesisDatabase.kt"
+      ],
+      "server": [
+        "shared_saved_views",
+        "shared_space_ui",
+        "shared_project_imports",
+        "shared_task_transfers",
+        "shared_bulk_operations",
+        "shared_automation_operations",
+        "shared_template_operations",
+        "shared_custom_field_receipts",
+        "shared_planning_receipts",
+        "shared_mutation_receipts"
+      ],
+      "contents": "Owner-scoped localStorage and IndexedDB drafts/caches/outbox, unsent edits, local bases, saved personal views and tombstones"
+    },
+    {
+      "id": "personal.reminders",
+      "scope": "personal",
+      "domains": [
+        "workspace"
+      ],
+      "web": [
+        "app/habit-reminder-plan.ts"
+      ],
+      "native": [
+        "data/GenesisDatabase.kt"
+      ],
+      "server": [
+        "habit_reminder_profiles",
+        "habit_reminder_devices",
+        "habit_reminder_deliveries",
+        "advice_notification_days",
+        "advice_notification_deliveries",
+        "shared_notification_preferences"
+      ],
+      "contents": "Private reminder state; minimal explicitly approved technical schedule projection remains separate"
+    },
+    {
+      "id": "personal.archives",
+      "scope": "personal",
+      "domains": [
+        "local-snapshot",
+        "attachment"
+      ],
+      "web": [
+        "app/backup-device.ts",
+        "app/backup-format.ts",
+        "app/backup-restore.ts",
+        "app/backup-drive.ts"
+      ],
+      "native": [
+        "data/GenesisDatabase.kt",
+        "auth/BackupProtocol.kt"
+      ],
+      "server": [
+        "backup_stages",
+        "backup_safety_snapshots",
+        "backup_receipts"
+      ],
+      "contents": "Protected safety/held copies and import staging; personal archive recovery is independent of identity, subscription and ACL"
+    },
+    {
+      "id": "project.content",
+      "scope": "project",
+      "domains": [
+        "shared-project",
+        "shared-comment"
+      ],
+      "web": [
+        "app/cloud-sync.ts",
+        "app/shared-task-details.ts"
+      ],
+      "native": [
+        "auth/AuthController.kt",
+        "data/GenesisDatabase.kt"
+      ],
+      "server": [
+        "shared_projects",
+        "shared_project_statuses",
+        "shared_project_categories",
+        "shared_tasks",
+        "shared_comments",
+        "shared_comment_mentions",
+        "shared_project_comments",
+        "shared_task_labels",
+        "shared_task_dependencies",
+        "shared_task_planning",
+        "shared_task_approvals",
+        "shared_task_reviews",
+        "shared_custom_field_values",
+        "shared_project_labels",
+        "shared_task_watchers",
+        "shared_notification_task_state",
+        "shared_google_projection_links",
+        "shared_templates",
+        "shared_custom_fields",
+        "shared_custom_field_versions"
+      ],
+      "contents": "Project/task content, checklists, comments and mentions, labels, dependencies, private review/planning details; membership stays authoritative metadata"
+    },
+    {
+      "id": "project.files",
+      "scope": "project",
+      "domains": [
+        "attachment",
+        "shared-project"
+      ],
+      "web": [
+        "app/cloud-sync.ts"
+      ],
+      "native": [
+        "auth/SharedTaskFilesProtocol.kt"
+      ],
+      "server": [
+        "shared_task_attachments",
+        "shared_task_images"
+      ],
+      "contents": "File bytes, filenames, media types, previews, sizes, ordering, deleted files and pending uploads"
+    },
+    {
+      "id": "project.mindmaps",
+      "scope": "project",
+      "domains": [
+        "mindmap",
+        "attachment"
+      ],
+      "web": [
+        "app/mindmaps-storage.ts"
+      ],
+      "native": [
+        "data/GenesisDatabase.kt"
+      ],
+      "server": [
+        "shared_mindmaps",
+        "shared_mindmap_versions",
+        "shared_mindmap_deletions",
+        "shared_mindmap_deletion_scopes",
+        "shared_mindmap_conversions",
+        "shared_mindmap_receipts"
+      ],
+      "contents": "Project-owned maps, complete history, images, tombstones and conversion/receipt journals"
+    },
+    {
+      "id": "project.automation",
+      "scope": "project",
+      "domains": [
+        "shared-project"
+      ],
+      "web": [
+        "app/shared-series.ts",
+        "app/shared-automations.ts",
+        "app/shared-workflows.ts"
+      ],
+      "native": [
+        "auth/AuthController.kt"
+      ],
+      "server": [
+        "shared_task_series",
+        "shared_series_instances",
+        "shared_automation_rules",
+        "shared_automation_runs",
+        "shared_project_workflows",
+        "shared_project_workflow_versions",
+        "shared_automation_operations"
+      ],
+      "contents": "Recurrence and automation definitions, templates, workflow versions and run payloads; encrypted rules execute on an authorized client"
+    },
+    {
+      "id": "project.history",
+      "scope": "project",
+      "domains": [
+        "shared-project",
+        "attachment"
+      ],
+      "web": [
+        "app/shared-planning.ts",
+        "app/shared-reports.ts",
+        "app/shared-data-exchange.ts"
+      ],
+      "native": [
+        "auth/AuthController.kt"
+      ],
+      "server": [
+        "shared_audit_events",
+        "shared_project_planning",
+        "shared_project_review_policies",
+        "shared_sprints",
+        "shared_trash",
+        "shared_bulk_items",
+        "shared_data_import_records",
+        "shared_template_sources",
+        "shared_project_imports",
+        "shared_task_transfers",
+        "shared_task_query_versions",
+        "shared_bulk_operations",
+        "shared_template_operations",
+        "shared_mutation_receipts",
+        "shared_custom_field_receipts",
+        "shared_planning_receipts",
+        "shared_workspace_inbox_relocations",
+        "shared_workspace_list_relocations",
+        "shared_workspace_scope_relocations",
+        "shared_workspace_task_relocations"
+      ],
+      "contents": "Private activity, planning/reports, trash, import/transfer/bulk snapshots and source references"
+    },
+    {
+      "id": "project.local-work",
+      "scope": "project",
+      "domains": [
+        "shared-project",
+        "shared-comment",
+        "mindmap",
+        "attachment"
+      ],
+      "localDomains": [
+        "draft",
+        "outbox",
+        "local-snapshot"
+      ],
+      "web": [
+        "app/shared-editor-indexed-storage.ts",
+        "app/shared-work-draft-journal.ts"
+      ],
+      "native": [
+        "data/GenesisDatabase.kt"
+      ],
+      "server": [],
+      "contents": "Project-specific drafts and uploads, including unmounted editors; reconcile unsent edits into authorized content objects. Raw queues and legacy metadata stay in protected local snapshots, never shared remote objects"
+    },
+    {
+      "id": "space.content",
+      "scope": "space",
+      "domains": [
+        "shared-project",
+        "attachment"
+      ],
+      "web": [
+        "app/shared-templates.ts",
+        "app/shared-custom-fields.ts",
+        "app/cloud-sync.ts"
+      ],
+      "native": [
+        "auth/AuthController.kt"
+      ],
+      "server": [
+        "shared_spaces",
+        "shared_space_labels",
+        "shared_space_project_categories",
+        "shared_member_categories",
+        "shared_templates",
+        "shared_custom_fields",
+        "shared_custom_field_versions",
+        "shared_saved_views",
+        "shared_data_imports",
+        "shared_data_import_records",
+        "shared_template_sources",
+        "shared_bulk_operations",
+        "shared_automation_operations",
+        "shared_template_operations",
+        "shared_custom_field_receipts",
+        "shared_mutation_receipts"
+      ],
+      "contents": "Space-private content including member-category titles, templates, custom fields/history, shared views/imports and cover images; ACL is a separate signed transaction"
+    },
+    {
+      "id": "space.mindmaps",
+      "scope": "space",
+      "domains": [
+        "mindmap",
+        "attachment"
+      ],
+      "web": [
+        "app/mindmaps-storage.ts"
+      ],
+      "native": [
+        "data/GenesisDatabase.kt"
+      ],
+      "server": [
+        "shared_mindmaps",
+        "shared_mindmap_versions",
+        "shared_mindmap_deletions",
+        "shared_mindmap_deletion_scopes",
+        "shared_mindmap_conversions",
+        "shared_mindmap_receipts"
+      ],
+      "contents": "Space-owned maps and every associated version/file/journal, distinct from project-owned maps"
+    },
+    {
+      "id": "space.local-work",
+      "scope": "space",
+      "domains": [
+        "shared-project",
+        "shared-comment",
+        "mindmap",
+        "attachment"
+      ],
+      "localDomains": [
+        "draft",
+        "outbox",
+        "local-snapshot"
+      ],
+      "web": [
+        "app/shared-editor-indexed-storage.ts",
+        "app/shared-work-draft-journal.ts"
+      ],
+      "native": [
+        "data/GenesisDatabase.kt"
+      ],
+      "server": [],
+      "contents": "Space-specific unmounted editor drafts, conflict choices, pending operations and tombstones; reconcile edits into authorized content objects. Raw queues and legacy metadata remain protected locally"
+    }
+  ],
+  "separateBoundaries": [
+    "Identity, account sessions, Google/Yandex tokens, billing, entitlements, ACL and quotas are never restored from content archives",
+    "Google Tasks/Calendar and explicitly requested assistant/spelling processing receive an external copy only through an explained consent boundary",
+    "Existing encrypted message history keeps its protocol and independent keys; forward secrecy is not claimed",
+    "Public artwork/catalogues and technical privacy-aware push payloads are outside private content",
+    "System backups encrypt the whole configuration/database set for an offsite recovery recipient; their private recovery key stays off production"
+  ]
+}

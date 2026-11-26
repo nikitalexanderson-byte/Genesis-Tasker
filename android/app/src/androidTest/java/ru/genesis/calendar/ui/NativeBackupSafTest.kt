@@ -4,6 +4,7 @@ import android.view.View
 import android.webkit.WebView
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.UiController
@@ -28,30 +29,31 @@ import ru.genesis.calendar.data.BackupGateway
 import java.io.File
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.atomic.AtomicBoolean
 
 /** Real SAF and production WebView bridge; only a unique account in a separate QA package. */
 class NativeBackupSafTest {
     @get:Rule val compose=createAndroidComposeRule<PagerTestActivity>()
     private fun js(expression:String):String {
-        val result=AtomicReference<String?>()
+        val result=AtomicReference<String?>();val completed=AtomicBoolean(false)
         onView(isAssignableFrom(WebView::class.java)).inRoot(isDialog()).perform(object:ViewAction {
             override fun getConstraints():Matcher<View> = isAssignableFrom(WebView::class.java)
             override fun getDescription()="Exercise isolated backup UI"
             override fun perform(controller:UiController,view:View) {
                 (view as WebView).evaluateJavascript("String((function(){return $expression})())") {
-                    result.set(JSONTokener(it).nextValue() as? String)
+                    try{result.set(JSONTokener(it).nextValue() as? String)}finally{completed.set(true)}
                 }
             }
         })
-        compose.waitUntil(10000){result.get()!=null};return result.get()!!
+        compose.waitUntil(10000){completed.get()};return checkNotNull(result.get()){"Synthetic WebView evaluation did not return a String"}
     }
-    private fun body()=js("document.body.innerText")
+    private fun body()=js("document.body?.innerText??''")
     private fun click(label:String) {
         assertEquals("true",js("(()=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==${JSONObject.quote(label)});if(!b||b.disabled)return false;b.click();return true})()"))
     }
     private fun waitText(text:String) { compose.waitUntil(30000){body().contains(text)} }
     @Test fun realDocumentPickersCancelExportAndReopenEncryptedPersonalArchive() {
-        check(BuildConfig.DEBUG&&compose.activity.packageName.endsWith(".qa322.debug"))
+        check(BuildConfig.DEBUG&&compose.activity.packageName=="ru.genesis.calendar.qa1103.debug")
         val app=compose.activity.application as GenesisApplication
         val owner="saf-qa-${UUID.randomUUID()}"
         app.activateAccount(owner)
@@ -71,8 +73,9 @@ class NativeBackupSafTest {
         fun picker(){assertTrue("System document picker did not open",device.wait(Until.hasObject(documents),15000))}
         fun cancel(){device.pressBack();if(device.hasObject(documents))device.pressBack();assertTrue(device.wait(Until.gone(documents),10000));waitText("Action cancelled.")}
         try {
+            val visible=mutableStateOf(true)
             compose.setContent { CompositionLocalProvider(LocalGenesisLanguage provides "en",LocalEveningTheme provides true) {
-                MaterialTheme(colorScheme=evening,typography=GenesisTypography) { NativeBackupDialog(owner,"Backups and restore",{},gateway) }
+                MaterialTheme(colorScheme=evening,typography=GenesisTypography) { if(visible.value)NativeBackupDialog(owner,"Backups and restore",{visible.value=false},gateway) }
             } }
             waitText("Generate key")
             assertEquals("true",js("(()=>{document.querySelector('.backup-check input').click();return true})()"))
@@ -94,14 +97,39 @@ class NativeBackupSafTest {
             click("Choose file");picker()
             val exported=device.wait(Until.findObject(By.text(filename)),15000)
             assertNotNull("The real exported archive must be offered by OpenDocument",exported);exported.click()
-            waitText("import.genesisbackup")
+            waitText(filename)
             click("Check and decrypt")
             waitText("File checked on this device.")
             assertFalse(body().contains("The operation could not finish"))
             captureNativeWindow(File(app.getExternalFilesDir(null),"backup322-saf-decrypted.png"))
+            var captured:JSONObject?=null
+            compose.waitUntil(10000){runCatching{app.backupMigrationMemory.capture(owner,app.workspaceEpoch)}.getOrNull()?.also{captured=it}!=null}
+            val beforeClose=requireNotNull(captured).getJSONArray("views").getJSONObject(0)
+            val fileStatistics=app.backupMigrationMemory.fileStatistics(owner,app.workspaceEpoch)
+            assertEquals(1,fileStatistics.files);assertEquals(0L,fileStatistics.memoryBytes);assertEquals(0,fileStatistics.pending)
+            assertEquals(2,requireNotNull(captured).getInt("protocol"));assertTrue(beforeClose.isNull("rawForm"))
+            val valueForm=beforeClose.getJSONObject("valueForm");val rawManifest=valueForm.getString("rawManifest");val retained=JSONObject(rawManifest)
+            val state=JSONObject();val fields=retained.getJSONArray("fields");val candidates=valueForm.getJSONArray("values")
+            for(index in 0 until fields.length()){
+                val field=fields.getJSONObject(index);val matches=(0 until candidates.length()).map{candidates.getJSONObject(it)}.filter{it.getString("id")==field.getString("id")}
+                assertEquals(1,matches.size);assertEquals(field.getString("name"),matches.single().getString("name"))
+                state.put(field.getString("name"),JSONTokener(matches.single().getString("rawJson")).nextValue())
+            }
+            assertTrue(retained.getBoolean("settled"));assertEquals(filename,retained.getJSONObject("file").getString("name"))
+            assertEquals(owner,state.getJSONObject("payload").getString("ownerId"))
+            val selected=beforeClose.getJSONArray("files").getJSONObject(0)
+            assertEquals(retained.getJSONObject("file").getString("id"),selected.getJSONObject("descriptor").getString("id"))
+            val bytes=java.util.Base64.getUrlDecoder().decode(selected.getString("bytes"))
+            try{assertEquals(selected.getJSONObject("descriptor").getString("sha256"),java.security.MessageDigest.getInstance("SHA-256").digest(bytes).joinToString(""){"%02x".format(it)})}finally{bytes.fill(0)}
+            compose.runOnIdle{visible.value=false};compose.waitForIdle()
+            val detached=app.backupMigrationMemory.capture(owner,app.workspaceEpoch)
+            assertFalse(detached.getJSONArray("views").getJSONObject(0).getBoolean("mounted"));assertEquals(valueForm.toString(),detached.getJSONArray("views").getJSONObject(0).getJSONObject("valueForm").toString())
+            val capturedBytes=ru.genesis.calendar.data.backupJsonUtf8(detached.toString())
+            try{File(app.getExternalFilesDir(null),"backup336-native-form-input.json").writeBytes(capturedBytes)}finally{capturedBytes.fill(0)}
             File(app.getExternalFilesDir(null),"backup322-saf-proof.json").writeText(JSONObject().put("synthetic",true)
                 .put("cancelledOpenAndSave",true).put("actualEncryptedExportAndOpen",true).put("decryptedByProductionWebView",true)
-                .put("authorizedAfterSavePicker",true).put("filename",filename).toString(2))
+                .put("retainedFileMemoryBytes",fileStatistics.memoryBytes).put("retainedFileBytes",fileStatistics.bytes)
+                .put("authorizedAfterSavePicker",true).put("retainedAfterNativeViewDisposal",true).put("filename",filename).toString(2))
         } finally { app.activateAccount(null) }
     }
 }

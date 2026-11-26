@@ -39,6 +39,8 @@ import ru.genesis.calendar.auth.AuthPanelState
 import ru.genesis.calendar.auth.activity
 import ru.genesis.calendar.BuildConfig
 import ru.genesis.calendar.R
+import ru.genesis.calendar.data.PublicPage
+import ru.genesis.calendar.data.publicPagePath
 import com.yandex.authsdk.YandexAuthLoginOptions
 import com.yandex.authsdk.YandexAuthOptions
 import com.yandex.authsdk.YandexAuthResult
@@ -53,15 +55,16 @@ private val welcomeMuted = Color(0xFFB8C9C2)
 /** A single Google entry for the account used throughout GENESIS. */
 @Composable
 fun WelcomeScreen(state: AuthPanelState, controller: AuthController, language: String,
-    preferredLanguage: String? = null, onLanguage: (String) -> Unit) {
+    preferredLanguage: String? = null, languageReady: Boolean = true,
+    onLanguage: (String) -> Unit) {
     val context = LocalContext.current
     val activity = context.activity()
     var invitationBusy by remember { mutableStateOf(false) }
     WelcomeContent(state, language, onLanguage,
         onSignIn = { activity?.let { controller.signIn(it, preferredLanguage) } },
-        signInEnabled = activity != null && !invitationBusy, onRetry = controller::checkSession,
+        signInEnabled = activity != null && !invitationBusy && languageReady, onRetry = controller::checkSession,
         invitation = { NativeReferralInvitation(controller, language) { invitationBusy = it } },
-        onWeb = { openWebsite(context) },
+        onWeb = { openWebsite(context, language) },
         onLegal = { path -> context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.GENESIS_ORIGIN + path))) })
 }
 
@@ -126,10 +129,10 @@ fun WelcomeScreen(state: AuthPanelState, controller: AuthController, language: S
         }
         @Composable fun Legal() {
             Column(Modifier.fillMaxWidth().testTag("welcome-legal"), horizontalAlignment = Alignment.CenterHorizontally) {
-                TextButton({ onLegal("/terms") }, Modifier.heightIn(min = 48.dp).testTag("welcome-terms")) {
+                TextButton({ onLegal(publicPagePath(language, PublicPage.TERMS)) }, Modifier.heightIn(min = 48.dp).testTag("welcome-terms")) {
                     Text("Пользовательское соглашение", color = welcomeMuted, style = MaterialTheme.typography.labelMedium)
                 }
-                TextButton({ onLegal("/privacy") }, Modifier.heightIn(min = 48.dp).testTag("welcome-privacy")) {
+                TextButton({ onLegal(publicPagePath(language, PublicPage.PRIVACY)) }, Modifier.heightIn(min = 48.dp).testTag("welcome-privacy")) {
                     Text("Политика конфиденциальности", color = welcomeMuted, style = MaterialTheme.typography.labelMedium)
                 }
             }
@@ -210,7 +213,8 @@ fun LanguageChips(language: String, dark: Boolean = false, flagsOnly: Boolean = 
         val selection = genesisSelectionColors(if (night) eveningPalette(LocalDarkPalette.current) else MaterialTheme.colorScheme,night)
         BoxWithConstraints(Modifier.fillMaxWidth().testTag("welcome-language-grid")) {
             // Keep complete rows as languages are added; compact cells still have a 48 dp height.
-            val columns = balancedLanguageColumns(languages.size, ((maxWidth.value + 2f) / 46f).toInt())
+            val columns = balancedLanguageColumns(languages.size,
+                ((maxWidth.value + 2f) / 46f).toInt())
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 languages.chunked(columns).forEach { row ->
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -232,6 +236,7 @@ fun LanguageChips(language: String, dark: Boolean = false, flagsOnly: Boolean = 
                                 }
                             }
                         }
+                        repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
                     }
                 }
             }
@@ -263,7 +268,7 @@ fun LanguageChips(language: String, dark: Boolean = false, flagsOnly: Boolean = 
 internal fun balancedLanguageColumns(count: Int, availableColumns: Int): Int =
     (minOf(count, availableColumns.coerceAtLeast(1), 7) downTo 1).first { count % it == 0 }
 
-private fun openWebsite(context: Context) {
+private fun openWebsite(context: Context, language: String) {
     runCatching { context.startActivity(Intent(Intent.ACTION_VIEW,
-        Uri.parse("${ru.genesis.calendar.auth.AUTH_ORIGIN}/")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+        Uri.parse(ru.genesis.calendar.auth.AUTH_ORIGIN + publicPagePath(language))).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
 }

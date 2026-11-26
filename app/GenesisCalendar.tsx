@@ -1,4 +1,6 @@
 "use client";
+import {cacheLastUser,privateUserCacheRequired,LAST_USER_CACHE_KEY} from './last-user-cache';
+import {PrivateGoogleCopy} from './PrivateGoogleCopy';
 import release319Copy from "./release-319-copy.json";
 import { GENESIS_TELEGRAM, genesisTelegramLabel } from './site-links';
 import { PaletteArtFilter } from "./PaletteArtFilter";
@@ -68,7 +70,7 @@ const PlanGuidanceHost=lazy(()=>import("./PlanGuidanceHost"));
 import ukrainianSynthemaNames from "./weekday-synthema.uk.json";
 /* eslint-disable @next/next/no-img-element -- Google requires the official, unmodified sign-in asset. */
 
-import {
+import {useLayoutEffect,
   type CSSProperties,
   type FormEvent,
   type PointerEvent,
@@ -130,6 +132,8 @@ import {
   type TaskOrigin,
   GENESIS_LEGACY_WORKSPACE_STORAGE_KEY,
   GENESIS_USER_WORKSPACE_STORAGE_PREFIX,
+  usesPrivateProductStorage,
+  restoreOfflinePrivateWorkspace,
   connectAdditionalGoogleAccount,
   connectGoogleServices,
   consumeGoogleAuthError,
@@ -435,7 +439,7 @@ type SolarLocationStatus = "loading" | "ready";
 type TaskSeriesScope = "occurrence" | "series";
 type PendingTaskDeletion = { taskId: string; occurrenceDate: string };
 
-const LAST_USER_KEY = "genesis-last-user-v2";
+const LAST_USER_KEY = LAST_USER_CACHE_KEY;
 
 const NAVIGATION: Array<{ id: ViewName; label: string; symbol: string }> = [
   { id: "today", label: "Сегодня", symbol: "☉" },
@@ -1366,6 +1370,7 @@ export function GenesisCalendar() {
   const [legalPage] = useState<ReturnType<typeof currentLegalPage>>(() => currentLegalPage());
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("loading");
   const [syncError, setSyncError] = useState("");
+  const [workspaceReadyOwner, setWorkspaceReadyOwner] = useState<string | null>(null);
   const [workspaceRecoveryKey, setWorkspaceRecoveryKey] = useState<string | null>(null);
   const [notificationHeaderTarget, setNotificationHeaderTarget] = useState<HTMLDivElement | null>(null);
   const loadLocalWorkspace = (key: string) => {
@@ -1443,10 +1448,32 @@ export function GenesisCalendar() {
   const categoriesRef = useRef<GenesisCategory[]>(DEFAULT_CATEGORIES);
   const taskListLinksRef = useRef<TaskListProjectLink[]>([]);
   const habitWorkspaceRef = useRef<HabitWorkspace>(normalizeHabitWorkspace(EMPTY_HABIT_WORKSPACE));
+  // Read the latest render, rather than the render that installed the source.
+  // These are inert inputs: migration must never resume a delete, transfer,
+  // provider copy or map conversion just because its form was still open.
+  const workspaceMigrationForms = useRef<unknown>(null);
+  useLayoutEffect(()=>{workspaceMigrationForms.current = {
+    taskComposer, composerTab, newEntryType, dayTaskCreatorOpen, mindmapConversion,
+    taskTitle, taskDescription, taskFormCalendar, taskScope, taskDueDate, taskUndated,
+    taskEndDate, taskTime, taskProject, taskTaskListId, taskNewListTitle, taskNewListAccountId,
+    taskTags, taskReminders, taskRecurrenceConfig, taskDependsOn, taskPriority, taskSyncAccountIds,
+    yandexEntryType, yandexEndTime, yandexLocation, yandexTelemostUrl, yandexAttendees,
+    yandexOptionalAttendees, yandexBusy, yandexVisibility, yandexReminders,
+    newProjectTitle, newProjectDescription, newProjectParent, newProjectCategory, newProjectTags,
+    newCategoryTitle, newTaskListTitle, taskListScope, newTaskListProject, newTaskListAccountId,
+    newTaskListDrafts, taskListBatchTitles, taskListBatchDates, editingCategoryId,
+    editingCategoryTitle, editingCategoryColor, editingProject, editingProjectTags,
+    editingTask, editingTaskTags, editingTaskScope, editingOccurrenceDate, editingTaskList,
+    transferTask, transferProject, pendingTaskDeletion, projectToComplete,
+  };});
   useEffect(() => {
     if (!cloudUser?.uid) return;
     return registerBackupSource('workspace', { owner:cloudUser.uid, capture:() => ({tasks:tasksRef.current,projects:projectsRef.current,
-      categories:categoriesRef.current,taskLists:taskListsRef.current,taskListLinks:taskListLinksRef.current,...habitWorkspaceRef.current}) });
+      categories:categoriesRef.current,taskLists:taskListsRef.current,taskListLinks:taskListLinksRef.current,...habitWorkspaceRef.current}),
+      captureMigration:() => ({format:'genesis-workspace-editor-v1',
+        workspace:{tasks:tasksRef.current,projects:projectsRef.current,categories:categoriesRef.current,
+          taskLists:taskListsRef.current,taskListLinks:taskListLinksRef.current,...habitWorkspaceRef.current},
+        forms:workspaceMigrationForms.current,execution:'history-only'}) });
   }, [cloudUser?.uid]);
   const cloudUserRef = useRef<GenesisUser | null>(null);
   const displayCalendarSaveRef = useRef<Promise<void>>(Promise.resolve());
@@ -1541,7 +1568,7 @@ export function GenesisCalendar() {
           if (!user || user.uid !== accountId) throw new Error("Theme account session changed");
           if (fresh) {
             setCloudUser(user);
-            if (!privateDeviceAccessBlocked()) localStorage.setItem(LAST_USER_KEY, JSON.stringify(user));
+            cacheLastUser(user);
           }
           return {
             theme: normalizeWebTheme(user.theme),
@@ -1556,7 +1583,7 @@ export function GenesisCalendar() {
           if (signal.aborted) throw new DOMException("Theme write aborted", "AbortError");
           if (cloudUserRef.current?.uid === accountId) {
             setCloudUser(result.user);
-            if (!privateDeviceAccessBlocked()) localStorage.setItem(LAST_USER_KEY, JSON.stringify(result.user));
+            cacheLastUser(result.user);
           }
           return {
             theme: normalizeWebTheme(result.user.theme),
@@ -1770,7 +1797,7 @@ export function GenesisCalendar() {
     setCloudUser(current => current?.uid === user.uid ? user : current);
     try {
       const cached = JSON.parse(localStorage.getItem(LAST_USER_KEY) || "null") as GenesisUser | null;
-      if (cached?.uid === user.uid && !privateDeviceAccessBlocked()) localStorage.setItem(LAST_USER_KEY, JSON.stringify(user));
+      if (cached?.uid === user.uid) cacheLastUser(user);
     } catch { /* Server preferences remain saved when device storage is unavailable. */ }
   }, []);
   const { layout: accountLayout, save: saveLayout, error: layoutError } = useAccountLayout(cloudUser, applyLayoutUser);
@@ -1963,12 +1990,12 @@ export function GenesisCalendar() {
       || right.priority - left.priority);
   useEffect(() => {
     const permissionTimer = window.setTimeout(() => setHabitNotificationPermissionState(habitNotificationPermission()), 0);
-    const stopObserving = observeHabitNotificationClicks();
+    const stopObserving = observeHabitNotificationClicks(cloudUser?.uid);
     return () => {
       window.clearTimeout(permissionTimer);
       stopObserving();
     };
-  }, []);
+  }, [cloudUser?.uid]);
 
   useEffect(() => {
     if (!cloudUser?.uid || typeof Notification === "undefined" || Notification.permission !== "granted") return;
@@ -2128,10 +2155,14 @@ export function GenesisCalendar() {
 
   const publicPageVisible = Boolean(legalPage || (isGoogleSyncConfigured && (!cloudUser || privateDeviceAccessBlocked())));
   useEffect(() => {
-    if (publicPageVisible) return;
+    if (publicPageVisible || !authResolved) return;
     const initialView = viewFromHash();
-    const initialFrame = window.requestAnimationFrame(() => setView(initialView));
     const initialUrl = new URL(window.location.href);
+    const openPricing = initialUrl.hash === "#pricing";
+    const initialFrame = window.requestAnimationFrame(() => {
+      setView(initialView);
+      if (openPricing) requestUpgrade();
+    });
     if (initialView !== "admin") initialUrl.hash = initialView;
     window.history.replaceState(
       { ...(window.history.state ?? {}), genesisView: initialView },
@@ -2142,6 +2173,7 @@ export function GenesisCalendar() {
       setAccountMenuOpen(false);
       setAccountOpen(false);
       setView(viewFromHash());
+      if (window.location.hash === "#pricing") requestUpgrade();
       window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" }));
     };
     window.addEventListener("popstate", handlePopState);
@@ -2149,7 +2181,7 @@ export function GenesisCalendar() {
       window.cancelAnimationFrame(initialFrame);
       window.removeEventListener("popstate", handlePopState);
     };
-  }, [publicPageVisible]);
+  }, [authResolved, publicPageVisible]);
   useEffect(() => {
     if (!cloudUser || viewIsVisible(view, uiVisibility(cloudUser.uiVisibility)) || invitedWorkspaceOpen) return;
     const frame = window.requestAnimationFrame(() => {
@@ -2254,7 +2286,8 @@ export function GenesisCalendar() {
     taskListLinksRef.current = taskListLinks;
     habitWorkspaceRef.current = habitWorkspace;
     const key = cloudUser ? `${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${cloudUser.uid}` : GENESIS_LEGACY_WORKSPACE_STORAGE_KEY;
-    try { writeProtectedWorkspace(localStorage, key, { tasks, projects, categories, taskLists, taskListLinks, ...habitWorkspace }); }
+    try { void Promise.resolve(writeProtectedWorkspace(localStorage, key, { tasks, projects, categories, taskLists, taskListLinks, ...habitWorkspace }))
+      .catch(()=>{setSyncError("Не удалось сохранить запись. Проверьте значение и повторите.");setSyncStatus("error");}); }
     catch {
       const timer = window.setTimeout(() => {
         setSyncError("Не удалось сохранить запись. Проверьте значение и повторите."); setSyncStatus("error");
@@ -2318,6 +2351,7 @@ export function GenesisCalendar() {
     let stopTasks: (() => void) | undefined;
     let stopWorkspace: (() => void) | undefined;
     let loadedUserId = "";
+    let workspaceReady = false;
     let loadedCalendarConnected = false;
     const startCloudTasks = (user: GenesisUser) => {
       stopTasks?.();
@@ -2348,6 +2382,9 @@ export function GenesisCalendar() {
       setSyncError("");
 
       if (!user) {
+        setAuthResolved(true);
+        workspaceReady = false;
+        setWorkspaceReadyOwner(null);
         setCloudUser(null);
         stopTasks?.();
         stopTasks = undefined;
@@ -2366,15 +2403,15 @@ export function GenesisCalendar() {
       setLanguage(effectiveLanguage);
       storeLanguage(effectiveLanguage);
       setCloudUser(effectiveUser);
-      if (!privateDeviceAccessBlocked()) localStorage.setItem(LAST_USER_KEY, JSON.stringify(effectiveUser));
+      cacheLastUser(effectiveUser);
       if (pendingLanguage) {
         localStorage.removeItem(LANGUAGE_LOGIN_PENDING_KEY);
         if (pendingLanguage !== serverLanguage) {
           void updateAccountPreferences({ language: pendingLanguage })
             .then((result) => {
-              if (!active) return;
+              if (!active || !workspaceReady || loadedUserId !== user.uid) return;
               setCloudUser(result.user);
-              if (!privateDeviceAccessBlocked()) localStorage.setItem(LAST_USER_KEY, JSON.stringify(result.user));
+              cacheLastUser(result.user);
             })
             .catch((error: Error) => {
               if (!active) return;
@@ -2383,6 +2420,7 @@ export function GenesisCalendar() {
         }
       }
       if (loadedUserId === user.uid) {
+        if (!workspaceReady) return;
         if (!loadedCalendarConnected && (user.calendarConnected)) {
           loadedCalendarConnected = true;
           setSyncStatus("syncing");
@@ -2397,7 +2435,7 @@ export function GenesisCalendar() {
             setSyncError(error.message);
             setSyncStatus(navigator.onLine ? "error" : "offline");
           });
-        } else if (loadedCalendarConnected && !user.calendarConnected) {
+        } else if (loadedCalendarConnected && !user.calendarConnected&&!usesPrivateProductStorage(user.uid)) {
           loadedCalendarConnected = false;
           stopTasks?.();
           stopTasks = undefined;
@@ -2409,10 +2447,13 @@ export function GenesisCalendar() {
       stopWorkspace?.();
       stopWorkspace = undefined;
       loadedUserId = user.uid;
+      workspaceReady = false;
+      setWorkspaceReadyOwner(null);
       loadedCalendarConnected = user.calendarConnected;
 
       const userKey = `${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${user.uid}`;
-      const local = loadLocalWorkspace(localStorage.getItem(userKey) ? userKey : GENESIS_LEGACY_WORKSPACE_STORAGE_KEY);
+      const encryptedAccount=usesPrivateProductStorage(user.uid);
+      const local = loadLocalWorkspace(encryptedAccount||localStorage.getItem(userKey) ? userKey : GENESIS_LEGACY_WORKSPACE_STORAGE_KEY);
       if (!local) return;
       tasksRef.current = local.tasks;
       projectsRef.current = local.projects;
@@ -2442,8 +2483,8 @@ export function GenesisCalendar() {
           const nextProjects = workspace.hasRemoteStructure ? workspace.projects : local.projects;
           const nextCategories = workspace.hasRemoteStructure ? workspace.categories : local.categories;
           const nextTaskListLinks = workspace.hasRemoteStructure ? workspace.taskListLinks : local.taskListLinks;
-          const currentTasks=tasksRef.current;
-          const reconciledWorkspaceTasks = mergeInitialWorkspaceCollection(local.tasks,currentTasks,reconcileGoogleTaskMetadata(workspace.tasks,currentTasks));
+          const currentTasks=encryptedAccount?[]:tasksRef.current;
+          const reconciledWorkspaceTasks = encryptedAccount?workspace.tasks:mergeInitialWorkspaceCollection(local.tasks,currentTasks,reconcileGoogleTaskMetadata(workspace.tasks,currentTasks));
           const nextTasksById = new Map(reconciledWorkspaceTasks.map((task) => [task.id, task]));
           currentTasks.forEach((task) => {
             if (isCloudTaskDeleted(task.id)) return;
@@ -2453,14 +2494,14 @@ export function GenesisCalendar() {
               nextTasksById.set(task.id, task);
             }
           });
-          const nextTasks = Array.from(nextTasksById.values()).filter(task=>!isCloudTaskDeleted(task.id));
+          const nextTasks = Array.from(nextTasksById.values()).filter(task=>encryptedAccount||!isCloudTaskDeleted(task.id));
           tasksRef.current = nextTasks;
           projectsRef.current = nextProjects;
           categoriesRef.current = nextCategories;
           setTasks(nextTasks);
           setProjects(nextProjects);
           setCategories(nextCategories);
-          const nextTaskLists=mergeInitialWorkspaceCollection(local.taskLists,taskListsRef.current,workspace.taskLists);
+          const nextTaskLists=encryptedAccount?workspace.taskLists:mergeInitialWorkspaceCollection(local.taskLists,taskListsRef.current,workspace.taskLists);
           setTaskLists(nextTaskLists);
           taskListsRef.current = nextTaskLists;
           setTaskListLinks(nextTaskListLinks);
@@ -2469,21 +2510,29 @@ export function GenesisCalendar() {
             workspace.user.taskCalendarMode ?? "sacred",
           ));
           setNewProjectCategory(nextCategories[0]?.id ?? "");
+          workspaceReady = true;
+          setWorkspaceReadyOwner(user.uid);
+          setCloudUser({ ...workspace.user, language: effectiveLanguage });
+          setAuthResolved(true);
           setSyncError(workspace.syncWarning ?? "");
-          setSyncStatus(workspace.user.calendarConnected ? (workspace.syncWarning ? "offline" : "synced") : "local");
+          setSyncStatus(workspace.user.calendarConnected||encryptedAccount ? (workspace.syncWarning ? "offline" : "synced") : "local");
           stopWorkspace = observeCloudWorkspace((error) => {
             if (!active) return;
             setSyncError(error.message);
             setSyncStatus(navigator.onLine ? "error" : "offline");
           });
-          if (workspace.user.calendarConnected) startCloudTasks(user);
+          if (workspace.user.calendarConnected||encryptedAccount) startCloudTasks(user);
         })
         .catch((error: Error) => {
-          if (!active) return;
+          if (!active || loadedUserId !== user.uid) return;
+          loadedUserId = "";
+          workspaceReady = false;
+          setAuthResolved(true);
+          setAuthError(error.message);
           setSyncError(error.message);
           setSyncStatus(navigator.onLine ? "error" : "offline");
         });
-    }, (error) => {
+    }, async (error) => {
       if (!active) return;
       setSyncError(error.message);
       try {
@@ -2495,10 +2544,10 @@ export function GenesisCalendar() {
         }
         // A failed background check must not replace the live workspace with an older cache.
         if(cloudUserRef.current?.uid){setAuthResolved(true);setSyncStatus(navigator.onLine ? "error" : "offline");return;}
-        const cached = JSON.parse(localStorage.getItem(LAST_USER_KEY) || "null") as GenesisUser | null;
+        let cached = JSON.parse(localStorage.getItem(LAST_USER_KEY) || "null") as GenesisUser | null;
         if (cached?.uid) {
-          restoreOfflineWorkspaceSession(cached.uid,
-            cached.authProvider === "yandex" ? "yandex" : "google");
+          if(privateUserCacheRequired(cached)){cached=await restoreOfflinePrivateWorkspace(cached);if(!active)return;}
+          else restoreOfflineWorkspaceSession(cached.uid,cached.authProvider === "yandex" ? "yandex" : "google");
           const cachedLanguage = normalizeLanguage(cached.language);
           const local = loadLocalWorkspace(`${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${cached.uid}`);
           if (!local) return;
@@ -2515,6 +2564,9 @@ export function GenesisCalendar() {
           setLanguage(cachedLanguage);
           storeLanguage(cachedLanguage);
           setCloudUser({ ...cached, language: cachedLanguage });
+          workspaceReady = true;
+          loadedUserId = cached.uid;
+          setWorkspaceReadyOwner(cached.uid);
           setAuthResolved(true);
           setSyncStatus("offline");
           return;
@@ -2562,7 +2614,7 @@ export function GenesisCalendar() {
   }, [cloudUser, activeTaskCalendarMode]);
 
   const saveTask = (task: Task) => {
-    if (!cloudUser || !cloudUser.calendarConnected) return;
+    if (!cloudUser || !cloudUser.calendarConnected&&!usesPrivateProductStorage(cloudUser.uid)) return;
     setSyncStatus("syncing");
     void saveCloudTask(cloudUser.uid, task)
       .then((saved) => {
@@ -2576,7 +2628,7 @@ export function GenesisCalendar() {
   };
 
   const saveTaskSeries = (series: Task[]) => {
-    if (!cloudUser || !cloudUser.calendarConnected || !series.length) return;
+    if (!cloudUser || !cloudUser.calendarConnected&&!usesPrivateProductStorage(cloudUser.uid) || !series.length) return;
     setSyncStatus("syncing");
     void (async () => {
       const savedTasks: Task[] = [];
@@ -2648,7 +2700,9 @@ export function GenesisCalendar() {
 
   useEffect(() => {
     if (!hydrated || !cloudUser || !navigator.onLine) return;
+    const current=captureAccountSessionGuard();
     const timer = window.setTimeout(() => {
+      try{current();}catch{return;}
       void saveMetrics(metricsFor(tasks, projects, habitWorkspace.habits.length)).catch(() => undefined);
     }, 1500);
     return () => window.clearTimeout(timer);
@@ -3074,11 +3128,11 @@ export function GenesisCalendar() {
         await mindmapConversion.repository.journal(operation);
         guard();
         const existing = tasksRef.current.find(item => item.id === task.id);
-        const saved = existing ?? (cloudUser.calendarConnected ? await createCloudTaskOnce(cloudUser.uid, task) : task);
+        const saved = existing ?? (cloudUser.calendarConnected||usesPrivateProductStorage(cloudUser.uid) ? await createCloudTaskOnce(cloudUser.uid, task) : task);
         guard();
         const localKey = `${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${cloudUser.uid}`;
         const local = readStoredState(localKey);
-        writeProtectedWorkspace(localStorage, localKey, { ...local, tasks: [...local.tasks.filter(item => item.id !== saved.id), saved] });
+        await writeProtectedWorkspace(localStorage, localKey, { ...local, tasks: [...local.tasks.filter(item => item.id !== saved.id), saved] });
         tasksRef.current = [...tasksRef.current.filter(item => item.id !== saved.id), saved];
         setTasks(current => [...current.filter(item => item.id !== saved.id), saved]);
         setMindmapConversion(null);
@@ -3302,7 +3356,7 @@ export function GenesisCalendar() {
         occurrenceTask,
       ]);
       if (remainingSeries) saveTask(remainingSeries);
-      else if (cloudUser && cloudUser.calendarConnected) void removeCloudTask(cloudUser.uid, original);
+      else if (cloudUser && (cloudUser.calendarConnected||usesPrivateProductStorage(cloudUser.uid))) void removeCloudTask(cloudUser.uid, original);
       saveTask(occurrenceTask);
       setEditingTask(null);
       return;
@@ -3362,7 +3416,7 @@ export function GenesisCalendar() {
       const consolidated = buildTaskSeries(consolidatedDraft, recurrenceConfig)[0] ?? consolidatedDraft;
       const memberIds = new Set(seriesMembers.map((task) => task.id));
       setTasks((current) => [...current.filter((task) => !memberIds.has(task.id)), consolidated]);
-      if (cloudUser && cloudUser.calendarConnected) {
+      if (cloudUser && (cloudUser.calendarConnected||usesPrivateProductStorage(cloudUser.uid))) {
         setSyncStatus("syncing");
         void (async () => {
           await Promise.all(seriesMembers.map((task) => removeCloudTask(cloudUser.uid, task)));
@@ -3477,7 +3531,7 @@ export function GenesisCalendar() {
     const ids = new Set(tasksToDelete.map((task) => task.id));
     tasksRef.current = tasksRef.current.filter((task) => !ids.has(task.id));
     setTasks((current) => current.filter((task) => !ids.has(task.id)));
-    if (cloudUser && cloudUser.calendarConnected && tasksToDelete.length) {
+    if (cloudUser && (cloudUser.calendarConnected||usesPrivateProductStorage(cloudUser.uid)) && tasksToDelete.length) {
       setSyncStatus("syncing");
       void Promise.all(tasksToDelete.map((task) => removeCloudTask(cloudUser.uid, task)))
         .then(() => setSyncStatus("synced"))
@@ -3720,7 +3774,7 @@ export function GenesisCalendar() {
       const next = applyHabitTimerCommand(base, command);
       await updateHabitWorkspace(next, true);
       guard();
-      writeProtectedWorkspace(localStorage, key, { tasks: tasksRef.current, projects: projectsRef.current,
+      await writeProtectedWorkspace(localStorage, key, { tasks: tasksRef.current, projects: projectsRef.current,
         categories: categoriesRef.current, taskLists: taskListsRef.current, taskListLinks: taskListLinksRef.current,
         ...habitWorkspaceRef.current });
     });
@@ -3744,7 +3798,7 @@ export function GenesisCalendar() {
       const next = input ? applyHabitReminderInput(base,target,input,new Date()) : completeHabitReminder(base, target, new Date());
       if(next===base)return;
       await updateHabitWorkspace(next, true);guard();
-      writeProtectedWorkspace(localStorage, key, {tasks:tasksRef.current,projects:projectsRef.current,categories:categoriesRef.current,
+      await writeProtectedWorkspace(localStorage, key, {tasks:tasksRef.current,projects:projectsRef.current,categories:categoriesRef.current,
         taskLists:taskListsRef.current,taskListLinks:taskListLinksRef.current,...habitWorkspaceRef.current});
     });
   };
@@ -3758,7 +3812,7 @@ export function GenesisCalendar() {
       const base=normalizeHabitWorkspace(preserveHabitTimerRecords(stored,habitWorkspaceRef.current),activeTaskCalendarMode);
       const next=applyHabitHistoryCommand(base,command,activeTaskCalendarMode);
       await updateHabitWorkspace(next,true,true);guard();
-      writeProtectedWorkspace(localStorage,key,{tasks:tasksRef.current,projects:projectsRef.current,categories:categoriesRef.current,
+      await writeProtectedWorkspace(localStorage,key,{tasks:tasksRef.current,projects:projectsRef.current,categories:categoriesRef.current,
         taskLists:taskListsRef.current,taskListLinks:taskListLinksRef.current,...habitWorkspaceRef.current});
     });
   };
@@ -3773,7 +3827,7 @@ export function GenesisCalendar() {
       const base = normalizeHabitWorkspace(preserveHabitTimerRecords(stored, habitWorkspaceRef.current), activeTaskCalendarMode);
       const next = applyHabitLifecycleToWorkspace(base, command);
       await updateHabitWorkspace(next, true, true); guard();
-      writeProtectedWorkspace(localStorage, key, { tasks: tasksRef.current, projects: projectsRef.current,
+      await writeProtectedWorkspace(localStorage, key, { tasks: tasksRef.current, projects: projectsRef.current,
         categories: categoriesRef.current, taskLists: taskListsRef.current, taskListLinks: taskListLinksRef.current, ...habitWorkspaceRef.current });
     });
   };
@@ -3793,7 +3847,7 @@ export function GenesisCalendar() {
       if (next === base) return;
       await updateHabitWorkspace(next, true, true);
       check();
-      writeProtectedWorkspace(localStorage, key, { tasks: tasksRef.current, projects: projectsRef.current,
+      await writeProtectedWorkspace(localStorage, key, { tasks: tasksRef.current, projects: projectsRef.current,
         categories: categoriesRef.current, taskLists: taskListsRef.current, taskListLinks: taskListLinksRef.current, ...habitWorkspaceRef.current });
     });
   };
@@ -3831,7 +3885,7 @@ export function GenesisCalendar() {
       if (next === base) return;
       await updateHabitWorkspace(next, true, true);
       check();
-      writeProtectedWorkspace(localStorage, key, { tasks: tasksRef.current, projects: projectsRef.current,
+      await writeProtectedWorkspace(localStorage, key, { tasks: tasksRef.current, projects: projectsRef.current,
         categories: categoriesRef.current, taskLists: taskListsRef.current, taskListLinks: taskListLinksRef.current, ...habitWorkspaceRef.current });
     });
   };
@@ -3868,7 +3922,7 @@ export function GenesisCalendar() {
       );
       tasksRef.current = remainingTasks;
       habitWorkspaceRef.current = clearedWorkspace;
-      writeProtectedWorkspace(localStorage, `${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${cloudUser.uid}`,
+      await writeProtectedWorkspace(localStorage, `${GENESIS_USER_WORKSPACE_STORAGE_PREFIX}${cloudUser.uid}`,
         { tasks: remainingTasks, projects: projectsRef.current, categories: categoriesRef.current,
           taskLists: taskListsRef.current, taskListLinks: taskListLinksRef.current, ...clearedWorkspace });
       setTasks(remainingTasks);
@@ -5254,7 +5308,7 @@ export function GenesisCalendar() {
     const updatedUser = { ...user, calendarMode: mode };
     cloudUserRef.current = updatedUser;
     setCloudUser(updatedUser);
-    try { if (!privateDeviceAccessBlocked()) localStorage.setItem(LAST_USER_KEY, JSON.stringify(updatedUser)); }
+    try { cacheLastUser(updatedUser); }
     catch { /* The visible choice still works when browser storage is unavailable. */ }
     const save = async () => {
       if (revision !== displayCalendarRevisionRef.current || cloudUserRef.current?.uid !== user.uid) return;
@@ -6140,7 +6194,7 @@ export function GenesisCalendar() {
           const occurrence = standaloneTaskFromOccurrence({ ...taskForOccurrence(task,date), id: uid(), recurrenceOriginalDate: date,
             done: !task.done, completedAt: task.done ? null : new Date().toISOString(), googleEventId:null, googleTaskId:null, googleLinks:{}, updatedAt:timestamp() },task.id);
           setTasks(current => [...current.filter(t => t.id !== task.id && t.id !== occurrence.id), ...(remaining ? [remaining] : []), occurrence]);
-          if (remaining) saveTask(remaining); else if (cloudUser.calendarConnected) void removeCloudTask(cloudUser.uid,task);
+          if (remaining) saveTask(remaining); else if (cloudUser.calendarConnected||usesPrivateProductStorage(cloudUser.uid)) void removeCloudTask(cloudUser.uid,task);
           saveTask(occurrence);
         }}
         onCalendar={(task,date) => { const value = date || task.dueDate; if (value) {
@@ -7062,6 +7116,7 @@ export function GenesisCalendar() {
         error={authResolved ? authError || syncError : ""}
         language={language}
         onLanguageChange={selectLanguage}
+        onLanguageSuggestion={setLanguage}
         onGoogle={() => void handleGoogleSignIn()}
       />
       </Suspense>
@@ -7075,6 +7130,8 @@ export function GenesisCalendar() {
     <SacredFeaturesContext value={sacredFeaturesEnabled}>
     <DiaryProvider key={cloudUser?.uid || 'anonymous'} userId={cloudUser?.uid || ''} ready={hydrated && syncStatus !== 'syncing'}>
     <main
+      inert={Boolean(cloudUser && workspaceReadyOwner !== cloudUser.uid)}
+      aria-busy={Boolean(cloudUser && workspaceReadyOwner !== cloudUser.uid)}
       className={`genesis-app mode-${activeCalendarMode}${habitWorkspace.habitSettings.feedback.animations ? "" : " habit-animations-off"}`}
       data-exp-layout="app-shell"
       data-sacred-features={sacredFeaturesEnabled}
@@ -7098,7 +7155,7 @@ export function GenesisCalendar() {
         order={todayOrder} halfBlocks={todayHalves} hiddenBlocks={todayHidden} webVisibility={webHabitHeader} language={language} onSave={saveTodayOrder} onClose={() => setTodayOrderEditor({owner: todayOrderOwner, view, open: false})}/></Suspense> : null}
       {experimentalProjectFormOpen ? <div className="modal-backdrop experimental-project-composer-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setExperimentalProjectFormOpen(false); }}>{renderProjectCreateForm()}</div> : null}
       <ActionNotice message={layoutError || (view === "projects" && activeProjectsArea === "shared" ? "" : notice)}/>
-      <UpgradeAccessUI user={cloudUser} onUserChange={user=>{if(cloudUserRef.current?.uid!==user.uid)return;setCloudUser(user);if(!privateDeviceAccessBlocked())localStorage.setItem(LAST_USER_KEY,JSON.stringify(user));}}/>
+      <UpgradeAccessUI user={cloudUser} onUserChange={user=>{if(cloudUserRef.current?.uid!==user.uid)return;setCloudUser(user);cacheLastUser(user);}}/>
       {cloudUser?<Suspense fallback={null}><SupportNotice key={cloudUser.uid} user={cloudUser}/></Suspense>:null}
       {cloudUser?<Suspense fallback={null}><PlanGuidanceHost key={cloudUser.uid} user={cloudUser} section={view}/></Suspense>:null}
       {iosInstallOpen ? <Suspense fallback={null}><IosInstallPrompt language={language} onClose={() => setIosInstallOpen(false)} /></Suspense> : null}
@@ -7191,7 +7248,7 @@ export function GenesisCalendar() {
               setCloudUser(current => current?.uid === user.uid ? { ...current, emailVerification: user.emailVerification } : current);
               if (!privateDeviceAccessBlocked()) try {
                 const cached=JSON.parse(localStorage.getItem(LAST_USER_KEY) || "null");
-                if(cached?.uid===user.uid)localStorage.setItem(LAST_USER_KEY,JSON.stringify({...cached,emailVerification:user.emailVerification}));
+                if(cached?.uid===user.uid)cacheLastUser({...cached,emailVerification:user.emailVerification});
               } catch { /* The live verified state remains available if this cache cannot be written. */ }
             }} /> : null}
             {authError ? <p className="oauth-callback-error" role="alert">{authError}</p> : null}
@@ -7214,7 +7271,7 @@ export function GenesisCalendar() {
               {view === "projects" && (sharedProjectsVisible || personalProjectsVisible) ? <>
                 {!experimentalThemeActive ? <div className="view-calendar-toolbar">{renderDisplayCalendarChoice(language === "en" ? "Project date display" : "Отображение дат в проектах")}</div> : null}
                 {!sharedProjectsVisible || activeProjectsArea === "personal" ? renderProjects() : <Suspense fallback={<DeferredViewFallback label={language === "en" ? "Opening shared projects…" : "Открываем общие проекты…"} />}>
-                  <SharedProjects key={`${cloudUser?.uid}:${invitationDestination?.userId===cloudUser?.uid ? invitationDestination?.request : "default"}`} userId={cloudUser?.uid ?? ""} language={language} experimentalTheme={experimentalThemeActive}
+                  <SharedProjects key={`${cloudUser?.uid}:${invitationDestination?.userId===cloudUser?.uid ? invitationDestination?.request : "default"}`} userId={cloudUser?.uid ?? ""} language={language} experimentalTheme={experimentalThemeActive} googleAccounts={cloudUser?.googleAccounts??[]}
                     writeEnabled={sharedProjectsAvailable}
                     projectViewOrder={accountLayout.sharedProjectViewOrder} onProjectViewOrder={sharedProjectViewOrder => saveLayout({ sharedProjectViewOrder })}
                     calendarScale={accountLayout.sharedCalendarScale} onCalendarScale={sharedCalendarScale => saveLayout({ sharedCalendarScale })}
@@ -7812,6 +7869,7 @@ export function GenesisCalendar() {
               </div>
             ) : null}
             </details>
+            {cloudUser&&usesPrivateProductStorage(cloudUser.uid)?<PrivateGoogleCopy ownerId={cloudUser.uid} language={language} accounts={cloudUser.googleAccounts} source={editingTask}/>:null}
             <div className="editor-actions task-editor-actions">
               <button type="button" className="task-editor-action task-editor-action-delete personal-action-hint" aria-label={translateText("Удалить", language)} data-action-hint={translateText("Удалить", language)} onClick={() => { const id = editingTask.id; const occurrence = editingOccurrenceDate || editingTask.dueDate; setEditingTask(null); deleteTask(id, occurrence); }}><ExperimentalIcon name="delete" /><span className="task-editor-action-label">{translateText("Удалить", language)}</span></button>
               {sharedProjectsAvailable && editingTask.entryType !== "birthday" ? <button type="button" className="task-editor-action task-editor-action-transfer personal-action-hint" aria-label={translateText("Переместить в общие", language)} data-action-hint={translateText("Переместить в общие", language)} onClick={() => { setTransferTask(tasks.find((task) => task.id === editingTask.id) ?? editingTask); setEditingTask(null); }}><ExperimentalIcon name="move" /><span className="task-editor-action-label">{translateText("Переместить в общие", language)}</span></button> : null}
@@ -7934,7 +7992,7 @@ export function GenesisCalendar() {
               return permission;
             }}
             onHabitNotificationSettingsChange={(notifications) => {
-              if (habitWorkspace.habitSettings.notifications.enabled && !notifications.enabled) recordHabitNotificationsDisabled();
+              if (habitWorkspace.habitSettings.notifications.enabled && !notifications.enabled) recordHabitNotificationsDisabled(cloudUser?.uid);
               updateHabitWorkspace({ ...habitWorkspace, habitSettings: { ...habitWorkspace.habitSettings, notifications } });
             }}
             onHabitFeedbackSettingsChange={(feedback) => {
@@ -7954,7 +8012,7 @@ export function GenesisCalendar() {
               setCloudUser(user);
               const nextTaskCalendarMode = user.taskCalendarMode ?? "sacred";
               setTaskRecurrenceConfig((current) => alignRecurrenceConfigWithCalendar(current, nextTaskCalendarMode, newTaskDueDate));
-              if (!privateDeviceAccessBlocked()) localStorage.setItem(LAST_USER_KEY, JSON.stringify(user));
+              cacheLastUser(user);
             }}
           />
         </Suspense>
@@ -8020,6 +8078,12 @@ export function GenesisCalendar() {
       ) : null}
       {voiceLanguageEnabled && voiceControlActive ? <Suspense fallback={null}><WebVoiceControl language={language} onCommand={executeWebVoiceCommand} onStop={() => setVoiceControlActive(false)} /></Suspense> : null}
     </main>
+    {cloudUser && workspaceReadyOwner !== cloudUser.uid ? <div className="private-vault-gate workspace-startup-gate">
+      <section className="workspace-recovery-dialog" role="status" aria-live="polite">
+        <h2>{translateText(syncStatus === 'error' ? 'Не удалось загрузить данные' : 'Загрузка…', language)}</h2>
+        {syncStatus === 'error' ? <button type="button" onClick={() => window.dispatchEvent(new Event('focus'))}>{translateText('Повторить', language)}</button> : null}
+      </section>
+    </div> : null}
     </DiaryProvider>
     </SacredFeaturesContext>
     </SharedUpdatesProvider>

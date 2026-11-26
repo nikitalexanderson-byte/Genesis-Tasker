@@ -4,11 +4,13 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createContext, runInContext } from "node:vm";
 import { webcrypto } from "node:crypto";
+import {FixtureLockManager} from './browser-locks.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const require = createRequire(import.meta.url);
 const ts = require("typescript");
 const sources = new Map();
+const origins=new WeakMap();
 
 export class MemoryStorage {
   data = new Map();
@@ -26,7 +28,7 @@ export function deferred() {
 }
 
 // Each instance is a separate tab: real cloud-sync code and WebCrypto, no live network or account.
-export async function cloudSyncClient({ storage = new MemoryStorage(), sessionStorage = new MemoryStorage(), userId = "cache-qa-user", key, initializeWorkspace = true, withDataExchange = false, withMindmaps = false, withPrivateMessages = false, withBackups = false, language = "ru", timers = { setTimeout, clearTimeout } } = {}) {
+export async function cloudSyncClient({ storage = new MemoryStorage(), sessionStorage = new MemoryStorage(), userId = "cache-qa-user", key, initializeWorkspace = true, authenticated = true, withDataExchange = false, withMindmaps = false, withPersonalRepositories = false, withPrivateMessages = false, withBackups = false, withPhysis = false, language = "ru", timers = { setTimeout, clearTimeout } } = {}) {
   key ??= Buffer.from(webcrypto.getRandomValues(new Uint8Array(32))).toString("base64");
   const deviceKey = `genesis-workspace-device-key-v2:${userId}`, keyRecord = JSON.stringify({ key, recoveryCode: key });
   if (storage.getItem(deviceKey) !== keyRecord) storage.setItem(deviceKey, keyRecord);
@@ -45,11 +47,13 @@ export async function cloudSyncClient({ storage = new MemoryStorage(), sessionSt
     } }),
   };
   const window = new EventTarget();
-  const navigator = { onLine: true };
+  const origin=origins.get(storage)??{locks:new FixtureLockManager(),markers:new Map()};origins.set(storage,origin);
+  const navigator = { onLine: true, locks:origin.locks };
   Object.assign(window, { localStorage: storage, sessionStorage, crypto, navigator,
     location: Object.assign(new URL("http://127.0.0.1:4193/"), { reload() {} }) });
   const requests = [];
   let fetchResponse = async () => { throw new TypeError("Synthetic offline"); };
+  let authenticatingFixture=false;
   const context = createContext({
     window, navigator, localStorage: storage, sessionStorage, crypto,
     process: { env: { NEXT_PUBLIC_GENESIS_API_URL: "http://127.0.0.1:4193/api" } },
@@ -62,7 +66,8 @@ export async function cloudSyncClient({ storage = new MemoryStorage(), sessionSt
     CustomEvent: class extends Event { constructor(type, options = {}) { super(type, options); this.detail = options.detail; } },
     Error, TypeError, DOMException, AbortController, AbortSignal, URL, URLSearchParams,
     Response, Request, Headers, Blob, FormData, atob, btoa, structuredClone,
-    setTimeout: timers.setTimeout, clearTimeout: timers.clearTimeout, setInterval, clearInterval, queueMicrotask,
+    setTimeout: (...args)=>(authenticatingFixture?setTimeout:timers.setTimeout)(...args),
+    clearTimeout: handle=>(authenticatingFixture?clearTimeout:timers.clearTimeout)(handle),setInterval, clearInterval, queueMicrotask,
   });
   const modules = new Map();
   function load(file) {
@@ -79,19 +84,44 @@ export async function cloudSyncClient({ storage = new MemoryStorage(), sessionSt
       if (id.endsWith(".json")) return JSON.parse(readFileSync(resolve(dirname(file), id), "utf8"));
       return id.startsWith(".") ? load(resolve(dirname(file), /\.[cm]?[jt]sx?$/.test(id) ? id : `${id}.ts`)) : require(id);
     }, loaded, loaded.exports);
+    if(file.replaceAll('\\','/').endsWith('/app/e2ee/legacy-transport-fence.ts')) {
+      // Replace only the concrete persistent IO port, keeping the real scope
+      // policy/LockManager consumer and transition validation. Do not pretend a
+      // dummy global indexedDB is a browser: unrelated key stores keep their own
+      // existing fixture behavior. Real IDB is checked in browser QA.
+      loaded.exports.IndexedDbLegacyTransportMarkers=class {
+        static available(){return true;}
+        async get(owner){return structuredClone(origin.markers.get(owner)??null);}
+        async any(){return origin.markers.size>0;}
+        async commit(owner,expected,next){loaded.exports.validateLegacyTransportTransition(owner,origin.markers.get(owner)??null,expected,next);if(next)origin.markers.set(owner,structuredClone(next));else origin.markers.delete(owner);}
+        async close(){}
+      };
+    }
     return loaded.exports;
   }
   const client = load(resolve(root, "app/cloud-sync.ts"));
   if (initializeWorkspace && !client.restoreOfflineWorkspaceSession(userId)) throw new Error("Synthetic workspace could not be restored");
+  if(authenticated&&!storage.getItem('genesis-local-sign-out-v1')) {
+    // This fixture has always represented an authenticated synthetic backend.
+    // Establish that identity through the real metadata-only session reader;
+    // a cached device key alone must never authorize private HTTP.
+    const offline=fetchResponse;
+    fetchResponse=async url=>{if(new URL(url).pathname!=='/api/session')throw new Error('Unexpected fixture authentication request');return new Response(JSON.stringify({user:{uid:userId},csrf:'fixture-csrf',loginId:`fixture-login:${userId}`}),{headers:{'Content-Type':'application/json'}});};
+    authenticatingFixture=true;
+    try{await client.loadGenesisSession();}finally{authenticatingFixture=false;fetchResponse=offline;requests.length=0;}
+  }
   const cacheKey = `genesis-shared-offline-v1:${userId}`;
   const importedKey = await webcrypto.subtle.importKey("raw", Buffer.from(key, "base64"), "AES-GCM", false, ["encrypt", "decrypt"]);
   return {
-    client, storage, sessionStorage, userId, key, requests, window, navigator,
+    client, storage, sessionStorage, userId, key, requests, window, navigator, legacyMarkers:origin.markers,
     dataExchange: withDataExchange ? load(resolve(root, "app/shared-data-exchange.ts")) : undefined,
     mindmaps: withMindmaps ? load(resolve(root, "app/mindmaps-storage.ts")) : undefined,
+    repositories: withPersonalRepositories ? {restoration:load(resolve(root, 'app/stoicheion-restoration-storage.ts')),aurora:load(resolve(root, 'app/aurora/repository.ts'))} : undefined,
     privateMessages: withPrivateMessages ? load(resolve(root, "app/private-messages-api.ts")) : undefined,
+    physis:withPhysis?{store:load(resolve(root,'app/physis/store.ts')),crypto:load(resolve(root,'app/physis/crypto.ts')),account:load(resolve(root,'app/physis/account-session.ts'))}:undefined,
     featureAccess: load(resolve(root, "app/feature-access.ts")),
-    backups: withBackups ? {device:load(resolve(root,'app/backup-device.ts')),sources:load(resolve(root,'app/backup-sources.ts')),format:load(resolve(root,'app/backup-format.ts')),tasks:load(resolve(root,'app/backup-task-restore.ts')),restore:load(resolve(root,'app/backup-restore.ts'))} : undefined,
+    backups: withBackups ? {device:load(resolve(root,'app/backup-device.ts')),sources:load(resolve(root,'app/backup-sources.ts')),format:load(resolve(root,'app/backup-format.ts')),tasks:load(resolve(root,'app/backup-task-restore.ts')),restore:load(resolve(root,'app/backup-restore.ts')),
+      memory:load(resolve(root,'app/backup-migration-memory.ts')),archives:load(resolve(root,'app/e2ee/archives-web-source.ts')),operations:load(resolve(root,'app/backup-web-operations.ts'))} : undefined,
     respond(handler) { fetchResponse = handler; },
     holdCrypto(method) {
       const gate = { entered: deferred(), release: deferred() };

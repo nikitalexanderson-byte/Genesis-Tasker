@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 // CLI-only synthetic users. Nothing in this harness is loaded by the production API.
 if (PHP_SAPI !== 'cli') exit(1);
-$options = getopt('', ['dir:', 'origin:', 'run-id:', 'backup']);
+$options = getopt('', ['dir:', 'origin:', 'run-id:', 'backup', 'e2ee', 'drive']);
 $directory = str_replace('\\', '/', (string)($options['dir'] ?? ''));
 $origin = (string)($options['origin'] ?? 'http://127.0.0.1:4380');
 $runId = (string)($options['run-id'] ?? ('run-' . gmdate('Ymd-His') . '-' . bin2hex(random_bytes(4))));
@@ -13,11 +13,17 @@ if (file_exists($directory)) throw new RuntimeException('Fresh fixture directory
 if (!mkdir($directory . '/sessions', 0700, true)) throw new RuntimeException('Cannot create owned runtime');
 $directory = str_replace('\\', '/', (string)realpath($directory));
 $config = [
+    // Explicit synthetic-only opt-in; this file is never part of server/public.
+    'e2ee_v1_enabled' => array_key_exists('e2ee', $options),
+    'e2ee_v1_pilot_users' => array_key_exists('e2ee', $options) ? ['qa-' . $runId . '-business'] : [],
     'backup_v1_enabled' => array_key_exists('backup',$options),
-    'app_url' => $origin, 'google_only' => true, 'google_client_id' => '', 'google_client_secret' => '',
+    'private_drive_enabled' => array_key_exists('drive',$options),
+    'app_url' => $origin, 'google_only' => true,
+    'google_client_id' => array_key_exists('drive',$options) ? 'isolated-drive-client' : '',
+    'google_client_secret' => array_key_exists('drive',$options) ? 'isolated-drive-client-secret' : '',
     'gigachat_enabled' => false, 'gemini_enabled' => false, 'physis_enabled' => true,
     'crypto_key' => base64_encode(random_bytes(32)), 'db_path' => $directory . '/genesis.sqlite',
-    'session_path' => $directory . '/sessions', 'cookie_secure' => false, 'timezone' => 'Europe/Moscow',
+    'session_path' => $directory . '/sessions', 'cookie_secure' => parse_url($origin, PHP_URL_SCHEME) === 'https', 'timezone' => 'Europe/Moscow',
     'admin_email' => 'no-admin-' . $runId . '@example.invalid',
     'notifications' => ['email' => ['transport' => 'disabled']], 'billing' => ['enabled' => false],
 ];

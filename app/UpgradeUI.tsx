@@ -5,7 +5,7 @@ import {loadBillingCatalog,loadBillingQuote,createBillingOrder,createBillingTria
 import {BILLING_PLANS,BILLING_RESOURCES,BILLING_FALLBACK_POLICY,billingForeignRate,billingMoney,billingPlanAllows,billingPlanLimits,billingResourceCapacity,billingPlanName,billingDisplayPrice,billingCheckoutReady,effectiveBillingPlan,type BillingCatalog,type BillingPlan,type BillingProvider,type BillingQuote} from './billing';
 import {billingPricingCurrency} from './billing-location';
 import {useAutomaticPaymentRegion} from './use-payment-region';
-import {savedPublicCurrency,savePublicCurrency,type PublicCurrency} from './public-currency';
+import {requestedPublicCurrency,savedPublicCurrency,savePublicCurrency,type PublicCurrency} from './public-currency';
 import {RefundContacts} from './RefundContacts';
 import {PaymentReturnDialog} from './PaymentReturnDialog';
 import {FutureModelingPaymentReturn} from './FutureModelingPayment';
@@ -84,7 +84,7 @@ export function UpgradeAccessUI({user,onUserChange}:{user:GenesisUser|null;onUse
 export function UpgradeDialog({user,request=DEFAULT_UPGRADE_REQUEST,onClose,onOrder,onUserChange}:{user:GenesisUser;request?:UpgradeRequest;onClose:()=>void;onOrder?:(id:string)=>void;onUserChange?:(user:GenesisUser)=>void}) {
   const text=upgradeCopy(user.language);const [catalog,setCatalog]=useState<BillingCatalog|null>(null);
   const [selected,setSelected]=useState<BillingPlan>(()=>suggestedPlan(request,user));const [months,setMonths]=useState<1|12>(1);
-  const [currency,setCurrency]=useState(savedPublicCurrency);const [busy,setBusy]=useState(false);const [error,setError]=useState('');
+  const [currency,setCurrency]=useState(()=>requestedPublicCurrency()??savedPublicCurrency());const [busy,setBusy]=useState(false);const [error,setError]=useState('');
   const [quoteState,setQuoteState]=useState<{offerId:string;provider:BillingProvider;quote:BillingQuote|null;failed:boolean}|null>(null);const [quoteRevision,setQuoteRevision]=useState(0);
   const [trialUpdate,setTrialUpdate]=useState<{base:GenesisUser;profile:GenesisUser}|null>(null);const [trialConfirm,setTrialConfirm]=useState<BillingTrialPlan|null>(null);
   const trialProfile=trialUpdate?.base===user?trialUpdate.profile:user;

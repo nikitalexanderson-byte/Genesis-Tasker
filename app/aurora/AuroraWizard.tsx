@@ -47,6 +47,7 @@ import { chooseSphragis, ritualInstructions, type ComfortMode } from './sphragis
 import type { OrganonSelection, OrganonPreferences } from './organon';
 import type { PrimaryDrawSnapshot, SituationProfile, EvidenceKind } from './types';
 import type { AuroraHost } from './host';
+import {usePersonalMigrationSource} from '../use-personal-migration-source';
 import { AuroraPayment } from './AuroraPayment';
 import './aurora.css';
 const STAGES = [A.cardsTitle, RU.text0003, RU.text0004, RU.text0005, RU.text0006, RU.text0007, RU.text0008, RU.text0009, RU.text0010];
@@ -85,6 +86,11 @@ export function AuroraWizard({ host, primary, temporal = null, lockSource = fals
     const cancelDelete=useRef<HTMLButtonElement|null>(null);
     useEffect(()=>{if(deleteId)cancelDelete.current?.focus();},[deleteId]);
     const documentRef = useRef<AuroraDocument | null>(null), timer = useRef<ReturnType<typeof setTimeout> | null>(null), alive = useRef(true), heading = useRef<HTMLHeadingElement | null>(null);
+    usePersonalMigrationSource(host.captureMigration?host.ownerId:null,'aurora',()=>({
+        current:host.captureMigration?.(documentRef.current)??null,
+        state:{document:documentRef.current,activeId,unlockedId,conflict,archivedSolution,deleteId,historyEdit},
+        settled:!busy&&documentRef.current!==null,
+    }),host);
     const visibleSessions = document?.sessions.filter(s => !s.gno && (!lockSource || primary && samePrimaryDraw(s.primary,primary))) ?? [];
     const session = visibleSessions.find(s => s.id === activeId) ?? null;
     const historical=!!session&&!samePrimaryDraw(session.primary,primary);

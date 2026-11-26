@@ -56,7 +56,7 @@ class HabitReminderActionsFlowTest {
             reminder = HabitReminder(true, now.atZone(zone).toLocalTime().toString()))
         try {
             check(registry.edit().putStringSet("deliveryTimes", emptySet()).commit())
-            saveHabitReminderFrequency(app, app.workspaceScope, HabitReminderFrequency(4, 5))
+            runBlocking { saveHabitReminderFrequency(app, app.workspaceScope, HabitReminderFrequency(4, 5)) }
             assertEquals(HabitReminderFrequency(4, 5), habitReminderFrequency(app, app.workspaceScope))
             runBlocking {
                 repository.updateSettings(originalSettings.copy(notifications = originalSettings.notifications.copy(
@@ -99,7 +99,7 @@ class HabitReminderActionsFlowTest {
             val edit = registry.edit()
             previous.forEach { (key, value) -> if (value == null) edit.remove(key) else edit.putStringSet(key, value) }
             check(edit.commit())
-            saveHabitReminderFrequency(app, app.workspaceScope, frequency)
+            runBlocking { saveHabitReminderFrequency(app, app.workspaceScope, frequency) }
             runBlocking { app.scheduler.restoreHabitNotifications() }
         }
     }

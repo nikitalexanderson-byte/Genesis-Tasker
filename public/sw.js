@@ -1,4 +1,7 @@
+/* global GenesisLegacyTransportWorker */
 const SCOPE = self.registration.scope;
+importScripts(new URL("./e2ee-legacy-transport-worker.js", SCOPE).href);
+const legacyPersonalRequest = GenesisLegacyTransportWorker.installLegacyTransportWorker(self);
 importScripts(new URL("./habit-reminder-worker.js", SCOPE).href);
 importScripts(new URL("./advice-notification-worker.js", SCOPE).href);
 const ASSETS_PATH = new URL("./assets/", SCOPE).pathname;
@@ -405,10 +408,13 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-  if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.includes("/api/")) return;
+  if (url.pathname.includes("/api/")) {
+    if (legacyPersonalRequest.handles(request)) event.respondWith(legacyPersonalRequest(request));
+    return;
+  }
+  if (request.method !== "GET") return;
   if (url.pathname.includes("/downloads/")) return;
 
   // Versioned bundles are immutable. Keep serving the current page's cached
@@ -495,7 +501,7 @@ self.addEventListener("push", (event) => {
       if (typeof receivedAt === "number" && receivedAt < Date.now() - 172800000) await receipts.delete(key);
     }
   };
-  sharedPushChain = sharedPushChain.catch(() => undefined).then(receive).catch(() => undefined);
+  sharedPushChain = sharedPushChain.catch(() => undefined).then(() => legacyPersonalRequest.background(receive)).catch(() => undefined);
   event.waitUntil(sharedPushChain);
 });
 
@@ -512,6 +518,7 @@ self.addEventListener("notificationclick", (event) => {
       if (visibleClient) {
         visibleClient.postMessage({
           type: "GENESIS_NOTIFICATION_OPENED",
+          userId:data.userId,
           notificationId: data.genesisNotificationId,
           kind: data.kind,
           variant: data.variant,
@@ -524,3 +531,6 @@ self.addEventListener("notificationclick", (event) => {
     }),
   );
 });
+// Only this main worker knows its imported and own handlers use the background
+// barrier. A new transport import alone must not certify an old cached sw.js.
+legacyPersonalRequest.completeBackgroundInstall();

@@ -37,12 +37,15 @@ function genesisBillingCreateOrder(string $userId, array $input,?array $catalogD
 {
     $user=genesisFindUser($userId);
     if (!$user || !genesisSessionIsPrimaryGoogleUser($user)) throw new GenesisResourceLimitException(403,'BILLING_PRIMARY_GOOGLE_REQUIRED');
-    if (array_diff(array_keys($input),['offerId','provider','client','idempotencyKey','receiptEmail','expectedAmountMinor','expectedCurrency'])
+    if (array_diff(array_keys($input),['offerId','provider','client','idempotencyKey','receiptEmail','expectedAmountMinor','expectedCurrency','expectedProductId'])
         || !is_string($input['idempotencyKey']??null) || !preg_match('/\A[a-zA-Z0-9_-]{16,100}\z/D',$input['idempotencyKey'])) throw new InvalidArgumentException('BILLING_ORDER_INVALID');
     $settings=genesisBillingSettings();$catalog=genesisBillingCatalog($settings,(string)($input['client']??'web'),$catalogDefinition);
     $offer=null;foreach($catalog['offers'] as $candidate) if ($candidate['id']===($input['offerId']??null)) $offer=$candidate;
     $provider=$input['provider']??'';
     if (!$offer || !in_array($provider,$offer['availableProviders'],true)) throw new GenesisResourceLimitException(503,'BILLING_NOT_CONFIGURED');
+    if($provider!=='google-play'&&array_key_exists('expectedProductId',$input))throw new InvalidArgumentException('BILLING_ORDER_INVALID');
+    if($provider==='google-play'&&($input['expectedProductId']??null)!==$offer['playProductId'])
+        throw new GenesisResourceLimitException(409,'BILLING_PRODUCT_CHANGED');
     $offer=genesisBillingProviderOffer($offer,$provider);
     $db=genesisDb();genesisBeginWriteTransaction($db);
     try {
@@ -84,10 +87,16 @@ function genesisBillingCreateOrder(string $userId, array $input,?array $catalogD
                 $order=genesisBillingOrder($db,$id);
             }
         }
+        if($provider==='google-play'&&$order['product_id']!==$input['expectedProductId'])
+            throw new GenesisResourceLimitException(409,'BILLING_PRODUCT_CHANGED');
         $db->commit();
     } catch(Throwable $e) { if($db->inTransaction())$db->rollBack();throw $e; }
     if ($order['checkout_url']!==null || $order['status']!=='pending') return genesisBillingPublicOrder($order);
     $order['owner_hash']=genesisSubscriptionIdentityHashes($user)[0];
+    if($provider==='google-play'){
+        return [...genesisBillingPublicOrder($order,$db),
+            'obfuscatedAccountId'=>$order['owner_hash'],'obfuscatedProfileId'=>$order['play_profile_hash']];
+    }
     $order['receipt_email']=$input['receiptEmail']??$user['email'];
     if($provider==='yookassa'&&($settings['providers'][$provider]['receipt_required']??true)===true&&$order['encrypted_receipt']===null){
         $snapshot=genesisSharedContentEncrypt(json_encode(genesisBillingYooFiscalReceipt($order,$settings['providers'][$provider]),JSON_THROW_ON_ERROR));
@@ -104,7 +113,7 @@ function genesisBillingCreateOrder(string $userId, array $input,?array $catalogD
         return genesisBillingPublicOrder(genesisBillingPaddleCheckout($db,$order,$settings['providers'][$provider]));
     $gatewayCheckout??='genesisBillingGatewayCheckout';
     $result=$gatewayCheckout($order,$settings['providers'][$provider],$returnUrl);
-    if ($provider!=='google-play') $db->prepare('UPDATE billing_orders SET checkout_url=?,provider_secret=?,updated_at=? WHERE id=? AND checkout_url IS NULL')
+    $db->prepare('UPDATE billing_orders SET checkout_url=?,provider_secret=?,updated_at=? WHERE id=? AND checkout_url IS NULL')
         ->execute([$result['checkoutUrl'],$result['providerReference'],genesisNow(),$order['id']]);
     // A webhook may change settlement during checkout I/O. Its public projection must win.
     return [...$result,...genesisBillingPublicOrder(genesisBillingOrder($db,$order['id']))];

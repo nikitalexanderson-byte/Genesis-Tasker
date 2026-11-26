@@ -1,3 +1,4 @@
+/* global legacyPersonalRequest */
 /* Advice bodies are loaded only after cookie authentication and current preference/age checks. */
 const ADVICE_PUSH_SCOPE=self.registration.scope;
 const ADVICE_PUSH_RECEIPTS="genesis-advice-push-receipts-v1";
@@ -18,11 +19,11 @@ self.addEventListener("push",event=>{
       ||!["aurora","philosophers"].includes(target.searchParams.get("adviceCollection")))return;
     await self.registration.showNotification(typeof message.title==="string"?message.title:"GENESIS",{body:message.body,lang:message.lang,
       tag:"genesis-advice-"+id,renotify:false,data:{url:target.href,adviceDeliveryId:id,userId:result.userId}});
-    await receipts.put(receiptUrl,new Response(JSON.stringify({receivedAt:Date.now()}),{headers:{"Content-Type":"application/json"}}));
+    await receipts.put(receiptUrl,new Response(JSON.stringify({userId:result.userId,receivedAt:Date.now()}),{headers:{"Content-Type":"application/json"}}));
     if(++advicePushReceived%50===0)for(const key of await receipts.keys()){
       const old=await receipts.match(key);let receivedAt;try{receivedAt=(await old.json()).receivedAt;}catch{continue;}
       if(typeof receivedAt==="number"&&receivedAt<Date.now()-172800000)await receipts.delete(key);
     }
   };
-  advicePushChain=advicePushChain.catch(()=>undefined).then(receive).catch(()=>undefined);event.waitUntil(advicePushChain);
+  advicePushChain=advicePushChain.catch(()=>undefined).then(()=>legacyPersonalRequest.background(receive)).catch(()=>undefined);event.waitUntil(advicePushChain);
 });

@@ -11,10 +11,12 @@ import javax.crypto.spec.SecretKeySpec
 /** Implemented by the existing authenticated account transport; no second session or workspace key. */
 internal interface DiaryGateway {
     fun check()
+    suspend fun <T> withLegacyOperation(operation:suspend ()->T):T { check();return operation().also{check()} }
     fun featureAccess(): FeatureAccess = FeatureAccess()
     suspend fun workspace(): JSONObject
     /** GET when body is null; otherwise PUT. The transport must keep its existing session generation guards. */
     suspend fun request(path: String, body: JSONObject? = null): JSONObject
+    suspend fun privateService(service:String,timeZone:String?=null):JSONObject = error("E2EE_PRIVATE_SERVICE_UNAVAILABLE")
     suspend fun remove(id: String, expectedRevision: Long): JSONObject = throw UnsupportedOperationException("DIARY_DELETE_UNAVAILABLE")
 }
 

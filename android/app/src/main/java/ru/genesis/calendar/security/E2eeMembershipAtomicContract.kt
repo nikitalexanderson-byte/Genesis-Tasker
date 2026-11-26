@@ -1,0 +1,158 @@
+package ru.genesis.calendar.security
+
+import org.json.JSONArray
+import org.json.JSONObject
+import java.security.MessageDigest
+
+/** Matching technical codec for membership-atomic-contract/local.ts. This
+ * validates inert originals; it neither trusts a directory nor executes them. */
+internal object E2eeMembershipAtomicContract {
+    val actions=setOf("membership-atomic-begin","membership-atomic-page","membership-atomic-status","membership-atomic-cancel","membership-atomic-seal","membership-atomic-preview")
+    private val planKinds=setOf("operation","operation-grants","acl","anchors","clear-assignments","revoke-invitations","role-events","product-operations")
+    private val packetKinds=setOf("rotation-packets","product-packets")
+    private fun invalid():Nothing=error("E2EE_MEMBERSHIP_ATOMIC_INVALID")
+    private fun rows(value:JSONArray)=(0 until value.length()).map{value.getJSONObject(it)}
+    private fun number(value:Any,min:Long=0,max:Long=9007199254740990L)=E2eeCommands.integer(value,min).also{if(it>max)invalid()}
+    fun digest(value:Any):String {val bytes=E2eeCommands.canonical(value);return try{E2eeEnvelope.encode(MessageDigest.getInstance("SHA-256").digest(bytes))}finally{bytes.fill(0)}}
+    fun stagingPayload(action:String,input:JSONObject):JSONObject {
+        if(action !in actions)invalid();val extra=when(action){"membership-atomic-page"->setOf("phase","index","pageHash");"membership-atomic-status"->setOf("phase","after");"membership-atomic-seal"->setOf("batchHash");"membership-atomic-preview"->setOf("after");else->emptySet()}
+        E2eeKeys.exact(input,setOf("intentId","planHash")+extra);E2eeKeys.technical(input.getString("intentId"));E2eeEnvelope.decode(input.getString("planHash"),32)
+        if(action in setOf("membership-atomic-page","membership-atomic-status")&&input.get("phase") !in setOf("plan","packets"))invalid()
+        if(action=="membership-atomic-page"){number(input.get("index"),0,9999);E2eeEnvelope.decode(input.getString("pageHash"),32)}
+        if(action=="membership-atomic-status")number(input.get("after"),0,10000)
+        if(action=="membership-atomic-seal")E2eeEnvelope.decode(input.getString("batchHash"),32)
+        if(action=="membership-atomic-preview")number(input.get("after"),0,5001)
+        return JSONObject(input.toString())
+    }
+    private fun anchor(value:JSONObject){
+        E2eeKeys.exact(value,setOf("scopeId","ownerId","kind","resourceId","generation","directoryRevision","checkpointHash","entityId","revision","payloadHash")+(if(value.has("productIndexHash"))setOf("productIndexHash")else emptySet()))
+        for(key in listOf("scopeId","ownerId","resourceId","entityId"))E2eeKeys.technical(value.getString(key))
+        if(value.get("kind") !in setOf("space","project")||value.get("entityId")!=value.getString("kind")+":"+value.getString("resourceId"))invalid()
+        for(key in listOf("generation","directoryRevision","revision"))number(value.get(key),1)
+        E2eeEnvelope.decode(value.getString("checkpointHash"),32);E2eeEnvelope.decode(value.getString("payloadHash"),32);if(value.has("productIndexHash"))E2eeEnvelope.decode(value.getString("productIndexHash"),32)
+    }
+    fun checkedAnchor(input:JSONObject)=JSONObject(input.toString()).also{anchor(it)}
+    private fun pageProjection(input:JSONObject)=JSONObject().put("format","genesis-membership-page-v2").put("kind",input.get("kind"))
+        .put("items",if(input.get("kind")=="acl")E2eeMembershipContract.projection(input.getJSONArray("items"))else input.getJSONArray("items"))
+    private fun operationHeader(input:JSONObject){
+        val kind=input.getString("kind");val fields=when(kind){
+            "invitation-admit"->setOf("kind","spaceId","resourceId","invitationId","invitationKind","userId","role","permissions","createdBy","acceptedAt")
+            "project-role"->setOf("kind","projectId","userId","role");"project-remove"->setOf("kind","projectId","userId")
+            "space-role"->setOf("kind","spaceId","userId","role")+(if(input.has("permissions"))setOf("permissions")else emptySet())+(if(input.has("canOrganizeTasks"))setOf("canOrganizeTasks")else emptySet())
+            "member-permissions"->setOf("kind","spaceId","userId","categoryId","permissions");"project-grants"->setOf("kind","spaceId","userId","allProjects")
+            "category-permissions"->setOf("kind","spaceId","categoryId","expectedRevision","permissions")+(if(input.has("rename"))setOf("rename")else emptySet());else->invalid()
+        };E2eeKeys.exact(input,fields)
+        for(key in listOf("projectId","spaceId","userId"))if(input.has(key))E2eeKeys.technical(input.getString(key))
+        if(kind=="invitation-admit"){
+            for(key in listOf("resourceId","invitationId","createdBy"))E2eeKeys.technical(input.getString(key))
+            val target=input.getString("invitationKind");if(target !in setOf("space","project")||input.get("role") !in (if(target=="space")setOf("admin","member","guest")else setOf("manager","member","commenter","viewer"))||target=="project"&&!input.isNull("permissions")||target=="space"&&input.get("resourceId")!=input.get("spaceId"))invalid()
+            val at=input.getString("acceptedAt");if(!Regex("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z").matches(at))invalid();java.time.Instant.parse(at)
+        }
+        if(input.has("categoryId")&&(kind=="category-permissions"||!input.isNull("categoryId")))E2eeKeys.technical(input.getString("categoryId"))
+        if(kind=="project-role"&&input.get("role") !in setOf("manager","member","commenter","viewer")||kind=="space-role"&&input.get("role") !in setOf("admin","member","guest"))invalid()
+        if(input.has("canOrganizeTasks")&&input.get("canOrganizeTasks") !is Boolean||kind=="project-grants"&&input.get("allProjects") !is Boolean)invalid()
+        if(kind=="member-permissions"&&input.isNull("categoryId")&&input.isNull("permissions")||kind=="category-permissions"&&input.isNull("permissions"))invalid()
+        if(input.has("permissions")&&!input.isNull("permissions")){val permissions=input.getJSONObject("permissions");E2eeKeys.exact(permissions,setOf("createProjects","editTasks","organizeTasks","comment","manageProjects","inviteMembers"));if(permissions.keys().asSequence().any{permissions.get(it) !is Boolean})invalid()}
+        if(kind=="category-permissions"){E2eeCommands.integer(input.get("expectedRevision"));if(input.has("rename")&&input.get("rename")!=true)invalid()}
+    }
+    fun page(input:JSONObject):JSONObject {
+        E2eeKeys.exact(input,setOf("kind","items"));val kind=input.getString("kind");val items=input.getJSONArray("items")
+        if(kind !in planKinds+packetKinds||items.length() !in 1..200)invalid();val seen=mutableSetOf<String>()
+        fun unique(value:String){if(!seen.add(value))invalid()}
+        if(kind=="acl")E2eeMembershipContract.changes(items)else for(row in rows(items))when(kind){
+            "operation"->{if(items.length()!=1)invalid();operationHeader(row)}
+            "operation-grants"->{E2eeKeys.exact(row,setOf("projectId","role","includeDescendants"));unique(E2eeKeys.technical(row.getString("projectId")));if(row.get("role") !in setOf("member","commenter","viewer","none")||row.get("includeDescendants") !is Boolean)invalid()}
+            "anchors"->{anchor(row);unique(row.getString("scopeId"))}
+            "clear-assignments"->{E2eeKeys.exact(row,setOf("projectId","userId"));for(key in listOf("projectId","userId"))E2eeKeys.technical(row.getString(key));unique(row.getString("projectId")+"\u0000"+row.getString("userId"))}
+            "revoke-invitations"->{E2eeKeys.exact(row,setOf("kind","resourceId","userId"));if(row.get("kind") !in setOf("space","project"))invalid();for(key in listOf("resourceId","userId"))E2eeKeys.technical(row.getString(key));unique(row.getString("kind")+"\u0000"+row.getString("resourceId")+"\u0000"+row.getString("userId"))}
+            "role-events"->{E2eeKeys.exact(row,setOf("projectId","userId","from","to"));for(key in listOf("projectId","userId"))E2eeKeys.technical(row.getString(key));for(key in listOf("from","to"))if(!row.isNull(key)&&row.get(key) !in setOf("manager","member","commenter","viewer"))invalid();unique(row.getString("projectId")+"\u0000"+row.getString("userId"))}
+            "product-operations"->{E2eeKeys.exact(row,setOf("scopeId","intentId","operations"));for(key in listOf("scopeId","intentId"))E2eeKeys.technical(row.getString(key));unique(row.getString("scopeId")+"\u0000"+row.getString("intentId"));val operations=rows(row.getJSONArray("operations"));val ids=mutableSetOf<String>();if(operations.size !in 1..100)invalid();for(raw in operations){val operation=E2eeProductContract.operation(raw);if(!ids.add(operation.getString("entityId"))||operation.get("action")=="propose-complete")invalid()}}
+            "rotation-packets","product-packets"->{E2eeKeys.exact(row,setOf("command","signature"));val command=row.getJSONObject("command");E2eeCommands.commandBytes(command).fill(0);E2eeEnvelope.decode(row.getString("signature"),64);if(command.get("action")!=(if(kind=="rotation-packets")"rotate-membership"else"product-commit-bound"))invalid();unique(command.getString("scopeId")+"\u0000"+command.getString("operationId"))}
+            else->invalid()
+        }
+        val bytes=E2eeCommands.canonical(pageProjection(input));try{check(bytes.size<=512*1024){"E2EE_MEMBERSHIP_PAGE_TOO_LARGE"}}finally{bytes.fill(0)}
+        return JSONObject(input.toString())
+    }
+    fun pageRef(index:Int,input:JSONObject):JSONObject {number(index);val value=page(input);return JSONObject().put("index",index).put("kind",value.get("kind")).put("count",value.getJSONArray("items").length()).put("pageHash",digest(pageProjection(value)))}
+    fun pages(kind:String,input:JSONArray):JSONArray {
+        val result=JSONArray();var offset=0;var size=minOf(200,input.length())
+        while(offset<input.length()){
+            val items=JSONArray();for(index in offset until offset+size)items.put(input.get(index))
+            try{result.put(page(JSONObject().put("kind",kind).put("items",items)));offset+=size;size=minOf(200,input.length()-offset)}
+            catch(error:Exception){if(size<=1||error.message !in setOf("E2EE_MEMBERSHIP_PAGE_TOO_LARGE","E2EE_COMMAND_TOO_LARGE"))throw error;size=maxOf(1,size/2)}
+        };return result
+    }
+    fun refs(input:JSONArray,packets:Boolean):JSONArray {
+        if(input.length()>10000||!packets&&input.length()<1)invalid();val kinds=if(packets)packetKinds else planKinds
+        for((index,row)in rows(input).withIndex()){
+            E2eeKeys.exact(row,setOf("index","kind","count","pageHash"));if(number(row.get("index"))!=index.toLong()||row.get("kind") !in kinds)invalid();number(row.get("count"),1,200);E2eeEnvelope.decode(row.getString("pageHash"),32)
+        };return JSONArray(input.toString())
+    }
+    fun plan(input:JSONObject):JSONObject {
+        E2eeKeys.exact(input,setOf("format","actorId","intentId","spaceId","reviewFingerprint","scopeIds","pages"));if(input.get("format")!="genesis-membership-atomic-plan-v2")invalid()
+        for(key in listOf("actorId","intentId","spaceId"))E2eeKeys.technical(input.getString(key));E2eeEnvelope.decode(input.getString("reviewFingerprint"),32)
+        val ids=input.getJSONArray("scopeIds");if(ids.length() !in 1..5001)invalid();val values=(0 until ids.length()).map{E2eeKeys.technical(ids.getString(it))};if(values!=values.toSet().sorted())invalid();refs(input.getJSONArray("pages"),false)
+        return JSONObject(input.toString())
+    }
+    fun stem(owner:String,intent:String):String {E2eeKeys.technical(owner);E2eeKeys.technical(intent);return digest(JSONObject().put("format","genesis-membership-local-key-v2").put("ownerId",owner).put("intentId",intent))}
+    fun localId(owner:String,intent:String)="membership-atomic-v2:"+stem(owner,intent)
+    fun pageId(owner:String,intent:String,index:Int):String {number(index,0,9999);return "membership-atomic-page:"+stem(owner,intent)+":"+index}
+    fun requestId(owner:String,action:String,payload:JSONObject):String {E2eeKeys.technical(owner);return "membership-atomic-request:"+digest(JSONObject().put("ownerId",owner).put("action",action).put("payload",stagingPayload(action,payload)))}
+    fun localState(input:JSONObject,owner:String):JSONObject {
+        E2eeKeys.exact(input,setOf("format","ownerId","plan","planHash","ready","cancelRequested","cancelled"));val plan=plan(input.getJSONObject("plan"))
+        if(input.get("format")!="genesis-membership-local-stage-v2"||input.get("ownerId")!=owner||plan.get("actorId")!=owner||digest(plan)!=input.get("planHash")
+            ||listOf("ready","cancelRequested","cancelled").any{input.get(it) !is Boolean}||input.getBoolean("cancelled")&&!input.getBoolean("cancelRequested"))invalid()
+        return JSONObject(input.toString())
+    }
+    fun localPage(input:JSONObject,owner:String):JSONObject {
+        E2eeKeys.exact(input,setOf("format","ownerId","intentId","planHash","index","page"));E2eeKeys.technical(input.getString("intentId"));E2eeEnvelope.decode(input.getString("planHash"),32);number(input.get("index"),0,9999)
+        if(input.get("format")!="genesis-membership-local-page-v2"||input.get("ownerId")!=owner||page(input.getJSONObject("page")).get("kind") !in planKinds)invalid()
+        return JSONObject(input.toString())
+    }
+    fun localPageMatches(state:JSONObject,input:JSONObject):JSONObject {
+        val row=localPage(input,state.getString("ownerId"));val plan=state.getJSONObject("plan");val index=number(row.get("index"),0,9999).toInt();val refs=plan.getJSONArray("pages")
+        if(row.get("intentId")!=plan.get("intentId")||row.get("planHash")!=state.get("planHash")||index>=refs.length()||!E2eeProductJson.same(pageRef(index,row.getJSONObject("page")),refs.getJSONObject(index)))invalid()
+        return row
+    }
+    fun localRequest(input:JSONObject,owner:String):JSONObject {
+        E2eeKeys.exact(input,setOf("format","ownerId","action","payload","packet"));if(input.get("format")!="genesis-membership-stage-request-v2"||input.get("ownerId")!=owner)invalid()
+        val action=input.getString("action");val payload=stagingPayload(action,input.getJSONObject("payload"));val signed=input.getJSONObject("packet");E2eeKeys.exact(signed,setOf("command","signature"));val command=signed.getJSONObject("command")
+        E2eeCommands.commandBytes(command).fill(0);E2eeEnvelope.decode(signed.getString("signature"),64)
+        if(command.get("ownerId")!=owner||command.get("action")!=action||!E2eeProductJson.same(command.getJSONObject("payload"),payload))invalid()
+        return JSONObject(input.toString())
+    }
+    fun changeHash(rawPlan:JSONObject):String {val value=plan(rawPlan);return digest(JSONObject().put("protocol",2).put("actorId",value.get("actorId")).put("intentId",value.get("intentId")).put("planHash",digest(value)).put("scopeIds",value.get("scopeIds")))}
+    fun batchHash(rawPlan:JSONObject,pages:JSONArray)=digest(JSONObject().put("protocol",2).put("planHash",digest(plan(rawPlan))).put("packetPages",refs(pages,true)))
+    fun packetsId(owner:String,intent:String)="membership-atomic-packets:"+stem(owner,intent)
+    fun packetPageId(owner:String,intent:String,index:Int):String {number(index,0,9999);return "membership-atomic-packet-page:"+stem(owner,intent)+":"+index}
+    fun localPackets(input:JSONObject,state:JSONObject):JSONObject {
+        E2eeKeys.exact(input,setOf("format","ownerId","intentId","planHash","batchHash","pages","ready"));val plan=state.getJSONObject("plan");val pages=refs(input.getJSONArray("pages"),true)
+        if(input.get("format")!="genesis-membership-local-packets-v2"||input.get("ownerId")!=state.get("ownerId")||input.get("intentId")!=plan.get("intentId")||input.get("planHash")!=state.get("planHash")||pages.length()<1||batchHash(plan,pages)!=input.get("batchHash")||input.get("ready") !is Boolean)invalid()
+        return JSONObject(input.toString())
+    }
+    fun localPacketPageMatches(manifest:JSONObject,input:JSONObject):JSONObject {
+        E2eeKeys.exact(input,setOf("format","ownerId","intentId","planHash","batchHash","index","page"));val index=number(input.get("index"),0,9999).toInt();val page=page(input.getJSONObject("page"));val refs=manifest.getJSONArray("pages")
+        if(input.get("format")!="genesis-membership-local-packet-page-v2"||listOf("ownerId","intentId","planHash","batchHash").any{input.get(it)!=manifest.get(it)}||page.get("kind") !in packetKinds||index>=refs.length()||!E2eeProductJson.same(pageRef(index,page),refs.getJSONObject(index)))invalid()
+        return JSONObject(input.toString())
+    }
+    /** Binding only; pinned-directory verification and owner review remain
+     * separate. No imported packet becomes an authority pin here. */
+    class PacketBindings(input:JSONObject){
+        private val plan=E2eeMembershipAtomicContract.plan(input);private val change=changeHash(plan);private val scopes=(0 until plan.getJSONArray("scopeIds").length()).map{plan.getJSONArray("scopeIds").getString(it)}
+        private val anchors=mutableMapOf<String,JSONObject>();private val products=mutableMapOf<String,String>();private val rotations=mutableSetOf<String>();private val seenProducts=mutableSetOf<String>()
+        fun planPage(input:JSONObject){val page=page(input)
+            if(page.get("kind")=="anchors")for(row in rows(page.getJSONArray("items"))){val id=row.getString("scopeId");if(id !in scopes||anchors.put(id,row)!=null)invalid()}
+            if(page.get("kind")=="product-operations")for(row in rows(page.getJSONArray("items"))){val id=row.getString("scopeId");val key=id+"\u0000"+row.getString("intentId");if(id !in scopes||products.put(key,digest(row.getJSONArray("operations")))!=null)invalid()}
+        }
+        fun packetPage(input:JSONObject){val page=page(input);val kind=page.getString("kind");if(kind !in packetKinds)invalid()
+            for(packet in rows(page.getJSONArray("items"))){val command=packet.getJSONObject("command");val scope=command.getString("scopeId");val anchor=anchors[scope]?:invalid();val payload=command.getJSONObject("payload")
+                if(command.get("ownerId")!=anchor.get("ownerId")||number(command.get("expectedRevision"))!=number(anchor.get("directoryRevision"),1)||command.get("checkpointHash")!=anchor.get("checkpointHash")||payload.get("membershipHash")!=change)invalid()
+                if(kind=="rotation-packets"){if(!rotations.add(scope))invalid()}else{
+                    E2eeKeys.exact(payload,setOf("intentId","membershipHash","operations"));val key=scope+"\u0000"+E2eeKeys.technical(payload.getString("intentId"))
+                    if(!seenProducts.add(key)||products[key]!=digest(payload.getJSONArray("operations")))invalid()
+                }
+            }
+        }
+        fun complete(){if(anchors.keys.sorted()!=scopes||rotations.sorted()!=scopes||seenProducts.size!=products.size)invalid()}
+    }
+}

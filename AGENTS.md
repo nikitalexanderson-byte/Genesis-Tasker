@@ -10,6 +10,395 @@
   USD открываются после проверки каталога, checkout, подписанных событий и
   выдачи доступа. Android и выпуск 3.3.6 ведутся отдельно.
 
+## Продолжение24 ноября: activity87 принята в своих границах
+
+- Build:web87 PASS. Immutable87 hash5955b3f5…10d22,8983files, НЕ менять;
+  runtime/activity87-input-identity.json содержит raw source hashes.
+- Native88 SUCCESS2m18s, wrapper151.47s. Forced single JVM policy test1/1,
+  читает52 shared vectors; не full JVM. SourceABCD91DE…2B1AA,
+  APK8F6C974A…3A206, instrumentationDB90A29E…F9EF0. Actual APK policy asset
+  exact BDAA700F…22371 matches contract. Freeze88 снят; не устанавливалось.
+- Scoped JS/worker/fence20/20, updated deployed-PHP suite3/3 с52vectors,
+  actual Chromium activity87-04 PASS5/5, types/lint PASS. Ошибка первого Node
+  вызова была strip-only prerequisite; первые browser setups не PASS продукта.
+- Files79 завершён PASS14/14, cleanup PASS, before=after=e808ba07…54c68.
+  Download/image byte-exact и legacy/anonymous refusal приняты; не повторять.
+- Membership82/session70553 продолжает на83: оба projects ACTIVE, space ждёт
+  реальный boundary18:50UTC на последнем срезе. Rich85/session64997 имеет
+ 12PASS, обаshared ACTIVE, normal task readback; comment/rule/maps step ещё идёт.
+  Оба используют неизменный83; новые activity87 inputs не подменять внутри run.
+  Main149/Play/устройства/flags unchanged, formal9/20 и final review открыты.
+
+## Продолжение24 ноября: исходящие aggregate uploads87
+
+- Native84 завершён SUCCESS2m32s, wrapper162.90s, no JVM. Source428C9DB0…4AC091,
+  APK8B8F19C6…381F2, instrumentation327EC0D3…11826. Root freeze84 снят. Ничего
+  не устанавливалось; controller37 и основной149 не повторять/не менять.
+- После84 найден actual private outbound gap: в73 ушли70metrics/26feature-usage
+  POSTs, отклонённые сервером409. Shared transport contract87 теперь включает
+  оба prefixes, PHP resource copied exact, worker regenerated. Web suppresses
+  optional raw aggregate uploads for private/locked profiles; central fence
+  сохраняет race protection; delayed metrics проверяет captured session. История
+  источников и encrypted domain data сохраняются, legacy accounts не отключены.
+- Focused JS/worker/fence20/20, actual browser activity87-04 PASS5/5;52 shared
+  vectors. Types/scoped lint PASS. Early01–03 browser и strip-only Node были QA
+  setup failures; не считать product PASS. Native84 предшествует87; следующий
+  focused native policy test/assembly ещё нужен. Build:web87/session34878 идёт.
+- Read-only server canary86 на retained75:25new-generation tables/624rows/
+  866703bytes без точного private marker. Не whole confidentiality/crypto proof;
+  legacy tables/private client JSON не читались. Synthetic ownership verified.
+
+## Продолжение24 ноября: backup80 принят, membership83 и assembly84
+
+- HEAD aff70df5 pushed. Exact Source checks45455359422/45455346904 RUNNING;
+  не отменять следующим push ради статусов. Main/production7964526b, APK149.
+- Backup80 на immutable78 PASS13/13,2recovery42 notRepeated, cleanup PASS,
+  bundle unchanged.46 encrypted entries/6sections,483340bytes; wrong-key deny,
+  inert import/cold history/current edited task сохранены. Изменённый snapshot
+  в80 не воспроизводился; сообщение78 не выдавать за испытание этого отказа.
+- Membership73 FAIL12PASS/1FAIL: checked planAck при proposal отсутствовал,
+  confirm disabled и generic alert. IDB abort2, причина preview ещё неизвестна;
+  не называть её доказанно429/queue71. В73 diagnostic fields отсутствуют, старое
+  предположение о включённых phase points неверно. Cleanup PASS,72 unchanged.
+-83 блокирует planAck до proposal, даёт явный повтор load прежнего intent после
+  отказа preview. Crypto guards/consents не ослаблены. Types/scoped lint0errors/
+  3old warnings/build PASS. Immutable83 abda808f…dc983,8983files, НЕ менять.
+  Membership82/session70553 на83 действительно включил1refusal+4phase non-pausing
+  logpoints и preserve-failure. Будущий retry только после observed Retry-After.
+- Rich75-02 FAIL12PASS/1FAIL: comment уже decrypted в DOM, но скрыт за вкладкой
+  Comments. Helper теперь открывает её; rich85/session64997 идёт на83. Files79/
+  session51258 остаётся на78. Принятые stages не запускать заново без причины.
+- Drive77-05 PASS16/16 +2real backend restarts: после prepare и после partial
+  resumable. Cleanup PASS; simulator Google, не live OAuth/native process death.
+- Native84/session40679 собирает текущие feedback78+membership83 assets. До
+  identity84 app/android/contracts/public НЕ менять. JVM не запрашивался;
+  controller37 не повторять, основной149/устройства/Play и gates не трогать.
+
+## Продолжение24 ноября: Drive77 и backup feedback78
+
+- Exact049 Source checks45445304778/45445288477 SUCCESS обоих jobs. Первый
+  web log2232PASS/0FAIL, Android test/build SUCCESS16m1s; XML totals не извлекались.
+  Эти проверки предшествуют новому web feedback78 и QA fixture77.
+- Real PHP HTTP/SQLite/cURL Drive77-04 PASS16/16 с локальным TLS provider
+  simulator, включая lost ACK и5.59MB resumable/256KiB accepted offset. Cleanup
+  PASS. Google OAuth UI/native SAF/process death/max artifact не проверены,
+  production Drive off.01/03 были setup/simulator failures, не product passes.
+- Content74 FAIL15PASS/1FAIL: image ещё Loading при503s Retry-After, а QA ждал
+  только20s. Cleanup PASS, immutable72 unchanged. QA timeout исправлен без
+  изменения budgets.76 FAIL при safe SOURCE_HISTORY_CHANGED в final catalogue
+  comparison; owned private client-state не читать.78 сохраняет этот guard,
+  локализует actionable retry14languages и не выводит arbitrary exception text.
+  Types/scoped lint/i18n/build:web PASS;14 new values semantic read, прежние
+  значения каталога unchanged. Whole final review/source acceptance не повышать.
+- Immutable78 hash e808ba07…54c68,8983files; не менять. Files79/session51258
+  проверяет только files, backup80/session36756 — новый export/retry/history;
+  оба явно пропускают неизменённые2 recovery42 cases. Membership73/session56323
+  и rich shared75-02/session90503 продолжают на immutable72, не перезапускать.
+  QA75 seed содержит comments,4 map versions, disabled automation,2 workflow
+  versions; cold product readback ещё нужен. Native73 предшествует78; новую
+  assembly выполнять после завершения текущего correction block, без повтора
+  принятой controller37 migration. Main149/Play/устройства и gates не менять.
+
+## Продолжение24 ноября: реальная точка входа72
+
+- Mounted64 завершён FAIL12PASS/1FAIL,2notRepeated; все3shared ACTIVE, normal
+  task readback/legacy deny PASS. Все4 phase logpoints пройдены за40ms; ожидание
+  было после modal-request. Cleanup PASS, immutable63 hash8fa49a79…1b6fa unchanged.
+- Причина: web/main.tsx не монтировал PrivateMembershipGate, хотя Next layout
+  его содержал. Gate добавлен рядом с Vault/Migration за пределами content
+  boundary. Build:web72 PASS; immutable72 hash3cb209db…7bf94,8983files.
+- Новый actual compiled-root smoke72: RED05 на63 не создаёт review;
+  GREEN05 на72 PASS2/2 — реальный root создаёт его и actual foreground guard
+  закрывает legacy identity с E2EE_ACCOUNT_CHANGED,0authority mutations.
+  Оба cleanup PASS, bundles unchanged. Это wiring/refusal, не owner consent UI.
+  Ранние01–04 — QA setup/ожидание persistent dialog при locked identity;
+  сохранять FAIL. Guard не обходился. Quick root gate теперь перед private-product.
+- Full membership73/session56323 идёт на immutable72; content74/session5441
+  отдельно проверяет files/archives на том же bundle. Два personal recovery42
+  cases явно notRepeated в обоих. QA ждёт enabled plan/owner
+  controls после actual IO; phase logpoints не паузят IDB. Budgets не менялись,
+  основной149/устройства/Play не тронуты. Native73 assembly SUCCESS1m30s,
+  sourceD3A19A04…89643/APK31AA2C04…5A995, no JVM; freeze73 снят. Новый APK
+  не устанавливался. Native63 предшествует copy69/71/72.
+
+## Продолжение24 ноября: readonly queue71 и exact CI f330
+
+- Source checks45430372649/45430353686 exactf330 SUCCESS обоих jobs. Первый web
+  log2229/2229; Android unit task выполнен, без извлечённых XML totals. Это не
+  приёмка последующих copy69/readonly queue71.
+- RED71 показывает блокировку create/inspect общим lock во время независимого
+  readonly membership capture. Snapshot теперь вне draft mutation queue с
+  current guards до/после IO; consent/preview/start остаются serial. GREEN3/3,
+  tsc/scoped lint/build:web71 PASS. Не называть единственной
+  причиной60 до фактического UI результата. Native63 предшествует71.
+- Membership64/session48899 использует immutable63, все3shared ACTIVE;
+  normal membership editor ждёт actual Retry-After16:40UTC. Bundle не менять.
+
+## Продолжение24 ноября: admission70 и copy69
+
+- Новый настоящий nonmember admission70-03 PASS5/5: invitation/recipient consent,
+  atomic ACL+3roots/receipt retry, отсутствие доступа до отдельного device
+  approval, explicit history и cold epochs1/2. CLI/in-memory encrypted vault,
+  не owner-review/invitation UI; cleanup PASS. Whole34 этим не закрыт.
+- Все26 E2EE copy-каталогов смыслово прочитаны вместе с предыдущими scopes;
+  PT Drive2 labels и ZH assistantHistory уточнены. i18n:audit PASS. Это не
+  visual/font-scale/остальные product/legal/update copy и не final review.
+  Не повторять вычитку этих неизменённых каталогов. Native63 предшествует69.
+- Membership64/session48899 идёт на immutable63, оба project scopes ACTIVE;
+  последний space retry16:30UTC. Бюджет/данные/guards не обходить. Main149,
+  floors/cutover/deployAndroid=false сохраняются. Source checks f330 ещё идут.
+
+## Продолжение24 ноября: native63 и semantic65–67
+
+- Native63 assembly SUCCESS1m7s, unitExecuted=false/fullUnitRun=false;
+  sourceAF2E4715…9703BB, APKACC87877…AEDF3. Новый embedded engine отличается
+  от58; instrumentation прежний327EC0D3…11826. Root freeze снят, retained37
+  и основной149 не обновлялись. Принятую controller37 migration не повторять.
+- Semantic65:490 новых значений файлов/создания;66:476 ранее прочитанных
+  device-entry/access;67:552 оставшихся membership-review на12 языках.
+  Последний каталог полностью прочитан вместе с ранее принятыми EN/RU и
+  критичными14-language fields. Это scoped semantic read без text changes,
+  не visual/final crypto review. Keys/hashes/evidence в final-review.md.
+- Membership64/session48899 на immutable web-shared-read63 продолжает;
+  bundle не менять. Source checks exact f330 ещё не оба завершены на этом срезе.
+
+## Продолжение24 ноября: message migration62 и read scheduling63
+
+- Exact4454e536 Source checks45418383374/45418365896 SUCCESS обоих jobs.
+  В журнале первого run2226/2226 JS; полный Android job SUCCESS, без выдуманных
+  XML totals. Новую correction63 этот CI не проверяет.
+- Actual browser migration62-08 PASS5/5: ordinary nonempty encrypted Messenger
+  cells -> mounted complete personal migration/PHP/SQLite -> direct protected
+  cell hashes -> cold real vault unlock -> explicit byte-exact pending retry.
+  Conflict draft сохранён при cold readback, migration не отправляет сообщение.
+  Chat transport modeled; не whole20/48 и не signed upgrade. Cleanup PASS.
+- Mounted60 FAIL12PASS/1FAIL,2notRepeated:3shared scopes ACTIVE и normal task
+  readback PASS, но role change не открыл review за20min. Runtime cleanup PASS,
+  immutable54 unchanged. Не повторять без конкретного разбора scheduling path.
+- RED63 доказывает лишнее второе observation для widget, пришедшего во время
+  незавершённого scope IO. Batch теперь открыт только до settlement этого IO;
+  mutation закрывает его сразу, поздний read получает новый snapshot. GREEN9/9,
+  types/scoped lint/build:web PASS. Это bounded fix, не доказанный whole60 repair;
+  новый native asset identity и actual membership result ещё нужны.
+- Prodamus более не выбран владельцем: после запроса дополнительных документов
+  поручен поиск другого провайдера для НПД без ИП, foreign cards -> RUB. Анкету
+  не отменяли сообщением сервису, gateway остаётся выключенным. Robokassa,
+  EasyStaff и Lava.top пока только исследованы; новые кабинеты не создавались.
+
+## Продолжение24 ноября: native59 завершён и tabs60
+
+- Native59 SUCCESS50s/no new JVM; оба APK byte-identical58. Root freeze59 снят,
+  текущая assembly identity96BC214A…659DBA. Не повторять controller37 migration.
+- Actual browser tabs60 PASS2/2: real IDB/Web Locks сохраняют обе конкурирующие
+  encrypted compositions; отказ local save не отправляет сообщение. Rendered
+  chat/token guard added. JS8/8, tsc/scoped lint PASS; это separate bounded scope,
+  не новый112layout run. Catalogues не менялись ради этой коррекции.
+- Mounted60/session41588 идёт на immutable54/startup proof. Не менять bundle;
+  real600-request windows/600s и все guards сохраняются.252 critical values ещё
+  прочитаны на14 языках (semantic61); whole review20/48/release не завершены.
+
+## Продолжение24 ноября: compose59 принят в своём охвате
+
+- Web compose59: JS8/8, tsc/scoped lint02/build:web02 PASS. Actual browser59-05
+  PASS5 functional+112 locale/layout cases, cleanup PASS, unchanged source.
+  Native58 accepted8 JVM остаются своим native scope;59 assembly только обновит
+  web assets и identity, не является новым JVM run. No new native migration.
+- Mounted54 roster был исправен; exact getByLabel возвращает0 из-за label/select
+  options, getByRole возвращает1. Только3 QA selectors исправлены, не продуктовые
+  ACL/consents. Следующий mounted60 использует прежний immutable54 и startup proof.
+  Подробности/ограничения — security-336-secret-peer-keys.md и membership acceptance.
+- Во время asset build59 не менять app/android/contracts/public до identity.
+  No subagents/Daybreak, private JSON/demo-output запреты, основной149, gates off.
+
+## Продолжение24 ноября: web messenger compositions59
+
+- Native58 SUCCESS12m44s, focused8/8 JVM (2 current Messenger peer-pin +6 read-rate),
+  source6D331482…1928C2F. Root freeze58 снят. Это не full JVM и не новый UI4/4.
+- Web54 FAIL до role selector; owner/task +3 shared scopes ACTIVE и normal read
+  PASS. Не повторять перенос с нуля без разбора roster snapshot. Immutable54
+  не менять; cleanup/retention проверить по run.json, private JSON не читать.
+- Browser secret-peer58 выявил отсутствие web draft autosave. Новый полный59
+  block сохраняет encrypted composition/token/edit target, ordered writes,
+  Web Locks CAS и exact ACK/command cleanup с inert history. Код ещё требует
+  focused JS/browser/runtime acceptance; старые58 APK не принимают59 web diff.
+  Run03 first async Promise-based PASS не доказывает persistence; harness исправлен.
+
+## Продолжение24 ноября: native57 принят
+
+- Build57 SUCCESS14m52s, focused6/6 JVM, exact source11DB6869…6DF3CD7C.
+  UI57 на retained37 PASS4/4 с настоящими PIN/fingerprint/cancel/background;
+  QA data preserved, services stopped/reverse removed. Миграцию не повторяли,
+  основной signed149 не трогали. Root inputs разморожены; retained37 очистить
+  до release. Web54 продолжает на immutable df8d904f…d2b05c9 без смены bundle.
+- При проверке сценария35 обнаружено misleading generic notReady и stale web
+  security code после MESSENGER_DEVICE_CHANGED. Следующий законченный correction
+  block добавляет отдельное сообщение14languages и repository regression;
+  старые APK/runtime57 не выдавать за приёмку этого нового UI diff.
+
+## Продолжение24 ноября: Android normal-read retry56
+
+- У normal account transport Android обнаружен тот же пробел: bounded retry
+  был только в migration read, а активный account делал read/status/directory
+  напрямую. Новый e2eePrivateRequestWithRateRetry сохраняет submitted JSON и
+  повторяет только эти3 readonly routes через прежнюю bounded policy. Любые
+  command/challenge/membership mutations не повторяются. Current/device и
+  captured request generation проверяются на каждом ожидании/ответе.
+- Новые3 JVM cases: реальные отказ/ожидание, изменения внешнего JSONObject,
+  закрытие владельца, смена generation и отсутствие retry writes. Build56 FAIL:
+  Kotlin IR/AddContinuation internal compiler error, unitExecuted=false. Не
+  выдавать старые XML/APK за56. Sync adapter теперь имеет собственный IO wait
+  с ОБЩИМ e2eeReadRetrySeconds для suspend/sync policies; runBlocking bridge
+  убран без смены budgets. Build57 проверяет focused6 JVM + QA assembly;
+  не называть его full1453. После старта не менять app/android/contracts/public
+  до identity/runtime57. Native37 migration не повторять: следующий UI57
+  использует retained37; основной signed149 на emulator5580 не трогать до150.
+- Web54/session24674 продолжает на immutable df8d904f…d2b05c9. Его web inputs
+  не изменились из-за native56. No subagents/Daybreak, gates/floors off.
+
+## Продолжение24 ноября: bounded directory/status ожидание
+
+- Mounted49 завершён FAIL12PASS/1FAIL,2notRepeated; personal и3shared scopes
+  ACTIVE, normal task readback PASS. Team editor не открылся до selector.
+  Actual429 directory/status не использовали уже имеющийся signed-read retry,
+  поэтому refresh снимал refreshed flag. CORRUPT_FILE может маскировать fetch
+  failure и сам не доказывает повреждение данных. Cleanup49 PASS.
+- Web fix54: typed bounded rate для read/status/directory; scope refresh и
+  scopeSummaries используют retryE2eeRead с прежним owner/device/lifecycle guard.
+  Ни mutation retry, ни stale-authority fallback, ни larger budget не добавлены.
+  RED3/3, GREEN65/65 +close1/1, types/scoped lint/build:web PASS. Immutable54
+  полностью скопирован ПОСЛЕ completion build54. Mounted54/session24674 RUNNING
+  на df8d904f…d2b05c9; args — runtime/membership-ui54-input-identity.json.
+  Нельзя менять этот bundle. Source dab6eb7a pushed; CI45400562946/45400549205
+  выполняются. Native inputs Android не менялись; старый native41
+  не выдавать за runtime этой web correction. CI12ef45392523518/11880 SUCCESS
+  обоих jobs, но не проверяет последующий54 diff.
+- Component53 accepted112/112,49before=49after=53after hash5af34101…df9506.
+  No subagents/Daybreak, private JSON/demo-output запреты, подпись/данные,
+  coverage и release gates/floors off сохраняются.
+
+## Продолжение24 ноября: окно согласования доступа
+
+- Native PrivateMembershipModal сохраняет открытый editor dialog и поднимает
+  review в browser top layer; общий popup frame исключает внешний gate. Это
+  web-only UI correction; crypto guards/keys/ACL не менялись. Browser component49
+  PASS8/8 на4 ширинах×2 схемах, actual modal/fence/Close/Escape/draft retention.
+  Typecheck/build:web PASS, scoped lint0errors/3old warnings, detector49[].
+- Mounted membership46-02 FAIL после normal shared readback: team editor не
+  открылся до role selector; snapshot содержит E2EE_REFRESH_REQUIRED/
+  E2EE_DIRECTORY_CONFLICT и actual429. Это не доказательство modal pointer bug.
+  Cleanup PASS. QA entry теперь ждёт roster и использует прежний bounded
+  Retry-After/reload/unlock. Новый focused49/session92385 всё ещё идёт на
+  уже полностью скопированном immutable49. Он явно notRepeated два принятых42
+  personal recovery cases. Ранний48 был запущен до конца copy, owner-checked
+  API stopped, cleanup PASS; его изменённый bundle hash не засчитывать как QA.
+  Подробности/ограничения — security-336-membership-acceptance-2026-11-24.md.
+- Membership clients50-05 PASS6/6: real SQLite/P256/HPKE scope clients, atomic
+  3-scope rotation + exact receipt retry, actual revoked read/write refusals,
+  old recipient cannot open future root, first trusted device of an EXISTING
+  member reads epochs1/2 with explicit history grant, cold owner vault read.
+  CLI transport + in-memory encrypted vault, не actual HTTP/IDB/owner-consent UI.
+  Cleanup PASS; failed50-04 runtime отдельно owner-checked cleaned. Новые
+  scripts/qa/membership-{clients.mjs,client-store.php} не меняют product code.
+  Полные33/34 и20-path/48-scenario вывод по-прежнему не завершены.
+- Component53 PASS112/112:14 языков×4 widths×2 schemes, palette violet,
+  actual modal/fence/checkbox/Close/Escape/retained parent draft и inner overflow.
+  Manual de360dark/ja390light/en1440dark; другие снимки geometry/input only.
+  Runtime whole membership и font-scale1.3 этим не приняты. Семантически
+  прочитаны ещё210 критичных значений external/Drive/archive/cancel/restore copy
+  на14 языках, без противоречий; exact keys/hashes в semantic51/52 evidence и
+  final-review.md. Product/native inputs не менялись ради этих проверок.
+
+## Продолжение24 ноября: атомарное изменение участников
+
+- Новая предметная приёмка выявила production defect: genesisE2eeEpochKeys
+  пропускал rotate-membership. Теперь membership epochs входят в историю как
+  обычная rotation; иначе ломалась полнота history grants и проверка key reuse.
+  RED membership-atomic45-1124-red02 сохранён. GREEN history02:39 новых assertions
+  с реальной SQLite/P256/staging/cancel/atomic ACL+3 rotations/late rollback/
+  revoked reader/immutable receipts/history grants/key reuse; cleanup PASS.
+- TS/PHP planner+wire15/15 и production stager lifecycle6/6 PASS. Последний
+  использует synthetic durable CAS ports и ECDSA, не actual IDB/Android.
+  Server opaque capsules не доказывают клиентскую расшифровку. Полные33/34,
+  20-path/48-scenario acceptance, signed149→150 и exact final review ещё нужны.
+  app/android/contracts/public не менялись; native41 повторять ради server fix
+  не нужно. Доказательства — security-336-membership-acceptance-2026-11-24.md.
+
+## Текущее продолжение24 ноября: старое browser storage
+
+- После загрузки паспортных фото самим владельцем Prodamus прошёл шаг5:
+  application «Анкета успешно отправлена!», email link «Почта подтверждена».
+  Оферта — опубликованные /terms?lang=ru. Заявлены российские/зарубежные карты,
+  внешняя интеграция; кредиты/рассрочки и рекурренты выключены. Ожидается внешняя
+  проверка1–3рабочих дня; кабинета/ключей/checkout ещё нет. Не активировать wire
+  contract5216f0dc по одному факту подачи. Документы в репозиторий не копировались.
+- Повторно наблюдался Boosty Basic VERIFICATION COMPLETED, up to EUR500/year.
+  Main7964526b принят как новая опубликованная база: exact Source checks
+  45364626251 и штатный Deploy45373264770 SUCCESS. Live anonymous donations
+  endpoint возвращает Boosty available=true и /genesiscalendar/donate; шесть
+  public routes200 с верными реквизитами, /ru/ redirects и неизменный manifest149
+  подтверждены. Это не security3.3.6 и не проверка настоящего платежа/выплаты.
+- В root добавлен owner-bound legacy-storage retirement: byte-exact старые
+  localStorage originals и raw legacy workspace key сначала запечатываются
+  independent device vault и перечитываются, потом compare-and-remove под
+  действующим migration fence. Resume читает encrypted originals; signed cancel
+  восстанавливает только свой незавершённый scope. История отменённого scope не
+  воскрешает позже удалённые values. Public profile имеет отдельную retention.
+- Focused19/19, tsc/scoped lint и build:web PASS. Actual mounted browser42
+  PASS13/13, immutable cb84fedf…87216, owned runtime cleaned. Initial41 FAIL
+  сохранён: net::ERR_CONNECTION_FAILED, этот код добавлен в прежний bounded
+  explicit form retry без reset. Full JS41:2182/2184 PASS,2 PHP prerequisites;
+  с прежним PHP обе затронутые suites PASS11/11. Native41 build SUCCESS21m52s,
+  fresh JVM1453:1445PASS/0fail/8old opt-in skips. SourceBEA956EA…230308,
+  APK95995C54…982D8C; instrumentation тот же327EC0D3…11826.
+- UI41/session71896 завершён PASS_LOCAL_SCOPE4/4 на retained37 без новой миграции.
+  Backend изменён только шестью просмотренными payment/donation файлами main49;
+  runner проверяет exact allowlist, clean backend и фиксирует новый полный hash,
+  не claim-ит byte-identical backend. Backend hashBAAD5E68…E4518C, services
+  stopped/reverse removed, owned runtime preserved до release cleanup. Root
+  inputs разморожены. Документы и отдельная Prodamus-ветка не native inputs.
+  Не повторять принятую native controller37 migration ради нового UI evidence.
+  Сохраняются no subagents/Daybreak, запрет чтения client-state/*.private.json и
+  demo-output, данные/подпись, cutover/floors off, deployAndroid=false.
+
+## Последнее дополнение24 ноября: Boosty и принятый native40
+
+- Boosty Basic фактически подтверждён в UI (VERIFICATION COMPLETED, до EUR500/год).
+  Страница boosty.to/genesiscalendar имеет сохранённые название GENESIS · Nikita
+  Lyapin и About; официальный Copy link дал /genesiscalendar/donate. В закрытый
+  config.php Hostinger добавлен только boosty (enabled/profile_verified=true,
+  этот URL); остальные настройки строго сверены, private rollback сохранён.
+  Это пока не публикация нового сайта и не проверка реального платежа.
+- Срочный PR49 HEAD3f91441d: PR Source checks45356215106 оба jobs PASS;
+  push45356202996 пока ждёт web-and-api. Защита main не обойдена; merge/Deploy
+  ещё не выполнены. Production4cc67503/APK149 остаётся. Новый main сначала
+  обязан пройти собственные exact-source checks, затем прежний deploy.yml.
+- Controller37 platform PASS_LOCAL_SCOPE, actual migration/private reader/
+  cold PIN1/1 PASS; старый wrapper INCOMPLETE из-за UI harness. Миграцию не
+  повторять для UI: сохранён owned runtime37. UI37/38 дают2PASS/2FAIL; это не
+  принятое4/4. Native39 выявил некликабельный Text-child Compose в test selector.
+  Native40 ищет реального enabled button ancestor и требует actual STOPPED
+  перед следующим launcher entry; diagnostics сохраняют только threads/screen.
+  Build40 PASS, unitExecuted=false, product APK byte-identical build37
+  (7A7AF1CFB732BF00726E5B8B49DD050CE205E86C872D6B61B4D33A81A9F44D8F).
+  UI40 на retained37 завершён PASS_LOCAL_SCOPE:4/4 реальных UI сценария,
+  backend unchanged, QA data preserved, services stopped/reverse removed.
+  Native inputs разморожены; использовать этот результат без новой миграции.
+- API26 source37: фактически36PASS/1FAIL, оригинальный отчёт INCOMPLETE сохранён
+  (его Measure-Object сумма2 ошибочна; derived-totals.json считает36/1).
+  Source39 focused capacity PASS1/1 после настоящего observed PIN после тяжёлой
+  подготовки; periodicRefresh=false, исходный NONE восстановлен. Product APK
+  тот же. API34 source37 прежние37/37 PASS; не называть это полной UI приёмкой.
+- Отдельный worktree prodamus-gateway-worktree, branch codex/prodamus-gateway-
+  20261124, commit5216f0dc: strict form/HMAC/receipt wire contract,63 checks PASS.
+  В API не подключён, checkout не активирован. Durable state/schema141, полный
+  gateway/web/native, pending/refund lifecycle и merchant acceptance ещё нужны.
+  Не изобретать lookup/refund API или merchant URL. Регистрация Prodamus ждёт
+  опубликованных реквизитов/тарифов и двух подтверждённых ссылок на шаге3/5.
+
+Следующий раздел и старые sessions ниже — исторические срезы; это дополнение
+имеет приоритет. No subagents/Daybreak, private client-state/demo-output запреты,
+сохранность данных/подписи и раздельные web/API/APK публикации сохраняются.
+
 ## Уточнение донатов 24 ноября 2026
 
 - CloudTips — для российских карт; Boosty — для зарубежных. Сервис выбирается вручную, регион меняет только порядок. Страница boosty.to/genesiscalendar создана на Никиту после подтверждения условий; KYC обязателен до активации. Не выдавать неподтверждённый профиль за работающий приём платежей.
@@ -38,6 +427,208 @@
 - Срочный web-выпуск выполняется отдельно от незавершённой безопасности3.3.6;
   APK149, данные, подпись, update floors и выключенный cutover сохраняются.
 
+## Актуальное продолжение 24 ноября 2026
+
+- Security HEAD c0ac5d82; exact-source CI45343556816 SUCCESS обоих jobs.
+  Native build37 SUCCESS, actual JVM1452:1444 PASS/0 failures/8 opt-in skips;
+  source hash38322BF326156883D86C237581E33DE5E51B7716FE16BFD1CE5F373DA84A6DCD.
+  Focused API34 source37:4 suites/37 cases PASS. API26 per-case source37 идёт
+  отдельно с реальным наблюдаемым системным PIN перед каждым case; исходный NONE
+  обязателен к восстановлению. Controller37 + unlock UI идёт без периодического
+  обновления HAT и с настоящим launcher driver. До его завершения app/android/
+  contracts/public в root не менять. Документы не являются native inputs.
+- В c0 исправлены web input ownership races (snapshot секретов до await,
+  zero owned buffers finally): actual Chromium/IDB RED4 failures, GREEN5/5;
+  native source bridge освобождает finished permit до JS acknowledgement,
+  сохраняя лимит2 unfinished requests. Streamed source fixture дополнен
+  обязательной protocol/owner/scope/migration/hash/fence binding; guard не ослаблен.
+- Срочный сайт ведётся в output/release-3.3.6/unified-payments-worktree,
+  branch codex/unified-payments-20261124, commit875c8b5e, PR49. Пользователь отменил
+  Paddle и две витрины: единый genesiscalendar.com с14 языками, старые /ru/ только
+  redirect; исполнитель/PD-controller Никита Ляпин, НПД/ИНН772495179010; Юрий
+  Логвинов владеет доменом и хостингом. ФИО, ИНН, реальные тарифы помещены в подвал.
+  Политические/санкционные гарантии всех стран не заявляются, реальные роли и
+  сервисы обработки данных сохраняются. Source checks веб-ветки пока выполняются;
+  это не Deploy и не выпуск безопасности. Production4cc67503/APK149 сохраняется.
+- Донаты: CloudTips для российских карт, Boosty для других; ручной выбор доступен,
+  регион меняет только порядок. boosty.to/genesiscalendar создана на Никиту после
+  отдельного подтверждения условий. Несмотря на ответ владельца о верификации,
+  свежая Boosty Verification всё ещё показывает незаполненную AML/KYC форму.
+  Не включать приём до действительного допуска; не читать/не присылать коды и
+  документы в чат. Анкета Prodamus на шаге3/5 ждёт публикации сайта с реквизитами.
+- Полный crypto review,48-system-scenario evidence и signed149→150 ещё не закрыты.
+  Старую формальную coverage9/20 нельзя повышать по сумме component test counts.
+  No subagents/Daybreak; demo-output и client-state/*.private.json не читать/stage.
+
+- Актуальнее предыдущих срезов: root b929b60f, принятый main4cc67503 включён.
+  Block0c5aa442 исправил общий reader: overlapping GETs используют один свежий
+  verified snapshot, aggregate GETs не блокируют друг друга, mutations остаются
+  барьером. Добавлены owner-bound encrypted space layouts web/native с сохранением
+  старого personal document. tsc/scoped lint и53/53 tests PASS. Immutable web36
+  actual normal shared task + multi-chunk attachment/photo hash readback PASS2/2,
+  legacy project route409, bundle unchanged; report retained58/resume-1795476689849.
+  Explicit offline cold shared reader web34 PASS1/1, no signed network requests.
+  Native36/session1193 assembling0c5aa442: app/android/contracts/public НЕ менять
+  до identity/runtime36. UI35 cancel/PIN/fingerprint3PASS, background1FAIL90s;
+  native36 test now uses actual Activity lifecycle without synthetic auth callbacks.
+  Original fixture session expired after1h and HTTPS fixture had cookie_secure=false;
+  corrected securely, same-owner separate synthetic identity delivery PASS1/1.
+  No production cookie/key guard weakened. Root exact-source CI0c5aa failed only
+  no-unsafe-finally in retained QA runner; fixed b929b60f, rerun pending. APK149,
+  floors/cutover/pilot and deployAndroid=false unchanged; formal coverage9/20.
+  Six checked RU announcement PNGs packed in output/release-3.3.6/
+  GENESIS-3.3.6-announcement-RU.zip; two black system-auth captures excluded.
+
+- Новейшее продолжение: root67684489 включает guarded Retry-After a365c880/
+  09291e57 и optional personal projection c9cee41b. Build31 SUCCESS, JVM1452:
+  1444PASS/0failures/8 old opt-in skips. Build32 assemble-only SUCCESS; её
+  скопированные XML НЕ новый unit run. Full lint30 SUCCESS0errors/224warnings.
+  Controller30 PASS, UI31 PIN/fingerprint/cancel3PASS; background отдельно1PASS.
+  Restore31-02 PASS: age snapshot3ACTIVE scopes/25tables, wrong/tamper deny,
+  byte-exact restore и actual cold-PIN normal product read; runtime/plaintext
+  этого успешного restore очищены. Failed setup restore31-01 ещё очистить.
+  UI32 interrupted after observed Android background-launch denial (Home stayed
+  foreground). Instrumentation now uses actual system launcher and awaits resumed
+  MainActivity. Build33/session83796 assembling; root app/android/contracts/public
+  НЕ менять до identity/runtime33. No new product bypass or credential refresh.
+  Immutable web33 includes retry binding and72/72 scoped tests, typecheck/lint/
+  web build PASS. Retained58 reader still unresolved; diagnostics waits actual
+  HTTP429 Retry-After238s (no rate reset/limit increase). Runtime log web33-reader58-04.
+  CI79dc45273761078 SUCCESS both jobs. Production149 and activation gates unchanged.
+
+- Актуальнее всех freezes ниже: native30 SUCCESS4m43s на79dc383b,
+  JVM1448:1440PASS/0failures/8 opt-in skips; source hash E7B28B6E…,
+  APK EE918FA4…/test0B994D62…. Actual API26/API34 source30 по7/7 PASS.
+  Controller30 и full lint30 RUNNING (sessions21160/1045), PID32014 сначала
+  snapshot/sources. До обоих результатов app/android/contracts/public не менять.
+  Build29 имел единственный fixture catch FAIL (wrong exception class при
+  корректном extra-field deny); fix79dc383b не меняет production validator.
+  Web57 на immutable31 hash-stable FAIL после15PASS: после actual429 retry
+  project migration E2EE_CORRUPT_FILE. Не считать приёмкой файлов. Short real
+  multi-chunk queue rate/resume/cold-read unit PASS1/1; source отказа ещё ищется.
+  Web58/session30471 идёт на том же immutable31 с safe technical stack frames и
+  opt-in owned synthetic failure preservation. Client recovery/browser state
+  при FAIL сохраняется отдельно от backend в client-state; НИКОГДА не читать,
+  не печатать и не stage его private.json. Оба owned каталога очистить до release.
+  CI79dc run45273761078 RUNNING. Backend155/1 (неизменённый300s bulk-large
+  timeout Windows); HTTP402/402, i18n14 audit, dependency0 подтверждены.
+
+- Самый новый срез: build28 завершилась compile FAIL (LocalPreferences117:
+  Kotlin не допускает comma-separated val locals). Исправлено643f01fb;
+  build29/session76282 выполняется, app/android/contracts/public до identity29
+  не менять. XML из28 не являются новым unit evidence (tasks не выполнялись).
+  Web parallel scope-refresh fix aadb00cc/191625eb перенесён в root; typed
+  authority inputs snapshot до await. JS full2157:2153PASS/4FAIL; три environment
+  prerequisites устранены и rerun PASS, четвёртый — no-op random-ID mutation
+  fixture, исправлен гарантированной заменой. Scoped58/58 и rendered62/62 PASS.
+  API HTTP402/402 PASS, i18n14 audit PASS, dependency audit0. Full backend ещё
+  выполняется. Web56 не засчитан: запущен до завершения immutable copy и bundle
+  hash изменился; дополнительно observed transient fetch connection failure.
+  Web57/session25778 повторяет content/files на уже завершённом immutable31.
+  Runtime29 использовать wrapper28 с явным -RunId29 -NoAuthenticationRefresh
+  -KeepFixture (preserves только owned synthetic runtime после controller PASS).
+
+- Последний срез продолжения: native27 full controller PASS (1503s), full lint27
+  SUCCESS0errors/224warnings/9hints; UI27 первые2/4 PASS, затем реальный crash
+  legacy LocalPreferences.setRemote под active fence. Исправлен цельным блоком:
+  device-root UI document + encrypted pending public preferences, typed custody/
+  archive inventory web/native, legacy originals unchanged, lock/corruption fail
+  closed; adopted foreground vault больше не зависит от HTTP request generation.
+  Новая actual regression проверяет pending/ack, реальный public preference HTTP,
+  сохранность original и второй cold PIN. JS26/26 PASS; native block требует28.
+  Web55 trusted-device enrollment/cold local-code PASS; web53 backup3checks PASS,
+  shared project/space ACTIVE, normal task reader timeout после actual429.
+  Это не полный PASS web53. Production149 и rollout gates прежние; coverage9/20.
+  Не читать и не stage demo-output; не использовать subagents или Daybreak.
+
+- Текущий срез23 ноября22:55: controller26 прошёл personal migration, private
+  identity, два real cold-PIN входа и edit/background reread; shared readback
+  остановился HTTP AuthFailure, status старым runner не сохранён. Build26 JVM
+  1437:1429 PASS/0failures/8 opt-in skips; actual cache cases26/34 по3/3 PASS.
+  Перенесены explicit archive inventory web/native, inline import и independent
+  public-profile namespace. Новые active-fence cache и bounded Retry-After read
+  corrections требуют build27 и runtime; это не готовая приёмка3.3.6. После запуска
+  build27 root app/android/contracts/public заморожены до её identity/runtime.
+  Старые freezes ниже исторические. Production149 и rollout gates прежние.
+
+- Последний срез23 ноября21:50: full lint24 SUCCESS0errors/224warnings/9hints,
+  actual archives+relational source regression24 API26/API34 по4/4 PASS.
+  Controller24 дошёл до personal ACTIVE за7m33s; затем test-only predicate ждал
+  ready до реального PIN, хотя locked private identity намеренно ready=false.
+  Fixture исправлен с явными отрицательными проверками content readiness.
+  Следующий build25 меняет только instrumentation; до его identity root
+  app/android/contracts/public снова не менять. Web44 vault visuals112/112 PASS,
+  но полный shared43 ещё выполняется. Production149 и gates остаются прежними.
+
+- Build23 завершилась JVM1437:1428 PASS/1 FAIL/8 existing opt-in skips. Единственный
+  FAIL — новый fixture counter перечислений (реальный vault фильтрует objectPrefix
+  после storage.list), не crypto/body отказ. Counter исправлен без изменения main
+  кода; build24 повторяет весь RemoteOriginal suite и собирает QA APKs. До результата
+  build24 root app/android/contracts/public не менять. Full runtime ещё впереди.
+
+- Native22 full controller завершён20-minute timeout после перехода sources→
+  reconciliation; PIN/HAT отказа больше нет. Его inputs разморожены. Web corrections
+  перенесены commits83db5557/08851210. Текущая build23 проверяет linear bulk original
+  audit и strict EOF/request/body/namespace проверки; root app/android/contracts/public
+  не менять до identity23. Cold PIN/biometric и все rollout gates сохраняются.
+
+- Текущая native build22 проверяет foreground durability после300s Keystore HAT:
+  cold opening по-прежнему требует реального системного PIN/STRONG biometric;
+  memory-only witness уже открытого устройства проверяет exact bundle/slot/key.
+  До результата build22 не менять root app/android/contracts/public inputs.
+  Web read-floor correction разрабатывается в существующем linked worktree;
+  перед переносом дождаться identity22. Старые build9/build14 freezes ниже —
+  история, не действующие сборки. Приёмка нового блока ещё не завершена.
+
+- Подтверждение отпечатка использует публичный Compose launcher AndroidX
+  Biometric1.4.0-rc01 с Class3/STRONG на всех поддерживаемых API. Core1.18
+  FingerprintManagerCompat оказался no-op и удалён из этого пути; старое
+  утверждение о рабочем bridge было неверным. Системный PIN запускается только
+  отдельным owner-bound переходом. Реальная Keystore-проверка после UI обязательна.
+  Снимки кандидата для анонса не являются приёмкой безопасности или выпуском.
+
+- 23 ноября русский SVG-флаг опубликован отдельно от безопасности: main
+  4cc6750315ce115074f129239598d6673ae73cc6, Source checks45140708340 и штатный
+  Deploy45146768399 SUCCESS. Live meta, SVG200 и реальный radio «Русский» с
+  loaded /language-flags/ru.svg без текста RU подтверждены; Android manifest
+  3.3.5/149 неизменен. Принятая база включена в security ветку merge b5616c4c.
+  Дальнейшая работа только вперёд от неё; это не выпуск/активация3.3.6.
+
+- 23 ноября механизм PIN/отпечатка принят отдельным реальным component run на
+  owned API34: RecoveryCredentialActivity + auth-required Android Keystore,
+  4/4 (PIN, fingerprint37, отмена, фон). Это ещё не полная приёмка аккаунта или
+  выпуск. Доказательство — output/qa/security336-native150-unlock-component-api34-04/.
+  Исходный synthetic PIN сохранён. Гонки background generation и encrypted
+  job custody исправляются отдельным блоком с обязательным повтором product
+  migration; guard-отказы не ослаблять. Во время текущей build14 не менять
+  app/android/contracts/public inputs до результата.
+
+- 23 ноября владелец дополнительно поручил экран блокировки приложения с
+  отпечатком и PIN, если он ещё не реализован. Существующий fullscreen vault
+  gate и системный PIN сохраняются; к тому же одноразовому owner-bound входу
+  добавлена платформенная биометрия. Использовать PIN/графический ключ/пароль
+  Android, не хранить PIN или отпечатки в GENESIS. На API30+ только STRONG,
+  на API26–29 платформенный fingerprint и системный credential fallback.
+  Отмена, фон, timeout и смена owner не открывают интерфейс. Callback не заменяет
+  фактическое открытие authentication-required Keystore vault. Код ещё требует
+  сборки и реальной приёмки отпечатка/PIN на owned эмуляторах; не claim-ить готовый
+  релиз или биометрический PASS по наличию API вызова. App inputs текущей build9
+  не менять до её результата.
+
+- 23 ноября последним уточнением владелец потребовал заменить буквенное RU
+  российским SVG-флагом, как у остальных языков, включая международный выбор
+  языка. Это заменяет прежнее исключение без флага для этой кнопки. География,
+  оператор, валюта и отдельная российская редакция от выбора языка не меняются.
+  Изолированная веб-правка — codex/ru-language-flag-20261123, PR47; её фактическую
+  публикацию подтверждать отдельно от подготовки безопасности.
+
+- 23 ноября исправление URL-языка и международных USD Terms опубликовано отдельно:
+  принятая production-база main4c209a00356a0211a5a11a24580b458be3cf7bc3,
+  Source checks45094862291 и Deploy45099066004 success. Live авторизованные
+  EN/USD, международные RU/USD и российские /ru/ RUB подтверждены; APK/manifest149
+  сохранены. Security3.3.6 не публиковалась; текущая подготовка развивается
+  вперёд от этой базы. Paddle checkout не активирован, deployAndroid=false.
+
 - 23 ноября региональная витрина опубликована отдельно от безопасности: main
   c1205c045862fcfbaa01b48a1fbd7f04d6693b75, Source checks45084250291 success,
   Deploy45088162015 success. Обнаруженный при live-приёмке повторный выбор языка
@@ -45,6 +636,115 @@
   базы; публичный документ выбирает язык по URL, международные условия — USD
   на всех14 языках, /ru/ сохраняет российские условия. APK3.3.5/149 и выключенные
   security/Android gates сохраняются. Детали — docs/web-paddle-operator-2026-11-22.md.
+
+## Строгий порядок владельца от 22 ноября 2026
+
+- Выполнять реализацию целыми законченными функциональными блоками кода на web, API и Android. После минимального чтения нужных контрактов сразу вносить весь связанный код; не подменять реализацию повторным исследованием, микроправками и длинными промежуточными отчётами.
+- Сначала завершить все оставшиеся блоки исходного задания 3.3.6. Только затем проводить общий анализ/source review, compiler/typecheck/lint/tests/build/CI, приёмку, исправления и итоговое внутреннее крипторевью. До этого не запускать проверки исполнения security-кода.
+- Не возвращаться к уже изученным файлам и завершённым блокам без конкретной новой зависимости или ошибки. Не расширять архитектуру сверх требований исходного задания. Документацию обновлять кратко по завершённому блоку; сохранять код и точный остаток.
+- Обязательные условия сохранности данных, подписи, совместимости 3.3.5/149, раздельных публикаций и честной итоговой приёмки сохраняются. Срочные готовые веб-правки выпускать отдельно от незавершённой безопасности.
+
+
+## Подготовка 3.3.6 с 18 ноября 2026
+
+- 22 ноября отдельным веб-выпуском опубликованы исправленная desktop-луна/часы
+  и автоматическое включение общих дел без переключателя в Account. Новая принятая
+  база mainac8ccf604bb42f7b7b19411f8703b88cd7dce8d2, Source checks45057471114
+  success, Deploy45061812677 success. Live meta/health, desktop1440dark и Account
+  readback подтверждены; manifest149 неизменен, APK HEAD200/286545165bytes.
+  Android3.3.5/149, deployAndroid=false, security coverage9/20, cutover/floors off.
+  Это не активация Paddle или приёмка безопасности. Развитие сайта только вперёд
+  от этой базы; детали и пределы — docs/web-pricing-region-2026-11-22.md.
+
+
+
+- 22 ноября следующим отдельным выпуском опубликованы исправленные региональные
+  USD-тарифы, скрытие ЮKassa без положительного текущего RU-сигнала и точечные
+  правки карточек, часов, лунной подписи и настроек советов. Принятая текущая
+  веб-база — main `6672bbefd65abc4b9c3268800d02c57bd82ed967`, Source checks
+  `45042239234` success, штатный Deploy `45048236052` success. Live meta/health,
+  неизменный manifest и полный APK3.3.5/149 SHA-256 проверены; живое окно тарифов
+  в текущей сессии показывает USD без RUB/ЮKassa. Пределы live QA и снимки —
+  `docs/web-pricing-region-2026-11-22.md`. Этот main перенесён в security ветку,
+  расширенные правила3.3.6 сохранены. Новая безопасность не публиковалась,
+  Paddle checkout не активирован; GENESIS_DEPLOY_ANDROID=false, coverage9/20,
+  cutover/floors off остаются. Дальнейшее развитие сайта — вперёд от этой базы.
+
+- 22 ноября срочные публичные веб-правки для Paddle отдельно опубликованы:
+  main `c29b76e33cc42160616b2df6f5eca61af94f6c63`, Source checks44962824697
+  success, Deploy44965877713 success. Новая международная витрина и `/ru/` —
+  принятая база для дальнейшей работы; она уже перенесена в эту локальную ветку.
+  Новая безопасность3.3.6 в этот Deploy не входила. Живая проверка98 документов,
+  старых русских ссылок, API/Google provider и неизменности APK/manifest3.3.5/149
+  прошла. GENESIS_DEPLOY_ANDROID=false. Это не активация Paddle checkout и не
+  приёмка локального security-кода: покрытие остаётся9/20, cutover/floors выключены.
+
+- Последним прямым уточнением 21 ноября владелец поручил итоговое крипторевью
+  самому исполнителю и потребовал обновить Markdown: «сделай ты этот ревью и
+  перепиши md что ты сам все перепроверишь в конце». Отдельное внешнее заключение
+  больше не является условием выпуска/активации 3.3.6. После завершения всего кода,
+  общей приёмки и исправлений выполнить итоговое внутреннее крипторевью точного
+  финального кандидата, сохранить находки, исправления, повторные проверки и
+  ограничения. Не называть его независимым человеческим аудитом и не засчитывать
+  прежний ограниченный review за проверку нового большого diff. Все остальные
+  условия покрытия, сохранности данных, recovery/upgrade и публикации сохраняются.
+- 21 ноября владелец явно исключил версии до 3.3.5 из поддерживаемого перехода:
+  их отдельные APK и upgrade-проверки для выпуска 3.3.6 не нужны. Релизная
+  матрица обновления начинается с 3.3.5/149. Сохранять данные, подпись и очереди
+  при 3.3.5 → 3.3.6, существующие schema migrations не удалять. Это уточнение
+  заменяет прежнее требование проверять отдельные APK 3.3.4 и более ранних.
+- Последним прямым поручением в этом продолжении владелец потребовал завершить
+  все обновления и **полный деплой3.3.6**. После полной приёмки разрешены штатные
+  отдельные web/API Deploy и подписанный Android APK3.3.6 на сайте. Это снимает
+  прежнее ограничение подготовки без публикации для этого выпуска. Сохранить
+  package, release-сертификат, данные, существующие workflows и принятую базу
+  сайта; versionCode должен превышать все реально использованные, включая149.
+  Полный coverage, recovery/direct-upgrade acceptance и итоговое внутреннее
+  crypto review исполнителем остаются условиями активации E2EE. До подтверждённой доставки сохранять
+  update floors0 и cutover off; GENESIS_DEPLOY_ANDROID включать только на выпуск
+  и вернуть false. Личные устройства, Google Play-треки, Production и состав
+  тестировщиков не менять как побочный эффект формулировки «деплой».
+- Владелец уточнил в текущем продолжении: в3.3.6 сначала тестируется Paddle по
+  уже согласованному прозрачному сценарию. Если корректное подключение не
+  получится, сравнить альтернативы, включая CloudPayments и Робокассу; это
+  резервный вариант, не поручение переключать действующую оплату сейчас.
+  Реальные юридические роли, отдельный `/ru/`, один origin и работающая ЮKassa
+  сохраняются. Одобрение домена и техническую/платёжную приёмку Paddle нельзя
+  подменять языком, геолокацией или сокрытием витрины.
+- Последнее решение по публичным языкам: отдельный раздел только `/ru/`,
+  остальные языки на основном сайте через переключатель/`?lang=`. Сохранять
+  один origin приложения/API/OAuth/ключей и очередей; DNS/поддомены не нужны.
+  18 ноября владелец уточнил, что в Android речь о стартовом экране **до входа**:
+  русский доступен только при текущем положительном IP-определении России.
+  При неизвестной/другой стране — выбранный нерусский язык либо английский;
+  сохранённый русский не обходит это правило. Настройки аккаунта после входа
+  сохраняют все 14 языков. Не скрывать реальные юридические роли и не подменять
+  платёжную допустимость языком/географией экрана. Подробности и QA:
+  `docs/public-localization-336.md`.
+- Владелец поручил начать реализацию полного security/E2EE-промпта прошлого
+  чата и отдельно подчеркнул: изменения безопасности относятся **ко всей
+  системе — сайту, API/серверу и Android**. Общие проекты, вложения, локальные
+  очереди/черновики и backups входят в обязательный охват. Не сводить работу к
+  Android или одному workspace. Полный исходный промпт сохранён побайтно в
+  `docs/security-336-implementation-prompt.md`; актуальный журнал и этапы —
+  `docs/release-3.3.6.md`. Историческое «анализ, не внедрять» во вступлении
+  исходного промпта заменено этим новым поручением на реализацию.
+- Параллельно прямо поручены точечные изменения дизайна Android по 11 снимкам.
+  Объём и результаты: `docs/release-3.3.6-design.md`. Общая шапка имеет прозрачные
+  icon actions в покое и фон при взаимодействии. Тулбары личных/общих дел и
+  mindmaps по последнему уточнению — без обводок, с лёгкой подложкой и выделением
+  выбранного действия/открытого меню. Декоративные иконки задач/привычек —
+  одинаковые приглушённые glyphs без подложки во всех темах, также в календаре.
+- Первый общий криптографический контракт реализуется за пределами активной
+  legacy sync; это ещё не полный vault/enrollment/recovery/migration. Не повышать
+  supported crypto protocol, обязательные update floors или включать cutover
+  из-за наличия отдельных модулей. Перед активацией обязательны весь coverage,
+  проверка восстановления/прямых обновлений и итоговое внутреннее crypto review.
+- До готовности сохраняется действующая Android 3.3.5/149,
+  подпись/package/данные и раздельные существующие workflow сохраняются;
+  GENESIS_DEPLOY_ANDROID=false. Личные устройства не изменять как побочный
+  эффект QA. Новый versionCode проверять перед релизной сборкой, он должен
+  быть выше всех уже использованных, включая 149.
 
 ## Региональная витрина: уточнение владельца 23 ноября 2026
 

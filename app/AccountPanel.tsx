@@ -10,6 +10,10 @@ import { DonationLink } from "./DonationLink";
 import release319Copy from "./release-319-copy.json";
 import { BillingPanel } from './BillingPanel';
 import { BackupPanel } from './BackupPanel';
+import {PrivateSharedSecurityPanel} from './PrivateSharedSecurityPanel';
+import {PrivateMigrationEntry} from './PrivateMigrationGate';
+import {PRIVATE_VAULT_COPY} from './private-vault-copy';
+import privateDeviceEntryCopy from '../contracts/e2ee/personal-device-entry-copy-v1.json';
 import { GoogleIdentityPanel } from './AccountSecurityPanels';
 import {UpgradeButton,isFreeBillingUser} from './UpgradeUI';
 import {BillingTrialStatus} from './BillingTrialStatus';
@@ -24,6 +28,7 @@ import { sharedNotificationLabel } from "./notification-settings-model";
 
 import { useEffect, useRef, useState } from "react";
 import type { CalendarMode } from "./calendar-data";
+import {invitationSecurityCopy} from './invitation-security-copy';
 import type { GenesisCategory, GenesisUser, SharedInvitation, SharedNotification, SyncRouting } from "./cloud-sync";
 import { acceptSharedInvitation, deleteGenesisAccount, disconnectGoogleServices, listSharedInvitations, listSharedNotifications, readSharedNotifications, rejectSharedInvitation, removeAdditionalGoogleAccount, updateAccountPreferences, recordFeatureUsage } from "./cloud-sync";
 import { LANGUAGES, LANGUAGE_LABELS, localizeCategoryName, runtimeLocale, translateText, type Language } from "./i18n";
@@ -225,7 +230,12 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
     setInvitationBusy(id); setInvitationMessage("");
     try {
       if (accept) {
-        await acceptSharedInvitation(id);
+        const accepted = await acceptSharedInvitation(id);
+        if (accepted.pendingApproval || accepted.deviceApprovalRequired) {
+          setInvitations(await listSharedInvitations());
+          setInvitationMessage(invitationSecurityCopy(user.language)[accepted.pendingApproval ? 'saved' : 'device']);
+          return;
+        }
         const result = await updateAccountPreferences({ sharedProjectsEnabled: true });
         onUserChange(result.user);
       }
@@ -566,14 +576,16 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
         </div>
 
         {settingsTab==='account'?<BillingPanel user={user}/>:null}
+        {settingsTab==='account'?<PrivateMigrationEntry user={user}/>:null}
+        {settingsTab==='account'&&user.privateVault?<PrivateSharedSecurityPanel key={`private-shared:${user.uid}`} ownerId={user.uid} language={user.language}/>:null}
         {settingsTab === 'account' && onOpenPartners ? <section className="account-preferences" data-no-translate><h3>{partnerText('partner', user.language)}</h3><button type="button" onClick={onOpenPartners}>{partnerText('open', user.language)}</button></section> : null}
         {settingsTab==='account'&&!user.partnerAccess?.panelEnabled&&['standart','premium','business','premium4life'].includes(effectiveBillingPlan(user.featureAccess?.source==='trial'?user.featureAccess.paidAccess:user.featureAccess))?<ReferralsPanel language={user.language} onAccessChange={async()=>{const refreshed=await loadGenesisSession();if(refreshed)onUserChange(refreshed);}}/>:null}
         {settingsTab==='backups'?<BackupPanel key={`backups:${user.uid}`} user={user}/>:null}
         {settingsTab==='account'&&user.authProvider==='google'?<GoogleIdentityPanel key={`identities:${user.uid}`} user={user}/>:null}
         <div className="account-security-grid" data-settings-group="account">
           <article><span>Google-сервисы</span><strong>{user.calendarConnected && user.googleTasksImportReady ? "Подключены" : "По желанию"}</strong><small>Calendar и Tasks подключаются отдельным согласием после входа.</small></article>
-          <article><span>Личные данные</span><strong>Зашифрованы</strong><small>AES-GCM в браузере; ключ хранится на сервере отдельно и зашифрован для автоматического входа.</small></article>
-          <article><span>Офлайн-копия</span><strong>На устройстве</strong><small>Доступна без сети после входа на этом устройстве.</small></article>
+          <article><span>Личные данные</span><strong>Зашифрованы</strong><small data-no-translate={user.privateVault||undefined}>{user.privateVault?PRIVATE_VAULT_COPY[user.language].privacy:'AES-GCM в браузере; ключ хранится на сервере отдельно и зашифрован для автоматического входа.'}</small></article>
+          <article><span>Офлайн-копия</span><strong>На устройстве</strong><small data-no-translate={user.privateVault||undefined}>{user.privateVault?PRIVATE_VAULT_COPY[user.language].offlineDescription:'Доступна без сети после входа на этом устройстве.'}</small></article>
         </div>
 
         <section className="account-preferences" data-settings-group="account" aria-labelledby="calendar-export-title" data-exp-ui="panel">
@@ -1062,9 +1074,10 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
               ? `${invitation.inviterName} invites you to workspace «${invitation.spaceTitle}», project «${invitation.projectTitle}».`
               : `Вас ${invitation.inviterName} приглашает присоединиться к пространству «${invitation.spaceTitle}», проекту «${invitation.projectTitle}».`}</p>
             <div className="shared-invitation-actions">
-              <button type="button" disabled={Boolean(invitationBusy)} onClick={() => void respondToInvitation(invitation.id, true)}>
+              {invitation.pendingApproval || invitation.admitted ? <p role="status" data-no-translate>{invitationSecurityCopy(user.language)[invitation.admitted ? 'device' : 'saved']}</p> : null}
+              <button type="button" disabled={Boolean(invitationBusy) || invitation.pendingApproval || invitation.admitted} onClick={() => void respondToInvitation(invitation.id, true)}>
                 {user.language === "en" ? "Accept" : "Принять"}</button>
-              <button type="button" disabled={Boolean(invitationBusy)} onClick={() => void respondToInvitation(invitation.id, false)}>
+              <button type="button" disabled={Boolean(invitationBusy) || invitation.admitted} onClick={() => void respondToInvitation(invitation.id, false)}>
                 {user.language === "en" ? "Decline" : "Отклонить"}</button>
             </div>
           </div>)}
@@ -1207,7 +1220,7 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
             <span className="eyebrow">Encrypted workspace</span>
             <h3 id="account-e2ee-title">{user.language === "en" ? "Encrypted personal data" : "Шифрование личных данных"}</h3>
           </div>
-          <p>{(user.language === "en" ? "Projects and tracker data are encrypted before storage. After Google sign-in, an authenticated GENESIS session unlocks them automatically on every device—no recovery code is required." : "Проекты и данные трекеров шифруются перед сохранением. После входа через Google защищённая сессия GENESIS автоматически открывает их на любом устройстве — код восстановления не нужен.")}</p>
+          <p data-no-translate={user.privateVault||undefined}>{user.privateVault?privateDeviceEntryCopy[user.language].notice:(user.language === "en" ? "Projects and tracker data are encrypted before storage. After Google sign-in, an authenticated GENESIS session unlocks them automatically on every device—no recovery code is required." : "Проекты и данные трекеров шифруются перед сохранением. После входа через Google защищённая сессия GENESIS автоматически открывает их на любом устройстве — код восстановления не нужен.")}</p>
         </section>
 
         <section className="account-oauth-note" aria-label="Безопасность входа" data-settings-group="account">

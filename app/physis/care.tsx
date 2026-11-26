@@ -1,3 +1,4 @@
+import { usePhysisMigrationCapture } from './migration-editors';
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { CalendarDatePicker } from '../CalendarDatePicker';
@@ -29,6 +30,7 @@ function PersonalDrugDialog({ children, title, onClose, busy, en }: { children:R
   return createPortal(<div className="modal-backdrop physis-settings-backdrop"><section ref={dialog} className="physis-settings-dialog physis-drug-editor-dialog" role="dialog" aria-modal="true" aria-labelledby={heading} tabIndex={-1}><header className="physis-settings-heading"><h2 id={heading}>{title}</h2><DialogCloseButton disabled={busy} aria-label={en?'Close':'Закрыть'} onClick={onClose}/></header><div className="physis-settings-content">{children}</div></section></div>,document.querySelector('.physis')??document.body);
 }
 export function PhysisDrugCatalog(props: PhysisFeatureProps) {
+
   const { store } = props;
   const en=props.language==='en';
   const [catalogMode, setCatalogMode] = useState<'reference' | 'personal'>('personal');
@@ -63,6 +65,7 @@ export function PhysisDrugCatalog(props: PhysisFeatureProps) {
     .map(name=>({name,count:matching.filter(record=>recordCategories.get(record.id)!.includes(name)).length}));
   const addedIds=new Set(allRecords.filter(record=>!record.data.archived).map(record=>referenceForDrug(record.data,entries)?.id).filter((id):id is string=>!!id));
   const pages=Math.max(1,Math.ceil(records.length/24)),current=Math.min(page,pages);
+  usePhysisMigrationCapture('care.PhysisDrugCatalog',()=>({catalogMode,catalogBranch,categories,mode,sort,page,kind,search,favorites,archives,editing,draft,draftRecord,addNotice,pendingAdds:[...pendingAdds.current].map(([intent,record])=>({intent,record}))}));
   const changePage=(value:number)=>{setPage(value);requestAnimationFrame(()=>{results.current?.scrollIntoView({block:'start'});results.current?.focus({preventScroll:true});});};
   const addFromCatalog=(entry:CatalogView)=>void action.run(async()=>{
     setAddNotice('');
@@ -132,6 +135,7 @@ export function PhysisDrugCatalog(props: PhysisFeatureProps) {
 }
 const initialPeriod = (day: string, timeZone: string): RegimenPeriod => ({ id: crypto.randomUUID(), start: day, end: '', timeZone, mode: 'daily', times: ['09:00'], weekdays: [1, 2, 3, 4, 5], everyDays: 1, everyHours: 24, anchorAt: resolveCalendarWallTime(day, '09:00', timeZone).instant.toISOString(), dose: 1, unit: 'шт', route: 'oral', food: '', notes: '' });
 export function PhysisIntakes(props: PhysisFeatureProps & { owner: string; compact?: boolean; onOpenCatalog?: () => void }) {
+
   const { store, settings, context, owner, compact = false } = props;
   const web = typeof document !== 'undefined' && document.documentElement.dataset.genesisWeb === 'true';
   const today = todayCivilDate(context); const [day, setDay] = useState(today);
@@ -141,6 +145,7 @@ export function PhysisIntakes(props: PhysisFeatureProps & { owner: string; compa
   const action = usePhysisAction(); const drugs = physisRecords<Drug>(store, 'drug').filter(r => !r.data.archived);
   const regimens = physisRecords<Regimen>(store, 'regimen'); const intakes = physisRecords<Intake>(store, 'intake');
   const [now,setNow] = useState(()=>Date.now());
+  usePhysisMigrationCapture('care.PhysisIntakes',()=>({day,editing,draft,draftRecord,effective,entry,formOpen,now}));
   useEffect(()=>{const timer=setInterval(()=>setNow(Date.now()),15000);return()=>clearInterval(timer);},[]);
   const postpone = (event: IntakeReminder) => action.run(async()=>{const old=intakes.find(r=>r.data.eventId===event.eventId);const data=postponeIntakeReminder(event,old?.data);const record=old ? editPhysisRecord(old,data) : newPhysisRecord('intake',data);if(!old)record.id=await intakeRecordId(owner,event.eventId);await store.save(record);});
   const pending = useMemo(() => pendingIntakeEvents(regimens, intakes, day, day === today), [regimens, intakes, day, today]);

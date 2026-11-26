@@ -4,6 +4,7 @@ if (PHP_SAPI !== 'cli') exit(1);
 require dirname(__DIR__).'/src/feature-access.php';
 require dirname(__DIR__).'/src/billing.php';
 require dirname(__DIR__).'/src/billing-gateways.php';
+require dirname(__DIR__).'/src/billing-play-voids.php';
 function genesisIdentifierHash(string $namespace,string $value): string {return hash_hmac('sha256',$namespace."\0".$value,'synthetic-upgrade-test');}
 function checkUpgrade(bool $ok,string $message): void {if(!$ok)throw new RuntimeException($message);}
 function upgradeFixture(array $migrations=['093_billing_infrastructure','096_billing_upgrade_credit','099_billing_refund_amount','100_billing_settlement','101_billing_pending_order_deletion_guard','104_subscription_trials','111_forecast_elite_plus']): PDO {
@@ -309,6 +310,35 @@ $playAccess=genesisBillingApplyReceipt($play,genesisBillingPlayReceipt($playPaym
 checkUpgrade($playAccess['plan']==='premium','Normal paid Play SKU lost its access grant');
 $playQuote=genesisBillingUpgradeQuote($play,'buyer',upgradeOffer('business'),$now);
 checkUpgrade($playQuote['availableProviders']===[]&&$playQuote['upgradeUnavailableReason']==='credit-source-unverified','Unverified regional Play price became monetary upgrade credit');
+
+$play->exec(file_get_contents(dirname(__DIR__).'/migrations/142_billing_play_voids.sql'));
+$count=genesisBillingPlayVoidPage($play,$now,static function(array $params)use($now):array{
+    checkUpgrade(($params['type']??null)===0&&($params['endTime']??null)===$now*1000,'Play scan lost the one-time purchase window');
+    return ['voidedPurchases'=>[['purchaseToken'=>'synthetic-unclaimed-token']],
+        'tokenPagination'=>['nextPageToken'=>'next-synthetic-page']];
+});
+checkUpgrade($count===0&&$play->query("SELECT subscription_plan FROM users WHERE id='buyer'")->fetchColumn()==='premium',
+    'A void from another checkout revoked this account');
+checkUpgrade(genesisBillingPlayVoidPage($play,$now+30,static fn()=>throw new RuntimeException('Scan lease did not defer polling'))===0,
+    'Pagination ignored its retry schedule');
+$void=['purchaseToken'=>'synthetic-paid-token','purchaseTimeMillis'=>$playPayment['purchaseTimeMillis'],
+    'voidedTimeMillis'=>(string)($now*1000)];
+try{
+    genesisBillingPlayVoidPage($play,$now+60,static fn()=>['voidedPurchases'=>[[...$void,'purchaseTimeMillis'=>'1']]]);
+    throw new RuntimeException('Invalid refund timestamp accepted');
+}catch(DomainException $expected){checkUpgrade($expected->getMessage()==='BILLING_PLAY_VOID_MISMATCH','Wrong Play refund refusal');}
+checkUpgrade($play->query("SELECT page_token FROM billing_play_void_scan WHERE id=1")->fetchColumn()==='next-synthetic-page',
+    'An inconclusive refund scan lost its cursor');
+$count=genesisBillingPlayVoidPage($play,$now+360,static function(array $params)use($void):array{
+    checkUpgrade(($params['token']??null)==='next-synthetic-page','Play scan failed to resume the held page');
+    return ['voidedPurchases'=>[$void,$void]];
+});
+checkUpgrade($count===1&&$play->query("SELECT status FROM billing_orders WHERE id='target'")->fetchColumn()==='refunded',
+    'The verified Play refund was missed or applied twice');
+$replay=genesisBillingApplyReceipt($play,genesisBillingPlayReceipt($playPayment,$playOrder,'synthetic-paid-token'),$now+361);
+checkUpgrade($replay['plan']==='free','An older Play payment restored refunded access');
+checkUpgrade((int)$play->query("SELECT checked_through FROM billing_play_void_scan WHERE id=1")->fetchColumn()===$now,
+    'The completed scan did not retain the original window end');
 
 // Actual096/099 rollback and pre-migration backup: old orders/receipts and old-style writers survive.
 $migration=upgradeFixture(['093_billing_infrastructure']);

@@ -12,6 +12,7 @@ import { sanitizeTraceFile } from './trace-sanitize.mjs';
 import { verifyTrialWeb317 } from './web-trials317.mjs';
 import { runHeaderStartup } from './web-header-startup.mjs';
 import { chooseDisplayCalendar } from './display-calendar-control.mjs';
+import { verifyLatestMindmapSave } from './web-mindmap-save.mjs';
 import {verifyPublicRegions} from './web-public-region.mjs';
 
 const baseURL = process.env.GENESIS_QA_WEB_ORIGIN ?? 'http://127.0.0.1:4380';
@@ -260,21 +261,9 @@ try {
         await snapshot('mindmap-create');
       });
       await check('mindmap-edit-second-client', async () => {
-        await page.getByRole('button', { name: 'Настройка карты', exact: true }).click();
-        const savedDescription = page.waitForResponse(response =>
-          new URL(response.url()).pathname.startsWith('/api/mindmaps/') &&
-          response.request().method() === 'PUT' && response.ok());
-        await page.getByRole('textbox', { name: 'Описание', exact: true }).fill('Карта синтетического теста — сохранённое описание 🌱.');
-        await page.getByRole('textbox', { name: 'Название карты', exact: true }).click();
-        await savedDescription;
-        await page.locator('.mindmap-save-state[data-save-state="synced"]').waitFor({ state: 'attached' });
         const second = await newContext(tier);
         try {
-          const other = await second.newPage(); await other.goto(page.url());
-          await other.getByRole('button', { name: 'Настройка карты', exact: true }).click();
-          assert.equal(await other.getByRole('textbox', { name: 'Описание', exact: true }).inputValue(),
-            'Карта синтетического теста — сохранённое описание 🌱.');
-          await other.screenshot({ path: `${output}/${tier}-mindmap-edit-second-client.png`, fullPage: true });
+          await verifyLatestMindmapSave({page, secondContext:second, output, tier});
         } finally { await second.close(); }
         await snapshot('mindmap-edit-second-client');
         const settings = page.getByRole('dialog', { name: 'Настройка карты', exact: true });

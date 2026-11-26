@@ -11,6 +11,7 @@ internal interface CommandJournalContract {
     fun verify(edit: JSONObject, data: JSONObject, project: String, queued: Boolean)
     fun rebase(edit: JSONObject, data: JSONObject, project: String): JSONObject
     fun receipt(command: JSONObject, response: JSONObject): JSONObject
+    fun storedReceipt(command: JSONObject, response: JSONObject): JSONObject = receipt(command,response)
 }
 
 internal object WorkflowJournalContract : CommandJournalContract {

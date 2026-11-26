@@ -1,0 +1,264 @@
+{
+  "protocol": 1,
+  "synthetic": true,
+  "document": {
+    "version": 1,
+    "ownerId": "synthetic-backup-journal-owner",
+    "sessions": [
+      {
+        "id": "synthetic-session",
+        "ownerId": "synthetic-backup-journal-owner",
+        "version": 1,
+        "createdAt": "2026-11-05T09:00:00Z",
+        "updatedAt": "2026-11-05T09:00:00Z",
+        "stage": 0,
+        "highestStage": 0,
+        "primary": {
+          "id": "synthetic-source",
+          "source": "stoicheion-spread",
+          "sourceModelId": "theokyklos-fourteen-v1",
+          "secondaryModelId": "aurora-nine-v1",
+          "anchorMapVersion": "stoicheion-directions-identity-v1",
+          "layoutId": "stoicheion-nine-row-major-v1",
+          "projectionVersion": "source-sector-olympians-v2",
+          "sourceDay": "2026-11-05",
+          "sourceSeed": 123,
+          "createdAt": "2026-11-05T09:00:00Z",
+          "cards": [
+            {
+              "cardId": "mu",
+              "cardInstanceId": "synthetic-source:0:mu",
+              "sourcePositionId": "northwest",
+              "orientation": "reversed",
+              "weight": 1,
+              "temporalRole": null,
+              "functions": [
+                {
+                  "deityId": "apollo",
+                  "share": 1
+                }
+              ]
+            },
+            {
+              "cardId": "rho",
+              "cardInstanceId": "synthetic-source:1:rho",
+              "sourcePositionId": "north",
+              "orientation": "upright",
+              "weight": 1,
+              "temporalRole": null,
+              "functions": [
+                {
+                  "deityId": "athena",
+                  "share": 1
+                }
+              ]
+            },
+            {
+              "cardId": "chi",
+              "cardInstanceId": "synthetic-source:2:chi",
+              "sourcePositionId": "northeast",
+              "orientation": "reversed",
+              "weight": 1,
+              "temporalRole": "chronos",
+              "functions": [
+                {
+                  "deityId": "artemis",
+                  "share": 1
+                }
+              ]
+            },
+            {
+              "cardId": "psi",
+              "cardInstanceId": "synthetic-source:3:psi",
+              "sourcePositionId": "west",
+              "orientation": "upright",
+              "weight": 1,
+              "temporalRole": null,
+              "functions": [
+                {
+                  "deityId": "poseidon",
+                  "share": 1
+                }
+              ]
+            },
+            {
+              "cardId": "phi",
+              "cardInstanceId": "synthetic-source:4:phi",
+              "sourcePositionId": "center",
+              "orientation": "reversed",
+              "weight": 1,
+              "temporalRole": null,
+              "functions": [
+                {
+                  "deityId": "dionysus",
+                  "share": 1
+                }
+              ]
+            },
+            {
+              "cardId": "kappa",
+              "cardInstanceId": "synthetic-source:5:kappa",
+              "sourcePositionId": "east",
+              "orientation": "reversed",
+              "weight": 0,
+              "temporalRole": "kronos",
+              "functions": []
+            },
+            {
+              "cardId": "omega",
+              "cardInstanceId": "synthetic-source:6:omega",
+              "sourcePositionId": "southwest",
+              "orientation": "upright",
+              "weight": 1,
+              "temporalRole": null,
+              "functions": [
+                {
+                  "deityId": "demeter",
+                  "share": 1
+                }
+              ]
+            },
+            {
+              "cardId": "eta",
+              "cardInstanceId": "synthetic-source:7:eta",
+              "sourcePositionId": "south",
+              "orientation": "reversed",
+              "weight": 1,
+              "temporalRole": null,
+              "functions": [
+                {
+                  "deityId": "ares",
+                  "share": 0.5
+                },
+                {
+                  "deityId": "aphrodite",
+                  "share": 0.5
+                }
+              ]
+            },
+            {
+              "cardId": "delta",
+              "cardInstanceId": "synthetic-source:8:delta",
+              "sourcePositionId": "southeast",
+              "orientation": "reversed",
+              "weight": 1,
+              "temporalRole": null,
+              "functions": [
+                {
+                  "deityId": "hephaestus",
+                  "share": 1
+                }
+              ]
+            }
+          ]
+        },
+        "selectedSectorId": null,
+        "observationOnly": false,
+        "finishAsObservation": false,
+        "intake": {},
+        "context": {
+          "situationId": "synthetic-session",
+          "topic": "",
+          "domain": "",
+          "originalQuestion": "",
+          "fields": {},
+          "participants": [],
+          "timeline": [],
+          "facts": [],
+          "interpretations": [],
+          "unknowns": [],
+          "contradictions": [],
+          "feelings": [],
+          "values": [],
+          "competingValues": [],
+          "barrierTypes": [],
+          "controllableFactors": [],
+          "externalDependencies": [],
+          "availableResources": [],
+          "existingCommitments": [],
+          "constraints": [],
+          "previousAttempts": [],
+          "repeatedEpisodes": [],
+          "exceptionsToPattern": [],
+          "answerEvidence": [],
+          "acceptedThemes": [],
+          "rejectedThemes": [],
+          "historyPermission": false,
+          "referencedSessionIds": [],
+          "timezone": "Europe/Moscow"
+        },
+        "answers": [],
+        "hypotheses": [],
+        "contextSnapshots": [],
+        "triad": null,
+        "goalText": "",
+        "goalTags": [],
+        "profileState": "integration",
+        "curatorId": null,
+        "organon": null,
+        "organonPreferences": {
+          "goalTags": [],
+          "qualityTags": [],
+          "valueTags": [],
+          "barrierTags": [],
+          "lastFiveCanonicalForms": [],
+          "excludedCanonicalForms": [],
+          "preferShort": false,
+          "avoidedLetters": []
+        },
+        "comfort": "visual",
+        "sphragisLetter": null,
+        "ritualMinutes": 1,
+        "ecphonesis": false,
+        "minutes": 10,
+        "actionOptionIds": [],
+        "selectedActionId": null,
+        "executions": [],
+        "forecasts": [],
+        "resolutions": [],
+        "selectedForecastId": null,
+        "resultId": null,
+        "preparedResults": [],
+        "observationNote": "",
+        "completedAt": null,
+        "forecastForm": {
+          "target": "",
+          "success": "",
+          "failure": "",
+          "conditions": "",
+          "end": "",
+          "conditionDeadline": "",
+          "scenarioId": "",
+          "horizonBasis": "",
+          "horizonMode": "absolute",
+          "anchorEvent": "",
+          "startOffsetMinutes": 0,
+          "durationMinutes": 1440
+        },
+        "draftAnswer": {
+          "questionId": "",
+          "choiceId": "",
+          "detail": ""
+        },
+        "planStart": "",
+        "actualActionNote": "",
+        "observationDraft": {
+          "occurred": "unknown",
+          "conditions": "unknown",
+          "occurredAt": "",
+          "conditionAt": "",
+          "anchorAt": "",
+          "complete": false,
+          "contradictory": false,
+          "description": ""
+        },
+        "completionDraft": {
+          "ritualDone": false,
+          "actionDone": false,
+          "withoutRitual": false
+        }
+      }
+    ],
+    "removed": []
+  }
+}

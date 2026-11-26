@@ -22,6 +22,27 @@ const center=async(page,dialog)=>{
 /** U08-U11: rendered controls, modal persistence and actual local API prices; never submits checkout. */
 export async function verifyUi317({context,page,tier,output,check,snapshot,originalMapUrl,visit,openAccount,upgrade,closeUpgrade}) {
   const records=[];
+  await check('release336-android-website-pricing-entry',async()=>{
+    const originalCurrency=await page.evaluate(()=>localStorage.getItem('genesis.public-pricing-currency.v1'));
+    const orders=[];
+    const observe=request=>{if(request.method()==='POST'&&new URL(request.url()).pathname.startsWith('/api/billing/orders'))orders.push(request);};
+    page.on('request',observe);
+    try {
+      await visit('/?lang=ru#pricing');
+      await upgrade().waitFor();
+      await upgrade().locator('input[name="upgrade-currency"][value="USD"]').check();
+      assert.match(await upgrade().locator('.upgrade-checkout-button').innerText(),/Paddle/);
+      assert(await upgrade().locator('.upgrade-checkout-button').isDisabled());
+      await closeUpgrade();
+      assert.equal(orders.length,0);
+    }finally{
+      page.off('request',observe);
+      await page.evaluate(currency=>{
+        const key='genesis.public-pricing-currency.v1';
+        if(currency===null)localStorage.removeItem(key);else localStorage.setItem(key,currency);
+      },originalCurrency);
+    }
+  });
   for(const width of [360,390,768,1440])for(const scheme of ['light','dark']) {
     await check(`release317-account-${width}-${scheme}`,async()=>{
       await visit('/#today');await page.setViewportSize({width,height:1000});await theme(page,scheme);

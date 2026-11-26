@@ -5,7 +5,7 @@ import {DiaryRepository} from '../../app/diary-storage';
 import {DreamJournal,DreamJournalToday} from '../../app/DreamJournal';
 import {DreamJournalSettings} from '../../app/DreamJournalSettings';
 import DiaryPage from '../../app/DiaryPage';
-import type {GenesisUser} from '../../app/cloud-sync';
+import type {GenesisUser,PersonalDocumentAccess} from '../../app/cloud-sync';
 import {type Language} from '../../app/i18n';
 import {uiVisibility} from '../../app/ui-visibility';
 import '../../app/globals.css';
@@ -34,7 +34,8 @@ const rows=new Map<string,Record<string,unknown>>(JSON.parse(sessionStorage.getI
 const deleted=new Map<string,Record<string,unknown>>(JSON.parse(sessionStorage.getItem('dream-qa-deleted')??'[]'));
 let preferences=JSON.parse(sessionStorage.getItem('dream-qa-preferences')??'{"todayMode":"all-day","revision":0}');
 const persist=()=>{sessionStorage.setItem('dream-qa-remote',JSON.stringify([...rows]));sessionStorage.setItem('dream-qa-deleted',JSON.stringify([...deleted]));sessionStorage.setItem('dream-qa-preferences',JSON.stringify(preferences));};
-const repository=new DiaryRepository(owner,sessionStorage,{
+const syntheticAccess:PersonalDocumentAccess={
+ async withLegacyOperation(operation){return operation(syntheticAccess);},
  check(){},async privateId(id){return id;},
  async request<T>(path:string,init:RequestInit={}){
   if(path.startsWith('/diary/dream-clock'))return {today,timeZone:new URLSearchParams(path.split('?')[1]).get('timeZone')} as T;
@@ -50,7 +51,8 @@ const repository=new DiaryRepository(owner,sessionStorage,{
  },
  async seal(value,scope){const iv=crypto.getRandomValues(new Uint8Array(12));const cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:new TextEncoder().encode(scope)},await key,new TextEncoder().encode(JSON.stringify(value)));return {iv:b64(iv),ciphertext:b64(new Uint8Array(cipher))};},
  async open<T>(envelope:{iv:string;ciphertext:string},scope:string){const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:decode(envelope.iv),additionalData:new TextEncoder().encode(scope)},await key,decode(envelope.ciphertext));return JSON.parse(new TextDecoder().decode(plain)) as T;}
-});
+};
+const repository=new DiaryRepository(owner,sessionStorage,syntheticAccess);
 const user={uid:owner,taskCalendarMode:'profane',featureAccess:{schemaVersion:1,policyRevision:'synthetic-qa',enforcementEnabled:true,declaredPlan:'premium',effectivePlan:'premium',lifetimePremium:true,validUntil:null,evaluatedAt:new Date().toISOString(),allowedFeatures:['dream-journal','dream-voice'],freeFeatures:[]}} as unknown as GenesisUser;
 function Preview(){const [screen,setScreen]=useState(params.get('screen')??'dream'),[enabled,setEnabled]=useState(()=>sessionStorage.getItem('dream-qa-enabled')!=='false');
  const currentUser={...user,language,uiVisibility:uiVisibility({dreamJournalEnabled:enabled})};

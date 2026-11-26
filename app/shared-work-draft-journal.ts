@@ -1,3 +1,4 @@
+import {assertLegacyLocalWriteAllowed} from './e2ee/web-local-migration-fence.ts';
 export const SHARED_WORK_DRAFT_PREFIX='genesis-shared-work-drafts-v1:';
 export type SharedWorkDraftPurpose='workflow'|'planning'|'planning-tasks'|'custom-fields'|'saved-views'|'templates'|'template-apply'|'automations'|'project-access'|'data-import'|'stoicheion-restoration';
 const ID=/^[a-zA-Z0-9_-]{1,200}$/;
@@ -58,7 +59,7 @@ export class SharedWorkDraftJournal<T>{
  }
  /** Snapshot input before awaiting crypto; completion order cannot reorder edits. */
  write(input:T):Promise<WorkDraft<T>>{
-  this.check();const value=this.options.validate(structuredClone(input)),json=JSON.stringify(value);
+  this.check();assertLegacyLocalWriteAllowed(this.options.userId,this.options.storage);const value=this.options.validate(structuredClone(input)),json=JSON.stringify(value);
   if(typeof json!=='string'||new TextEncoder().encode(json).byteLength>(this.options.maxBytes??MAX_BYTES))throw new WorkDraftError('DRAFT_TOO_LARGE');
   const snapshot:unknown=JSON.parse(json);
   const work=this.serial.catch(()=>undefined).then(async()=>{
@@ -68,8 +69,8 @@ export class SharedWorkDraftJournal<T>{
    else if((await this.keys()).length>=MAX_RECORDS)throw new WorkDraftError('DRAFT_LIMIT');
    const at=(this.options.now?.()??new Date()).toISOString();
    const sealed=await this.options.access.seal({version:1,userId:this.options.userId,projectId:this.options.projectId,purpose:this.options.purpose,id:this.writerId,at,value:snapshot},this.scope(this.writerId));
-   this.check();const raw=JSON.stringify({version:1,id:this.writerId,at,...sealed});
-   if(this.options.asyncStorage)await this.options.asyncStorage.write(key,raw,previous,this.prefix,MAX_RECORDS,()=>this.check());
+   this.check();assertLegacyLocalWriteAllowed(this.options.userId,this.options.storage);const raw=JSON.stringify({version:1,id:this.writerId,at,...sealed});
+   if(this.options.asyncStorage)await this.options.asyncStorage.write(key,raw,previous,this.prefix,MAX_RECORDS,()=>{this.check();assertLegacyLocalWriteAllowed(this.options.userId,this.options.storage);});
    else {if(this.options.storage.getItem(key)!==previous)throw new WorkDraftError('DRAFT_CHANGED');this.options.storage.setItem(key,raw);}
    this.check();
    return {id:this.writerId,at,value:this.options.validate(snapshot),raw};
@@ -78,9 +79,9 @@ export class SharedWorkDraftJournal<T>{
  /** Recovery never removes a record that another tab changed in the meantime. */
  remove(record:Pick<WorkDraft<T>,'id'|'raw'>):Promise<void>{
   const work=this.serial.catch(()=>undefined).then(async()=>{
-   this.check();const key=this.key(record.id),raw=await this.stored(key);this.check();
+   this.check();assertLegacyLocalWriteAllowed(this.options.userId,this.options.storage);const key=this.key(record.id),raw=await this.stored(key);this.check();assertLegacyLocalWriteAllowed(this.options.userId,this.options.storage);
    if(raw===null)return;if(raw!==record.raw)throw new WorkDraftError('DRAFT_CHANGED');
-   if(this.options.asyncStorage)await this.options.asyncStorage.remove(key,record.raw,()=>this.check());
+   if(this.options.asyncStorage)await this.options.asyncStorage.remove(key,record.raw,()=>{this.check();assertLegacyLocalWriteAllowed(this.options.userId,this.options.storage);});
    else {if(this.options.storage.getItem(key)!==record.raw)throw new WorkDraftError('DRAFT_CHANGED');this.options.storage.removeItem(key);}
   });this.serial=work;return work;
  }

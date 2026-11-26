@@ -1,3 +1,4 @@
+import { usePhysisMigrationCapture } from './migration-editors';
 import { useRef, useState } from 'react';
 import type { PhysisKind, PhysisRecord, PhysisStore } from './types';
 import { DRUG_COLUMNS, checkPhysisImportBytes, parsePhysisBackup, type PhysisBackup, drugsFromCsv, exportPhysisCsv, parsePhysisCsv, parsePhysisRecords, previewPhysisImport, preparePhysisImport, resumePhysisImport, type ImportPreview, type PreparedPhysisImport } from './exchange-domain';
@@ -15,6 +16,7 @@ export function downloadPhysis(name: string, content: string, type = 'applicatio
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 export function PhysisExchange({ store, kind, exportEncrypted }: { store: PhysisStore; kind?: PhysisKind; exportEncrypted?: () => Promise<void> }) {
+
   const transfer=useDataTransferGuard();
   const action = usePhysisAction(); const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [rows, setRows] = useState<string[][] | null>(null); const [mapping, setMapping] = useState<Record<string, string>>({});
@@ -22,6 +24,7 @@ export function PhysisExchange({ store, kind, exportEncrypted }: { store: Physis
   const [report, setReport] = useState(''); const [accepted, setAccepted] = useState(false);
   const [genesisFile, setGenesisFile] = useState<string | null>(null);
   const prepared = useRef<PreparedPhysisImport | null>(null);
+  usePhysisMigrationCapture('exchange.PhysisExchange',()=>({preview,rows,mapping,backup,report,accepted,genesisFile,prepared:prepared.current}));
   const records = store.records.filter(r => !kind || r.kind === kind);
   const openFile = async (file: File) => {
     if (!transfer.check()) return;

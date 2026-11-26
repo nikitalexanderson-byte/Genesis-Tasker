@@ -1,9 +1,6 @@
 package ru.genesis.calendar.ui
 
-import android.provider.OpenableColumns
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -34,15 +31,20 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.genesis.calendar.data.*
 import ru.genesis.calendar.security.MessagingCrypto
+import ru.genesis.calendar.security.NativeMessageKeyTransfer
+import ru.genesis.calendar.security.NativeContentFileDestination
+import ru.genesis.calendar.security.NativeUserFileInput
+import ru.genesis.calendar.security.NativeUserFileOutput
 import ru.genesis.calendar.security.PrivateFileMetadata
+import org.json.JSONObject
 import java.util.UUID
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
 
 @Composable internal fun MessagingScreen(repository: MessagingRepository, initialSpaceId: String? = null, onClose: () -> Unit) {
     val state by repository.state.collectAsStateWithLifecycle()
     val canExchange = LocalFeatureAccess.current.allows("data-export")
     val scope = rememberCoroutineScope(); val context = LocalContext.current
+    val language=LocalGenesisLanguage.current
+    val recoveryCopy=remember(context,language){ru.genesis.calendar.security.LocalRecoveryCopy.read(context,language)}
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf("") }
@@ -51,23 +53,43 @@ import java.io.InputStream
     var backup by remember { mutableStateOf(false) }
     var password by remember { mutableStateOf("") }
     var backupSource by remember { mutableStateOf<String?>(null) }
-    var backupExport by remember { mutableStateOf<String?>(null) }
+    var recoveryKeySaved by remember { mutableStateOf(false) }
     var more by remember { mutableStateOf(false) }
     var security by remember { mutableStateOf(false) }
     var clearConfirm by remember { mutableStateOf(false) }
     var deleteConfirm by remember { mutableStateOf<MessagingRow?>(null) }
     var cancelEditConfirm by remember { mutableStateOf(false) }
     var recoverConfirm by remember { mutableStateOf(false) }
-    var download by remember { mutableStateOf<Pair<MessagingRow, PrivateFileMetadata>?>(null) }
+    var restoreFileDraft by remember{mutableStateOf<Pair<String,String?>?>(null)}
     val client = remember { UUID.randomUUID().toString() }
+    val authController=remember(context){ru.genesis.calendar.auth.AuthController.get(context)}
+    val keyTransfer by NativeMessageKeyTransfer.state.collectAsStateWithLifecycle()
+    val ownKeyTransfer=keyTransfer?.takeIf{it.request.owner==repository.ownerUid}
+    val fileDestination by NativeContentFileDestination.state.collectAsStateWithLifecycle()
+    val ownFileDestination=fileDestination?.takeIf{it.request.owner==repository.ownerUid&&it.request.purpose in setOf("message","message-input")}
+    val fileAccess=remember(repository){java.util.concurrent.atomic.AtomicReference<AutoCloseable?>(null)}
+    val fileText=remember(language){context.assets.open("message-files-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
+    val outputText=remember(language){context.assets.open("content-file-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
+    val draftRecoveryText=remember(language){context.assets.open("message-draft-recovery-copy-v1.json").use{val all=JSONObject(it.readBytes().toString(Charsets.UTF_8));all.optJSONObject(language)?:all.getJSONObject("en")}}
+    val foreground=remember(repository,lifecycle){java.util.concurrent.atomic.AtomicBoolean(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))}
+    DisposableEffect(repository,lifecycle){
+        val observer=androidx.lifecycle.LifecycleEventObserver{_,event->
+            if(event==Lifecycle.Event.ON_RESUME)foreground.set(true)
+            if(event==Lifecycle.Event.ON_PAUSE){foreground.set(false);password="";backupSource=null;recoveryKeySaved=false;fileAccess.getAndSet(null)?.close()
+                NativeContentFileDestination.state.value?.takeIf{it.request.owner==repository.ownerUid&&it.request.purpose in setOf("message","message-input")&&it.phase=="io"}?.let{NativeContentFileDestination.failed(it.request)}}
+        };lifecycle.addObserver(observer)
+        onDispose{foreground.set(false);lifecycle.removeObserver(observer);password="";backupSource=null;recoveryKeySaved=false;fileAccess.getAndSet(null)?.close()}
+    }
+    fun fileForeground(){check(foreground.get()){"E2EE_FOREGROUND_REQUIRED"};repository.requireDataExchange()}
+    fun messageFileForeground(){check(foreground.get()){"E2EE_FOREGROUND_REQUIRED"};repository.requireFileOwner()}
     fun run(action: suspend () -> Unit) {
         if (busy) return
         busy = true; error = ""
         scope.launch {
             try { withContext(Dispatchers.IO) { action() } }
             catch (cancelled: CancellationException) { throw cancelled }
-            catch (failure: Exception) { error = messagingError(failure.message) }
-            finally { busy = false }
+            catch (failure: Exception) { error = if(failure.message?.startsWith("MESSAGING_FILE_")==true)fileText.getString("error")else messagingError(failure.message) }
+            finally {runCatching{withContext(Dispatchers.IO){repository.refreshFileIntakes()}};busy = false }
         }
     }
     fun back() { if (state.selected != null) run { repository.closeConversation() } else onClose() }
@@ -109,41 +131,14 @@ import java.io.InputStream
             }
         }
     }
-    val exportKey = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
-        val source = backupExport; backupExport = null
-        if (uri != null && source != null) run {
-            repository.writeBackup(source) { context.contentResolver.openOutputStream(uri) ?: error("FILE_WRITE_FAILED") }
-            backup = false; password = ""; backupSource = null
+    LaunchedEffect(repository,state.initialized,ownKeyTransfer?.request?.id,ownKeyTransfer?.phase){
+        val selected=ownKeyTransfer?:return@LaunchedEffect
+        if(selected.phase=="ready"&&selected.request.kind=="import"&&state.initialized){
+            try{fileForeground();backupSource=selected.request.encryptedSource(::fileForeground);backup=true;password="";recoveryKeySaved=false}
+            catch(cancel:CancellationException){throw cancel}catch(_:Exception){error=messagingError("INVALID_BACKUP")}
         }
-    }
-    val importKey = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) run {
-            repository.requireDataExchange()
-            val source = context.contentResolver.openInputStream(uri)?.use { input ->
-                val bytes = messagingRead(input, 4000); bytes.toString(Charsets.UTF_8)
-            } ?: error("FILE_READ_FAILED")
-            repository.requireDataExchange()
-            backupSource = source
-        }
-    }
-    val exportFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri ->
-        val selected = download; download = null
-        if (uri != null && selected != null) run {
-            val bytes = repository.download(selected.first, selected.second)
-            try { context.contentResolver.openOutputStream(uri)?.use { it.write(bytes) } ?: error("FILE_WRITE_FAILED") }
-            finally { bytes.fill(0) }
-        }
-    }
-    val attach = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
-        if (uris.isNotEmpty()) run {
-            require((state.draft?.files?.size ?: 0) + uris.size <= 5) { "TOO_MANY_PRIVATE_FILES" }
-            uris.forEach { uri ->
-                val name = context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null } ?: "file"
-                val bytes = context.contentResolver.openInputStream(uri)?.use { messagingRead(it, MessagingCrypto.FILE_LIMIT) } ?: error("FILE_READ_FAILED")
-                try { require(bytes.size <= MessagingCrypto.FILE_LIMIT) { "PRIVATE_FILE_TOO_LARGE" }; repository.attach(name, context.contentResolver.getType(uri) ?: "application/octet-stream", bytes) }
-                finally { bytes.fill(0) }
-            }
-        }
+        if(selected.phase=="complete"&&selected.request.kind=="export"){backup=false;password="";backupSource=null;recoveryKeySaved=false}
+        if(selected.phase=="failed"){password="";backupSource=null;recoveryKeySaved=false;error=messagingError("INVALID_BACKUP")}
     }
     val headerActions: @Composable () -> Unit = {
             Box {
@@ -171,6 +166,34 @@ import java.io.InputStream
             headerActions()
         }
         if (busy) WorkspaceLoadingLine(Modifier.fillMaxWidth())
+        ownFileDestination?.takeIf{it.phase=="ready"}?.let{destination->Column(Modifier.fillMaxWidth().padding(12.dp)){
+            if(destination.request.purpose=="message-input"){
+                Text(fileText.getString("notice"),style=MaterialTheme.typography.bodySmall)
+                Button(onClick={run{
+                    val request=destination.request;messageFileForeground();request.current();val ownerGuard=authController.privateUiOwnerGuard(repository.ownerUid)
+                    fun current(){messageFileForeground();ownerGuard();request.current()}
+                    val input=NativeUserFileInput(::current)
+                    try{check(fileAccess.compareAndSet(null,input)){"E2EE_FILE_DESTINATION_BUSY"};request.attach(input);val sources=request.sources()
+                        repository.beginFileIntake(request.intentId,sources.size,::current);current()
+                        sources.forEachIndexed{index,uri->val file=input.read(context.applicationContext,uri)
+                            try{current();repository.stageFileIntake(request.intentId,index,file.name,file.type,file.bytes,::current);current()}finally{input.release(file)}}
+                        NativeContentFileDestination.complete(request)
+                    }catch(reason:Throwable){NativeContentFileDestination.failed(request);throw reason}
+                    finally{fileAccess.compareAndSet(input,null);request.detach(input);input.close()}
+                }},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(fileText.getString("import"))}
+            }else{
+                Text(outputText.getString("notice"),style=MaterialTheme.typography.bodySmall)
+                Button(onClick={run{
+                    val request=destination.request;fileForeground();request.current();val ownerGuard=authController.privateDataExchangeOwnerGuard(repository.ownerUid)
+                    fun current(){fileForeground();ownerGuard();request.current()}
+                    val bytes=repository.openFileOutput(request.intentId,::current);var output:NativeUserFileOutput?=null
+                    try{val access=NativeUserFileOutput(bytes,::current);output=access;check(fileAccess.compareAndSet(null,access)){"E2EE_FILE_DESTINATION_BUSY"};request.attach(access)
+                        access.write(context.applicationContext,request.uri());current();NativeContentFileDestination.complete(request)
+                    }catch(reason:Throwable){NativeContentFileDestination.failed(request);throw reason}
+                    finally{output?.let{fileAccess.compareAndSet(it,null);request.detach(it);it.close()};bytes.fill(0)}
+                }},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(outputText.getString("download"))}
+            }
+        }}
         if (error.isNotBlank()) Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(error, Modifier.weight(1f), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
             AffairsIconButton("Закрыть", AffairsAction.CLOSE, { error = "" })
@@ -267,7 +290,9 @@ import java.io.InputStream
                             else row.content?.let { content ->
                                 SelectionContainer { UntranslatedText(content.text, style = MaterialTheme.typography.bodyLarge) }
                                 content.files.forEach { file ->
-                                    TextButton({ download = row to file; exportFile.launch(file.name) }, Modifier.fillMaxWidth().heightIn(min = 48.dp), enabled = !busy) {
+                                    TextButton({val conversation=state.selected?.id;if(conversation!=null)run{fileForeground();val id=repository.prepareFileOutput(conversation,row,file)
+                                        NativeContentFileDestination.prepare(repository.ownerUid,id,authController.privateDataExchangeOwnerGuard(repository.ownerUid),"message")
+                                    }}, Modifier.fillMaxWidth().heightIn(min = 48.dp), enabled = !busy) {
                                         GenesisLucideIcon("download", Modifier.size(20.dp)); Spacer(Modifier.width(8.dp))
                                         UntranslatedText(file.name, Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
                                         Text("${(file.size + 1023) / 1024} КБ", style = MaterialTheme.typography.labelSmall)
@@ -281,7 +306,7 @@ import java.io.InputStream
             }
             state.draft?.let { draft ->
                 val composerConversation = state.selected!!.id
-                var text by remember(draft.id, draft.revision) { mutableStateOf(draft.text) }
+                var text by remember(draft.id, draft.revision,state.draftRestoreEpoch) { mutableStateOf(draft.text) }
                 LaunchedEffect(draft.id, draft.revision, state.pending) { if (!state.pending && draft.text.isEmpty()) text = "" }
                 Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -293,6 +318,17 @@ import java.io.InputStream
                             UntranslatedText(file.name, Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                             AffairsIconButton("Убрать файл", AffairsAction.CLOSE, { run { repository.removeFile(file.id) } }, enabled = !busy && !state.pending)
                         } }
+                        state.fileIntakes.forEach{intake->Column(Modifier.fillMaxWidth()){
+                            Text(fileText.getString(if(intake.retained)"retained"else"pending"),style=MaterialTheme.typography.labelMedium)
+                            intake.names.forEach{name->UntranslatedText(name,maxLines=2,overflow=TextOverflow.Ellipsis)}
+                            Text(fileText.getString("notice"),style=MaterialTheme.typography.bodySmall)
+                            if(!intake.complete)TextButton(onClick={run{messageFileForeground();repository.resumeFileIntake(intake.id)
+                                NativeContentFileDestination.prepare(repository.ownerUid,intake.id,authController.privateUiOwnerGuard(repository.ownerUid),"message-input")
+                            }},enabled=!busy&&!state.pending,modifier=Modifier.heightIn(min=48.dp)){Text(fileText.getString("resume"))}
+                            if(!intake.complete)TextButton(onClick={restoreFileDraft=intake.id to null},enabled=!busy&&!state.pending,modifier=Modifier.heightIn(min=48.dp)){Text(draftRecoveryText.getString("restore"))}
+                            intake.savedDraftIds.forEachIndexed{index,id->TextButton(onClick={restoreFileDraft=intake.id to id},enabled=!busy&&!state.pending,modifier=Modifier.heightIn(min=48.dp)){Text(draftRecoveryText.getString("copy")+" ${index+1}")}}
+                            if(!intake.retained)TextButton(onClick={run{repository.retainFileIntake(intake.id)}},enabled=!busy&&!state.pending,modifier=Modifier.heightIn(min=48.dp)){Text(fileText.getString("retain"))}
+                        }}
                         if (state.pending) {
                             Text("Отправка не подтверждена. Повторите запрос; сохранённое сообщение не будет продублировано.", style = MaterialTheme.typography.bodySmall)
                             TextButton({ recoverConfirm = true }, Modifier.heightIn(min = 48.dp), enabled = !busy) {
@@ -301,7 +337,10 @@ import java.io.InputStream
                         }
                         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             val attachmentLabel = genesisTranslate("Прикрепить файлы")
-                            IconButton({ attach.launch(arrayOf("*/*")) }, Modifier.size(48.dp).semantics { contentDescription = attachmentLabel }, enabled = state.keyReady && !busy && !state.pending && draft.files.size < 5) {
+                            IconButton({val conversation=composerConversation;val draftId=draft.id;val revision=draft.revision;run{messageFileForeground()
+                                val id=repository.prepareFileIntake(conversation,draftId,revision);messageFileForeground()
+                                NativeContentFileDestination.prepare(repository.ownerUid,id,authController.privateUiOwnerGuard(repository.ownerUid),"message-input")
+                            }}, Modifier.size(48.dp).semantics { contentDescription = attachmentLabel }, enabled = state.keyReady && !busy && !state.pending && draft.files.size < 5&&state.fileIntakes.none{it.draftId==draft.id&&!it.retained}) {
                                 GenesisLucideIcon("paperclip", Modifier.size(22.dp))
                             }
                             OutlinedTextField(text, { value ->
@@ -312,7 +351,7 @@ import java.io.InputStream
                                 }
                             }, Modifier.weight(1f).testTag("messaging-composer"), placeholder = { Text("Сообщение") }, maxLines = 5, shape = RoundedCornerShape(10.dp), enabled = state.keyReady && !busy && !state.pending)
                             val sendLabel = genesisTranslate(if (state.pending) "Повторить отправку" else "Отправить сообщение")
-                            IconButton({ run { repository.send(text) } }, Modifier.size(48.dp).testTag("messaging-send").semantics { contentDescription = sendLabel }, enabled = state.keyReady && !busy && (state.pending || text.isNotBlank() || draft.files.isNotEmpty())) {
+                            IconButton({ run { repository.send(text) } }, Modifier.size(48.dp).testTag("messaging-send").semantics { contentDescription = sendLabel }, enabled = state.keyReady && !busy && (state.pending || text.isNotBlank() || draft.files.isNotEmpty())&&(state.pending||state.fileIntakes.none{it.draftId==draft.id&&!it.retained})) {
                                 GenesisLucideIcon(if (state.pending) "refresh-cw" else "send", Modifier.size(22.dp))
                             }
                         }
@@ -337,29 +376,43 @@ import java.io.InputStream
             else "Приложение сначала проверит отправку. Если она не подтверждена, текст и доступные файлы станут новым черновиком. Проверьте переписку перед повторной отправкой.") },
         confirmButton = { TextButton({ recoverConfirm = false; run { repository.recoverPending() } }, enabled = !busy) { Text(if (state.pendingDelete) "Прекратить повтор" else "Сохранить копию") } },
         dismissButton = { TextButton({ recoverConfirm = false }) { Text("Отмена") } })
+    restoreFileDraft?.let{selected->AlertDialog(onDismissRequest={if(!busy)restoreFileDraft=null},title={Text(draftRecoveryText.getString("restore"))},text={Text(draftRecoveryText.getString("notice"))},
+        confirmButton={TextButton(onClick={restoreFileDraft=null;run{repository.restoreFileIntakeDraft(selected.first,selected.second)}},enabled=!busy){Text(draftRecoveryText.getString("restore"))}},
+        dismissButton={TextButton(onClick={restoreFileDraft=null},enabled=!busy){Text("Назад")}})}
     if (clearConfirm || deleteConfirm != null) AlertDialog(onDismissRequest = { clearConfirm = false; deleteConfirm = null },
         title = { Text(if (clearConfirm) "Очистить переписку для обоих?" else "Удалить сообщение для обоих?") },
         text = { Text("Сообщения и прикреплённые файлы будут удалены без возможности восстановления.") },
         confirmButton = { TextButton({ val row = deleteConfirm; val clear = clearConfirm; clearConfirm = false; deleteConfirm = null; run { if (clear) repository.clear() else if (row != null) repository.delete(row) } }, enabled = !busy) { Text("Удалить") } },
         dismissButton = { TextButton({ clearConfirm = false; deleteConfirm = null }) { Text("Отмена") } })
-    if (backup) AlertDialog(onDismissRequest = { if (!busy) { backup = false; password = ""; backupSource = null } },
+    if (backup) AlertDialog(onDismissRequest = { if (!busy) { ownKeyTransfer?.takeIf{it.phase=="ready"}?.request?.let(NativeMessageKeyTransfer::failed);backup = false; password = ""; backupSource = null } },
+        properties=androidx.compose.ui.window.DialogProperties(securePolicy=androidx.compose.ui.window.SecureFlagPolicy.SecureOn),
         title = { Text(if (state.keyReady && backupSource == null) "Резервная копия ключа" else "Импортировать ключ") }, text = {
         Column(Modifier.heightIn(max = (LocalConfiguration.current.screenHeightDp * .55f).dp)
             .verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (!canExchange) NativeAccessMessage("FEATURE_SUBSCRIPTION_REQUIRED", "data-export")
-            Text("Копия защищена паролем. Сохраните её и пароль отдельно: без ключа старые сообщения недоступны.")
-            OutlinedTextField(password, { password = it }, modifier = Modifier.fillMaxWidth().testTag("messaging-backup-password"),
-                label = { Text("Пароль: не менее 12 символов") }, visualTransformation = PasswordVisualTransformation(), singleLine = true, shape = RoundedCornerShape(10.dp))
+            Text(recoveryCopy.getString("notice"))
+            OutlinedTextField(password, { password = it.take(4096);recoveryKeySaved=false }, modifier = Modifier.fillMaxWidth().testTag("messaging-backup-password"),
+                label = { Text(recoveryCopy.getString("input")) }, visualTransformation = if(backupSource==null)androidx.compose.ui.text.input.VisualTransformation.None else PasswordVisualTransformation(), singleLine = true, shape = RoundedCornerShape(10.dp))
+            if(backupSource==null&&state.keyReady){
+                OutlinedButton({password=GenesisBackupContainer.newRecoveryKey();recoveryKeySaved=false},enabled=!busy,modifier=Modifier.heightIn(min=48.dp)){Text(recoveryCopy.getString("generate"))}
+                Row(verticalAlignment=Alignment.CenterVertically){Checkbox(recoveryKeySaved,{recoveryKeySaved=it},enabled=!busy&&MessagingCrypto.isRecoveryKey(password));Text(recoveryCopy.getString("saved"),Modifier.weight(1f))}
+            }
             if (backupSource != null) Text("Файл ключа выбран. Введите его пароль и восстановите ключ.", style = MaterialTheme.typography.bodySmall)
             if (error.isNotBlank()) Text(error, color = MaterialTheme.colorScheme.error)
-            OutlinedButton({ importKey.launch(arrayOf("application/json", "text/*", "application/octet-stream")) }, enabled = !busy && canExchange) { Text("Выбрать копию ключа") }
+            OutlinedButton({try{fileForeground();val guard=authController.privateDataExchangeOwnerGuard(repository.ownerUid);password="";backupSource=null;recoveryKeySaved=false;NativeMessageKeyTransfer.prepareImport(repository.ownerUid,guard)}catch(_:Exception){error=messagingError("INVALID_BACKUP")}}, enabled = !busy && canExchange && ownKeyTransfer?.phase !in setOf("requested","picking","io")) { Text("Выбрать копию ключа") }
         }
     }, confirmButton = { Button({
-        if (backupSource != null) run { repository.importBackup(backupSource!!, password); backup = false; password = ""; backupSource = null }
-        else run { backupExport = repository.exportBackup(password); withContext(Dispatchers.Main) { exportKey.launch("genesis-messaging-key.json") } }
-    }, enabled = !busy && canExchange && password.length >= 12 && (backupSource != null || state.keyReady)) {
+        val supplied=password;password="";recoveryKeySaved=false
+        if (backupSource != null){val selected=ownKeyTransfer?.takeIf{it.phase=="ready"&&it.request.kind=="import"}?.request;run{
+            val request=requireNotNull(selected){"INVALID_BACKUP"};val source=request.encryptedSource(::fileForeground)
+            repository.importBackup(source,supplied){request.current();fileForeground()};request.current();NativeMessageKeyTransfer.consumed(request);backup=false;backupSource=null
+        }}
+        else{try{val guard=authController.privateDataExchangeOwnerGuard(repository.ownerUid);run{
+            val source=repository.exportBackup(supplied);withContext(Dispatchers.Main.immediate){fileForeground();guard();NativeMessageKeyTransfer.prepareExport(repository.ownerUid,source,guard)}
+        }}catch(_:Exception){error=messagingError("INVALID_BACKUP")}}
+    }, enabled = !busy && canExchange && (if(backupSource!=null)password.length>=12 else state.keyReady&&recoveryKeySaved&&MessagingCrypto.isRecoveryKey(password))) {
         Text(if (backupSource != null || !state.keyReady) "Восстановить" else "Сохранить копию") } },
-        dismissButton = { TextButton({ backup = false; password = ""; backupSource = null }, enabled = !busy) { Text("Закрыть") } })
+        dismissButton = { TextButton({ ownKeyTransfer?.takeIf{it.phase=="ready"}?.request?.let(NativeMessageKeyTransfer::failed);backup = false; password = ""; backupSource = null }, enabled = !busy) { Text("Закрыть") } })
 }
 
 @Composable private fun MessagingNoticeRow(notice: MessagingNotice, busy: Boolean, onClick: () -> Unit) {
@@ -385,12 +438,3 @@ private fun messagingError(code: String?): String = when (code) {
     else -> "Не удалось выполнить запрос. Черновик и неподтверждённая отправка сохранены. Обновите данные или повторите отправку."
 }
 
-private fun messagingRead(input: InputStream, maximum: Int): ByteArray {
-    val output = ByteArrayOutputStream(); val buffer = ByteArray(8192)
-    while (true) {
-        val count = input.read(buffer); if (count < 0) break
-        require(output.size() + count <= maximum) { if (maximum == 4000) "INVALID_BACKUP" else "PRIVATE_FILE_TOO_LARGE" }
-        output.write(buffer, 0, count)
-    }
-    return output.toByteArray()
-}

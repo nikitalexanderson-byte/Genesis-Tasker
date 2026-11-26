@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "personalPrefixes": ["workspace","bootstrap","tasks","task-lists","diary","mindmaps","stoicheion","aurora","physis","modeling","future-modeling","habit-reminders","recovered-tasks","advice","metrics","feature-usage","billing/modeling/results","backup/v1/preview","backup/v1/commit","backup/v1/server-snapshot"],
+  "personalExact": ["sync/tasks","assistant/plan","assistant/spellcheck","assistant/spelling"],
+  "preferencesPath": "account/preferences",
+  "metadataPreferenceKeys": ["calendarMode","taskCalendarMode","calendarExplorationPending","timeFormat","weekStart","gregorianYearStart","darkPalette","theme","expectedThemeRevision","language","sharedProjectsEnabled","stoicheionDivinationDisabled"],
+  "privatePreferenceKeys": ["advicePreferences","syncRouting","uiVisibility","uiLayout"],
+  "separateScopes": ["shared"],
+  "notes": "Identifies personal legacy content, not a general route allowlist or an external-processing consent. Shared scopes and existing messaging have independent boundaries. Unknown preference fields are protected. Billing checkout identity/authority is separate; modeling result content is private."
+}

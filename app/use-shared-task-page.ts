@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { querySharedTasks, type SharedTaskFilter, type SharedTaskPage, type SharedTaskSort } from "./cloud-sync";
 import { sharedTaskDetailsError } from "./shared-task-details";
 import { translateText } from "./i18n";
+import { privateMembershipUi, subscribePrivateMembershipClose } from "./private-membership-ui";
 
 /** Bounded pages, refreshed on the existing five-second cadence. A changed generation replaces the collection. */
 export function useSharedTaskPage(filter: SharedTaskFilter | null, sort: SharedTaskSort = "position", refreshKey?: unknown, ownerKey?: string) {
@@ -36,11 +37,13 @@ export function useSharedTaskPage(filter: SharedTaskFilter | null, sort: SharedT
     if (filterKey === "null") return;
     const controller = new AbortController();
     const invalidate = () => { ++request.current; refreshing.current=false; loadingMore.current=false; moreController.current?.abort(); };
-    const initial = window.setTimeout(() => {setBusy(false);void refresh(controller.signal);}, 0);
-    const timer = window.setInterval(() => { if (navigator.onLine && document.visibilityState === "visible") void refresh(controller.signal); }, 5000);
-    const changed = () => void refresh(controller.signal);
-    window.addEventListener("genesis:shared-updates", changed);
-    return () => { invalidate(); controller.abort(); window.clearTimeout(initial); window.clearInterval(timer); window.removeEventListener("genesis:shared-updates", changed); };
+    const automaticRead = () => { if (!privateMembershipUi()) void refresh(controller.signal); };
+    const initial = window.setTimeout(() => {setBusy(false);automaticRead();}, 0);
+    const visibleRead = () => { if (navigator.onLine && document.visibilityState === "visible") automaticRead(); };
+    const timer = window.setInterval(visibleRead, 5000);
+    const resume = subscribePrivateMembershipClose(visibleRead);
+    window.addEventListener("genesis:shared-updates", automaticRead);
+    return () => { invalidate(); controller.abort(); resume(); window.clearTimeout(initial); window.clearInterval(timer); window.removeEventListener("genesis:shared-updates", automaticRead); };
   }, [refresh, refreshKey, filterKey]);
   const more = async () => {
     if (!filter || !page?.nextCursor || busy) return false;

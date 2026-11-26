@@ -1,0 +1,10 @@
+.private-google-copy { width: 100%; min-width: 0; }
+.private-google-copy summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+.private-google-copy fieldset { min-width: 0; padding: 12px 0; margin: 0; border: 0; display: grid; gap: 12px; }
+.private-google-copy label { display: grid; gap: 6px; min-width: 0; }
+.private-google-copy select, .private-google-copy button { min-height: 44px; max-width: 100%; }
+.private-google-copy .backup-check { display: flex; align-items: flex-start; gap: 8px; }
+.private-google-copy input[type="checkbox"] { flex: 0 0 auto; width: 20px; min-height: 20px; margin-top: 2px; }
+.private-google-copy dl { display: grid; gap: 4px; min-width: 0; margin: 0; }
+.private-google-copy dt { font-weight: 600; }
+.private-google-copy dd { min-width: 0; margin: 0 0 8px; overflow-x: auto; word-break: normal; overflow-wrap: normal; hyphens: none; }

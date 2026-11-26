@@ -1,0 +1,92 @@
+{
+  "synthetic": true,
+  "warning": "PUBLIC TEST KEYS; DO NOT USE FOR USER DATA",
+  "producer": "Node WebCrypto streaming file writer",
+  "rootKey": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+  "publicKeySpki": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEb_A7lJJBzh2t1DUZ5pYOCoW0GmmgXDKBA6orzhWUyhY8T3U6Vb8B3FP2wLDH7ueLQMb_fSWpbiKCuYnO9xwUSg",
+  "context": {
+    "cryptoProtocol": 1,
+    "suite": "A256KW-A256GCM-ES256",
+    "ownerId": "synthetic-owner",
+    "scopeId": "synthetic-owner",
+    "domain": "workspace",
+    "objectId": "synthetic-workspace",
+    "schemaVersion": 1,
+    "dataGeneration": 4294967297,
+    "writerProtocol": 9,
+    "cryptoEpoch": 2,
+    "securityEpoch": 3,
+    "revision": 7,
+    "keyId": "synthetic-root-2",
+    "deviceId": "synthetic-device-1",
+    "operationId": "00000000-0000-4000-8000-000000000001"
+  },
+  "manifest": {
+    "context": {
+      "cryptoProtocol": 1,
+      "suite": "A256KW-A256GCM-ES256",
+      "ownerId": "synthetic-owner",
+      "scopeId": "synthetic-owner",
+      "domain": "workspace",
+      "objectId": "synthetic-workspace",
+      "schemaVersion": 1,
+      "dataGeneration": 4294967297,
+      "writerProtocol": 9,
+      "cryptoEpoch": 2,
+      "securityEpoch": 3,
+      "revision": 7,
+      "keyId": "synthetic-root-2",
+      "deviceId": "synthetic-device-1",
+      "operationId": "00000000-0000-4000-8000-000000000001"
+    },
+    "wrappedKey": "cDocoNFhxgcgV1_6KPk1pgliuDoqtuJVyczOUDTmbC2Q4RjRaYl-Vg",
+    "nonce": "iTslCHre7fv-4UDE",
+    "ciphertext": "KQpxgH3L8z22pjQiNfG2t29ILW93MNakpb0X4xqmDXEe66FqVA9ud1fxinQMxbiAtDlKXZ8IKF--sTR0VuC3323ZmAGchOYptlvwZq2tjwDAoHEQV0vQ3gVWxSsFw6LurS5YMpN2Tw0wOIHp2PAIpAWIkj_F1LJR7uLEw_KT9vzKP7oAnDoIC-gXkreGpa7XBsTuGRa_lhOcSA2lov_6xoaTGQsw8NXhFH2uYeiDWMpVw-e5qCnP8XOQCObbR5CMaPRrCwCs9_9tPeHwuP0MPVqxft3p6bijY5yhK55n7FdwO02E5xJi4bZTVGb9xE05ZQFCEnBUxT12BpswWkMsJE2hxv8zfYNggx0YKlLjmK2CnlAOx9Zal5cJjA82cJoZ2e91zX3HS1i6oBBDRyTc2aApAnu-Z9Ks87NE1ryMUa8OSb4PBbh2UOnK7KpOdIB9bRRdFphDhuXKSVa_yrmedOF7ysC_XOa2bGuZxqOC58Dv8XIWOcnj_2LaaSAnG-c0hAjX",
+    "signature": "TA9nLCP3qnixp6A6gKpkU5FDWUOCExbtjsentzJdJ8HpYpKJZqmPowpSukPDWWpjb3keEh5Z1KG-iXLQlSL84Q"
+  },
+  "chunks": [
+    {
+      "context": {
+        "cryptoProtocol": 1,
+        "suite": "A256KW-A256GCM-ES256",
+        "ownerId": "synthetic-owner",
+        "scopeId": "synthetic-owner",
+        "domain": "attachment",
+        "objectId": "ac26e36f-73fc-4181-8852-8f19a87a1058:000000",
+        "schemaVersion": 1,
+        "dataGeneration": 4294967297,
+        "writerProtocol": 9,
+        "cryptoEpoch": 2,
+        "securityEpoch": 3,
+        "revision": 1,
+        "keyId": "synthetic-root-2",
+        "deviceId": "synthetic-device-1",
+        "operationId": "1c06bc48-56bf-4faa-83e2-46f691c5d9e2"
+      },
+      "wrappedKey": "aRMBlDqqeX8DeTg1LEyGMR3HBHPbUOn-s3-L-OE0IvLbsNwRRNSGcg",
+      "nonce": "4PCExH0yQUvN2pOL",
+      "ciphertext": "QIYFraYpIGuJDwAVnepj-1LgDVA6HulKAQ",
+      "signature": "YK6OvSwXHuMl9JlceYlmY0x_SUPbbK5j52ozzIa4-VdmFdeBt5w1lyJMAFT24dD4a6LTrFiOWM_uvcfHbQJO9A"
+    }
+  ],
+  "plaintext": "AP_YACJcDQr-",
+  "filenameUnits": [
+    65279,
+    111,
+    114,
+    105,
+    103,
+    105,
+    110,
+    97,
+    108,
+    55296,
+    55357,
+    56832,
+    46,
+    98,
+    105,
+    110
+  ],
+  "mediaType": "application/octet-stream"
+}

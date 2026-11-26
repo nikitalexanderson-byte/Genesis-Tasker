@@ -33,8 +33,9 @@ class MessagingCryptoTest {
         val source = requireNotNull(javaClass.getResourceAsStream("/messaging/webcrypto-backup.json")).bufferedReader().use { it.readText() }
         val identity = MessagingCrypto.importBackup(source, "Fixture backup пароль 2026")
         assertEquals(ids["owner-a"], identity.keyId)
-        val exported = MessagingCrypto.exportBackup(identity, "Fixture backup пароль 2026")
-        assertEquals(identity.keyId, MessagingCrypto.importBackup(exported, "Fixture backup пароль 2026").keyId)
+        val recoveryKey=ru.genesis.calendar.data.GenesisBackupContainer.newRecoveryKey()
+        val exported = MessagingCrypto.exportBackup(identity, recoveryKey)
+        assertEquals(identity.keyId, MessagingCrypto.importBackup(exported, recoveryKey).keyId)
         assertThrows(Exception::class.java) { MessagingCrypto.importBackup(source, "Incorrect password 2026") }
     }
     @Test fun rejectsPrivatePublicMismatchAndMalformedFiles() {

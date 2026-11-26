@@ -56,4 +56,21 @@ if ($_GET['path'] === 'qa/login') {
     genesisEstablishGoogleSession($user, $sub, ['sub' => $sub, 'email' => $email, 'email_verified' => true], 'web');
     genesisJson(['ok' => true, 'synthetic' => true, 'userId' => $user['id']]);
 }
+if ($_GET['path'] === 'qa/identity-confirmation') {
+    // Synthetic provider delivery only, under the CLI/loopback/owned-runtime
+    // guards above. The actual E2EE route still enforces its real 300s policy.
+    require dirname(__DIR__, 2) . '/server/src/bootstrap.php';
+    require dirname(__DIR__, 2) . '/server/src/repository.php';
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || ($config['e2ee_v1_enabled'] ?? false) !== true) genesisJson(['error' => 'NOT_FOUND'], 404);
+    $userId = genesisRequireUserId();
+    genesisRequireCsrf();
+    $users = json_decode((string)file_get_contents($directory . '/users.json'), true, 16, JSON_THROW_ON_ERROR)['users'];
+    $known = array_column($users, 'id');
+    $user = genesisFindUser($userId);
+    if (!in_array($userId, $known, true) || !$user || !str_ends_with($user['email'], '@example.invalid') || genesisIsAdminUser($user) || genesisSharedTester($user)) throw new RuntimeException('Ordinary synthetic identity required');
+    $input = genesisReadJson();
+    if (array_keys($input) !== ['confirmed'] || !is_bool($input['confirmed'])) genesisJson(['error' => 'INVALID_CONFIRMATION'], 400);
+    $_SESSION['authenticated_at'] = $input['confirmed'] ? time() : time() - 301;
+    genesisJson(['synthetic' => true, 'confirmed' => $input['confirmed']]);
+}
 require dirname(__DIR__, 2) . '/server/public/api/index.php';

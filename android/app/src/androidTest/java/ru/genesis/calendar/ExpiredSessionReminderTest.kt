@@ -2,7 +2,7 @@ package ru.genesis.calendar
 
 import android.content.Context
 import android.net.Uri
-import androidx.room.withTransaction
+import ru.genesis.calendar.data.withTransaction
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.work.WorkManager
 import kotlinx.coroutines.Dispatchers

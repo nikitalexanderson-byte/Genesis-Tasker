@@ -1,7 +1,22 @@
 html[data-olympian-native], html[data-olympian-native] body { margin:0; background:var(--surface); color:var(--ink); }
-html[data-olympian-native] main { padding:12px; }
+html[data-olympian-native] main { padding:0 12px 12px; }
 html[data-olympian-native] :is(button,select,summary,input) { min-height:48px; }
 html[data-olympian-native] .olympian-backdrop { padding:0; height:var(--olympian-native-height,100vh); display:block; background:var(--surface); }
 html[data-olympian-native] .olympian-backdrop>.olympian-modal[role=dialog] { width:100%; max-width:none; height:var(--olympian-native-height,100vh)!important; max-height:var(--olympian-native-height,100vh)!important; min-height:0; overflow-y:auto; border:0; border-radius:0; padding:12px; }
 html[data-olympian-native] :is(p,summary,button,h2,h3,strong) { overflow-wrap:normal; word-break:normal; hyphens:none; }
 html[data-olympian-native] .olympian-tile strong { font-size:clamp(.86rem,3.8vw,1.1rem); }
+html[data-olympian-native] .olympian-stoicheion-link {
+  justify-content:center; justify-self:stretch; min-width:0; min-height:48px;
+  padding:10px 16px; border:0; border-radius:var(--ui-radius,12px);
+  color:var(--ui-on-accent); background:var(--ui-accent); text-align:center;
+  text-decoration:none; line-height:1.4;
+}
+html[data-olympian-native] .olympian-stoicheion-link > svg { flex:none; }
+html[data-olympian-native] .olympian-stoicheion-link:hover { filter:brightness(1.06); }
+html[data-olympian-native] .olympian-stoicheion-link:active { filter:brightness(.94); }
+html[data-olympian-native] .olympian-stoicheion-link:focus-visible { outline:3px solid var(--ui-accent); outline-offset:3px; }
+/* The native title and this back action form one compact header. Only the
+   native shell owns Close, and the reading controls scroll with their content. */
+html[data-olympian-native] .olympian-backdrop>.olympian-reading-modal[role=dialog] { padding-top:0; }
+html[data-olympian-native] .olympian-reading-toolbar { position:static; padding:0; border:0; }
+html[data-olympian-native] .olympian-reading-modal .olympian-modal-heading { padding-top:12px; }

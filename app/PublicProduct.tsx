@@ -2,14 +2,16 @@
 import {useEffect,useState} from 'react';
 import {publicFeatureIntroHtml,publicFooterHtml,publicPricingCardsHtml,publicPricingTermsHtml,publicProductCopy} from './public-product';
 import {PublicGallery} from './PublicGallery';
-import {PUBLIC_CURRENCY_KEY,publicCurrency,resolvePublicCurrency,savedPublicCurrency,savePublicCurrency,type PublicCurrency} from './public-currency';
+import {PUBLIC_CURRENCY_KEY,publicCurrency,requestedPublicCurrency,resolvePublicCurrency,savedPublicCurrency,savePublicCurrency,type PublicCurrency} from './public-currency';
 import pricingCopy from './public-pricing-copy.json';
 import {currentPublicEdition,type PublicEdition} from './public-route';
 
 export function PublicProduct({language,edition=currentPublicEdition()}:{language:string;edition?:PublicEdition}) {
   const c=publicProductCopy(language,edition),p=pricingCopy[language as keyof typeof pricingCopy]??pricingCopy.en;
-  const [manual,setManual]=useState(savedPublicCurrency);
+  const [manual,setManual]=useState(()=>requestedPublicCurrency()??savedPublicCurrency());
   useEffect(()=>{
+    const requested=requestedPublicCurrency();
+    if(requested)savePublicCurrency(requested);
     const storage=(event:StorageEvent)=>{if(event.key===PUBLIC_CURRENCY_KEY)setManual(publicCurrency(event.newValue));};
     window.addEventListener('storage',storage);
     return()=>window.removeEventListener('storage',storage);

@@ -1,4 +1,5 @@
 'use client';
+import { usePhysisMigrationCapture, usePhysisMigrationTask } from './migration-editors';
 /* eslint-disable react/prop-types -- Nested shared props are checked by the imported PhysisFeatureProps TypeScript contract. */
 import { useEffect, useId, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from 'react';
 import { createPortal } from 'react-dom';
@@ -73,14 +74,17 @@ function catalogFor(props: Props): CatalogEntry[] {
   return combineCatalogFoods(personal, [...base, ...manual], props.referenceCatalog?.entries ?? fallbackCatalog, props.language);
 }
 function useActions() {
+  const track = usePhysisMigrationTask();
+
   const [submitCreation] = useState(createPhysisSubmission);
   const running = useRef(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  usePhysisMigrationCapture('nutrition.useActions',()=>({busy,error,creationIntents:submitCreation.captureMigration()}));
   async function run(action: () => void | Promise<void>) {
     if (running.current) return;
     running.current = true; setBusy(true); setError('');
-    try { await action(); } catch (cause) { setError(cause instanceof Error ? cause.message : 'Не удалось сохранить / Could not save'); }
+    try { await track(async()=>action()); } catch (cause) { setError(cause instanceof Error ? cause.message : 'Не удалось сохранить / Could not save'); }
     finally { running.current = false; setBusy(false); }
   }
   return { busy, error, run, submitCreation };
@@ -143,12 +147,15 @@ export function PhysisNutritionSummary(props: Props) {
 }
 
 export function PhysisNutrition(props: Props & { page: 'today' | 'diary' | 'foods' | 'settings' }) {
-  const [view,setView] = useState<'today' | 'plan'>('today'); const t=tr(props.language);
+
+  const [view,setView] = useState<'today' | 'plan'>('today');
+  usePhysisMigrationCapture('nutrition.PhysisNutrition',()=>({view})); const t=tr(props.language);
   const controls=props.page==='diary'?<nav className="shared-projects-switch physis-control-switch physis-equal-switch physis-nutrition-view-switch" aria-label={t('Режим рациона','Nutrition view')}><button type="button" aria-pressed={view === 'today'} onClick={()=>setView('today')}>{t('Дневник питания','Food diary')}</button><button type="button" aria-pressed={view === 'plan'} onClick={()=>setView('plan')}>{t('План питания','Planned nutrition')}</button></nav>:undefined;
   return <div className="physis-nutrition" data-page={props.page}>{props.page === 'foods' ? <FoodCatalog {...props} /> : props.page === 'settings' ? <NutritionSettings key={profileFor(props)?.updatedAt ?? 'new-profile'} {...props} /> : <NutritionDiary key={view} {...props} mode={props.page === 'today' ? 'today' : view} controls={controls}/>}</div>;
 }
 
 function FoodCatalog(props: Props) {
+
   const t = tr(props.language), en=props.language==='en', shared=props.referenceCatalog;
   const actions = useActions();
   const pageSize = 12;
@@ -170,6 +177,7 @@ function FoodCatalog(props: Props) {
   const [sharedEditing, setSharedEditing] = useState<CatalogView|null>(null);
   const [showImport, setShowImport] = useState(false);
   const [viewing, setViewing] = useState<string|null>(null);
+  usePhysisMigrationCapture('nutrition.FoodCatalog',()=>({page,query,onlyFavorites,categories,collection,researchCategories,categoryMode,nutrientFilter,editing,recipeEditing,sharedEditing,showImport,viewing}));
   const catalog = catalogFor(props);
   const collectionEntries = catalog.filter(entry => !entry.food.archived && (collection === 'all' || isTopFood(entry.food)));
   const recent = new Set(physisRecords<Meal>(props.store, 'meal').sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 10).flatMap(record => record.data.items.map(item => item.foodId)));
@@ -244,8 +252,10 @@ function FoodMacros({food,language}:{food:Food;language:string}) {
 }
 
 function FoodDetailDialog({entry,props,onClose,onEdit,onArchive,busy,error}:{entry:CatalogEntry;props:Props;onClose:()=>void;onEdit:()=>void;onArchive:()=>void;busy:boolean;error:string}) {
+
   const t=tr(props.language),title=useId(),dialog=useDialogAccessibility<HTMLElement>(onClose);
   const [section,setSection]=useState<'reference'|'warnings'|'composition'>('reference');
+  usePhysisMigrationCapture('nutrition.FoodDetailDialog',()=>({section}));
   const tabs = [['reference',t('Описание','Description')],['warnings',t('Ограничения','Restrictions')],['composition',t('Состав и порция','Composition and portion')]] as const;
   return <div className="modal-backdrop physis-settings-backdrop"><section ref={dialog} role="dialog" aria-modal="true" aria-labelledby={title} tabIndex={-1} className="physis-settings-dialog physis-food-dialog">
     <header className="physis-settings-heading"><div><h2 id={title}>{entry.food.name}</h2><p className="physis-muted">{foodTypeCategories(entry).join(' · ')}{entry.food.brand?' · '+entry.food.brand:''}</p></div><DialogCloseButton aria-label={t('Закрыть','Close')} onClick={onClose}/></header>
@@ -263,8 +273,10 @@ function FoodDetailDialog({entry,props,onClose,onEdit,onArchive,busy,error}:{ent
 }
 
 function FoodDetails({ food, props }: { food: Food; props: Props }) {
+
   const t = tr(props.language);
   const [quantity, setQuantity] = useState('100');
+  usePhysisMigrationCapture('nutrition.FoodDetails',()=>({quantity}));
   const value = physisNumber(quantity, .01, 100000);
   const totals = value === null ? null : totalNutrients([{ id: 'preview', foodId: 'preview', food, snapshotAt: new Date().toISOString(), quantity: value, unit: food.basis === '100g' ? 'g' : 'ml' }]);
   const difference = energyDifference(food);
@@ -280,6 +292,7 @@ function FoodDetails({ food, props }: { food: Food; props: Props }) {
 }
 
 function FoodEditor({ props, record, onClose, onSaved }: { props: Props; record?: PhysisRecord<Food>; onClose: () => void; onSaved?: (record: PhysisRecord<Food>) => void }) {
+
   const t = tr(props.language);
   const actions = useActions();
   const [food, setFood] = useState<Food>(() => structuredClone(record?.data ?? blankFood()));
@@ -288,6 +301,7 @@ function FoodEditor({ props, record, onClose, onSaved }: { props: Props; record?
   const [serving, setServing] = useState(String(food.servingAmount));
   const [density, setDensity] = useState(String(food.densityGPerMl ?? ''));
   const [edible, setEdible] = useState(String(food.edibleFraction * 100));
+  usePhysisMigrationCapture('nutrition.FoodEditor',()=>({food,draftRecord,values,serving,density,edible}));
   async function save() {
     const servingAmount = physisNumber(serving, .01, 100000), ediblePercent = physisNumber(edible, .01, 100), densityGPerMl = density.trim() ? physisNumber(density, .001, 30) : null;
     if (servingAmount === null || ediblePercent === null || (density.trim() && densityGPerMl === null)) throw new Error(t('Проверьте порцию, плотность и съедобную часть.', 'Check serving, density and edible fraction.'));
@@ -309,18 +323,22 @@ function FoodEditor({ props, record, onClose, onSaved }: { props: Props; record?
 }
 
 function FoodImport({ props, onClose }: { props: Props; onClose: () => void }) {
+
   const t = tr(props.language); const actions = useActions();
   const [raw, setRaw] = useState(''); const [preview, setPreview] = useState<Food | null>(null);
   const [pendingUsda, setPendingUsda] = useState<string | null>(null);
+  usePhysisMigrationCapture('nutrition.FoodImport',()=>({raw,preview,pendingUsda}));
   const duplicate = preview && pendingUsda !== preview.provenance.id && catalogFor(props).some(entry => entry.food.provenance.provider === 'USDA' && entry.food.provenance.id === preview.provenance.id);
   return <section className="physis-panel"><h3>{t('Импорт FoodData Central', 'FoodData Central import')}</h3><p>{t('Вставьте JSON одного продукта из официального USDA API. Запросы к поставщику здесь не отправляются. Другие записи Фюзиса импортируются в общих настройках.', 'Paste one food JSON from the official USDA API. This form makes no provider requests. Import other Physis records in general settings.')}</p><label>{t('JSON продукта', 'Food JSON')}<textarea rows={6} value={raw} maxLength={1000000} onChange={event => { setRaw(event.target.value); setPreview(null); }} /></label><div className="physis-actions"><button disabled={actions.busy} onClick={() => void actions.run(() => { const food = importUsdaFood(JSON.parse(raw)); if (!validateNutritionRecord(newPhysisRecord('food', food))) throw new Error(t('Некорректный состав', 'Invalid composition')); setPreview(food); })}>{t('Предварительный просмотр', 'Preview')}</button><button onClick={onClose}>{t('Закрыть', 'Close')}</button></div>{preview && <><h4>{preview.name}</h4><p>{preview.provenance.version} · {preview.provenance.license}</p><p>{t('Импортировано нутриентов', 'Nutrients found')}: {Object.keys(preview.nutrients).length}. {t('Классификацию ингредиентов проверьте после импорта.', 'Review ingredient classification after import.')}</p>{duplicate && <p className="physis-warning">{t('Такой USDA ID уже есть в каталоге. Повторный импорт пропущен.', 'This USDA ID already exists. Duplicate import is skipped.')}</p>}<button className="physis-primary" disabled={actions.busy || !!duplicate} onClick={() => void actions.run(async () => { setPendingUsda(preview.provenance.id); await actions.submitCreation(`usda:${preview.provenance.id}`, () => [{ ...newPhysisRecord('food', preview), source: 'import' }], props.store); onClose(); })}>{t('Импортировать продукт', 'Import food')}</button></>}<ErrorMessage error={actions.error} /></section>;
 }
 
 function IngredientPicker({ props, items, onChange }: { props: Props; items: MealItem[]; onChange: (items: MealItem[]) => void }) {
+
   const t = tr(props.language); const [query, setQuery] = useState(''); const [selected, setSelected] = useState('');
   const [quantity, setQuantity] = useState('100'); const [unit, setUnit] = useState<MealItem['unit']>('g');
   const [error, setError] = useState(''); const [onlyFavorites, setOnlyFavorites] = useState(false);
   const [creatingFood, setCreatingFood] = useState(false);
+  usePhysisMigrationCapture('nutrition.IngredientPicker',()=>({query,selected,quantity,unit,error,onlyFavorites,creatingFood}));
   const catalog = catalogFor(props).filter(entry => !entry.food.archived);
   const recent = new Set(physisRecords<Meal>(props.store, 'meal').sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 10).flatMap(record => record.data.items.map(item => item.foodId)));
   const visible = catalog.filter(entry => (!onlyFavorites || entry.food.favorite) && `${entry.food.name} ${entry.food.brand} ${entry.food.aliases.join(' ')}`.toLowerCase().includes(query.toLowerCase())).sort((a, b) => Number(isTopFood(b.food)) - Number(isTopFood(a.food)) || Number(b.food.favorite) - Number(a.food.favorite) || Number(recent.has(b.id)) - Number(recent.has(a.id)) || a.food.name.localeCompare(b.food.name));
@@ -329,10 +347,12 @@ function IngredientPicker({ props, items, onChange }: { props: Props; items: Mea
 }
 
 function RecipeEditor({ props, record, onClose }: { props: Props; record?: PhysisRecord<Recipe>; onClose: () => void }) {
+
   const t = tr(props.language); const actions = useActions();
   const [draftRecord] = useState(() => record ?? newPhysisRecord('recipe', {}));
   const [name, setName] = useState(record?.data.name ?? ''); const [items, setItems] = useState<MealItem[]>(record?.data.ingredients ?? []);
   const [yieldValue, setYield] = useState(String(record?.data.yieldGrams ?? '')); const [servings, setServings] = useState(String(record?.data.servings ?? 1)); const [note, setNote] = useState(record?.data.note ?? '');
+  usePhysisMigrationCapture('nutrition.RecipeEditor',()=>({draftRecord,name,items,yieldValue,servings,note}));
   return <section className="physis-panel"><h3>{t('Рецепт и выход блюда', 'Recipe and final yield')}</h3><form className="physis-form" onSubmit={event => { event.preventDefault(); void actions.run(async () => {
     const yieldGrams = physisNumber(yieldValue, .01, 1e6), count = physisNumber(servings, .01, 10000);
     if (yieldGrams === null || count === null) throw new Error(t('Укажите массу готового блюда и число порций.', 'Enter final cooked weight and serving count.'));
@@ -349,6 +369,7 @@ function NutritionMealDialog({children,onClose,language,title}: {children:ReactN
 }
 
 function NutritionPlanWizard({ props, open, onClose, dates }: { props: Props; open: boolean; onClose: () => void; dates: string[] }) {
+
   const t = tr(props.language), actions = useActions();
   const ref = useDialogAccessibility<HTMLElement>(()=>{if(!actions.busy)onClose();}, open);
   const existingProfile = profileFor(props);
@@ -368,6 +389,7 @@ function NutritionPlanWizard({ props, open, onClose, dates }: { props: Props; op
   const [drafts, setDrafts] = useState<Record<string, Meal[]>>({});
   const [mealIndex, setMealIndex] = useState(0);
   const [newFood, setNewFood] = useState(false);
+  usePhysisMigrationCapture('nutrition.NutritionPlanWizard',()=>({profile,profileRecord,parameters,step,energy,shares,basis,target,targetScope,day,drafts,mealIndex,newFood}));
   const meals = drafts[day] ?? blankMeals(day);
   const prepared = Object.values(drafts).flat().filter(meal => meal.items.length);
   const updateMeal = (index: number, patch: Partial<Meal>) => setDrafts(current => ({ ...current, [day]: meals.map((meal,i) => i === index ? { ...meal,...patch } : meal) }));
@@ -397,6 +419,7 @@ function NutritionPlanWizard({ props, open, onClose, dates }: { props: Props; op
 }
 
 function NutritionDiary(props: Props & { mode: 'today' | 'plan'; controls?: ReactNode }) {
+
   const t = tr(props.language); const actions = useActions();
   const web = typeof document !== 'undefined' && document.documentElement.dataset.genesisWeb === 'true';
   const [wizardOpen,setWizardOpen] = useState(false);
@@ -419,6 +442,7 @@ function NutritionDiary(props: Props & { mode: 'today' | 'plan'; controls?: Reac
   const [editing, setEditing] = useState<string | null>(null); const [copyTo, setCopyTo] = useState(() => addCivilDays(todayCivilDate(props.context), 1));
   const [repeating,setRepeating] = useState<PhysisRecord<Meal> | null>(null);
   const [templateName, setTemplateName] = useState(''); const [deleteId, setDeleteId] = useState('');
+  usePhysisMigrationCapture('nutrition.NutritionDiary',()=>({wizardOpen,selectedDate,anchor,period,dayType,editing,copyTo,repeating,templateName,deleteId}));
   const summary = summaryForDay(props.store, date); const profile = profileFor(props)?.data; const target = profile && profile[dayType].energy > 0 ? profile[dayType] : undefined;
   const templates = physisRecords<DietTemplate>(props.store, 'diet-template');
   const dates = [...new Set(physisRecords<Meal>(props.store, 'meal').map(record => record.data.date))].sort().reverse();
@@ -452,15 +476,19 @@ function NutritionDiary(props: Props & { mode: 'today' | 'plan'; controls?: Reac
 }
 
 function MealEditor({ props, date, record, defaultStatus = 'actual', onClose }: { props: Props; date: string; record?: PhysisRecord<Meal>; defaultStatus?: Meal['status']; onClose: () => void }) {
+
   const t = tr(props.language); const actions = useActions();
   const [meal, setMeal] = useState<Meal>(() => structuredClone(record?.data ?? { date, time: '12:00', timeZone: props.settings.timeZone, name: t('Обед', 'Lunch'), status: defaultStatus, items: [], note: '' }));
   const [draftRecord] = useState(() => record ?? newPhysisRecord('meal', meal));
+  usePhysisMigrationCapture('nutrition.MealEditor',()=>({meal,draftRecord}));
   const existing = props.store.records.some(r=>r.id===draftRecord.id);
   return <section className="physis-panel"><h3>{existing ? t('Изменить приём пищи', 'Edit meal') : meal.copiedFrom ? t('Повтор приёма пищи','Repeat meal') : t('Новый приём пищи', 'New meal')}</h3><form className="physis-form" onSubmit={event => { event.preventDefault(); void actions.run(async () => { await validateAndSave(props, editPhysisRecord(draftRecord, meal)); onClose(); }); }}><div className="physis-nutrition-fields"><label>{t('Дата приёма пищи','Meal date')}<CalendarDatePicker value={meal.date} mode={props.settings.inputCalendarMode} calculationContext={props.context} ariaLabel={t('Дата приёма пищи','Meal date')} onChange={value=>{if(value)setMeal({...meal,date:value});}} /></label><label>{t('Приём пищи', 'Meal name')}<input required list="physis-meal-names" value={meal.name} maxLength={200} onChange={event => setMeal({ ...meal, name: event.target.value })} /><datalist id="physis-meal-names">{[t('Завтрак', 'Breakfast'), t('Обед', 'Lunch'), t('Полдник', 'Afternoon snack'), t('Ужин', 'Dinner'), t('Перекус', 'Snack')].map(name => <option key={name} value={name} />)}</datalist></label><label>{t('Время', 'Time')}<TimeClockPicker value={meal.time} ariaLabel={t('Время', 'Time')} onChange={time => setMeal({ ...meal, time })} /></label><label>{t('Статус', 'Status')}<select value={meal.status} onChange={event => setMeal({ ...meal, status: event.target.value as Meal['status'] })}><option value="actual">{t('Фактически съедено', 'Actually eaten')}</option><option value="planned">{t('Планирую съесть', 'Planned')}</option></select></label></div><IngredientPicker props={props} items={meal.items} onChange={items => setMeal({ ...meal, items })} />{meal.items.length > 0 && <NutrientSummary totals={totalNutrients(meal.items)} props={props} />}<label>{t('Заметка', 'Note')}<textarea value={meal.note} maxLength={10000} onChange={event => setMeal({ ...meal, note: event.target.value })} /></label><p className="physis-muted">{t('Сохраняется состав и порция на момент записи. Последующее изменение продукта не меняет этот приём пищи.', 'Food composition and portions are saved as a snapshot. Later catalog edits do not change this meal.')}</p><ErrorMessage error={actions.error} /><div className="physis-actions physis-nutrition-save"><button className="physis-primary" type="submit" disabled={actions.busy || meal.items.length === 0}>{actions.busy ? t('Сохраняется…', 'Saving…') : t('Сохранить приём пищи', 'Save meal')}</button><button type="button" disabled={actions.busy} onClick={onClose}>{t('Отмена', 'Cancel')}</button></div></form></section>;
 }
 
 function PortionPlanner({ props, totals, target, date, onAdd, empty=false }: { props: Props; totals: NutrientTotals; target?: NutritionTarget; date: string; empty?: boolean; onAdd?: (item: MealItem) => void }) {
+
   const t = tr(props.language); const actions = useActions(); const [selected, setSelected] = useState(''); const [key, setKey] = useState<NutrientKey>('protein');
+  usePhysisMigrationCapture('nutrition.PortionPlanner',()=>({selected,key}));
   const catalog = catalogFor(props).filter(entry => !entry.food.archived); const food = catalog.find(entry => entry.id === selected);
   const goal = target && key in target ? target[key as keyof NutritionTarget] : null;
   const remaining = goal == null || !empty && totals[key].value === null ? null : Math.max(0, goal - totals[key].knownValue);
@@ -479,6 +507,7 @@ function targetDraft(target: NutritionTarget, profile: NutritionProfile): Target
 }
 export type NutritionSettingsHandle = { resolve: () => NutritionProfile };
 export function NutritionSettings(props: Props & { calculatorOnly?: boolean; personalDraft?: PersonalProfileDraft; editorRef?: Ref<NutritionSettingsHandle> }) {
+
   const Form = props.personalDraft ? 'div' : 'form';
   const t = tr(props.language); const actions = useActions(); const record = profileFor(props);
   const [profile, setProfile] = useState<NutritionProfile>(() => structuredClone(record?.data ?? defaultNutritionProfile()));
@@ -486,6 +515,7 @@ export function NutritionSettings(props: Props & { calculatorOnly?: boolean; per
   const [anthropometrics, setAnthropometrics] = useState({ age: String(profile.age ?? ''), heightCm: String(profile.heightCm ?? ''), weightKg: String(profile.weightKg ?? ''), activityFactor: String(profile.activityFactor) });
   const [drafts, setDrafts] = useState({ training: targetDraft(profile.training, profile), rest: targetDraft(profile.rest, profile) });
   const [estimate, setEstimate] = useState(''); const [message, setMessage] = useState('');
+  usePhysisMigrationCapture('nutrition.NutritionSettings',()=>({profile,draftRecord,anthropometrics,drafts,estimate,message}));
   function parameters() {
     if (props.personalDraft) {
       let next: NutritionProfile;

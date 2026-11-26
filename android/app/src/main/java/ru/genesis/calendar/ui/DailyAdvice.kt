@@ -130,6 +130,7 @@ import kotlin.math.min
             finally { loading = false }
         }
         val cards = response?.history.orEmpty().filter { DailyAdviceProtocol.visible(it, preferences) }
+        PrivatePendingOperations(CloudAccountSnapshot.scopeFor(userId),"advice",language,listOf(failed,changing,attempt,response?.advice?.id)){attempt++}
         if (failed) Row(Modifier.fillMaxWidth().testTag("daily-advice-load-error").semantics { liveRegion = LiveRegionMode.Polite },
             horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -395,7 +396,7 @@ import kotlin.math.min
     var error by remember { mutableStateOf(false) }
     var ageCategories by remember { mutableStateOf<List<String>?>(null) }
     var originOpen by remember { mutableStateOf(false) }
-    var collectionTab by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(preferences.collections.first()) }
+    var collectionTab by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("philosophers") }
     val scope = rememberCoroutineScope()
     fun change(patch: JSONObject) {
         if (busy || !enabled) return
@@ -422,7 +423,7 @@ import kotlin.math.min
             }
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("aurora", "philosophers").forEach { collection ->
+                    listOf("philosophers", "aurora").forEach { collection ->
                         OutlinedButton({ collectionTab = collection }, selected = collectionTab == collection,
                             modifier = Modifier.weight(1f).fillMaxHeight().heightIn(min = 48.dp)
                             .testTag("advice-source-tab-$collection"), contentPadding = PaddingValues(8.dp),

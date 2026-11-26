@@ -38,10 +38,11 @@ internal fun SharedMindmapsScreen(gateway: SharedWorkspaceGateway, space: String
     val repository = remember(gateway, uid, space, cacheScope) {
         MindmapRepository(app.database, cacheScope, SharedMindmapProtocol.uid(uid, space), SharedMindmapTransport(gateway, uid, space, onAccessLost = {
             ready = false; error = "Доступ к пространству изменился. Обновите общие дела."
-        }, onAuthorizedMaps = { authorizedMaps = it }), dataExchangeAccess = { dataExchangeAccess })
+        }, onAuthorizedMaps = { authorizedMaps = it }), dataExchangeAccess = { dataExchangeAccess },privateShared=ru.genesis.calendar.data.PrivateSharedMapBinding(app.workspaceScope,uid,space))
     }
-    val journal = remember(cacheScope) { SharedMindmapConversionJournal(app.database, cacheScope) }
+    val journal = remember(cacheScope) { SharedMindmapConversionJournal(app.database, cacheScope,PrivateSharedMapBinding(app.workspaceScope,uid,space)) }
     val records by repository.records.collectAsState()
+    LaunchedEffect(records){if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope))authorizedMaps=records.map{it.document.id}.toSet()}
     var journalRows by remember { mutableStateOf(emptyList<JSONObject>()) }
     var resolved by remember { mutableStateOf(emptyList<JSONObject>()) }
     var referenceIds by remember { mutableStateOf(emptySet<String>()) }
@@ -50,6 +51,7 @@ internal fun SharedMindmapsScreen(gateway: SharedWorkspaceGateway, space: String
     var cursor by remember { mutableStateOf<String?>(null) }
     var searchBusy by remember { mutableStateOf(false) }
     var actionBusy by remember { mutableStateOf(false) }
+    var exactApproval by remember{mutableStateOf<JSONObject?>(null)}
     val attemptedReceipts = remember(space) { mutableSetOf<String>() }
     val readOnly = currentSpace?.let { if (it.has("permissions")) it.getJSONObject("permissions").optBoolean("editTasks")
         else it.optString("role") != "guest" } != true
@@ -176,11 +178,15 @@ internal fun SharedMindmapsScreen(gateway: SharedWorkspaceGateway, space: String
                     val snapshot = gateway.sharedProject(requireNotNull(task.projectId)); val project = snapshot.getJSONObject("project")
                     require(sharedTaskCanEdit(project)) { "SHARED_PROJECT_FORBIDDEN" }
                     val current = gateway.sharedTask(project.getString("id"), task.id).getJSONObject("task")
-                    if (!task.done && current.optBoolean("approvalRequired")) gateway.sharedTaskApprove(project.getString("id"), task.id)
-                    else {
+                    val protected=ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope)
+                    if (!task.done && current.optBoolean("approvalRequired")&&!protected) gateway.sharedTaskApprove(project.getString("id"), task.id)
+                    else if(!task.done&&current.optBoolean("approvalRequired")&&current.optBoolean("completionRequested")){
+                        if(SharedTaskReviewProtocol.canApprove(current,uid))exactApproval=current
+                    }else {
                         val source = snapshot.getJSONArray("statuses"); val status = (0 until source.length()).map { source.getJSONObject(it) }.firstOrNull { (it.optInt("isDone") == 1) != task.done }
                             ?: throw IllegalStateException("SHARED_STATUS_NOT_FOUND")
                         gateway.updateSharedTask(project.getString("id"), task.id, JSONObject().put("statusId", status.getString("id")).put("expectedRevision", current.getLong("revision")))
+                        if(protected&&!task.done&&current.optBoolean("approvalRequired")){val proposed=gateway.sharedTask(project.getString("id"),task.id).getJSONObject("task");if(SharedTaskReviewProtocol.canApprove(proposed,uid))exactApproval=proposed}
                     }
                     retry++
                 } }, onProject = onProject, readOnly = readOnly, workspaceTitle = currentSpace?.optString("title").orEmpty(),
@@ -200,4 +206,5 @@ internal fun SharedMindmapsScreen(gateway: SharedWorkspaceGateway, space: String
                 })
         }
     }
+    exactApproval?.let{task->PrivateExactApprovalDialog(gateway,task,onClose={exactApproval=null},onDone={retry++})}
 }

@@ -86,9 +86,10 @@ function OlympianCatalog(props: Parameters<typeof OlympianIsopsephyContent>[0]) 
   return <OlympianIsopsephyContent {...props} search={copy ? { id, query, onChange: setQuery, copy } : undefined} />;
 }
 
-export function OlympianIsopsephyDialog({ deity, language, onClose, onBack, onSelect, onOpenStoicheion, onOpenSector }: {
+export function OlympianIsopsephyDialog({ deity, language, onClose, onBack, onSelect, onOpenStoicheion, onOpenSector, embedded = false }: {
   deity: OlympianDeity; language: Language; onClose: () => void;
   onBack?: () => void; onSelect?: (deity: OlympianDeity) => void;
+  embedded?: boolean;
 } & OlympianNavigation) {
   const lang = locale(language);
   const copy = content.locales[lang];
@@ -104,11 +105,11 @@ export function OlympianIsopsephyDialog({ deity, language, onClose, onBack, onSe
     return () => { document.body.style.overflow = previous; };
   }, []);
   const dialog = <div className="modal-backdrop olympian-backdrop" role="presentation" lang={lang} data-no-translate>
-    <section ref={dialogRef} className="olympian-modal olympian-reading-modal" role="dialog" aria-modal="true" data-dialog-header="none"
+    <section ref={dialogRef} className="olympian-modal olympian-reading-modal" role="dialog" aria-modal="true" data-dialog-header="none" data-olympian-embedded={embedded || undefined}
       aria-labelledby={titleId} aria-describedby={descriptionId} tabIndex={-1}>
       <div className="olympian-reading-toolbar">
         {onBack ? <button type="button" className="olympian-text-action" onClick={onBack}><ExperimentalIcon name="chevron-left" />{knowledgeCopy?.back ?? content.locales[lang].title}</button> : <span />}
-        <DialogCloseButton onClick={onClose} aria-label={`${copy.close}: ${deity.name[lang]}`} />
+        {!embedded ? <DialogCloseButton onClick={onClose} aria-label={`${copy.close}: ${deity.name[lang]}`} /> : null}
       </div>
       <header className="olympian-modal-heading">
         <OlympianSymbol deity={deity} />

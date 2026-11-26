@@ -22,7 +22,7 @@ export function contained(root, file) {
 }
 export function sourceSnapshot(root) {
   // Hash source bytes only. Never open secrets, local databases, generated build trees or user backups.
-  const names = execFileSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard', '--', 'app', 'server', 'android', 'tests', 'scripts', 'public', '.github/workflows', 'package.json', 'pnpm-lock.yaml', '*.config.*', 'docs/qa/3.1.7-2026-11-03/catalog-contracts.json'], { cwd: root, maxBuffer: 16 * 1024 * 1024 }).toString().split('\0').filter(Boolean);
+  const names = execFileSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard', '--', 'app', 'server', 'android', 'contracts', 'tests', 'scripts', 'public', '.github/workflows', 'package.json', 'pnpm-lock.yaml', '*.config.*', 'docs/qa/3.1.7-2026-11-03/catalog-contracts.json'], { cwd: root, maxBuffer: 16 * 1024 * 1024 }).toString().split('\0').filter(Boolean);
   const files = [...new Set(names)].filter(name => !/(^|\/)(?:\.env[^/]*|config\.php|server\/var|deploy-private|backups|sshp\.txt)(?:\/|$)/.test(name) && !/(?:^|\/)(?:build|\.gradle|var|node_modules)(?:\/|$)/.test(name)).sort().map(name => {
     const file = contained(root, name);
     return { path: slash(name), sha256: existsSync(file) && statSync(file).isFile() ? hash(readFileSync(file)) : 'MISSING' };

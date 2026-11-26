@@ -23,7 +23,8 @@ internal val dictationSpellerLanguages = setOf("ru", "en", "uk")
 internal const val dictationSpellerCreditUrl = "https://yandex.ru/dev/speller/"
 
 /** Explicit opt-in only. This free public endpoint receives one new final phrase, never a stored note or audio. */
-internal suspend fun correctDictatedPhrase(text: String, language: String): String {
+internal suspend fun correctDictatedPhrase(text: String, language: String,privateAccount:ru.genesis.calendar.security.E2eeProductAccount?=null,
+    consent:ru.genesis.calendar.security.ExternalCopyConsent?=null): String {
     require(language in dictationSpellerLanguages && text.isNotBlank() && text.length <= 4_000)
     return withTimeout(2_500) {
         coroutineScope {
@@ -33,6 +34,7 @@ internal suspend fun correctDictatedPhrase(text: String, language: String): Stri
                     var connection: HttpsURLConnection? = null
                     try {
                         coroutineContext.ensureActive()
+                        if(privateAccount!=null){checkNotNull(consent){"E2EE_EXTERNAL_COPY_CONSENT_REQUIRED"}.consume(privateAccount,"yandex-speller","dictation",org.json.JSONObject().put("text",text).put("language",language));privateAccount.requireOpen()}
                         connection = URL("https://speller.yandex.net/services/spellservice.json/checkText")
                             .openConnection() as HttpsURLConnection
                         connectionRef.set(connection)
@@ -48,6 +50,7 @@ internal suspend fun correctDictatedPhrase(text: String, language: String): Stri
                         val bytes = ("text=" + URLEncoder.encode(text, "UTF-8") + "&lang=" + language + "&options=6&format=plain")
                             .toByteArray(Charsets.UTF_8)
                         connection.setFixedLengthStreamingMode(bytes.size)
+                        privateAccount?.requireOpen()
                         connection.outputStream.use { it.write(bytes) }
                         check(connection.responseCode == 200)
                         check(connection.contentLengthLong <= 65_536)
@@ -65,6 +68,7 @@ internal suspend fun correctDictatedPhrase(text: String, language: String): Stri
                         val json = Charsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
                             .onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(output.toByteArray())).toString()
                         val corrected = applyDictationSpelling(text, JSONArray(json), language)
+                        privateAccount?.requireOpen()
                         if (continuation.isActive) continuation.resume(corrected)
                     } catch (failure: Exception) {
                         if (continuation.isActive) continuation.resumeWithException(failure)

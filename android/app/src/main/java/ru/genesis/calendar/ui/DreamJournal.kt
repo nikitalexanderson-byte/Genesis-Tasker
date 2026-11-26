@@ -85,6 +85,14 @@ internal val LocalDreamRepository=staticCompositionLocalOf<DiaryRepository?> { n
     var filter by rememberSaveable { mutableStateOf("all") };var query by rememberSaveable { mutableStateOf("") }
     var historyDay by rememberSaveable { mutableStateOf(date.toString()) }
     var showStats by rememberSaveable { mutableStateOf(false) };var showDrafts by rememberSaveable { mutableStateOf(false) }
+    RememberMigrationInput(repository.migrationOwner,"diary",repository){
+        val records=org.json.JSONArray(state.records.map{row->JSONObject().put("note",row.note.json()).put("revision",row.revision)
+            .put("draftKey",row.draftKey?:JSONObject.NULL).put("localOnly",row.localOnly)})
+        ru.genesis.calendar.security.NativeMigrationMemory.Capture(JSONObject().put("records",records).put("editors",org.json.JSONArray()),
+            JSONObject().put("form","dream-journal-view").put("open",open).put("recordId",record?.note?.id?:JSONObject.NULL)
+                .put("history",history).put("filter",filter).put("query",query).put("historyDay",historyDay)
+                .put("showStats",showStats).put("showDrafts",showDrafts),state.ready)
+    }
     val dreams=DreamJournalModel.uniqueDreams(state.records)
     val otherDrafts=state.records.filter { row -> row.note.dreamDay!=null&&row.draft&&dreams.none { it.draftKey==row.draftKey } }
     LaunchedEffect(repository) { try { repository.loadCached();repository.refresh();failed=false }
@@ -170,7 +178,7 @@ internal val LocalDreamRepository=staticCompositionLocalOf<DiaryRepository?> { n
     val currentLanguage by rememberUpdatedState(language)
     val currentEditorKey by rememberUpdatedState(key)
     DisposableEffect(spellingPatches){onDispose{spellingPatches.clear()}}
-    val saver=remember(repository){Saver<String,String>(save={repository.sealEditorState(it)},restore={repository.openEditorState(it)})}
+    val saver=remember(repository){Saver<String,String>(save={try{repository.sealEditorState(it)}catch(error:IllegalStateException){if(error.message=="E2EE_UNLOCK_REQUIRED")null else throw error}},restore={repository.openEditorState(it)})}
     var formJson by rememberSaveable(key,stateSaver=saver){mutableStateOf((record?.note?.json()?:DiaryNote.newDraftJson()
         .put("dream",JSONObject().put("day",date.toString()).put("timeZone",ZoneId.systemDefault().id))).toString())}
     var draftKey by rememberSaveable(key){mutableStateOf(record?.draftKey)}
@@ -183,6 +191,21 @@ internal val LocalDreamRepository=staticCompositionLocalOf<DiaryRepository?> { n
     val voiceGeneration=remember { intArrayOf(0) }
     val voiceCommit=remember(key){arrayOfNulls<Pair<String,String>>(1)}
     var changed by rememberSaveable(key) { mutableStateOf(false) }
+    val migrationEditorId=remember(repository,key){java.util.UUID.randomUUID().toString()}
+    RememberMigrationInput(repository.migrationOwner,"diary",migrationEditorId){
+        val editor=JSONObject().put("source",migrationEditorId).put("note",JSONObject(formJson)).put("revision",record?.revision?:0)
+        val pending=voiceCommit[0]
+        val captured=JSONObject().put("form","dream-editor").put("note",JSONObject(formJson)).put("draftKey",draftKey?:JSONObject.NULL)
+            .put("baseline",record?.note?.json()?:JSONObject.NULL).put("revision",record?.revision?:0).put("changed",changed)
+            .put("checking",checking).put("today",today?:JSONObject.NULL).put("saving",saving).put("conflict",conflict)
+            .put("recording",recording).put("voicePending",voicePending).put("voicePartial",voicePartial)
+            .put("voiceCommit",pending?.let{JSONObject().put("heard",it.first).put("body",it.second)}?:JSONObject.NULL)
+            .put("spellingEnabled",spellingEnabled).put("spellingPending",spellingPatches.hasPending()).put("deleteConfirm",deleteConfirm)
+            .put("execution","history-only")
+        ru.genesis.calendar.security.NativeMigrationMemory.Capture(JSONObject().put("records",org.json.JSONArray()).put("editors",org.json.JSONArray().put(editor)),
+            captured,!saving&&!recording&&!voicePending&&!spellingPatches.hasPending()&&!checking)
+    }
+    LaunchedEffect(repository,formJson){if(repository.privateContent)try{repository.keepEditorState(formJson)}catch(cancel:CancellationException){throw cancel}catch(_:Exception){error=common.getString("draftError")}}
     fun update(field:String,value:String){formJson=JSONObject(formJson).put(field,value).toString();changed=true;error=null}
     fun checkFinalPhrase(heard:String,generation:Int){
         val candidate=voiceCommit[0];voiceCommit[0]=null
@@ -194,7 +217,9 @@ internal val LocalDreamRepository=staticCompositionLocalOf<DiaryRepository?> { n
             generation==voiceGeneration[0]&&app.workspaceScope==editorAccountScope&&!saving&&!deleteConfirm&&spellingPatches.contains(ticket)
         scope.launch{
             try{
-                val corrected=correctDictatedPhrase(heard.trim(),language)
+                val privateAccount=if(repository.privateContent)ru.genesis.calendar.security.NativePrivateProducts.currentAccount(editorAccountScope)else null
+                val consent=privateAccount?.let{ru.genesis.calendar.security.ExternalCopyConsent.approve(it,"yandex-speller","dictation",JSONObject().put("text",heard.trim()).put("language",language),ownsPatch())}
+                val corrected=correctDictatedPhrase(heard.trim(),language,privateAccount,consent)
                 if(ownsPatch())spellingPatches.apply(JSONObject(formJson).getString("body"),ticket,corrected)?.let{update("body",it)}
             }catch(timeout:TimeoutCancellationException){if(ownsPatch())error=dictationCopy.getString("unavailable")}
             catch(cancel:CancellationException){throw cancel}

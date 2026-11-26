@@ -6,8 +6,10 @@ function genesisDb(): PDO {return $GLOBALS['settlementDb'];}
 function genesisConfig(): array {return ['billing'=>['enabled'=>false,'credit_settlement_verified'=>false,'providers'=>['yookassa'=>settlementConfig()]]];}
 function genesisNow(): string {return gmdate('Y-m-d\TH:i:s\Z',$GLOBALS['settlementNow']);}
 function genesisUuid(): string {static $i=0;return 'synthetic-job-'.++$i;}
-function genesisSharedContentEncrypt(string $value): string {return 'fixture:'.base64_encode($value);}
-function genesisSharedContentDecrypt(string $value): string {return base64_decode(substr($value,8),true);}
+// Isolate the low-level server cipher only. Use the actual shared-content
+// wrapper loaded by background-jobs/e2ee-background; never redeclare it.
+function genesisEncrypt(?string $value): ?string {return $value===null?null:'fixture:'.base64_encode($value);}
+function genesisDecrypt(?string $value): ?string {if($value===null||!str_starts_with($value,'fixture:'))return null;$plain=base64_decode(substr($value,8),true);return is_string($plain)?$plain:null;}
 function genesisIdentifierHash(string $namespace,string $value): string {return hash_hmac('sha256',$namespace."\0".$value,'synthetic-settlement-key');}
 require dirname(__DIR__).'/src/feature-access.php';
 require dirname(__DIR__).'/src/resource-limits.php';
@@ -202,6 +204,9 @@ settlementCheck(genesisBillingSettlement($db,'target')['state']==='refund-requir
 [$db,$order,$now,$start,$at]=settlementFixture();settlementHold($db,$start,$now);genesisBillingSettlementScan();genesisBillingSettlementScan();
 settlementCheck((int)$db->query('SELECT COUNT(*) FROM background_jobs')->fetchColumn()===1,'Scanner duplicated durable job');
 $job=genesisBackgroundClaim(gmdate('Y-m-d\TH:i:s\Z',$now));settlementCheck($job['kind']==='billing-settlement','Settlement job not claimable');
+settlementCheck(str_starts_with($job['payload'],GENESIS_SHARED_CONTENT_PREFIX)
+    &&json_decode(genesisSharedContentDecrypt($job['payload']),true,32,JSON_THROW_ON_ERROR)===['orderId'=>'target'],
+    'Settlement queue bypassed the real shared-content wrapper');
 $workerCalls=0;$http=function($method,$url,$body)use($db,&$workerCalls,$at):array{
     settlementCheck(!$db->inTransaction(),'Worker network held writer');$workerCalls++;
     if($method==='GET')return settlementPayment($at);return settlementRefund('pending');

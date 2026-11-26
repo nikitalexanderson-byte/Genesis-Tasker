@@ -1,6 +1,6 @@
 package ru.genesis.calendar.data
 
-import androidx.room.withTransaction
+import ru.genesis.calendar.data.withTransaction
 import org.json.JSONArray
 import org.json.JSONObject
 import org.json.JSONException
@@ -45,7 +45,13 @@ internal class CloudAccountImporter(private val db: GenesisDatabase, private val
             .put("addictionEntries", document.optJSONArray("addictionEntries") ?: JSONArray()).toString()
     }
 
-    suspend fun import(snapshot: CloudAccountSnapshot): Result {
+    suspend fun import(snapshot: CloudAccountSnapshot,assertCurrent:()->Unit={}):Result {
+        val current={ru.genesis.calendar.security.UpdateGate.requireOpen();assertCurrent()}
+        return if(scheduler==null)NativeLegacyOperationPermit.run(db,snapshot.scope,current){importLocked(snapshot,current)}
+            else scheduler.withIncomingAccountMutation(snapshot.scope,current){importLocked(snapshot,current)}
+    }
+    private suspend fun importLocked(snapshot: CloudAccountSnapshot,assertCurrent:()->Unit): Result {
+        assertCurrent()
         val scope = snapshot.scope
         val mutation=ru.genesis.calendar.auth.NativeBackupMutationGuard(scope)
         require(scope.startsWith("account-") && scope.length == 40)
@@ -81,7 +87,7 @@ internal class CloudAccountImporter(private val db: GenesisDatabase, private val
         val previousReminders = dao.reminders(scope)
         val changedTaskIds = mutableSetOf<String>()
         val update: suspend () -> Result = { db.withTransaction {
-            mutation.check()
+            mutation.check();assertCurrent()
             val pending = dao.outbox(scope).map { it.entityId }.toSet()
             val cached = dao.document(scope, "cloud-base")
             val staleWorkspace = cached != null && cached.revision > snapshot.version
@@ -129,13 +135,12 @@ internal class CloudAccountImporter(private val db: GenesisDatabase, private val
                         dao.putDocument(DocumentRecord(scope, "trackers", cipher.encrypt(requireNotNull(trackers), "$scope/trackers"), snapshot.version))
                 }
             }
+            assertCurrent()
             if (unreadable > 0) Result.IMPORTED_WITH_TASK_WARNING
             else if (pending.isNotEmpty() || staleWorkspace) Result.PENDING_LOCAL_CHANGES
             else if (snapshot.googleSyncWarning) Result.IMPORTED_WITH_GOOGLE_WARNING else Result.IMPORTED
         } }
-        val result = if (scheduler == null) update() else scheduler.withMutation {
-            update().also { previousReminders.filter { it.taskId in changedTaskIds }.forEach(scheduler::cancel) }
-        }
+        val result = update().also {assertCurrent();if(scheduler!=null)previousReminders.filter { it.taskId in changedTaskIds }.forEach(scheduler::cancel)}
         return result
     }
 }

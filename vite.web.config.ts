@@ -12,6 +12,7 @@ import {REGION_LANGUAGES} from './app/region-language';
 import {PUBLIC_PAGES,publicPagePath,publicPageAlternates} from './app/public-route';
 import {publicHomeHtml,publicLegalHtml,PUBLIC_ORIGIN} from './app/public-document-html';
 import publicPageCopy from './app/public-page-copy.json';
+import {advicePublicAssets} from './scripts/advice-public-assets.mjs';
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const configuredBase = process.env.GENESIS_BASE_PATH?.trim() || "/";
@@ -112,7 +113,7 @@ function offlinePrecacheManifest(basePath: string): Plugin {
         "fonts/experimental/SourceSerif4-latin.woff2"];
       const iconFiles = mindmapIconCatalog.map(icon => `mindmap-icons/${icon.id}.png`);
       const moodFiles = moodFaces.faces.map(face => `tracker-art/moods/mood-${face.value + 5}.svg`);
-      const staticFiles = [...feedbackAudioManifest.files.map(cue => `feedback-audio/${cue.file}`), ...fonts, ...iconFiles, ...moodFiles, "habit-reminder-worker.js", "icons/icon-round-v2.png", "mindmap-icons/LICENSE.txt", "mindmap-icons/SOURCE.txt", "mindmap-icons/GENESIS-100-PNG.zip", "sounds/task.wav", "sounds/habit.wav"];
+      const staticFiles = [...feedbackAudioManifest.files.map(cue => `feedback-audio/${cue.file}`), ...fonts, ...iconFiles, ...moodFiles, "habit-reminder-worker.js", "e2ee-legacy-transport-worker.js", "icons/icon-round-v2.png", "mindmap-icons/LICENSE.txt", "mindmap-icons/SOURCE.txt", "mindmap-icons/GENESIS-100-PNG.zip", "sounds/task.wav", "sounds/habit.wav"];
       const fingerprint = createHash("sha256").update(`${PRECACHE_STATIC_REVISION}\n${requiredFiles.join("\n")}`);
       staticFiles.forEach((file) => fingerprint.update(readFileSync(path.join(projectRoot, "public", file))));
       const version = fingerprint.digest("hex").slice(0, 16);
@@ -138,7 +139,7 @@ export default defineConfig({
   root: path.join(projectRoot, "web"),
   base,
   publicDir: path.join(projectRoot, "public"),
-  plugins: [compactUiLocaleTransport(), react(), offlinePrecacheManifest(base), publicLegalDocuments()],
+  plugins: [compactUiLocaleTransport(), react(), offlinePrecacheManifest(base), publicLegalDocuments(), advicePublicAssets(projectRoot)],
   define: {
     "process.env.NEXT_PUBLIC_GENESIS_MINDMAPS": JSON.stringify(process.env.GENESIS_MINDMAPS === "true" ? "true" : "false"),
     "process.env.NEXT_PUBLIC_GENESIS_API_URL": JSON.stringify(apiUrl),
@@ -153,6 +154,10 @@ export default defineConfig({
       output: {
         codeSplitting: {
           groups: [
+            // Vault, migration and recovery controls stay mounted independently
+            // of the planner without inflating its initial application chunk.
+            { name: "private-security-ui", test: /app[\\/]+Private[^\\/]+\.tsx$/, maxSize: 280_000, priority: 16 },
+            { name: "planner-ui", test: /app[\\/]GenesisCalendar\.tsx$/, maxSize: 280_000, priority: 14 },
             // Preserve the eagerly mounted controls while keeping their independent
             // tooltip/dialog services out of the entry with production mindmaps enabled.
             { name: "dialog-chrome", test: /app[\\/](?:ButtonTooltips|DialogDismissal|DialogHeaderActions)\.tsx$/, priority: 14 },

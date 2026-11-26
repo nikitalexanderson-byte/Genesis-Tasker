@@ -1,9 +1,11 @@
 package ru.genesis.calendar.data
 
-import androidx.room.withTransaction
+import ru.genesis.calendar.data.withTransaction
 import java.time.*
 import java.util.UUID
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.Dispatchers
 import org.json.JSONArray
 import org.json.JSONObject
 import ru.genesis.calendar.domain.GenesisCalendar
@@ -107,14 +109,30 @@ class TaskRepository(private val db: GenesisDatabase, private val cipher: LocalC
     val scope: String, private val scheduler: ReminderScheduler) {
     private val mutation=ru.genesis.calendar.auth.NativeBackupMutationGuard(scope)
     private val dao get() = db.dao()
-    val tasks = dao.observeTasks(scope).map { rows ->
+    private fun privateTask(value:JSONObject):LocalTask=LocalTask.from(TaskRecord(scope,value.getString("id"),"",value.optLong("updatedAt",0),value.optBoolean("done",false)),value.toString())
+    val tasks = PrivatePersonalDocuments.observeSnapshot(scope,dao.observeTasks(scope).map { rows ->
         rows.map { LocalTask.from(it, cipher.decrypt(it.encrypted, "$scope/${it.id}")) }
             .sortedWith(compareBy<LocalTask> { it.done }.thenBy { it.date }.thenBy { it.time }.thenByDescending { it.priority })
-    }
-    suspend fun get(id: String): LocalTask? = dao.task(scope, id)?.takeUnless { it.deleted }?.let {
+    }){snapshot->val rows=snapshot.getJSONArray("tasks");(0 until rows.length()).map{privateTask(rows.getJSONObject(it))}
+        .sortedWith(compareBy<LocalTask>{it.done}.thenBy{it.date}.thenBy{it.time}.thenByDescending{it.priority})}.flowOn(Dispatchers.IO)
+    suspend fun get(id: String): LocalTask? {
+      if(PrivatePersonalDocuments.isProtected(scope)){val rows=ru.genesis.calendar.security.NativePrivateProducts.snapshot(scope).getJSONArray("tasks");return(0 until rows.length()).map{rows.getJSONObject(it)}.find{it.getString("id")==id}?.let(::privateTask)}
+      return dao.task(scope, id)?.takeUnless { it.deleted }?.let {
         LocalTask.from(it, cipher.decrypt(it.encrypted, "$scope/${it.id}"))
+      }
     }
-    suspend fun save(task: LocalTask): LocalTask = scheduler.withMutation { saveLocked(task) }
+    private fun stagePrivateTask(snapshot:JSONObject,task:LocalTask):LocalTask{
+        val rows=snapshot.getJSONArray("tasks");val values=(0 until rows.length()).map{rows.getJSONObject(it)};val prior=values.find{it.getString("id")==task.id}
+        require(prior==null||prior.optLong("updatedAt",0)==task.revision){"E2EE_LOCAL_CONFLICT"}
+        val structure=WorkspaceStructureCodec.decode(CloudAccountImporter.structureDocument(snapshot));val assigned=task.projectId?.takeUnless{it=="__genesis_inbox__"}?.let{id->structure.projects.find{it.id==id}?:error("E2EE_PROJECT_MISSING")}
+        require(task.categoryId==null||task.categoryId in structure.categories.map{it.id}){"E2EE_CATEGORY_MISSING"}
+        val revision=maxOf(System.currentTimeMillis(),(prior?.optLong("updatedAt",0)?:0)+1)
+        val next=task.copy(revision=revision,project=assigned?.title?:"",categoryId=if(assigned!=null)assigned.categoryId else if(task.projectId=="__genesis_inbox__")null else task.categoryId)
+        val value=JSONObject(next.json()).put("updatedAt",revision).put("syncToGoogle",false).put("syncAccountIds",JSONArray())
+        value.remove("mindmapCreateOnly");value.remove("mindmapCreationPayload");value.remove("mindmapOccurrenceParentRevision")
+        snapshot.put("tasks",JSONArray(values.filterNot{it.getString("id")==task.id}+value));return privateTask(value)
+    }
+    suspend fun save(task: LocalTask): LocalTask = scheduler.withMutation(scope) { saveLocked(task) }
     private suspend fun saveLocked(task: LocalTask, updateAlarms:Boolean=true): LocalTask {
         require(task.title.isNotBlank() && task.title.length <= 500)
         if(task.date.isNotBlank()) LocalDate.parse(task.date)
@@ -129,6 +147,7 @@ class TaskRepository(private val db: GenesisDatabase, private val cipher: LocalC
             require(dates.size <= 500) { "Серия может содержать не более 500 повторений." }
             require(task.recurrenceExcludedDates.all { runCatching { LocalDate.parse(it) }.isSuccess })
         }
+        if(PrivatePersonalDocuments.isProtected(scope))return ru.genesis.calendar.security.NativePrivateProducts.mutate(scope){snapshot->snapshot to stagePrivateTask(snapshot,task)}
         val previous = dao.taskReminders(scope, task.id)
         val saved = db.withTransaction {
             mutation.check()
@@ -162,11 +181,18 @@ class TaskRepository(private val db: GenesisDatabase, private val cipher: LocalC
         val task = get(id) ?: return
         if (!task.done) save(task.copy(done = true))
     }
-    suspend fun saveOccurrence(draft:LocalTask):LocalTask = scheduler.withMutation {
+    suspend fun saveOccurrence(draft:LocalTask):LocalTask = scheduler.withMutation(scope) {
         val meta=JSONObject(draft.sourceFieldsJson);val id=meta.getString("recurrenceSeriesId");val date=meta.getString("recurrenceOriginalDate")
         val parent=get(id) ?: throw IllegalArgumentException("Задача больше недоступна.")
         require(parent.revision==meta.getLong("mindmapOccurrenceParentRevision")) { "Запись изменилась. Откройте её заново." }
         val remaining=TaskOccurrences.withoutDate(parent,date)
+        if(PrivatePersonalDocuments.isProtected(scope))return@withMutation ru.genesis.calendar.security.NativePrivateProducts.mutate(scope){snapshot->
+            meta.remove("mindmapOccurrenceParentRevision")
+            if(remaining!=null)stagePrivateTask(snapshot,remaining)else{
+                val rows=snapshot.getJSONArray("tasks");snapshot.put("tasks",JSONArray((0 until rows.length()).map{rows.getJSONObject(it)}.filterNot{it.getString("id")==id}))
+            }
+            snapshot to stagePrivateTask(snapshot,draft.copy(sourceFieldsJson=meta.toString()))
+        }
         val oldAlarms=dao.taskReminders(scope,id)+dao.taskReminders(scope,draft.id)
         meta.remove("mindmapOccurrenceParentRevision")
         val saved=db.withTransaction {
@@ -183,7 +209,11 @@ class TaskRepository(private val db: GenesisDatabase, private val cipher: LocalC
         val remaining = TaskOccurrences.withoutDate(current, date)
         if (remaining == null) delete(id, expectedRevision) else save(remaining)
     }
-    suspend fun delete(id: String, expectedRevision: Long? = null) = scheduler.withMutation {
+    suspend fun delete(id: String, expectedRevision: Long? = null) = scheduler.withMutation(scope) {
+        if(PrivatePersonalDocuments.isProtected(scope))return@withMutation ru.genesis.calendar.security.NativePrivateProducts.mutate(scope){snapshot->
+            val rows=snapshot.getJSONArray("tasks");val values=(0 until rows.length()).map{rows.getJSONObject(it)};val row=values.find{it.getString("id")==id}
+            require(row==null||expectedRevision==null||row.optLong("updatedAt",0)==expectedRevision){"E2EE_LOCAL_CONFLICT"};snapshot.put("tasks",JSONArray(values.filterNot{it.getString("id")==id})) to Unit
+        }
         val reminders = dao.taskReminders(scope, id)
         db.withTransaction {
             mutation.check()
@@ -201,7 +231,7 @@ class TaskRepository(private val db: GenesisDatabase, private val cipher: LocalC
         reminderAction(id,revision,"snooze",durationMillis)
 
     suspend fun reminderAction(id: String, revision: Long, action: String,
-        durationMillis: Long = 10 * 60_000L): Boolean = scheduler.withMutation {
+        durationMillis: Long = 10 * 60_000L): Boolean = scheduler.withMutation(scope) {
         val reminder = dao.reminder(scope,id) ?: return@withMutation false
         if(reminder.revision!=revision || reminder.state!="delivered") return@withMutation false
         val task=get(reminder.taskId)?.takeUnless { it.done } ?: return@withMutation false

@@ -1,0 +1,46 @@
+import {ProtectedMigrationContentPlan,openMigrationContentPlan,verifyMigrationContentPlanReadback,type MigrationContentPlanOptions,type MigrationContentPlanReference,type MigrationContentPlanReadback} from '../../app/e2ee/content-plan.ts';
+import {IndexedDbE2eeStorage,UnlockedE2eeVault} from '../../app/e2ee/storage.ts';
+import {E2EE_SUITE,encodeE2eeBytes,importE2eeRoot,type E2eeContext,type E2eeEnvelope} from '../../app/e2ee/envelope.ts';
+import {freshSecret,generateDeviceKeys} from '../../app/e2ee/keys.ts';
+import {requiredPrivatePaths} from '../../app/e2ee/migration-sources.ts';
+const report:{synthetic:boolean;runtime:string;checks:{name:string;passed:boolean}[];status?:string;error?:string}={synthetic:true,runtime:navigator.userAgent,checks:[]};
+const show=(stage:string)=>{document.querySelector('#result')!.textContent=JSON.stringify({...report,status:'RUNNING',stage},null,2);};
+const check=(name:string,passed:boolean)=>{report.checks.push({name,passed});show(name);if(!passed)throw new Error(name);};
+const refuses=async(body:()=>Promise<unknown>)=>{try{await body();return false;}catch(error){return error instanceof Error&&error.message.startsWith('E2EE_');}};
+function generated(size:number){return(async function*(){for(let at=0;at<size;at+=65536){const bytes=new Uint8Array(Math.min(65536,size-at));for(let index=0;index<bytes.length;index++)bytes[index]=((at+index)*31)&255;try{yield bytes;}finally{bytes.fill(0);}}})();}
+try{
+ check('actual secure WebCrypto and encrypted IndexedDB',isSecureContext&&!!crypto.subtle&&!!indexedDB);
+ const keys=await generateDeviceKeys(),raw=freshSecret(),root=await importE2eeRoot(raw);raw.fill(0);let live=true;
+ const current=()=>{if(!live)throw new Error('E2EE_ACCOUNT_CHANGED');};
+ const actor={ownerId:'readback-actor',scopeId:'device:plan-readback',deviceId:'readback-device'},scope={...actor,generation:1,cryptoEpoch:1,securityEpoch:1,keyId:'local-root',signingKey:keys.signing.privateKey,roots:new Map([['local-root',root]]),trustedSigner:(id:string)=>id===actor.deviceId?keys.signing.publicKey:undefined};
+ let vault=new UnlockedE2eeVault(new IndexedDbE2eeStorage(),scope);
+ const context:E2eeContext={cryptoProtocol:1,suite:E2EE_SUITE,ownerId:'content-owner',scopeId:'personal:plan-readback',domain:'workspace',objectId:'plan-context',schemaVersion:1,dataGeneration:2,writerProtocol:9,cryptoEpoch:1,securityEpoch:1,revision:1,keyId:'content-root',deviceId:actor.deviceId,operationId:crypto.randomUUID()};
+ const options:MigrationContentPlanOptions={vault,root,signer:keys.signing.publicKey,signingKey:keys.signing.privateKey,context,target:{ownerId:context.ownerId,scopeId:context.scopeId,kind:'personal'},migrationId:crypto.randomUUID(),sourceHash:encodeE2eeBytes(new Uint8Array(await crypto.subtle.digest('SHA-256',new Uint8Array([7])))),paths:requiredPrivatePaths('personal').map(path=>path.id),capacity:{maximumBytes:128*1024*1024,maximumEnvelopes:8000,maximumLocalParts:8000},ensureDurableKeys:async()=>{},assertCurrent:current,assertSourceComplete:async()=>{},admit:async()=>{}};
+ const build=async(size:number)=>{const writer=await ProtectedMigrationContentPlan.create({...options,vault});await writer.append('personal.workspace',{placement:'remote',domain:'workspace',objectId:'payload',size,source:generated(size),filename:'\ufeff\ud800-\udfff-α',mediaType:'application/octet-stream'});
+  await writer.append('personal.local-work',{placement:'local',domain:'workspace',objectId:'local',size:3,source:(async function*(){yield new Uint8Array([9,8,7]);})()});return writer.finish(options.paths.map(domain=>({domain,complete:true})));};
+ const read=async(recordId:string)=>{current();const row=await vault.read('outbox',recordId);if(!row)throw new Error('E2EE_MISSING_PLAN_RECORD');try{return JSON.parse(new TextDecoder().decode(row.value)) as E2eeEnvelope;}finally{row.value.fill(0);}};
+ const peer=async(reference:MigrationContentPlanReference)=>{const manifest=await openMigrationContentPlan({...options,vault,reference}),lookup=new Map(manifest.plan.map(item=>[item.domain+'\0'+item.objectId,item.recordId]));let gets=0,walks=0;
+  const port:MigrationContentPlanReadback={async forEachEnvelope(sink){walks++;for(const item of manifest.plan)await sink(await read(item.recordId));return manifest.plan.length;},async getEnvelope(domain,id){gets++;const recordId=lookup.get(domain+'\0'+id);return recordId?read(recordId):null;}};
+  return{manifest,port,counts:()=>({gets,walks})};};
+ const verify=(reference:MigrationContentPlanReference,port:MigrationContentPlanReadback)=>verifyMigrationContentPlanReadback({...options,vault,reference},port);
+ show('create generated9MiB file');const reference=await build(9*1024*1024+7);vault.lock();vault=new UnlockedE2eeVault(new IndexedDbE2eeStorage(),scope);const large=await peer(reference);
+ const expected=await(await fetch('/expected.json')).json();check('complete original digest matches independent bounded Node construction',large.manifest.logical[0].plaintextHash===expected.sha256);
+ show('verify full cold plan inventory and file bytes');const receipt=await verify(reference,large.port);
+ check('cold9MiB file full signed inventory AEAD and original-byte digest complete',receipt.envelopes===38&&receipt.remoteRecords===1&&receipt.localRecords===1&&large.counts().gets===38);
+ check('receipt binds only the exact immutable inert reference',Object.isFrozen(receipt)&&receipt.attemptId===reference.attemptId&&receipt.manifestHash===reference.manifestHash);
+ const smallRef=await build(3),small=await peer(smallRef),first=await read(small.manifest.plan[0].recordId),flip=(text:string)=>(text[0]==='A'?'B':'A')+text.slice(1);
+ check('an empty claimed inventory cannot omit planned objects',await refuses(()=>verify(smallRef,{...small.port,forEachEnvelope:async()=>0})));
+ check('duplicate inventory entries cannot count as completeness',await refuses(()=>verify(smallRef,{...small.port,forEachEnvelope:async sink=>{const count=await small.port.forEachEnvelope(sink);await sink(first);return count+1;}})));
+ check('payload hashes never substitute for inventory signature authentication',await refuses(()=>verify(smallRef,{...small.port,forEachEnvelope:async sink=>{await sink({...first,signature:flip(first.signature)});return 1;}})));
+ check('malformed runtime envelopes retain a sanitized protocol error',await refuses(()=>verify(smallRef,{...small.port,forEachEnvelope:async sink=>{await sink({} as E2eeEnvelope);return 1;}})));
+ check('missing exact get cannot produce a complete receipt',await refuses(()=>verify(smallRef,{...small.port,getEnvelope:async()=>null})));
+ check('changed exact ciphertext cannot produce a complete receipt',await refuses(()=>verify(smallRef,{...small.port,getEnvelope:async(domain,id)=>{const value=await small.port.getEnvelope(domain,id);return value?{...value,ciphertext:flip(value.ciphertext)}:null;}})));
+ check('swallowed callback failures remain sticky',await refuses(()=>verify(smallRef,{...small.port,forEachEnvelope:async sink=>{try{await sink({...first,signature:flip(first.signature)});}catch{/* Hostile fixture. */}try{return await small.port.forEachEnvelope(sink);}catch{return small.manifest.plan.length;}}})));
+ check('concurrent callbacks cannot finish verification',await refuses(()=>verify(smallRef,{...small.port,forEachEnvelope:async sink=>{await Promise.allSettled([sink(first),sink(first)]);return small.manifest.plan.length;}})));
+ let late:((value:E2eeEnvelope)=>Promise<void>)|undefined;await verify(smallRef,{...small.port,forEachEnvelope:async sink=>{late=sink;return small.port.forEachEnvelope(sink);}});
+ check('saved callbacks are revoked after iteration',!!late&&await refuses(()=>late!(first)));
+ check('device retirement after awaited get blocks success',await refuses(()=>verify(smallRef,{...small.port,getEnvelope:async(domain,id)=>{const value=await small.port.getEnvelope(domain,id);live=false;return value;}})));live=true;
+ check('all protected records remain readable after failed remote verification',(await openMigrationContentPlan({...options,vault,reference})).plan.length===38);
+ vault.lock();report.status='PASS';document.title='PASS GENESIS content-plan readback';
+}catch(error){report.status='FAIL';report.error=error instanceof Error?error.message:String(error);document.title='FAIL GENESIS content-plan readback';}
+document.querySelector('#result')!.textContent=JSON.stringify(report,null,2);

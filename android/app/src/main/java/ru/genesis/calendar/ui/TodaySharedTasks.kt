@@ -26,7 +26,7 @@ internal fun TodaySharedTasks(reader: SharedTaskListReader, date: String,
     TodayTaskGroup("${genesisTranslate("Общие")} · ${page?.optInt("total") ?: 0}",
         Modifier.testTag("today-shared-tasks")) {
             if (reader.busy && page == null) WorkspaceLoadingLine(Modifier.fillMaxWidth())
-            else if (page != null && (page.optInt("total") == 0)) Text("На сегодня задач нет")
+            else if (page != null && (page.optInt("total") == 0)) TodayTaskEmptyState("На сегодня задач нет")
             for (index in 0 until (rows?.length() ?: 0)) {
                 val row = rows!!.getJSONObject(index)
                 if (row.optString("dueDate") != date) continue

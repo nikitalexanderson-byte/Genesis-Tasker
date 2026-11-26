@@ -238,7 +238,7 @@ internal fun workflowMessage(code: String, copy: JSONObject): String? { return c
                     } }
                     "history" -> {
                         val versions = history?.let { WorkflowLifecycle.rows(it.getJSONArray("versions")) }.orEmpty()
-                        items(versions.size, key = { versions[it].getLong("revision") }) { index ->
+                        items(versions.size, key = { WorkflowLifecycle.historyKey(versions[it]) }) { index ->
                             val version = versions[index]
                             AffairsDisclosure(copy.getString("revision") + " " + number.format(version.getLong("revision")) + " · " + copy.getString(if (version.getBoolean("enabled")) "enabled" else "disabled"), Modifier.widthIn(max = AffairsLayout.formMaxWidth).testTag("workflow-history-${version.getLong("revision")}")) {
                                 UntranslatedText(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withLocale(Locale.forLanguageTag(language)).withZone(ZoneId.systemDefault()).format(Instant.parse(version.getString("createdAt"))))

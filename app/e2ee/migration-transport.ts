@@ -1,0 +1,152 @@
+import {signE2eeCommand,type SignedE2eeCommand,type WireValue} from './commands.ts';
+import {E2EE_DOMAINS,decodeE2eeBytes,validateE2eeEnvelope,type E2eeContext,type E2eeEnvelope} from './envelope.ts';
+import {assertTechnical} from './keys.ts';
+import type {VerifiedDirectory} from './directory.ts';
+import type {UnlockedWebDevice} from './device-vault.ts';
+import type {MigrationTransport,MigrationSourceContext} from './migration.ts';
+import type {E2eeHttpObservation} from './http-observation.ts';
+import type {MigrationPlanningSession,MigrationLegacyAction} from './migration-session.ts';
+import {validatePrivatePathPage} from './private-path-source.ts';
+
+export type E2eeMigrationRequest=(path:'/source'|'/command'|'/read',body:unknown,observation?:E2eeHttpObservation,signal?:AbortSignal)=>Promise<Record<string,WireValue>>;
+/** Signed, paginated shadow readback through the real authenticated channel.
+ * The source request must only be reached by the coordinator after prepare(). */
+export class SignedMigrationTransport implements MigrationTransport {
+  #device:UnlockedWebDevice;#owner:string;#scope:string;#securityEpoch:number;#revision:number;#checkpoint:string;
+  #domains:readonly E2eeContext['domain'][];#request:E2eeMigrationRequest;#planning:MigrationPlanningSession|undefined;#kind:VerifiedDirectory['kind'];
+  constructor(device:UnlockedWebDevice,directory:VerifiedDirectory,domains:readonly E2eeContext['domain'][],request:E2eeMigrationRequest,planning?:MigrationPlanningSession){
+    this.#device=device;this.#owner=directory.ownerId;this.#scope=directory.scopeId;this.#securityEpoch=directory.securityEpoch;this.#kind=directory.kind;
+    this.#revision=directory.checkpoint.revision;this.#checkpoint=directory.checkpoint.hash;this.#request=request;
+    assertTechnical(this.#owner);assertTechnical(this.#scope);
+    if(domains.length<1||domains.some(domain=>!E2EE_DOMAINS.includes(domain)))throw new Error('E2EE_COVERAGE_REQUIRED');
+    this.#domains=Object.freeze([...new Set([...domains,'attachment' as const])]);
+    this.#planning=planning;planning?.assertBinding({ownerId:this.#owner,scopeId:this.#scope,deviceId:device.deviceId,checkpointHash:this.#checkpoint,directoryRevision:this.#revision,securityEpoch:this.#securityEpoch});
+  }
+  async #call(path:'/source'|'/command'|'/read',body:unknown,observation?:E2eeHttpObservation,signal?:AbortSignal){
+    this.#device.requireOpen();const response=await this.#request(path,body,observation,signal);this.#device.requireOpen();return response;
+  }
+  async sourceHash(){const result=await this.#call('/source',{scopeId:this.#scope});decodeE2eeBytes(result.sourceHash,32);return result.sourceHash as string;}
+  async command(packet:SignedE2eeCommand){
+    if(packet.command.ownerId!==this.#owner||packet.command.scopeId!==this.#scope||packet.command.deviceId!==this.#device.deviceId)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+    return this.#call('/command',packet);
+  }
+  async legacyWorkspace(context:MigrationSourceContext):Promise<unknown>{
+    return this.#legacyPersonal('legacy-workspace',context);
+  }
+  async legacyAurora(context:MigrationSourceContext):Promise<unknown>{
+    return this.#legacyPersonal('legacy-aurora',context);
+  }
+  async legacyStoicheion(context:MigrationSourceContext):Promise<unknown>{
+    return this.#legacyPersonal('legacy-stoicheion',context);
+  }
+  async legacyAdvice(context:MigrationSourceContext):Promise<unknown>{
+    return this.#legacyPersonal('legacy-advice',context);
+  }
+  async legacyTasks(context:MigrationSourceContext):Promise<unknown>{
+    return this.#legacyPersonal('legacy-tasks',context);
+  }
+  async legacyDiary(context:MigrationSourceContext):Promise<unknown>{
+    return this.#legacyPersonal('legacy-diary',context);
+  }
+  async legacyMindmaps(context:MigrationSourceContext):Promise<unknown>{
+    return this.#legacyPersonal('legacy-mindmaps',context);
+  }
+  async legacyMindmapsPage(context:MigrationSourceContext,table:string,offset:number):Promise<unknown>{
+    return this.#legacyPersonal('legacy-mindmaps',context,{table,offset},()=>{if(!['maps','versions','receipts','deletions'].includes(table)||!Number.isSafeInteger(offset)||offset<0||offset>=Number.MAX_SAFE_INTEGER)throw new Error('E2EE_LEGACY_PAGE_INVALID');});
+  }
+  async legacyPhysisPage(context:MigrationSourceContext,table:string,offset:number):Promise<unknown>{
+    return this.#legacyPersonal('legacy-physis',context,{table,offset},()=>{if(!['owners','records','usedIds','receipts'].includes(table)||!Number.isSafeInteger(offset)||offset<0||offset>=Number.MAX_SAFE_INTEGER)throw new Error('E2EE_LEGACY_PAGE_INVALID');});
+  }
+  async legacyRemindersPage(context:MigrationSourceContext,table:string,offset:number):Promise<unknown>{
+    return this.#legacyPersonal('legacy-reminders',context,{table,offset},()=>{if(!['habitProfiles','habitDevices','habitDeliveries','adviceDays','adviceDeliveries','sharedPreferences'].includes(table)||!Number.isSafeInteger(offset)||offset<0||offset>=Number.MAX_SAFE_INTEGER)throw new Error('E2EE_LEGACY_PAGE_INVALID');});
+  }
+  async legacyArchiveFragment(context:MigrationSourceContext,table:string,offset:number,byteOffset:number):Promise<unknown>{
+    return this.#legacyPersonal('legacy-archives',context,{table,offset,byteOffset},()=>{if(!['stages','safety','receipts'].includes(table)||!Number.isSafeInteger(offset)||offset<0||offset>=Number.MAX_SAFE_INTEGER||!Number.isSafeInteger(byteOffset)||byteOffset<0||byteOffset>64*1024*1024)throw new Error('E2EE_ARCHIVE_TRANSPORT_INVALID');});
+  }
+  async legacySharedMindmapsPage(context:MigrationSourceContext,table:string,offset:number):Promise<unknown>{
+    return this.#legacyPersonal('legacy-shared-mindmaps',context,{table,offset},()=>{
+      if(!['project','space'].includes(this.#kind))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+      if(!['maps','versions','receipts','deletions','deletionScopes','conversions'].includes(table)||!Number.isSafeInteger(offset)||offset<0||offset>=Number.MAX_SAFE_INTEGER)throw new Error('E2EE_LEGACY_PAGE_INVALID');
+    });
+  }
+  async legacyPrivatePathFragment(context:MigrationSourceContext,pathId:string,table:string,offset:number,byteOffset:number):Promise<unknown>{
+    return this.#legacyPersonal('legacy-private-path',context,{pathId,table,offset,byteOffset},()=>validatePrivatePathPage(this.#kind,pathId,table,offset,byteOffset));
+  }
+  async legacyPrivatePathBatch(context:MigrationSourceContext,pathId:string,table:string,offset:number,byteOffset:number):Promise<unknown>{
+    return this.#legacyPersonal('legacy-private-path',context,{pathId,table,offset,byteOffset,maxFragments:50},()=>validatePrivatePathPage(this.#kind,pathId,table,offset,byteOffset));
+  }
+  async #legacyPersonal(action:MigrationLegacyAction,context:MigrationSourceContext,page?:{table:string;offset:number;byteOffset?:number;pathId?:string;maxFragments?:number},validate:()=>void=()=>{}):Promise<unknown>{
+    const preflight=()=>{if(context.ownerId!==this.#owner||context.scopeId!==this.#scope)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');validate();};
+    if(!this.#planning){preflight();throw new Error('E2EE_STREAMED_CAPTURE_REQUIRED');}
+    return this.#planning.requestLegacy(context,action,page,async(packet,observation,signal)=>{
+      const response=await this.#call('/read',packet,observation,signal);
+      if(response.checkpointHash!==this.#checkpoint||response.directoryRevision!==this.#revision)throw new Error('E2EE_DIRECTORY_CONFLICT');
+      return projectLegacyCaptureResponse(response,packet,context);
+    },preflight);
+  }
+  async #read(action:'read'|'get',payload:Record<string,WireValue>){
+    this.#device.requireOpen();
+    const packet=await signE2eeCommand({protocol:1,ownerId:this.#owner,scopeId:this.#scope,deviceId:this.#device.deviceId,action,
+      expectedRevision:this.#revision,checkpointHash:this.#checkpoint,securityEpoch:this.#securityEpoch,operationId:crypto.randomUUID(),payload},this.#device.keys().signing.privateKey);
+    const page=await this.#call('/read',packet);
+    if(page.directoryRevision!==this.#revision||page.checkpointHash!==this.#checkpoint)throw new Error('E2EE_DIRECTORY_CONFLICT');return page;
+  }
+  /** No aggregate ciphertext list. One structurally validated envelope per
+   * response, then an awaited sink. Empty pages must have pinned headers;
+   * callers still compare the entire expected inventory and authenticate data. */
+  async forEachEnvelope(consume:(envelope:E2eeEnvelope)=>Promise<void>):Promise<number>{return this.#walk(1,consume);}
+  async getEnvelope(domain:E2eeContext['domain'],objectId:string):Promise<E2eeEnvelope|null>{
+    this.#device.requireOpen();assertTechnical(objectId);if(!this.#domains.includes(domain))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+    const page=await this.#read('get',{domain,objectId});if(!Array.isArray(page.envelopes)||page.envelopes.length>1)throw new Error('E2EE_INVALID_RESPONSE');
+    if(page.envelopes.length===0)return null;const envelope=validateE2eeEnvelope(page.envelopes[0]),ctx=envelope.context;
+    if(ctx.ownerId!==this.#owner||ctx.scopeId!==this.#scope||ctx.domain!==domain||ctx.objectId!==objectId)throw new Error('E2EE_INVALID_RESPONSE');this.#device.requireOpen();return envelope;
+  }
+  async #walk(limit:number,consume:(envelope:E2eeEnvelope)=>Promise<void>){
+    if(typeof consume!=='function')throw new Error('E2EE_INVALID_READBACK_SINK');const sink=consume;let count=0;
+    for(const domain of this.#domains){
+      let after='';
+      for(;;){
+        this.#device.requireOpen();
+        const page=await this.#read('read',{domain,after,limit});
+        if(!Array.isArray(page.envelopes)||page.envelopes.length>limit)throw new Error('E2EE_INVALID_RESPONSE');
+        if(page.envelopes.length===0)break;
+        if(count+page.envelopes.length>8000)throw new Error('E2EE_MIGRATION_TOO_LARGE');
+        const envelopes=page.envelopes.map(validateE2eeEnvelope);let cursor=after;
+        for(const envelope of envelopes){const ctx=envelope.context;
+          if(ctx.ownerId!==this.#owner||ctx.scopeId!==this.#scope||ctx.domain!==domain||ctx.objectId<=cursor)throw new Error('E2EE_INVALID_RESPONSE');cursor=ctx.objectId;
+        }
+        for(const envelope of envelopes){
+          after=envelope.context.objectId;this.#device.requireOpen();await sink(envelope);this.#device.requireOpen();count++;
+        }
+        // Short pages never imply EOF, including the legacy aggregate reader.
+      }
+    }
+    this.#device.requireOpen();return count;
+  }
+  async readAll():Promise<E2eeEnvelope[]>{
+    const result:E2eeEnvelope[]=[];let bytes=0;
+    await this.#walk(50,async envelope=>{bytes+=JSON.stringify(envelope).length;if(bytes>256*1024*1024)throw new Error('E2EE_MIGRATION_TOO_LARGE');result.push(envelope);});
+    return result;
+  }
+}
+
+// The coordinator may renew its server lease between source pages. Authenticate
+// each actual signed fence before projecting it into the collector's immutable
+// context. The HTTP observer retains the original bytes and renewed fence.
+function projectLegacyCaptureResponse(response:Record<string,WireValue>,packet:SignedE2eeCommand,context:MigrationSourceContext){
+ const payload=packet.command.payload,fence=payload.fence;
+ if(!Number.isSafeInteger(fence)||(fence as number)<context.fence||payload.migrationId!==context.migrationId||payload.sourceHash!==context.sourceHash)throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+ const expected={protocol:1,ownerId:context.ownerId,scopeId:context.scopeId,migrationId:context.migrationId,sourceHash:context.sourceHash,fence};
+ if(Object.entries(expected).some(([key,value])=>response[key]!==value))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+ const value=structuredClone(response);
+ if(Object.hasOwn(value,'fragments')){
+  const maximum=payload.maxFragments;
+  if(!Number.isSafeInteger(maximum)||(maximum as number)<1||(maximum as number)>50||!Array.isArray(value.fragments)||!value.fragments.length||value.fragments.length>(maximum as number))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+  value.fragments=value.fragments.map(fragment=>{
+   if(!fragment||typeof fragment!=='object'||Array.isArray(fragment))throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+   for(const key of [...Object.keys(expected),'kind','resourceId','checkpointHash','directoryRevision'])if(fragment[key]!==response[key])throw new Error('E2EE_SCOPE_BINDING_MISMATCH');
+   return{...fragment,fence:context.fence};
+  });
+ }
+ return{...value,fence:context.fence};
+}

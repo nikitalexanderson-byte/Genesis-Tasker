@@ -1,6 +1,7 @@
 package ru.genesis.calendar.ui
 
 import android.animation.ValueAnimator
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.LocalActivity
@@ -79,15 +80,29 @@ internal fun nativeBillingProviderPrice(offer: JSONObject?, provider: String): P
     if (provider !in setOf("google-play","yookassa","lemon-squeezy") || amount !in 1L..9_007_199_254_740_991L || currency != if (provider == "lemon-squeezy") "USD" else "RUB") return null
     return amount to currency
 }
-internal fun nativeBillingProviderChoices(catalog: JSONObject?, offer: JSONObject?, playDistribution: Boolean): List<String> {
+internal fun nativeBillingProviderChoices(catalog: JSONObject?, offer: JSONObject?, playDistribution: Boolean,
+    playBillingEnabled: Boolean = false): List<String> {
     val preferred = catalog?.optJSONObject("routing")?.optString("preferredProvider")
     val providers = catalog?.optJSONArray("providers") ?: return emptyList()
     return (0 until providers.length()).mapNotNull { providers.optJSONObject(it) }.filter {
         val id = it.optString("id")
-        id == "yookassa" && !playDistribution &&
-            it.optString("reason") != "client-unavailable" && nativeBillingProviderPrice(offer,id) != null
+        val forDistribution = if (playDistribution) {
+            id == "google-play" && playBillingEnabled && it.optBoolean("available") &&
+                id in offer?.optJSONArray("availableProviders").strings() && nativePlayProductId(offer) != null
+        } else id == "yookassa"
+        forDistribution && it.optString("reason") != "client-unavailable" && nativeBillingProviderPrice(offer,id) != null
     }.map { it.getString("id") }.distinct().sortedBy { if (it == preferred) 0 else 1 }
 }
+
+internal fun nativePlayProductId(offer: JSONObject?): String? =
+    (offer?.opt("playProductId") as? String)?.takeIf { it.matches(Regex("[a-z0-9][a-z0-9_.]{0,149}")) }
+
+internal fun nativePaddleWebsiteUrl(playDistribution: Boolean, origin: String, language: String): String? {
+    if (playDistribution || origin != "https://genesiscalendar.com") return null
+    val locale = language.takeIf { it.matches(Regex("[a-z]{2}")) } ?: "en"
+    return "$origin/?lang=$locale&currency=USD#pricing"
+}
+
 internal fun nativeBillingMoney(amount: Long, language: String, currency: String = "RUB"): String {
     val format = NumberFormat.getNumberInstance(Locale.forLanguageTag(language)).apply {
         minimumFractionDigits = if (amount % 100L == 0L) 0 else 2; maximumFractionDigits = 2
@@ -320,6 +335,7 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
     val bundledPolicy = remember(context) { runCatching { context.assets.open("originals/catalogs/feature-access-policy.json")
         .bufferedReader().use { JSONObject(it.readText()) } }.getOrNull() }
     var catalog by remember(userId) { mutableStateOf<JSONObject?>(null) }
+    var catalogRefresh by remember { mutableIntStateOf(0) }
     val policy = catalog?.optJSONObject("policy") ?: bundledPolicy
     var selected by rememberSaveable(userId) { mutableStateOf(initialPlan?.takeIf { it in nativeBillingPlans }
         ?: suggestedPlan(bundledPolicy, access, initialFeature)) }
@@ -340,10 +356,19 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
     var observedOrderId by rememberSaveable(userId) { mutableStateOf<String?>(null) }
     var observedOrder by remember(userId) { mutableStateOf<JSONObject?>(null) }
     var orderRefresh by remember { mutableIntStateOf(0) }
+    var paddleWebsiteOpened by rememberSaveable(userId) { mutableStateOf(false) }
+    var paddleWebsiteError by remember(userId) { mutableStateOf(false) }
+    val paddleWebsite = nativePaddleWebsiteUrl(BuildConfig.PLAY_DISTRIBUTION, BuildConfig.GENESIS_ORIGIN, language)
     val billingLifecycle = LocalLifecycleOwner.current.lifecycle
-    DisposableEffect(billingLifecycle, userId, open, observedOrderId) {
+    DisposableEffect(billingLifecycle, controller, userId, open, observedOrderId) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME && open && observedOrderId != null) orderRefresh++
+            if (event == Lifecycle.Event.ON_RESUME && open) {
+                if (observedOrderId != null) orderRefresh++
+                if (paddleWebsiteOpened) {
+                    paddleWebsiteOpened = false
+                    controller.checkSession()
+                }
+            }
         }
         billingLifecycle.addObserver(observer)
         onDispose { billingLifecycle.removeObserver(observer) }
@@ -352,7 +377,7 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
     LaunchedEffect(open, initialFeature, initialPlan) {
         if (open) { selected = initialPlan?.takeIf { it in nativeBillingPlans } ?: suggestedPlan(policy, access, initialFeature); expanded = selected; quoteChanged = false }
     }
-    LaunchedEffect(controller, userId, open) {
+    LaunchedEffect(controller, userId, open, catalogRefresh) {
         if (!open) return@LaunchedEffect
         loading = true
         try { catalog = controller.billing("GET", "/billing/catalog?client=$channel") }
@@ -361,7 +386,7 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
         finally { loading = false }
     }
     val offer = nativeBillingOffer(catalog, selected, months)
-    val providerChoices = nativeBillingProviderChoices(catalog,offer,BuildConfig.PLAY_DISTRIBUTION)
+    val providerChoices = nativeBillingProviderChoices(catalog,offer,BuildConfig.PLAY_DISTRIBUTION,BuildConfig.PLAY_BILLING_ENABLED)
     // Keep a still-valid manual choice when routing or plan data refreshes.
     LaunchedEffect(providerChoices) { if (provider !in providerChoices) provider = providerChoices.firstOrNull().orEmpty() }
     val selectedPrice = nativeBillingProviderPrice(offer,provider)
@@ -402,7 +427,7 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
     val availableMethods = offer?.optJSONArray("availableProviders").strings().filter { it in providerChoices }
     val billing = remember(controller, userId) { GenesisPlayBilling(context, controller, scope, { controller.checkSession() }, { error = true }) }
     DisposableEffect(billing) { onDispose { billing.close() } }
-    val canPay = !busy && !trialBusy && !quoteLoading && quote != null && quoteProvider == provider && !access.lifetimePremium && selected != "free" &&
+    val canPay = !busy && !trialBusy && !loading && !quoteLoading && quote != null && quoteProvider == provider && !access.lifetimePremium && selected != "free" &&
         catalog?.optBoolean("checkoutEnabled") == true && provider in availableMethods && provider in quote!!.providers &&
         (quote!!.credit == 0L || catalog?.optBoolean("creditCheckoutEnabled") == true) &&
         observedOrder?.optString("status") !in setOf("payment-verifying", "settlement-required") &&
@@ -481,7 +506,8 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                                 NativeUpgradeTier(plan, months, selected == plan, expanded == plan,
                                     access.source != "trial" && (access.lifetimePremium && plan == "premium4life" ||
                                         !access.lifetimePremium && access.currentPlan() == plan),
-                                    policy, language, featureCopy, !busy, nativeBillingProviderPrice(tierOffer,provider)) {
+                                    policy, language, featureCopy, !busy,
+                                    nativeBillingProviderPrice(tierOffer,provider), playPricing = BuildConfig.PLAY_DISTRIBUTION) {
                                     expanded = if (expanded == plan) null else plan; selected = plan; error = false; quoteChanged = false
                                 }
                             }
@@ -518,7 +544,9 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                                     }
                                     if (total.referralDiscount > 0L) UpgradeText(referralCopy(language).getString("discount") + ": −" +
                                         nativeBillingMoney(total.referralDiscount, language, total.currency), color = upgradeScheme.primary)
-                                    UpgradeText(copy("К оплате: ", "Total: ") + nativeBillingMoney(total.amount, language, total.currency), style = MaterialTheme.typography.titleMedium)
+                                    if (provider != "google-play") {
+                                        UpgradeText(copy("К оплате: ", "Total: ") + nativeBillingMoney(total.amount, language, total.currency), style = MaterialTheme.typography.titleMedium)
+                                    }
                                     total.validUntil?.let { expiry -> UpgradeText(copy("Новый срок доступа до: ", "New access period ends: ") +
                                         expiry.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.forLanguageTag(language))),
                                         style = MaterialTheme.typography.bodySmall, color = upgradeScheme.onSurfaceVariant) }
@@ -534,6 +562,27 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                                     else if (quote == null) copy("Итоговую сумму подтвердит платёжная система. Доступ изменится после подтверждения оплаты.", "The payment provider will confirm the final total. Access changes after verified payment.")
                                     else copy("Перерасчёт выполнен сервером по оставшемуся оплаченному сроку. Доступ изменится после подтверждения оплаты.", "The server calculated credit from the remaining paid period. Access changes after verified payment."),
                                     style = MaterialTheme.typography.bodySmall, color = upgradeScheme.onSurfaceVariant)
+                                if (paddleWebsite != null) {
+                                    OutlinedButton(
+                                        onClick = {
+                                            paddleWebsiteError = false
+                                            try {
+                                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(paddleWebsite)))
+                                                paddleWebsiteOpened = true
+                                            } catch (_: ActivityNotFoundException) {
+                                                paddleWebsiteError = true
+                                            }
+                                        },
+                                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("billing-paddle-website"),
+                                        enabled = !busy,
+                                    ) {
+                                        UpgradeText(safetyCopy.getString("paddleWebsiteAction"))
+                                    }
+                                    UpgradeText(safetyCopy.getString("paddleWebsiteHint"),
+                                        style = MaterialTheme.typography.bodySmall, color = upgradeScheme.onSurfaceVariant)
+                                    if (paddleWebsiteError) UpgradeText(safetyCopy.getString("paddleWebsiteError"),
+                                        style = MaterialTheme.typography.bodySmall, color = upgradeScheme.error)
+                                }
                             }
                             if (error) UpgradeText(copy("Не удалось проверить оплату. Проверьте соединение и повторите попытку. Ваш доступ не изменился.",
                                 "Could not verify payment. Check your connection and try again. Your access has not changed."), color = upgradeScheme.error)
@@ -575,15 +624,25 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                                 if (!canPay) return@launch
                                 busy = true; error = false; quoteChanged = false; serverNotice = null
                                 try {
-                                    val order = controller.billing("POST", "/billing/orders", JSONObject().put("offerId", requireNotNull(offer).getString("id"))
-                                        .put("expectedAmountMinor", requireNotNull(quote).amount)
-                                        .put("expectedCurrency", requireNotNull(quote).currency)
-                                        .put("provider", provider).put("client", channel).put("idempotencyKey", UUID.randomUUID().toString()))
+                                    val method = provider
+                                    val acceptedQuote = requireNotNull(quote)
+                                    val current = if (method == "google-play") controller.privateUiOwnerGuard(userId) else null
+                                    val prepared = if (method == "google-play") {
+                                        billing.preparePurchase(requireNotNull(nativePlayProductId(offer)))
+                                    } else null
+                                    current?.invoke()
+                                    val request = JSONObject().put("offerId", requireNotNull(offer).getString("id"))
+                                        .put("expectedAmountMinor", acceptedQuote.amount)
+                                        .put("expectedCurrency", acceptedQuote.currency)
+                                        .put("provider", method).put("client", channel).put("idempotencyKey", UUID.randomUUID().toString())
+                                    if (prepared != null) request.put("expectedProductId", prepared.productId)
+                                    val order = controller.billing("POST", "/billing/orders", request)
+                                    current?.invoke()
                                     observedOrder = order
                                     observedOrderId = order.optString("id").takeIf { it.matches(Regex("[a-f0-9-]{36}")) }
                                     if (order.optJSONObject("settlement") != null || order.optString("status") != "pending") {
                                         serverNotice = nativeBillingSettlementCopyKey(order)
-                                    } else if (provider == "google-play") billing.purchase(requireNotNull(activity), order)
+                                    } else if (prepared != null) billing.purchase(requireNotNull(activity), order, prepared)
                                     else {
                                         require(!BuildConfig.PLAY_DISTRIBUTION)
                                         val uri = Uri.parse(order.getString("checkoutUrl")); require(uri.scheme == "https" && !uri.host.isNullOrBlank())
@@ -592,13 +651,15 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                                 } catch (cancel: CancellationException) { throw cancel }
                                 catch (failure: Exception) {
                                     if (failure.message == "BILLING_QUOTE_CHANGED") { quoteChanged = true; quoteLoading = true; quoteRefresh++ }
+                                    else if (failure.message == "BILLING_PRODUCT_CHANGED") { error = true; loading = true; catalogRefresh++; quoteRefresh++ }
                                     else if (failure.message == "BILLING_CREDIT_CHECKOUT_DISABLED") { serverNotice = "creditCheckoutUnavailable"; quoteRefresh++ }
                                     else if (failure.message == "BILLING_SETTLEMENT_REQUIRED") { serverNotice = "settlementRequired"; quoteRefresh++ }
                                     else error = true
                                 }
                                 finally { busy = false }
                             } }, Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("billing-checkout"), enabled = canPay) {
-                                UpgradeText(if (busy) copy("Подготавливаем оплату…", "Preparing payment…") else copy("Перейти к оплате", "Continue to payment"),
+                                UpgradeText(if (busy) copy("Подготавливаем оплату…", "Preparing payment…")
+                                    else if (provider == "google-play") "Google Play" else copy("Перейти к оплате", "Continue to payment"),
                                     color = if (canPay) upgradeScheme.onPrimary else upgradeScheme.onSurfaceVariant)
                             }
                             }
@@ -620,7 +681,8 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
 }
 
 @Composable internal fun NativeUpgradeTier(plan: String, months: Int, selected: Boolean, expanded: Boolean, current: Boolean,
-    policy: JSONObject?, language: String, featureCopy: JSONObject, enabled: Boolean, displayPrice: Pair<Long,String>?, onClick: () -> Unit) {
+    policy: JSONObject?, language: String, featureCopy: JSONObject, enabled: Boolean, displayPrice: Pair<Long,String>?,
+    playPricing: Boolean = false, onClick: () -> Unit) {
     val en = language == "en"
     val tint = when (plan) { "free" -> Color(0xff373268); "standart" -> Color(0xff6623a1); "premium" -> Color(0xff8c245f); "business" -> Color(0xff3e42a8); else -> Color(0xff6c286e) }
     androidx.compose.material3.Surface(onClick = onClick, enabled = enabled, shape = AffairsLayout.shape,
@@ -634,7 +696,11 @@ internal data class NativeBillingQuote(val amount: Long, val list: Long, val cre
                     if (current) UpgradeText(if (en) "Current plan" else "Ваш тариф", style = MaterialTheme.typography.labelSmall, color = Color(0xffecd9ff))
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    UpgradeText(nativeBillingMoney(displayPrice?.first ?: nativePlanListAmount(plan, months), language, displayPrice?.second ?: "RUB"), style = MaterialTheme.typography.titleMedium, color = Color.White)
+                    if (playPricing && plan != "free") {
+                        UpgradeText("Google Play", style = MaterialTheme.typography.titleMedium, color = Color.White)
+                    } else {
+                        UpgradeText(nativeBillingMoney(displayPrice?.first ?: nativePlanListAmount(plan, months), language, displayPrice?.second ?: "RUB"), style = MaterialTheme.typography.titleMedium, color = Color.White)
+                    }
                     UpgradeText(when (plan) { "free" -> if (en) "free" else "бесплатно"; "premium4life" -> if (en) "one payment" else "один раз"; else -> if (months == 12) (if (en) "per year" else "за год") else (if (en) "per month" else "за месяц") },
                         style = MaterialTheme.typography.labelSmall, color = Color(0xffecd9ff))
                 }

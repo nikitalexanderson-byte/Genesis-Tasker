@@ -1,3 +1,4 @@
+import { usePhysisMigrationCapture } from './migration-editors';
 import { useId, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { IconActionButton } from '../IconActionButton';
 import { DialogCloseButton } from '../DialogCloseButton';
@@ -21,7 +22,9 @@ export function CatalogCategoryFilter({ options, selected, onChange, mode, onMod
   mode:'any'|'all';onMode:(mode:'any'|'all')=>void;en:boolean;label?:string;showMode?:boolean;sidebar?:boolean;sectionSwitch?:ReactNode;
   contentSearch?: { value: string; onChange: (value: string) => void; label: string };
 }) {
+
   const [search,setSearch]=useState('');
+  usePhysisMigrationCapture('reference-catalog-controls.CatalogCategoryFilter',()=>({search}));
   const desktop=useSyncExternalStore(subscribeCategoryLayout,desktopCategoriesSnapshot,serverCategoriesSnapshot);
   const title=label??(en?'Categories':'Категории');
   const searchControl=contentSearch&&<label>{contentSearch.label}<input type="search" value={contentSearch.value} onChange={event=>contentSearch.onChange(event.target.value)}/></label>;
@@ -57,11 +60,13 @@ export function CatalogEditButton({entry,onEdit,en}:{entry:CatalogView;onEdit:(e
   return <IconActionButton icon="edit" label={(en?'Edit shared entry: ':'Изменить общую карточку: ')+entry.nameRu} className="physis-catalog-icon" onClick={()=>onEdit(entry)}/>;
 }
 export function CatalogEditor({initial,catalog,onClose,en}:{initial:CatalogView;catalog:ReferenceCatalog;onClose:()=>void;en:boolean}){
+
   const [draft,setDraft]=useState(()=>catalogItem(initial));const [tags,setTags]=useState('');const[sources,setSources]=useState(initial.sources.join('\n'));const[aliases,setAliases]=useState(initial.aliases.join('\n'));
   const [busy,setBusy]=useState(false);const[error,setError]=useState('');const title=useId();const dialog=useDialogAccessibility<HTMLElement>(()=>{if(!busy)onClose();},true);
   const [composition,setComposition]=useState<FoodComposition>(()=>structuredClone(initial.composition??compositionFromFood(blankFood())));
   const [values,setValues]=useState(()=>Object.fromEntries(NUTRIENT_KEYS.map(key=>[key,initial.composition?.trace.includes(key)?'trace':String(initial.composition?.values[key]??'')])));
   const [density,setDensity]=useState(String(initial.composition?.densityGPerMl??''));
+  usePhysisMigrationCapture('reference-catalog-controls.CatalogEditor',()=>({draft,tags,sources,aliases,busy,error,composition,values,density}));
   function readComposition(): FoodComposition {
     const parsed: FoodComposition['values']={}, trace:NutrientKey[]=[], estimated:NutrientKey[]=[];
     for(const key of NUTRIENT_KEYS){

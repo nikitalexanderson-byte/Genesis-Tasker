@@ -46,7 +46,7 @@ function genesisSharedBoardImage(mixed $value): string
     throw new InvalidArgumentException('INVALID_BOARD_IMAGE');
 }
 
-function genesisSharedSpaceInvite(string $userId, string $spaceId, array $input): array
+function genesisSharedSpaceInvite(string $userId, string $spaceId, array $input,?string $preparedId=null): array
 {
     genesisSharedRequireEnabled($userId);
     $space = genesisSharedSpaceAccess($spaceId, $userId);
@@ -68,7 +68,7 @@ function genesisSharedSpaceInvite(string $userId, string $spaceId, array $input)
         WHERE m.space_id = :space AND u.email = :email COLLATE NOCASE');
     $member->execute(['space' => $spaceId, 'email' => $email]);
     if ($member->fetchColumn()) throw new InvalidArgumentException('ALREADY_SPACE_MEMBER');
-    $id = genesisUuid(); $now = genesisNow(); $expires = gmdate('Y-m-d\TH:i:s\Z', time() + 7 * 86400);
+    $id = $preparedId===null?genesisUuid():genesisE2eeIdentifier($preparedId); $now = genesisNow(); $expires = gmdate('Y-m-d\TH:i:s\Z', time() + 7 * 86400);
     $ownsTransaction = !$db->inTransaction();
     if ($ownsTransaction) $db->beginTransaction();
     try {

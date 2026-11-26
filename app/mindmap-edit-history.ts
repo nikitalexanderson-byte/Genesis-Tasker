@@ -10,6 +10,7 @@ export class MindmapEditHistory {
   private recordedAt = 0;
   get canUndo() { return this.past.length > 0; }
   get canRedo() { return this.future.length > 0; }
+  captureMigration(){return structuredClone({past:this.past,future:this.future,group:this.group,recordedAt:this.recordedAt});}
   clear() { this.past = []; this.future = []; this.group = ""; }
   record(before: MindmapEditSnapshot, after: MindmapEditSnapshot, group = "", timestamp = Date.now()) {
     if (before.document.id !== after.document.id) { this.clear(); return; }

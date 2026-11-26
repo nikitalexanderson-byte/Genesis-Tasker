@@ -1,0 +1,60 @@
+{
+  "synthetic": true,
+  "protocol": 1,
+  "recoveryKey": "AwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISI=",
+  "canonicalAad": "[\"genesisbackup\",1,\"9c7ad786-8f3c-4f83-8bac-2d1b2c6e9856\",\"A256GCM+A256KW\",\"yd8kMW/Hzq5mkUzgAosKAkJ8Xum/2He8p/opjypuYWEZprqEWT5hpw==\"]",
+  "androidLegacyAad": "[\"genesisbackup\",1,\"9c7ad786-8f3c-4f83-8bac-2d1b2c6e9856\",\"A256GCM+A256KW\",\"yd8kMW\\/Hzq5mkUzgAosKAkJ8Xum\\/2He8p\\/opjypuYWEZprqEWT5hpw==\"]",
+  "payload": {
+    "schema": 1,
+    "backupId": "9c7ad786-8f3c-4f83-8bac-2d1b2c6e9856",
+    "source": "device_snapshot",
+    "ownerId": "portable-backup-qa",
+    "createdAt": "2026-11-20T03:00:00Z",
+    "client": "android",
+    "billingEvidence": null,
+    "sections": [
+      {
+        "id": "workspace",
+        "source": "device",
+        "completeness": "available",
+        "capturedAt": "2026-11-20T03:00:00Z",
+        "revision": 1,
+        "count": 1,
+        "pending": 0,
+        "notices": [],
+        "data": {
+          "document": {
+            "tasks": [
+              {
+                "id": "portable-task",
+                "title": "Portable synthetic note α Ω"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "files": {
+    "canonical": {
+      "format": "genesisbackup",
+      "schema": 1,
+      "backupId": "9c7ad786-8f3c-4f83-8bac-2d1b2c6e9856",
+      "algorithm": "A256GCM+A256KW",
+      "wrappedKey": "yd8kMW/Hzq5mkUzgAosKAkJ8Xum/2He8p/opjypuYWEZprqEWT5hpw==",
+      "iv": "AAECAwQFBgcICQoL",
+      "ciphertext": "8+lAMWiY4pjgQmPJ32G/bz8Z2NPbv7XU9qjTaukCN1nBz9qWL0oFmgDj4LLM3C0vBpCmmNXuu7uVwWh1MKaR1e9BmLD2YiCOIr7f/JI940QRlJdzxmqgYhvwwBpCu/NfxSKBA6TcbKV+xnNSyFYXWRUr8iSiSrKrQ5UVLsPVW4Ix5kcJehLXXaVJS4bOE5QhyFTCYkuCc7RIt6lLk5d/CLRbqLN1aRgc7XwOlzvMam0kwych5EwdxsZkIxb+UHlfneTA3aQnwTIaStqd6BvSy/N2QG2QsWfJGeG4p/X4aLrECCMIp+kupMNgPRakGTNcJsaP3RfSd7O5G2N4UUWU4V5sL+PePL3Egv9EQKdzcWXDCIpahJaTdz1e5w743X2D+VKDp17iQN/o5bznbGVdn7Pddj9fzAsbevTcjSVPil0h+Unh4jFVTN/SWjAL5AUOWsELe0fjYuF8c3w8KHly3MoiXAPEaBulfS4LELlVoXmR2G5gLwP1l92rrsHBx8GrFdniJN8u3knpUNuhQaNapoKV9oG3HVtZnsVaP2k2PbYDx/QLQ8RfJVdyvYU1YxtvfYbiVFiKXQdtSBanFX2R8UUhpQhnXTSGXl933q9T1RgFOY7j7A==",
+      "sha256": "90ae332de0127f74b084cfb6e78c40fed56e0c6d0390f292ce5c964cb30c97f9"
+    },
+    "androidLegacy": {
+      "format": "genesisbackup",
+      "schema": 1,
+      "backupId": "9c7ad786-8f3c-4f83-8bac-2d1b2c6e9856",
+      "algorithm": "A256GCM+A256KW",
+      "wrappedKey": "yd8kMW/Hzq5mkUzgAosKAkJ8Xum/2He8p/opjypuYWEZprqEWT5hpw==",
+      "iv": "EBESExQVFhcYGRob",
+      "ciphertext": "7cNrTRYFJn91owp8K5kzQYiuYNrCOJPjJXL1FOI1SygyvOjT4rEmv7s9bsF9XJa72l04ufzl9frQtKeQ55Hxu+2Jdh7X2Km/kbVYG0Syx2cdyGLyYX+u5VmTtG0ua8xYh9XG4ZXRPqeWzx0OF78p3zj09CaXfTtqqZiPURJkqgjBW+JbrpulJi8a/HRE2yydVT3xutX0FCXctPlrxPm1DOob5ZpnwC/ftkmq1bX6xbd6aVmGogvRNxSh5XHCT36eiulv0Q5T9J5rRuIflH5BjF0eUF7o/rjFV5lMGO0eRMiSqCyYdtAbVMMHMNNwQ1pHzBF8y0Ivfbt7RXvRtjeQ+i0OoA0LOtEeAghzpERRV756m3n1SesaJ0xxlhLcb0nu5EuW8RnXJ/pLsqcnfepvLMX8TLANIDDwE7BY1PLyB2L8TqMnQaA2R66P8lRlJwT/lUxGFNG+D6F3MJB7a+Abw2e27wm2jDPAED7B2C67+1wXxpXp6qcOBW6/l6LDxqEjX8/Ao7zbTaeSXA1QV5/zdVdcT6Vx6pfXOvDCl/IlTGhMr/FKLpbOfU1fANx2+7HsQG6hQKhhw9tozoVgYsbMU1W3wRNmzRRZF+4qIzVHL/sN+bAOPA==",
+      "sha256": "d41c53cfcfa558de415cbb1ed7f7b08f5d906799fec4fced5ec73c1e6d003d6c"
+    }
+  }
+}

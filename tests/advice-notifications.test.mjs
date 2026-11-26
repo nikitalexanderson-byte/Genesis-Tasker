@@ -42,7 +42,7 @@ function fixture({stores=new Map(),status=200,allowed=true,url=target,failShow=f
   const client={focus:async()=>{},navigate:async url=>navigated.push(url),postMessage:value=>posted.push(value)};
   const self={registration:{scope,showNotification:async(title,options)=>{if(failShow)throw Error('Synthetic OS error');shown.push({title,...options});}},
     clients:{matchAll:async()=>visible?[client]:[],openWindow:async url=>opened.push(url)},addEventListener:(name,callback)=>events.set(name,callback)};
-  runInNewContext(source+'\n'+clickSource,{self,SCOPE:scope,URL,Request,Response,Date,caches:{open:async()=>cache},fetch:async(requestUrl,options)=>{
+  runInNewContext(source+'\n'+clickSource,{self,legacyPersonalRequest:{background:operation=>operation(),completeBackgroundInstall(){}},SCOPE:scope,URL,Request,Response,Date,caches:{open:async()=>cache},fetch:async(requestUrl,options)=>{
     requests.push({url:requestUrl,options});return new Response(JSON.stringify({displayAllowed:allowed,userId:'synthetic-user',message:{deliveryId:id,title:'Public advice title',body:'The exact persisted public advice body.',lang:'en',url}}),{status});
   }});
   const dispatch=async(name,event)=>{let work;events.get(name)({...event,waitUntil:promise=>{work=promise;}});await work;};

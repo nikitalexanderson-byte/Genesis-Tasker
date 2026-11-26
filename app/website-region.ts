@@ -21,7 +21,10 @@ const wake=()=>refresh();
 function subscribe(listener:()=>void){listeners.add(listener);if(++users===1){refresh();document.addEventListener('visibilitychange',wake);window.addEventListener('online',wake);interval=setInterval(wake,120000);}
  return()=>{listeners.delete(listener);if(--users===0){epoch++;manualEpoch++;controller?.abort();clearInterval(interval);document.removeEventListener('visibilitychange',wake);window.removeEventListener('online',wake);value=initial;}};
 }
-export function useWebsiteRegion(){return useSyncExternalStore(subscribe,()=>value,()=>initial);}
+const noSubscription=()=>()=>{};
+export function useWebsiteRegion(enabled=true){
+ return useSyncExternalStore(enabled?subscribe:noSubscription,enabled?()=>value:()=>initial,()=>initial);
+}
 /** Called only by an explicit location button, so the visitor controls the
  * browser's permission prompt. Already granted access is checked automatically. */
 export async function requestWebsiteLocation(){const ticket=++manualEpoch;update({locating:true,error:false});try{if(!navigator.geolocation)throw new Error('LOCATION_UNAVAILABLE');const device=await locatePaymentRegion(navigator.geolocation);if(ticket===manualEpoch)update({device:device==='unknown'?null:device,error:device==='unknown'});}catch{if(ticket===manualEpoch)update({device:null,error:true});}finally{if(ticket===manualEpoch)update({locating:false});}}

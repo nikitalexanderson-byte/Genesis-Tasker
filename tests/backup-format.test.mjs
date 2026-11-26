@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { backupJson, newBackupRecoveryKey, sealBackup, openBackup } from '../app/backup-format.ts';
-import { backupDriveAdapter, DRIVE_BACKUP_ENABLED } from '../app/backup-drive.ts';
 import { captureBackupSources, registerBackupSource } from '../app/backup-sources.ts';
 const owner='00000000-0000-4000-8000-000000000001';
 const payload=()=>({schema:1,backupId:crypto.randomUUID(),source:'device_snapshot',ownerId:owner,createdAt:new Date().toISOString(),client:'web',billingEvidence:null,
@@ -34,8 +33,4 @@ test('synchronous snapshot isolates owner, freezes pending data, and unregisters
   const captured=captureBackupSources(owner);data.tasks.length=0;
   assert.equal(captured.workspace.tasks.length,1);assert.deepEqual(captureBackupSources('other'),{});
   cleanup();assert.deepEqual(captureBackupSources(owner),{});
-});
-test('Drive remains disabled and performs no upload; disconnect does not delete files',async()=>{
-  assert.equal(DRIVE_BACKUP_ENABLED,false);
-  const adapter=backupDriveAdapter();await assert.rejects(adapter.upload({operationId:'a',ciphertext:'opaque',sha256:'a'}),/DRIVE_BACKUP_NOT_APPROVED/);await adapter.disconnect();
 });

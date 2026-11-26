@@ -76,4 +76,12 @@ internal class ProjectAccessDraftService(private val journal: PlanningJournal, p
             throw failure
         }
     }
+    suspend fun sendPrivate(space:String,user:String,stamp:String,send:suspend(JSONObject)->VerifiedPrivateProjectAccessReceipt):JSONObject{
+        val record=current(space,user,stamp);if(record.getString("phase")=="received")return record
+        require(record.getString("phase")=="pending"){"PLANNING_DRAFT_PENDING"}
+        checked{ProjectAccessProtocol.snapshot(space,user,access.state(space,user))};require(!checked{access.hasTaskQueue()}){"PROJECT_ACCESS_LOCAL_QUEUE"}
+        val attempted=checked{journal.beginAttempt(account,scope(space,user),stamp)}
+        try{access.check();val verified=send(JSONObject(attempted.getString("command")));access.check();return checked{journal.succeededPrivateProjectAccess(account,scope(space,user),attempted.getString("stamp"),verified)}}
+        catch(cancel:CancellationException){throw cancel}catch(failure:Exception){access.check();val code=when(failure){is AuthApiError->failure.code;is AuthFailure->sharedFailureCode(failure);else->failure.message?.takeIf{it in ProjectAccessProtocol.errors||it=="PLANNING_DRAFT_STORAGE"}?:"PROTOCOL"};journal.failed(account,scope(space,user),attempted.getString("stamp"),code);throw failure}
+    }
 }

@@ -12,6 +12,14 @@ import ru.genesis.calendar.data.WorkspaceStructureCodec
 import ru.genesis.calendar.security.WorkspaceCipher
 
 class CloudAccountSnapshotTest {
+    @Test fun optimizedScopeEncodingPreservesEveryExistingAccountPath() {
+        val owners=listOf("user","0".repeat(256),"почта@example.invalid","owner-🙂")+(0..255).map{"opaque-$it"}
+        for(owner in owners){
+            val digest=java.security.MessageDigest.getInstance("SHA-256").digest(owner.toByteArray(Charsets.UTF_8))
+            val legacy="account-"+digest.joinToString(""){"%02x".format(it)}.take(32)
+            assertEquals(legacy,CloudAccountSnapshot.scopeFor(owner))
+        }
+    }
     @Test fun keepsSpecificGoogleQuotaIssueWithoutBlockingAccountData() {
         val source = payload(null).put("syncWarning", "Исчерпана суточная квота проекта GENESIS для Google Tasks.")
         val snapshot = CloudAccountSnapshot.fromBootstrap(source)

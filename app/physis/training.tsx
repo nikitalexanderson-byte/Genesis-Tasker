@@ -1,4 +1,5 @@
 "use client";
+import { usePhysisMigrationCapture, usePhysisMigrationTask } from './migration-editors';
 /* eslint-disable react/prop-types -- Props use the shared, strictly typed PhysisFeatureProps contract. */
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { IconActionButton } from '../IconActionButton';
@@ -23,15 +24,18 @@ const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 const tr = (en: boolean, ru: string, english: string) => en ? english : ru;
 const shortNumber = (n: number) => Number(n.toFixed(2)).toLocaleString();
 function useAction() {
+  const track = usePhysisMigrationTask();
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const running = useRef(false);
-  const run = async (action: () => Promise<void>) => { if (running.current) return; running.current = true; setBusy(true); setError(''); try { await action(); } catch (e) { setError(e instanceof Error ? e.message : 'Не удалось сохранить. Повторите действие.'); } finally { running.current = false; setBusy(false); } };
+  const run = async (action: () => Promise<void>) => { if (running.current) return; running.current = true; setBusy(true); setError(''); try { await track(action); } catch (e) { setError(e instanceof Error ? e.message : 'Не удалось сохранить. Повторите действие.'); } finally { running.current = false; setBusy(false); } };
   return { error, busy, run, setError };
 }
 function ErrorMessage({ error }: { error: string }) { return error ? <p className="physis-warning" role="alert">{error}</p> : null; }
 function NumberField({ label, value, onChange, max = 10000, min = 0, integer = false }: { label: string; value: number | null; onChange: (v: number | null) => void; max?: number; min?: number; integer?: boolean }) {
+
   const [raw, setRaw] = useState<string | null>(null);
+  usePhysisMigrationCapture('training.NumberField',()=>({raw,label,value,min,max}));
   const displayed = raw ?? (value === null ? '' : String(Number(value.toFixed(4))));
   const parsed = physisNumber(displayed, min, max);
   const invalid = displayed !== '' && (parsed === null || integer && !Number.isInteger(parsed));
@@ -52,8 +56,10 @@ function choicesFor(props: PhysisFeatureProps): ExerciseChoice[] {
   return [...STARTER_EXERCISES.filter(e => !personal.some(p => p.data.catalogId === e.id)), ...personal];
 }
 function ExerciseSelect({ choices, en, onSelect, label }: { choices: ExerciseChoice[]; en: boolean; onSelect: (choice: ExerciseChoice) => void; label?: string }) {
+
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState('');
+  usePhysisMigrationCapture('training.ExerciseSelect',()=>({search,selected}));
   const shown = choices.filter(e => `${e.data.name} ${e.data.nameEn} ${e.data.aliases.join(' ')}`.toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   return <div className="physis-training-add physis-form"><label>{tr(en, 'Найти упражнение', 'Find exercise')}<input type="search" value={search} onChange={e => setSearch(e.target.value)} /></label><label>{tr(en, 'Упражнение', 'Exercise')}<select value={selected} onChange={e => setSelected(e.target.value)}><option value="">{tr(en, 'Выберите упражнение', 'Choose exercise')}</option>{shown.map(ex => <option key={ex.id} value={ex.id}>{en ? ex.data.nameEn || ex.data.name : ex.data.name}</option>)}</select></label><button type="button" disabled={!shown.some(e => e.id === selected)} onClick={() => { const found = shown.find(e => e.id === selected); if (found) { onSelect(found); setSelected(''); } }}>{label || tr(en, 'Добавить упражнение', 'Add exercise')}</button></div>;
 }
@@ -75,6 +81,7 @@ function SetFields({ exercise, set, onChange, en, weightUnit, distanceUnit, plan
 }
 
 function useSessionDraft(record: PhysisRecord<TrainingSession>, store: PhysisFeatureProps['store']) {
+
   const { save } = store;
   const [draft, setDraft] = useState(record);
   const [state, setState] = useState<'saved' | 'saving' | 'error'>('saved');
@@ -82,6 +89,7 @@ function useSessionDraft(record: PhysisRecord<TrainingSession>, store: PhysisFea
   const pending = useRef<PhysisRecord<TrainingSession> | null>(null);
   const saving = useRef<Promise<boolean> | null>(null);
   const latest = useRef(record);
+  usePhysisMigrationCapture('training.useSessionDraft',()=>({draft,state,error,pending:pending.current,latest:latest.current,saving:saving.current!==null}));
   const enqueue = useCallback((next: PhysisRecord<TrainingSession>): Promise<boolean> => {
     pending.current = next;
     setState('saving'); setError('');
@@ -126,6 +134,7 @@ function useSessionDraft(record: PhysisRecord<TrainingSession>, store: PhysisFea
 }
 
 function SessionEditor({ record, props, onClose }: { record: PhysisRecord<TrainingSession>; props: PhysisFeatureProps; onClose: () => void }) {
+
   const en = props.language === 'en';
   const { draft, state, error, confirmed, change: saveChange, flush, accept } = useSessionDraft(record, props.store);
   const heading = useRef<HTMLElement>(null);
@@ -156,6 +165,7 @@ function SessionEditor({ record, props, onClose }: { record: PhysisRecord<Traini
   }));
   const change = (next: TrainingSession) => saveChange(withSessionExercises({ ...next, exercises: session.exercises, plannedExercises: originalPlan }, next.exercises));
   const templateDrafts = useRef(new TrainingCreationDrafts<TrainingProgram>()).current;
+  usePhysisMigrationCapture('training.SessionEditor',()=>({now,editingHistory,notice,replacementBatch,originalPlan,templateDrafts:templateDrafts.captureMigration()}));
   const flushAll = async () => {
     if (replacementBatch && replacementLocked) {
       try { await props.store.saveMany([replacementBatch.session, replacementBatch.program]); setReplacementBatch(null); return true; }
@@ -263,9 +273,11 @@ function SessionEditor({ record, props, onClose }: { record: PhysisRecord<Traini
 }
 
 function ExerciseCatalog(props: PhysisFeatureProps) {
+
   const en = props.language === 'en'; const action = useAction();
   const [query, setQuery] = useState(''); const [muscle, setMuscle] = useState(''); const [movement, setMovement] = useState(''); const [equipment, setEquipment] = useState(''); const [environment, setEnvironment] = useState(''); const [favorite, setFavorite] = useState(false);
   const [editing, setEditing] = useState<PhysisRecord<ExerciseDefinition> | null>(null);
+  usePhysisMigrationCapture('training.ExerciseCatalog',()=>({query,muscle,movement,equipment,environment,favorite,editing}));
   const choices = choicesFor(props);
   const visible = choices.filter(ex => [ex.data.name, ex.data.nameEn,
     ex.personal ? '' : translateText(ex.data.name, props.language as Language), ...ex.data.aliases].join(' ').toLocaleLowerCase(props.language).includes(query.trim().toLocaleLowerCase(props.language))
@@ -290,6 +302,7 @@ function DayEditor({ day, update, props }: { day: CycleDay; update: (day: CycleD
 }
 
 function ProgramEditor({ record, props, onClose }: { record: PhysisRecord<TrainingProgram>; props: PhysisFeatureProps; onClose: () => void }) {
+
   const en = props.language === 'en'; const action = useAction();
   const [program, setProgram] = useState(clone(record.data));
   const [version, setVersion] = useState(clone(record.data.versions.at(-1)!));
@@ -297,6 +310,7 @@ function ProgramEditor({ record, props, onClose }: { record: PhysisRecord<Traini
   const [length, setLength] = useState<number | null>(8);
   const [isExisting] = useState(() => props.store.records.some(r => r.id === record.id));
   const [versionIdentity] = useState(() => ({ id: crypto.randomUUID(), createdAt: new Date().toISOString() }));
+  usePhysisMigrationCapture('training.ProgramEditor',()=>({program,version,selectedDay,length,isExisting,versionIdentity}));
   const setDay = (id: string, value: CycleDay) => setVersion({ ...version, mesocycles: version.mesocycles.map(m => ({ ...m, microcycles: m.microcycles.map(c => ({ ...c, days: c.days.map(d => d.id === id ? value : d) })) })) });
   const selected = version.mesocycles.flatMap(m => m.microcycles.flatMap(c => c.days)).find(d => d.id === selectedDay);
   return <section className="physis-panel"><div className="physis-row"><h2>{isExisting ? tr(en, 'Новая версия программы', 'New program version') : tr(en, 'Конструктор программы', 'Program builder')}</h2><button type="button" onClick={onClose}>{tr(en, 'Закрыть без сохранения', 'Close without saving')}</button></div><p className="physis-muted">{tr(en, 'Создайте один тренировочный день: добавьте упражнения и подходы, сохраните и назначьте дату. Циклы и периодизация раскрываются ниже.', 'Create one workout day: add exercises and sets, save, then assign a date. Expand cycles and periodization below.')}</p><ErrorMessage error={action.error} /><form onSubmit={e => { e.preventDefault(); void action.run(async () => {
@@ -329,11 +343,13 @@ function ProgramEditor({ record, props, onClose }: { record: PhysisRecord<Traini
 }
 
 function AssignmentCreator({ program, props, onClose }: { program: PhysisRecord<TrainingProgram>; props: PhysisFeatureProps; onClose: () => void }) {
+
   const en = props.language === 'en'; const action = useAction();
   const [start, setStart] = useState(todayCivilDate(props.context)); const [mode, setMode] = useState<'fixed' | 'next'>('fixed'); const [advance, setAdvance] = useState<'complete' | 'finished'>('finished');
   const [versionId, setVersionId] = useState(program.data.versions.at(-1)!.id);
   const [preview, setPreview] = useState<TrainingAssignment | null>(null);
   const pendingRecord = useRef<PhysisRecord<TrainingAssignment> | null>(null);
+  usePhysisMigrationCapture('training.AssignmentCreator',()=>({start,mode,advance,versionId,preview,pendingRecord:pendingRecord.current}));
   const version = program.data.versions.find(v => v.id === versionId)!;
   const otherPlans = physisRecords<TrainingAssignment>(props.store, 'assignment').filter(a => !a.data.paused).flatMap(a => a.data.scheduled.filter(s => s.snapshot.kind === 'workout' && s.state !== 'skipped'));
   const overlaps = preview?.scheduled.filter(s => s.snapshot.kind === 'workout' && otherPlans.some(p => p.day === s.day)).length ?? 0;
@@ -345,12 +361,14 @@ function SchedulePreview({ assignment, props }: { assignment: TrainingAssignment
 }
 
 function Programs(props: PhysisFeatureProps & { onStartSaved?: (program: PhysisRecord<TrainingProgram>, dayId: string) => void }) {
+
   const creationDrafts = useRef(new TrainingCreationDrafts<TrainingProgram>()).current;
   const en = props.language === 'en'; const action = useAction();
   const [editing, setEditing] = useState<PhysisRecord<TrainingProgram> | null>(null);
   const [assigning, setAssigning] = useState<PhysisRecord<TrainingProgram> | null>(null);
   const [collection, setCollection] = useState<'personal' | 'alchemy'>('personal');
   const [archived, setArchived] = useState(false); const [query, setQuery] = useState('');
+  usePhysisMigrationCapture('training.Programs',()=>({editing,assigning,collection,archived,query,creationDrafts:creationDrafts.captureMigration()}));
   const programs = physisRecords<TrainingProgram>(props.store, 'program').filter(p => p.data.collection === collection && p.data.archived === archived && `${p.data.name} ${p.data.versions.at(-1)?.goal ?? ''}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   const create = () => { const program = newProgram(); program.versions[0].mesocycles[0].microcycles[0].days.splice(1); program.collection = collection; setEditing(newPhysisRecord('program', program)); };
   if (editing) return <ProgramEditor key={editing.id} record={editing} props={props} onClose={() => setEditing(null)} />;
@@ -370,10 +388,12 @@ function Programs(props: PhysisFeatureProps & { onStartSaved?: (program: PhysisR
 }
 
 function Assignments({ props }: { props: PhysisFeatureProps }) {
+
   const en = props.language === 'en'; const action = useAction();
   const assignments = physisRecords<TrainingAssignment>(props.store, 'assignment'); const sessions = physisRecords<TrainingSession>(props.store, 'session'); const programs = physisRecords<TrainingProgram>(props.store, 'program');
   const [from, setFrom] = useState(todayCivilDate(props.context));
   const [pending, setPending] = useState<{ record: PhysisRecord<TrainingAssignment>; next: TrainingAssignment } | null>(null);
+  usePhysisMigrationCapture('training.Assignments',()=>({from,pending}));
   return <div><h2>{tr(en, 'Назначенные циклы', 'Assigned cycles')}</h2><ErrorMessage error={action.error} />{!assignments.length && <p className="physis-empty">{tr(en, 'Назначения появятся после выбора программы и даты начала.', 'Assignments appear after choosing a program and start date.')}</p>}{assignments.map(a => {
     const score = completionScore(a, sessions, todayCivilDate(props.context)); const program = programs.find(p => p.id === a.data.programId); const latest = program?.data.versions.at(-1);
     return <details key={a.id} className="physis-training-program"><summary>{a.data.snapshot.name} · v{a.data.snapshot.version} · {a.data.paused ? tr(en, 'Пауза', 'Paused') : tr(en, 'Активна', 'Active')}</summary><p>{a.data.mode === 'fixed' ? tr(en, 'Фиксированные даты', 'Fixed dates') : tr(en, 'Следующая тренировка', 'Next workout')} · {score.percent ?? '—'}% ({shortNumber(score.earned)}/{score.due})</p><p>{tr(en, 'Начало', 'Start')}: {formatCalendarDateValue(a.data.startDay, props.settings.calendarMode, true, props.context)}</p><button type="button" disabled={action.busy} onClick={() => { void action.run(async () => { await props.store.save(editPhysisRecord(a, { ...a.data, paused: !a.data.paused })); }); }}>{a.data.paused ? tr(en, 'Продолжить программу', 'Resume program') : tr(en, 'Приостановить программу', 'Pause program')}</button><p className="physis-muted">{tr(en, 'Пауза не сдвигает даты. Перенос отдельного дня или будущего хвоста доступен в календаре.', 'Pausing never shifts dates. Move a day or the future sequence from the calendar.')}</p>{latest && latest.id !== a.data.snapshot.id && <div className="physis-form"><label>{tr(en, 'Обновить будущий план с даты', 'Update future plan from date')}<CalendarDatePicker value={from} mode={props.settings.inputCalendarMode} calculationContext={props.context} ariaLabel={tr(en, 'Дата применения новой версии', 'Apply new version from date')} onChange={setFrom} /></label><button type="button" disabled={!from} onClick={() => { try { const locked = new Set(sessions.filter(s => s.data.assignmentId === a.id).map(s => s.data.scheduledId!)); setPending({ record: a, next: applyVersionFrom(a.data, latest, from, locked) }); } catch (e) { action.setError(e instanceof Error ? e.message : 'Ошибка'); } }}>{tr(en, 'Предпросмотр новой версии', 'Preview new version')} v{latest.version}</button></div>}<SchedulePreview assignment={a.data} props={props} /><div className="physis-training-progress"><h4>{tr(en, 'Прогресс этапов', 'Stage progress')}</h4>{[...new Set(a.data.scheduled.map(s => s.meso))].map(meso => { const items = a.data.scheduled.filter(s => s.meso === meso); const filtered = { ...a, data: { ...a.data, scheduled: items } }; const result = completionScore(filtered, sessions, todayCivilDate(props.context)); return <div key={meso}><strong>{tr(en, 'Мезоцикл', 'Mesocycle')} {meso}: {result.percent ?? '—'}%</strong>{[...new Set(items.map(s => s.micro))].map(micro => { const cycle = completionScore({ ...a, data: { ...a.data, scheduled: items.filter(s => s.micro === micro) } }, sessions, todayCivilDate(props.context)); return <p key={micro}>{tr(en, 'Микроцикл', 'Microcycle')} {micro}: {cycle.percent ?? '—'}%</p>; })}</div>; })}</div></details>;
@@ -381,8 +401,10 @@ function Assignments({ props }: { props: PhysisFeatureProps }) {
 }
 
 function MoveWorkout({ assignment, item, props, onClose }: { assignment: PhysisRecord<TrainingAssignment>; item: ScheduledWorkout; props: PhysisFeatureProps; onClose: () => void }) {
+
   const en = props.language === 'en'; const action = useAction();
   const [day, setDay] = useState(addCivilDays(item.day, 1)); const [scope, setScope] = useState<'one' | 'tail'>('one'); const [preview, setPreview] = useState<TrainingAssignment | null>(null);
+  usePhysisMigrationCapture('training.MoveWorkout',()=>({day,scope,preview}));
   const sessions = physisRecords<TrainingSession>(props.store, 'session');
   const locked = new Set(sessions.filter(s => s.data.assignmentId === assignment.id).map(s => s.data.scheduledId!));
   const changed = preview?.scheduled.filter(s => assignment.data.scheduled.find(old => old.id === s.id)?.day !== s.day) ?? [];
@@ -392,10 +414,12 @@ function MoveWorkout({ assignment, item, props, onClose }: { assignment: PhysisR
 }
 
 function DayLog({ day, props, onOpen, onStart, showDate = true }: { showDate?: boolean; day: string; props: PhysisFeatureProps; onOpen: (record: PhysisRecord<TrainingSession>) => void; onStart: (day: string, scheduled?: ScheduledWorkout, assignment?: PhysisRecord<TrainingAssignment>) => void }) {
+
   const en = props.language === 'en'; const action = useAction();
   const sessions = physisRecords<TrainingSession>(props.store, 'session');
   const assignments = physisRecords<TrainingAssignment>(props.store, 'assignment');
   const [moving, setMoving] = useState<{ assignment: PhysisRecord<TrainingAssignment>; item: ScheduledWorkout } | null>(null);
+  usePhysisMigrationCapture('training.DayLog',()=>({moving}));
   const daySessions = sessions.filter(s => s.data.localDay === day).sort((a, b) => a.data.startedAt.localeCompare(b.data.startedAt));
   const scheduled = assignments.flatMap(a => a.data.scheduled.filter(s => s.day === day).map(item => ({ assignment: a, item })));
   const movedAway = assignments.flatMap(a => a.data.scheduled.filter(s => s.movedFrom === day && s.day !== day).map(item => ({ assignment: a, item })));
@@ -409,9 +433,11 @@ function DayLog({ day, props, onOpen, onStart, showDate = true }: { showDate?: b
 }
 
 function TrainingCalendar({ props, onOpen, onStart }: { props: PhysisFeatureProps; onOpen: (record: PhysisRecord<TrainingSession>) => void; onStart: (day: string, scheduled?: ScheduledWorkout, assignment?: PhysisRecord<TrainingAssignment>) => void }) {
+
   const en = props.language === 'en'; const today = todayCivilDate(props.context);
   const [day, setDay] = useState(today); const mode = props.settings.calendarMode;
   const [detailsDay, setDetailsDay] = useState<string | null>(null);
+  usePhysisMigrationCapture('training.TrainingCalendar',()=>({day,detailsDay}));
   const layout = trainingCalendarLayout(day, mode, props.context, props.weekStart); const { range } = layout;
   const sessions = physisRecords<TrainingSession>(props.store, 'session'); const assignments = physisRecords<TrainingAssignment>(props.store, 'assignment');
   const due = assignments.reduce((n, a) => n + completionScore(a, sessions, today, range).due, 0); const earned = assignments.reduce((n, a) => n + completionScore(a, sessions, today, range).earned, 0);
@@ -435,9 +461,11 @@ function TrainingDayDialog({ day, props, onOpen, onStart, onClose }: { day: stri
 }
 
 function TrainingStatistics(props: PhysisFeatureProps) {
+
   const web = typeof document !== 'undefined' && document.documentElement.dataset.genesisWeb === 'true';
   const en = props.language === 'en'; const today = todayCivilDate(props.context);
   const [start, setStart] = useState(calendarMonthRange(today, props.settings.calendarMode, props.context).start); const [end, setEnd] = useState(today);
+  usePhysisMigrationCapture('training.TrainingStatistics',()=>({start,end}));
   const sessions = physisRecords<TrainingSession>(props.store, 'session').filter(s => !!s.data.endedAt && s.data.localDay >= start && s.data.localDay <= end).sort((a, b) => a.data.startedAt.localeCompare(b.data.startedAt));
   const totals = sessions.reduce((sum, s) => { const value = sessionSummary(s.data); return { count: sum.count + 1, sets: sum.sets + value.completedSets, seconds: sum.seconds + value.seconds, volume: sum.volume + value.volumeKg, distance: sum.distance + value.distanceKm }; }, { count: 0, sets: 0, seconds: 0, volume: 0, distance: 0 });
   const rows = new Map<string, { name: string; convention: WeightMode; side: string; count: number; volume: number; first: number | null; last: number | null; best: number | null; seconds: number; distance: number }>();
@@ -452,6 +480,7 @@ function TrainingStatistics(props: PhysisFeatureProps) {
 }
 
 export function PhysisTraining(props: PhysisFeatureProps & { page: 'today' | 'programs' | 'control' | 'exercises'; dailyContext?: ReactNode }) {
+
   const creationDrafts = useRef(new TrainingCreationDrafts<TrainingSession>()).current;
   const en = props.language === 'en'; const action = useAction();
   const [tab, setTab] = useState<'today' | 'programs' | 'calendar' | 'statistics'>(props.page === 'programs' ? 'programs' : 'today');
@@ -467,6 +496,7 @@ export function PhysisTraining(props: PhysisFeatureProps & { page: 'today' | 'pr
   });
   const savedDays = programs.flatMap(program => program.data.versions.at(-1)!.mesocycles.flatMap(m => m.microcycles.flatMap(c => c.days)).filter(d => d.kind === 'workout' && d.exercises.length).map(day => ({program,day})));
   const [savedChoice, setSavedChoice] = useState('');
+  usePhysisMigrationCapture('training.PhysisTraining',()=>({tab,opened,savedChoice,creationDrafts:creationDrafts.captureMigration()}));
   const chosen = savedDays.find(({program,day}) => program.id + ':' + day.id === savedChoice) ?? savedDays[0];
   const openSession = (record: PhysisRecord<TrainingSession>) => { creationDrafts.open(record.id); setOpened(record); };
   const onStart = (day: string, item?: ScheduledWorkout, assignment?: PhysisRecord<TrainingAssignment>, program?: PhysisRecord<TrainingProgram>, dayId?: string) => { void action.run(async () => {

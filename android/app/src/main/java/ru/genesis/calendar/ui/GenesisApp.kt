@@ -114,6 +114,25 @@ fun GenesisApp(app: GenesisApplication, openedTask: String?, openedSection: Stri
     openedAdvice: ru.genesis.calendar.reminders.AdviceNotificationOpenRequest? = null) {
     require(!testWorkspace || BuildConfig.DEBUG)
     val activeScope by app.scopeFlow.collectAsStateWithLifecycle()
+    val privateController=remember(app){ru.genesis.calendar.auth.AuthController.get(app)}
+    val privateAuth by privateController.state.collectAsStateWithLifecycle()
+    if(!testWorkspace)PrivateBackupHandoffHost(privateAuth.user?.uid)
+    if(!testWorkspace)PrivateMigrationHost(privateController,privateAuth)
+    if(!testWorkspace)PrivateMembershipHost(privateController,privateAuth)
+    val privateRevision by ru.genesis.calendar.security.NativePrivateProducts.revision.collectAsStateWithLifecycle()
+    val privateCustodyRevision by ru.genesis.calendar.security.NativePrivateProducts.custodyRevision.collectAsStateWithLifecycle()
+    LaunchedEffect(privateController,testWorkspace){if(!testWorkspace)privateController.ensureSession()}
+    val privateProtected=privateAuth.user?.privateVault==true||ru.genesis.calendar.security.NativePrivateProducts.isProtected(activeScope)
+    val privateUnlocked=remember(activeScope,privateRevision){ru.genesis.calendar.security.NativePrivateProducts.isOpen(activeScope)}
+    LaunchedEffect(privateRevision,privateUnlocked,privateAuth.ready,privateAuth.busy){
+        if(!testWorkspace&&privateProtected&&privateUnlocked&&privateAuth.ready&&!privateAuth.busy)privateController.syncPending()
+    }
+    if(!testWorkspace&&privateProtected&&!privateUnlocked){
+        val unlockNight=rememberEveningTheme(AppearanceSettings.read("{}",privateAuth.accountSettings?.theme?:"auto"))
+        val unlockPalette=privateAuth.accountSettings?.darkPalette?:"green"
+        MaterialTheme(colorScheme=if(unlockNight)eveningPalette(unlockPalette)else daylightPalette(unlockPalette),typography=GenesisTypography,shapes=GenesisShapes){PrivateVaultGate(privateController,privateAuth)};return
+    }
+    if(!testWorkspace&&privateProtected&&privateUnlocked&&privateAuth.user!=null)PrivateExecutionPump(privateController,privateAuth.user!!.uid,privateAuth.ready&&!privateAuth.busy&&!privateAuth.requiresSignIn)
     key(activeScope) { GenesisWorkspaceContent(app, openedTask, openedSection, activeScope, testWorkspace, openedHabit, openedAdvice) }
 }
 
@@ -122,6 +141,7 @@ fun GenesisApp(app: GenesisApplication, openedTask: String?, openedSection: Stri
 private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?, openedSection: String?,
     activeScope: String, testWorkspace: Boolean, openedHabit: ru.genesis.calendar.reminders.HabitReminderOpenRequest?,
     openedAdvice: ru.genesis.calendar.reminders.AdviceNotificationOpenRequest?) {
+    val privateCustodyRevision by ru.genesis.calendar.security.NativePrivateProducts.custodyRevision.collectAsStateWithLifecycle()
     var closedAdviceNonce by rememberSaveable(activeScope) { mutableStateOf<Long?>(null) }
     // Derive this before the first Today composition: an effect would allow an accidental draw underneath the reader.
     val activeAdviceRequest = openedAdvice?.takeIf { it.scope == activeScope && it.nonce != closedAdviceNonce }
@@ -184,8 +204,9 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
     }
     val habitTrackingEnabled = habitWorkspace.settings.enabled
     val welcomePrefsStore=remember(app) { LocalPreferences(app,"welcome") }
-    val welcomePrefs by welcomePrefsStore.values.collectAsStateWithLifecycle(
-        UiPreferences(language = regionalLanguageForDevice()))
+    val welcomeSelection by welcomePrefsStore.selectedLanguage.collectAsStateWithLifecycle(null)
+    var preferredWelcomeLanguage by rememberSaveable { mutableStateOf<String?>(null) }
+    val explicitWelcomeLanguage = preferredWelcomeLanguage ?: welcomeSelection?.selected
     val taskSync by authController.taskSync.collectAsStateWithLifecycle()
     val accountTaskSync = taskSync.takeIf { it.scope == activeScope }
     val scope=rememberCoroutineScope()
@@ -193,7 +214,6 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
         ru.genesis.calendar.reminders.MoonReminderScheduler.restore(app)
         runCatching { ru.genesis.calendar.reminders.SleepReminderScheduler.restore(app) }
     }
-    var preferredWelcomeLanguage by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(authController, testWorkspace) { if (!testWorkspace) authController.ensureSession() }
     LaunchedEffect(activeScope, authState.user, authState.busy) {
         if (!testWorkspace && activeScope.startsWith("account-") && authState.user != null && !authState.busy) {
@@ -462,6 +482,9 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
     var updateCheckMessage by remember { mutableStateOf<String?>(null) }
     val accountGate = !testWorkspace && (!activeScope.startsWith("account-") || authState.user == null || !authState.ready)
     val welcomeVisible = accountGate && !(authState.busy && authState.user != null)
+    val welcomeRegion = rememberWelcomeIpRegion(welcomeVisible && explicitWelcomeLanguage == null)
+    val welcomeLanguage = ru.genesis.calendar.data.welcomeLanguageForDevice(explicitWelcomeLanguage,
+        suggestRussianByIp = welcomeRegion == ru.genesis.calendar.auth.WelcomeIpRegion.RUSSIA)
     val window = LocalContext.current.activity()?.window
     val changeDisplayCalendar: (CalendarMode) -> Unit = { next ->
         if (!testWorkspace && authState.user != null) authController.updateSharedPreference("display", next.wireValue)
@@ -479,7 +502,7 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
             isAppearanceLightNavigationBars = !eveningTheme && !welcomeVisible
         }
     } }
-    val language = if (testWorkspace || activeScope.startsWith("account-")) prefs.language else welcomePrefs.language
+    val language = if (accountGate) welcomeLanguage else prefs.language
     val frameworkConfiguration = remember(configuration, language) {
         Configuration(configuration).apply { setLocale(java.util.Locale.forLanguageTag(language)) }
     }
@@ -527,7 +550,8 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
             .testTag(if (eveningTheme) "app-theme-Evening" else "app-theme-Standart"),color=MaterialTheme.colorScheme.background) {
             if (accountGate) {
                 if (authState.busy && authState.user != null) AuthTransitionScreen(authState.message)
-                else WelcomeScreen(authState,authController,welcomePrefs.language,preferredWelcomeLanguage) { language ->
+                else WelcomeScreen(authState,authController,welcomeLanguage,explicitWelcomeLanguage,
+                    languageReady = welcomeSelection != null) { language ->
                         preferredWelcomeLanguage = language
                         scope.launch { welcomePrefsStore.set("language",language) }
                     }
@@ -747,10 +771,11 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                         DiaryScreen(diary, onClose = ::navigateBack)
                     }
                     "Сообщения" -> authState.user?.uid?.let { uid ->
-                        val repository = remember(app, activeScope, uid) {
+                        val messagingLifetime=authController.messagingLifetime()
+                        val repository = remember(app, activeScope, uid,privateCustodyRevision,messagingLifetime) {
                             ru.genesis.calendar.data.MessagingRepository.room(app.database, activeScope, uid, authController.messagingGateway(uid))
                         }
-                        val messenger = remember(app, activeScope, uid) {
+                        val messenger = remember(app, activeScope, uid,privateCustodyRevision,messagingLifetime) {
                             ru.genesis.calendar.data.MessengerRepository.room(app.database, activeScope, uid, authController.messagingGateway(uid))
                         }
                         MessengerScreen(messenger, prefs.language, initialProjectId=messagingProjectId,
@@ -1018,7 +1043,7 @@ private fun AuthTransitionScreen(message: String) {
 }
 
 @Composable
-private fun TodayTasksPanel(tasks: List<LocalTask>, missedTasks: List<LocalTask>, selected: String, use24: Boolean,
+internal fun TodayTasksPanel(tasks: List<LocalTask>, missedTasks: List<LocalTask>, selected: String, use24: Boolean,
     structure: WorkspaceStructure, onCreate: () -> Unit, onComplete: (LocalTask) -> Unit,
     onMoveToToday: (LocalTask) -> Unit, onOpen: (String) -> Unit,
     showCreate: Boolean = true,
@@ -1036,12 +1061,7 @@ private fun TodayTasksPanel(tasks: List<LocalTask>, missedTasks: List<LocalTask>
         Column(Modifier.padding(AffairsLayout.gutter), verticalArrangement = Arrangement.spacedBy((10f / 1.5f).dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically) {
-                Surface(Modifier.size(40.dp), shape = AffairsLayout.controlShape,
-                    color = MaterialTheme.colorScheme.primaryContainer) {
-                    Box(contentAlignment = Alignment.Center) {
-                        GenesisVectorIcon(GenesisPageIcon.TASKS, Modifier.size(24.dp), MaterialTheme.colorScheme.primary)
-                    }
-                }
+                TodaySectionIcon(GenesisPageIcon.TASKS, "today-tasks-section-icon")
                 Column(Modifier.weight(1f)) {
                     Text("Задачи дня", style = MaterialTheme.typography.titleLarge)
                     Text(if (tasks.isEmpty() && !hasShared) "День свободен для нового замысла" else
@@ -1056,10 +1076,8 @@ private fun TodayTasksPanel(tasks: List<LocalTask>, missedTasks: List<LocalTask>
             TodayTaskGroup("Личные", Modifier.testTag("today-personal-tasks"),
                 titleModifier = Modifier.testTag("today-personal-tasks-title")) {
             if (tasks.isEmpty()) {
-                Surface(Modifier.fillMaxWidth(), shape = AffairsLayout.shape, color = MaterialTheme.colorScheme.surface) {
-                    Text(if (hasShared) "${genesisTranslate("Личные")} · 0" else "На сегодня задач нет. Можно оставить день свободным или создать задачу.",
-                        Modifier.padding(14.dp), style = MaterialTheme.typography.bodyMedium)
-                }
+                TodayTaskEmptyState(if (hasShared) "${genesisTranslate("Личные")} · 0" else
+                    "На сегодня задач нет. Можно оставить день свободным или создать задачу.")
             } else tasks.forEach { task ->
                 TodayTaskRow(task.done, { onOpen(task.id) }, Modifier.testTag("task-${task.id}"),
                     onComplete = { onComplete(task) }) {
@@ -1351,6 +1369,21 @@ internal fun TaskEditor(task:LocalTask?,selected:String,prefs:UiPreferences,stru
         yandexBusy, yandexVisibility, yandexReminders).joinToString("\u001f")
     val originalFingerprint = rememberSaveable(task?.id) { draftFingerprint }
     var pendingExit by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val migrationContext=LocalContext.current
+    val migrationAuth=remember(migrationContext){ru.genesis.calendar.auth.AuthController.get(migrationContext)}
+    val migrationIdentity by migrationAuth.state.collectAsStateWithLifecycle()
+    val migrationBase=remember(task?.id){task?:LocalTask(title="")}
+    RememberMigrationInput(migrationIdentity.user?.takeIf{!it.privateVault}?.uid,"tasks",migrationBase.id){
+        val draft=migrationBase.copy(title=title,description=description,date=date,time=time,priority=priority,projectId=projectId,recurrence=recurrence,reminders=reminders)
+        val state=JSONObject().put("form","personal-task").put("draft",JSONObject(draft.json())).put("calendarMode",formCalendarMode.wireValue)
+            .put("taskListId",listId?:JSONObject.NULL).put("syncTargets",JSONArray(syncTargets)).put("entryType",entryType).put("yandexEntryType",yandexEntryType)
+            .put("endDate",yandexEndDate).put("endTime",yandexEndTime).put("location",yandexLocation).put("telemost",yandexTelemost)
+            .put("attendees",yandexAttendees).put("optionalAttendees",yandexOptionalAttendees).put("busy",yandexBusy).put("visibility",yandexVisibility).put("providerReminders",JSONArray(yandexReminders))
+            .put("customReminder",customReminder).put("customRelative",customRelative).put("customAmount",customAmount).put("customUnit",customUnit)
+            .put("absoluteDate",absoluteDate).put("absoluteTime",absoluteTime).put("absoluteCalendarMode",absoluteCalendarMode.wireValue)
+            .put("confirmDelete",confirmDelete).put("pendingExit",pendingExit!=null)
+        ru.genesis.calendar.security.NativeMigrationMemory.Capture(null,state,!saving)
+    }
     fun requestExit(action: () -> Unit) {
         if (saving) return
         if (draftFingerprint != originalFingerprint) pendingExit = action else action()
@@ -1577,6 +1610,11 @@ internal fun TaskEditor(task:LocalTask?,selected:String,prefs:UiPreferences,stru
                 saveError?.let { Text(it, color=MaterialTheme.colorScheme.error,
                     modifier=Modifier.testTag("task-save-error"), style=MaterialTheme.typography.bodySmall) }
                 validation?.let { Text(it,color=MaterialTheme.colorScheme.error) }
+                PrivateGoogleCopyEntry(JSONObject().put("title",title).put("description",description)
+                    .put("dueDate",yandexEndDate.takeIf{entryType in setOf("meeting","event")&&it.isNotBlank()}?:date.ifBlank{null}?:JSONObject.NULL)
+                    .put("startDate",date.ifBlank{null}?:JSONObject.NULL).put("startTime",time.ifBlank{null}?:JSONObject.NULL)
+                    .put("endTime",yandexEndTime.ifBlank{null}?:JSONObject.NULL).put("timeZone",java.util.TimeZone.getDefault().id)
+                    .put("completedAt",yandexFields.optString("completedAt").takeUnless{it.isBlank()||it=="null"}?:JSONObject.NULL))
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween) {
                     TextButton(onClick={ requestExit(onDismiss) },enabled=!saving){Text("Отмена")}
                     Button(enabled=!saving && title.isNotBlank() && (routing?.mode!="choose" ||
@@ -1828,6 +1866,11 @@ private fun SettingsScreen(app:GenesisApplication,prefs:UiPreferences,sectionId:
         }
         "habits" -> HabitSettingsPanel(app, prefs.use24, visibility.dreamJournalEnabled, accountSettings!=null) { onSetVisibility(visibility.copy(dreamJournalEnabled=it)) }
         "reminders" -> {
+        val privateReminderFailed by ru.genesis.calendar.security.NativePrivateProducts.reminderProjectionFailed.collectAsState()
+        if(privateReminderFailed&&ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope)) {
+            val privateReminderCopy=remember(prefs.language){app.assets.open("shared-security-copy-v1.json").use { stream->val all=org.json.JSONObject(stream.readBytes().toString(Charsets.UTF_8));all.optJSONObject(prefs.language)?:all.getJSONObject("en") }}
+            UntranslatedText(privateReminderCopy.getString("error"),color=MaterialTheme.colorScheme.error)
+        }
         if (LocalSacredFeaturesEnabled.current) MoonReminderSettings(app, prefs, onSetLocal)
         sharedController?.let { EmailNotificationSettings(it,prefs.use24) }
         SettingsSection("◷", "Системные напоминания", "Проверка разрешений и точности Android",
@@ -1920,6 +1963,8 @@ private fun SettingsScreen(app:GenesisApplication,prefs:UiPreferences,sectionId:
         }
             ru.genesis.calendar.auth.AuthPanel(app, prefs.language)
             NativeBackupEntry()
+            PrivateMigrationEntry()
+            PrivateSharedSecurityEntry()
             onOpenAssistant?.let { open ->
                 OutlinedButton(onClick = open, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                     .testTag("open-server-assistant")) {

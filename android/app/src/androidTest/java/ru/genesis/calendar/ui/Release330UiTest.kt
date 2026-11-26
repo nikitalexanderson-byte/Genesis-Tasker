@@ -131,6 +131,8 @@ class Release330UiTest {
             .put("advice",JSONObject().put("id","advice-"+"a".repeat(24)).put("dayKey",day)
                 .put("title","Synthetic advice").put("body","Daily cached advice").put("language","en")
                 .put("dismissed",false).put("categories",JSONArray().put("aretology")).put("sources",JSONArray()))
+        val cacheApp=context.applicationContext as ru.genesis.calendar.GenesisApplication
+        cacheApp.activateAccount(user)
         val first=DailyAdviceCache(context,user,"en","qa330")
         coroutineScope { (1..8).map { async { first.today("2026-11-12") { loads++; delay(10); response("2026-11-12") } } }.awaitAll() }
         val recreated=DailyAdviceCache(context,user,"en","qa330")
@@ -142,8 +144,10 @@ class Release330UiTest {
         assertTrue(recreated.today("2026-11-12") { error("must remain cached") }.getJSONObject("advice").getBoolean("dismissed"))
         recreated.today("2026-11-13") { loads++; response("2026-11-13") }
         assertEquals(2,loads)
+        cacheApp.activateAccount(user+"-other")
         DailyAdviceCache(context,user+"-other","en","qa330").today("2026-11-13") { loads++; response("2026-11-13") }
         assertEquals(3,loads)
+        cacheApp.activateAccount(null)
     }
     @Test fun oracleTextAndReversedSurfaceRemainReadableInEveryLightPalette() {
         val letter=StoicheionLetter("theta",8,"Тэта","Θ","θ",9,9,"","","Бёдра","Μηροί","ΩΘΟΥΘΩΘΩ",Color(0xff6a839f))

@@ -133,3 +133,22 @@ shared-discovery-opened.jpg, shared-settings-no-toggle.jpg. На новом ка
 frozen offline install, typecheck, i18n:audit,11 связанных тестов, scoped lint и
 build:web со встроенными проверками PASS. Backend/Android не менялись.
 CI/публикация и live readback фиксируются после фактического завершения.
+
+
+### Фактическая публикация desktop/shared настроек
+
+PR44 merged: mainac8ccf604bb42f7b7b19411f8703b88cd7dce8d2. Push/PR checks
+45053598174/45053630523 success; exact-main website-only checks45057471114
+success. Штатный Deploy45061812677 success, production meta совпадает с main,
+health.ok=true. Manifest149 побайтно неизменен (SHA256582a282682b23af7368efe3a1f61533731a1915135f8dbd25dda6fbc7be54f63);
+APK149 HEAD200 и286545165 bytes. Повторное полное скачивание APK в этом выпуске
+не выполнялось; предыдущий полный SHA256 зафиксирован выше. Android=false.
+
+Live readback существующего аккаунта:1440px, dark/night — имя Селена в луне,
+общий left1206px, moon.bottom229.67px, clock.top247.67px (gap18px), без overlap.
+Account→Общие дела: переключателя нет; уведомления, приглашения, события на месте.
+Снимки output/release-web-moon/live-desktop-moon.jpg и
+live-settings-no-project-toggle.jpg в отдельном web checkout. Viewport сброшен,
+настройки не сохранялись. Новые Business/RU/платёжные операции на production не
+выполнялись; локальный synthetic Business readback описан выше. Security3.3.6
+в этот выпуск не входила; Paddle checkout не активировался.

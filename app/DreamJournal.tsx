@@ -1,10 +1,12 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useDiary } from "./DiaryProvider";
 import { diaryCopy } from "./diary-copy";
 import { newDiaryNote, validDreamDay, type DiaryNote } from "./diary-model";
 import type { DiaryRecord } from "./diary-storage";
-import { GenesisApiError, type GenesisUser } from "./cloud-sync";
+import { GenesisApiError,usesPrivateProductStorage, type GenesisUser } from "./cloud-sync";
+import {requirePrivateAccount} from './e2ee/product-session';
+import {approveExternalCopy,EXTERNAL_COPY_NOTICE_VERSION} from './e2ee/external-copy';
 import { featureAllowed } from "./feature-access";
 import { requestUpgrade } from "./upgrade-events";
 import { useDialogAccessibility } from "./use-dialog-accessibility";
@@ -111,6 +113,9 @@ function DreamEditor({user,record,date,language,onSaved,onClose,dateEditable=tru
   const spelling=useRef(false), spellingRequests=useRef(new Set<AbortController>());
   const voiceDocument=useRef<{base:string;expected:string;parts:string[]}|null>(null);
   const noteRef=useRef(note);
+  const migrationForm=useRef({note,revision:record?.revision??0,state:{voicePartial}}),registerMigrationEditor=diary.registerMigrationEditor;
+  useLayoutEffect(()=>{migrationForm.current={note,revision:record?.revision??0,state:{voicePartial}};},[note,record?.revision,voicePartial]);
+  useEffect(()=>registerMigrationEditor(()=>({...migrationForm.current,state:{...migrationForm.current.state,voiceDocument:voiceDocument.current}})),[registerMigrationEditor]);
   useEffect(()=>{noteRef.current=note;},[note]);
   const voice=useRef<DreamDictation|null>(null); const active=useRef(true); const pending=useRef(false);
   const voiceGeneration=useRef(0), deleting=useRef(false);
@@ -178,11 +183,14 @@ function DreamEditor({user,record,date,language,onSaved,onClose,dateEditable=tru
           const index=session.parts.push(phrase)-1;publish();
           if(!confirmed||!spelling.current||!supportedSpellingLanguage(language))return;
           const controller=new AbortController();spellingRequests.current.add(controller);
-          void correctDictationSpelling(heard,language,controller.signal).then(result=>{
+          void (async()=>{const account=usesPrivateProductStorage(user.uid)?requirePrivateAccount(user.uid):null;
+            const consent=account?await approveExternalCopy(account,'yandex-speller','dictation',{text:heard,language},{confirmed:current()&&spelling.current,noticeVersion:EXTERNAL_COPY_NOTICE_VERSION}):undefined;
+            if(!current()||!spelling.current||controller.signal.aborted)return;
+            const result=await correctDictationSpelling(heard,language,controller.signal,consent?{ownerId:user.uid,consent}:undefined);
             if(!current()||!spelling.current||controller.signal.aborted)return;
             setSpellingUnavailable(!result.available);
             if(result.available){session.parts[index]=formatDictation(result.text,language);publish();}
-          }).finally(()=>spellingRequests.current.delete(controller));
+          })().catch(()=>{if(current()&&spelling.current&&!controller.signal.aborted)setSpellingUnavailable(true);}).finally(()=>spellingRequests.current.delete(controller));
         }
       });
       voice.current.start();
@@ -213,7 +221,7 @@ function DreamEditor({user,record,date,language,onSaved,onClose,dateEditable=tru
       {error?<p role="alert">{error}</p>:null}
       {deleteConfirm?<div className="dream-delete-confirm" role="group" aria-label={record&&!record.draftKey?text.deleteDream:text.discard}><p>{record&&!record.draftKey?text.deleteConfirm:text.discardConfirm}</p><button type="button" className="danger" disabled={diary.busy} onClick={()=>void erase()}>{text.deleteAction}</button><button type="button" disabled={diary.busy} onClick={()=>{deleting.current=false;setDeleteConfirm(false);}}>{text.cancel}</button></div>:<button type="button" className="danger" disabled={diary.busy} onClick={()=>{deleting.current=true;stop();setDeleteConfirm(true);}}>{record&&!record.draftKey?text.deleteDream:text.discard}</button>}
       {conflict?<button type="button" className="secondary-button" disabled={diary.busy||!valid||!diary.syncEnabled} onClick={()=>{if(pending.current)return;pending.current=true;const now=new Date().toISOString();
-        const copying=stop();void diary.save({...copying,id:crypto.randomUUID(),createdAt:now,updatedAt:now}).then(()=>{if(record?.draftKey)diary.discard(record.draftKey);diary.discardOwn(copying.id);onSaved(copying.dream!.day);})
+        const copying=stop();void diary.save({...copying,id:crypto.randomUUID(),createdAt:now,updatedAt:now}).then(async()=>{if(record?.draftKey)await diary.discard(record.draftKey);await diary.discardOwn(copying.id);onSaved(copying.dream!.day);})
           .catch(()=>setError(common.error)).finally(()=>{pending.current=false;});}}>{common.copy}</button>:null}
       <footer><button type="button" className="secondary-button" onClick={close} disabled={diary.busy||deleteConfirm}>{common.closeDraft}</button><button type="submit" className="primary-button" disabled={!valid||checking||diary.busy||!diary.syncEnabled||deleteConfirm}>{common.save}</button></footer>
     </form>

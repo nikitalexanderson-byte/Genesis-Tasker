@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/e2ee-background.php';
 
 function genesisNotificationCopy(string $key,string $language): string
 {
@@ -21,7 +22,7 @@ function genesisNotificationScan(int $limit=200,?string $now=null): int
             JOIN users u ON u.id=c.user_id AND u.shared_projects_enabled=1
             LEFT JOIN shared_notification_task_state ns ON ns.task_id=t.id
             WHERE (COALESCE(ns.imported,0)=0 OR EXISTS(SELECT 1 FROM shared_task_watchers w WHERE w.task_id=t.id AND w.user_id=c.user_id AND w.watching=1))
-            AND (t.id>? OR (t.id=? AND c.user_id>?)) ORDER BY t.id,c.user_id LIMIT ".$limit);
+            AND ".genesisE2eeLegacyAvailableSql('project','t.project_id')." AND (t.id>? OR (t.id=? AND c.user_id>?)) ORDER BY t.id,c.user_id LIMIT ".$limit);
         $q->execute([$cursor['task_cursor'],$cursor['task_cursor'],$cursor['user_cursor']]);$pairs=$q->fetchAll();$q->closeCursor();$count=0;
         foreach($pairs as$pair){
             if(!genesisNotificationEligible($pair['user_id'],$pair['project_id']))continue;
@@ -110,11 +111,14 @@ function genesisNotificationPerformLeased(array $job,?callable $testTransport=nu
     genesisBeginWriteTransaction($db);
     try{
         if(!$owns()){$db->commit();return'superseded';}
+        if(($held=genesisE2eeBackgroundHold($job,null,true))!==null){$db->commit();return $held;}
         $payload=json_decode(genesisSharedContentDecrypt($job['payload']),true,16,JSON_THROW_ON_ERROR);
-        $network=static function($channel,$target,$message)use($db,$owns,$testTransport):string{
+        $network=static function($channel,$target,$message)use($db,$owns,$testTransport,$job):string{
             $db->commit();$failure=null;$result=null;
             try{$result=$testTransport!==null?$testTransport($channel,$target,$message):genesisNotificationSend($channel,$target,$message);}catch(Throwable$e){$failure=$e;}
-            genesisBeginWriteTransaction($db);if(!$owns())throw new RuntimeException('NOTIFICATION_LEASE_SUPERSEDED');if($failure!==null)throw$failure;return$result;
+            genesisBeginWriteTransaction($db);if(!$owns())throw new RuntimeException('NOTIFICATION_LEASE_SUPERSEDED');
+            if(genesisE2eeBackgroundBlocked($job))throw new DomainException('E2EE_CLIENT_REQUIRED');
+            if($failure!==null)throw$failure;return$result;
         };
         $state=genesisNotificationDeliver($payload,$network,null,$testTransport===null);
         if($state==='deferred'){
@@ -125,7 +129,9 @@ function genesisNotificationPerformLeased(array $job,?callable $testTransport=nu
     }catch(Throwable$e){
         if($db->inTransaction())$db->rollBack();genesisBeginWriteTransaction($db);
         try{
-            if(!$owns()){$db->commit();return'superseded';}$state=(int)$job['attempts']>=5?'failed':'pending';$code=in_array($e->getMessage(),['PUSH_RETRY','EMAIL_RETRY','PUSH_CRYPTO_FAILED'],true)?$e->getMessage():'NOTIFICATION_RETRY';
+            if(!$owns()){$db->commit();return'superseded';}
+            if(($held=genesisE2eeBackgroundHold($job))!==null){$db->commit();return $held;}
+            $state=(int)$job['attempts']>=5?'failed':'pending';$code=in_array($e->getMessage(),['PUSH_RETRY','EMAIL_RETRY','PUSH_CRYPTO_FAILED'],true)?$e->getMessage():'NOTIFICATION_RETRY';
             $available=gmdate('Y-m-d\TH:i:s\Z',time()+min(3600,30*(2**min(7,(int)$job['attempts']))));
             $db->prepare('UPDATE background_jobs SET state=?,available_at=?,lease_until=NULL,lease_token=NULL,error_code=?,updated_at=? WHERE id=?')->execute([$state,$available,$code,genesisNow(),$job['id']]);
             if($state==='failed')genesisNotificationJobFailed($job,$code);$db->commit();return$state;

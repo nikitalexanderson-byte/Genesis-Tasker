@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {cloudSyncClient} from './helpers/cloud-sync-client.mjs';
+import {calendarModule} from './helpers/calendar-modules.mjs';
 test('rescue captures device and domain queue before any entitlement request, ignoring a later empty server',async()=>{
  const f=await cloudSyncClient({userId:'backup-owner',withBackups:true});
  const source={tasks:[{id:'local',title:'Only good copy'}],habits:[]};
@@ -98,4 +99,37 @@ test('replace preview reports removals outside projects and habits before sealin
  assert.equal(plan.operations.length,1);
  const result=await f.client.openBackupWorkspace(f.userId,plan.operations[0].input);assert.equal(result.moodEntries.length,0);assert.equal(result.categories.length,0);
  assert.equal(f.requests.slice(before).every(row=>!row.init?.method||row.init.method==='GET'),true);
+});
+
+test('portable backup opens every writer and superseded Aurora copy without trusting an arbitrary selected branch',async()=>{
+ const f=await cloudSyncClient({userId:'backup-journal-owner',withBackups:true,withPersonalRepositories:true});
+ const {newSession}=calendarModule('app/aurora/session.ts'),policy=calendarModule('app/aurora/draw-policy.ts');
+ const primary=policy.snapshotFromSavedDraw({id:'synthetic-source',seed:123,day:'2026-11-05',createdAt:'2026-11-05T09:00:00Z',cards:policy.expectedSourceDraw(123)});
+ const doc=id=>({version:1,ownerId:f.userId,removed:[],sessions:[newSession({id,ownerId:f.userId,now:'2026-11-05T09:00:00Z',primary,timezone:'Europe/Moscow'})]});
+ const access=f.client.personalDocumentAccess(f.userId),{AuroraRepository}=f.repositories.aurora;
+ const a=new AuroraRepository(f.userId,f.storage,access),b=new AuroraRepository(f.userId,f.storage,access);
+ const one=doc('left-private'),two=doc('right-private');one.sessions[0].observationNote='First unsent private copy';await a.save(one);
+ one.sessions[0].observationNote='The newer private copy';await a.save(one);await b.save(two);
+ const before=[...f.storage.data],requests=f.requests.length,frozen=f.backups.device.freezeBackupDevice(f.userId,f.storage);
+ const payload=await f.backups.device.materializeDeviceBackup(frozen),section=payload.sections.find(row=>row.id==='aurora');
+ assert.equal(f.requests.length,requests);assert.deepEqual([...f.storage.data],before);
+ assert.equal(section.pending,3);assert.equal(section.data.pendingCopies.length,3);assert.equal(section.data.document,null);
+ assert.equal(section.data.pendingCopies.some(copy=>copy.document.sessions[0].observationNote==='First unsent private copy'),true);
+ assert.equal(section.data.pendingCopies.some(copy=>copy.document.sessions[0].observationNote==='The newer private copy'),true);
+ assert.equal(section.data.pendingCopies.some(copy=>copy.document.sessions[0].id==='right-private'),true);
+ section.data.document=two; // Neither a forged choice nor array order authorizes discarding another writer.
+ f.respond(url=>{assert.equal(new URL(url).pathname,'/api/aurora-workspace');return Response.json({document:null});});
+ await assert.rejects(f.backups.restore.prepareBackupRestore(payload,f.userId,['aurora'],'replace',{
+  access,current:async()=>({document:{},version:0,tasks:[]}),sealWorkspace:()=>{throw new Error('Unexpected workspace change');},
+ }),/BACKUP_DRAFT_CHOICE_REQUIRED/);
+ const {backupJournalConflicts}=calendarModule('app/backup-private-journals.ts'),[group]=await backupJournalConflicts(payload);
+ for(const variant of [group.variants[0],group.variants.at(-1)]){
+  const plan=await f.backups.restore.prepareBackupRestore(payload,f.userId,['aurora'],'replace',{
+   access,current:async()=>({document:{},version:0,tasks:[]}),sealWorkspace:()=>{throw new Error('Unexpected workspace change');},
+  },{aurora:{sourceHash:group.sourceHash,variantHash:variant.hash}});
+  assert.equal(plan.operations.length,1);assert.equal(plan.operations[0].section,'aurora');
+  const opened=await access.open(plan.operations[0].input,'aurora-workspace:v1');assert.deepEqual(JSON.parse(JSON.stringify(opened)),variant.document);
+ }
+ assert.equal(f.requests.slice(requests).every(row=>!row.init.method||row.init.method==='GET'),true);
+ assert.deepEqual([...f.storage.data],before);
 });

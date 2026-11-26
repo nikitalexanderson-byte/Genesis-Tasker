@@ -3,7 +3,7 @@ import type { PhysisRecord, PhysisStore } from './types.ts';
 /** Retain generated IDs until acknowledgement; a lost response must not create a second copy. */
 export function createPhysisSubmission() {
   const pending = new Map<string, PhysisRecord[]>();
-  return async (intent: string, prepare: () => PhysisRecord[], store: PhysisStore) => {
+  const submit = async (intent: string, prepare: () => PhysisRecord[], store: PhysisStore) => {
     let records = pending.get(intent);
     const retry = records !== undefined;
     if (!records) { records = prepare(); pending.set(intent, records); }
@@ -24,4 +24,5 @@ export function createPhysisSubmission() {
     }
     pending.delete(intent);
   };
+  return Object.assign(submit, { captureMigration: () => structuredClone([...pending].map(([intent, records]) => ({ intent, records }))) });
 }

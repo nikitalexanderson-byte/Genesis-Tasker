@@ -67,8 +67,7 @@ import java.util.UUID
     BackHandler{back()}
     LaunchedEffect(repository){run{repository.initialize();if(initialProjectId!=null){val chat=repository.create("project",projectId=initialProjectId,commandId=UUID.randomUUID().toString());repository.select(chat);onInitialProjectOpened()}}}
     LaunchedEffect(repository,lifecycle,state.selected?.id){lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED){while(true){delay(5000);if(!busy)try{withContext(Dispatchers.IO){if(state.selected==null)repository.inbox()else repository.refresh()}}catch(e:CancellationException){throw e}catch(_:Exception){failure=c("failure")}}}}
-    LaunchedEffect(state.selected?.id,state.editing?.id,state.pending){draft=state.draft}
-    LaunchedEffect(draft,state.selected?.id){if(state.selected!=null&&!state.pending){delay(250);withContext(Dispatchers.IO){repository.saveDraft(draft)}}}
+    LaunchedEffect(state.selected?.id,state.draftToken,state.editing?.id,state.pending){draft=state.draft}
     if(legacyOpen&&legacy!=null){Column(Modifier.fillMaxSize()){TextButton({legacyOpen=false},Modifier.heightIn(min=48.dp)){Text(c("back"))};legacy{legacyOpen=false}};return}
     val current=state.selected;val own=current?.members?.firstOrNull{it.userId==repository.owner}
     val inboxActions: @Composable () -> Unit = {
@@ -168,7 +167,7 @@ import java.util.UUID
             TextButton({help=!help},Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(c(current.kind));GenesisLucideIcon(if(help)"chevron-up" else "chevron-down")}
             if(help)Text(c(if(current.kind=="secret")"secretHelp"else"cloudHelp")+(if(current.kind=="project")"\n"+c("projectHelp")else""),Modifier.padding(horizontal=12.dp),style=MaterialTheme.typography.bodySmall)
             if(own?.status=="pending")Column(Modifier.padding(12.dp)){Text(c("invitation"));Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){Button({run{repository.membership("accept")}},enabled=!busy){Text(c("accept"))};OutlinedButton({run{repository.membership("decline")}},enabled=!busy){Text(c("decline"))}}}
-            state.secretError?.let{Text(c(if(it=="MESSENGER_SECRET_DEVICE_ONLY")"deviceOnly"else"notReady"),Modifier.padding(12.dp),color=MaterialTheme.colorScheme.onSurfaceVariant)}
+            state.secretError?.let{Text(c(when(it){"MESSENGER_SECRET_DEVICE_ONLY"->"deviceOnly";"MESSENGER_DEVICE_CHANGED"->"keyChanged";else->"notReady"}),Modifier.padding(12.dp),color=MaterialTheme.colorScheme.onSurfaceVariant)}
             if(state.offline)Text(c("failure"),Modifier.padding(horizontal=12.dp),style=MaterialTheme.typography.bodySmall)
             val list=rememberLazyListState()
             LaunchedEffect(state.rows.size,current.id){if(state.rows.isNotEmpty()&&(list.layoutInfo.visibleItemsInfo.lastOrNull()?.index?:0)>=state.rows.size-5)list.animateScrollToItem(state.rows.size-1)}
@@ -177,7 +176,7 @@ import java.util.UUID
                 items(state.rows,key={it.id}){row->Row(Modifier.fillMaxWidth(),horizontalArrangement=if(row.senderId==repository.owner)Arrangement.End else Arrangement.Start){Surface(color=if(row.senderId==repository.owner)MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer,shape=RoundedCornerShape(10.dp),modifier=Modifier.fillMaxWidth(.94f)){
                     Column(Modifier.padding(12.dp)){
                         Row(verticalAlignment=Alignment.CenterVertically){Text(if(row.senderId==repository.owner)c("you")else current.members.firstOrNull{it.userId==row.senderId}?.name?:"",Modifier.weight(1f),style=MaterialTheme.typography.labelMedium)
-                            if(!row.deleted&&row.senderId==repository.owner){var more by remember{mutableStateOf(false)};Box{AffairsIconButton(c("actions"),AffairsAction.MORE,{more=true},enabled=!busy&&!state.pending,outlined=false);DropdownMenu(more,{more=false}){DropdownMenuItem(text={Text(c("edit"))},onClick={more=false;run{repository.edit(row);draft=row.text}},enabled=!row.failed);DropdownMenuItem(text={Text(c("delete"))},onClick={more=false;delete=row})}}}}
+                            if(!row.deleted&&row.senderId==repository.owner){var more by remember{mutableStateOf(false)};Box{AffairsIconButton(c("actions"),AffairsAction.MORE,{more=true},enabled=!busy&&!state.pending,outlined=false);DropdownMenu(more,{more=false}){DropdownMenuItem(text={Text(c("edit"))},onClick={more=false;run{repository.edit(row)}},enabled=!row.failed);DropdownMenuItem(text={Text(c("delete"))},onClick={more=false;delete=row})}}}}
                         SelectionContainer{UntranslatedText(if(row.deleted)c("deleted")else if(row.failed)c("decryptError")else row.text,style=MaterialTheme.typography.bodyLarge)}
                     }
                 }}}
@@ -186,8 +185,10 @@ import java.util.UUID
             if(state.pending && state.pendingConflict) TextButton({run{repository.recoverPendingConflict()}}, enabled=!busy,
                 modifier=Modifier.padding(horizontal=12.dp).testTag("messenger-recover-pending")) { Text(c("recoverPending")) }
             if(own?.status!="pending"&&state.secretError==null)Row(Modifier.fillMaxWidth().padding(12.dp).height(IntrinsicSize.Min),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)){
-                OutlinedTextField(draft,{if(it.toByteArray().size<=30000)draft=it},Modifier.weight(1f).testTag("messenger-draft"),placeholder={Text(c("message"))},maxLines=4,enabled=!busy&&!state.pending)
-                AffairsIconButton(c(if(state.pending)"retry"else if(state.editing!=null)"save"else"send"),AffairsAction.NEXT,{run{if(!state.pending)repository.saveDraft(draft);repository.send();draft=""}},modifier=Modifier.fillMaxHeight(),enabled=!busy&&(state.pending||draft.isNotBlank()),outlined=true)
+                OutlinedTextField(draft,{value->if(value.toByteArray(Charsets.UTF_8).size<=30000){draft=value;val conversation=current.id;val token=state.draftToken
+                    scope.launch(Dispatchers.Main.immediate){try{repository.saveDraft(value,conversation,token)}catch(cancel:CancellationException){throw cancel}catch(_:Exception){failure=c("failure")}}
+                }},Modifier.weight(1f).testTag("messenger-draft"),placeholder={Text(c("message"))},maxLines=4,enabled=!busy&&!state.pending)
+                AffairsIconButton(c(if(state.pending)"retry"else if(state.editing!=null)"save"else"send"),AffairsAction.NEXT,{val conversation=current.id;val token=state.draftToken;val text=draft;run{if(!state.pending)repository.saveDraft(text,conversation,token);repository.send(conversation,token)}},modifier=Modifier.fillMaxHeight(),enabled=!busy&&(state.pending||draft.isNotBlank()),outlined=true)
                 if(state.editing!=null&&!state.pending)AffairsIconButton(c("cancel"),AffairsAction.CLOSE,{run{repository.edit(null);draft=""}},modifier=Modifier.fillMaxHeight(),enabled=!busy,outlined=true)
             }
         }
@@ -299,7 +300,7 @@ import java.util.UUID
             colors=ButtonDefaults.textButtonColors(contentColor=MaterialTheme.colorScheme.error)){Text(c("delete"))} },
         dismissButton = { TextButton({deletingChat=null},enabled=!busy){Text(c("cancel"))} }) }
     delete?.let { row -> AlertDialog(onDismissRequest = { delete = null }, title = { Text(c("confirmDelete")) },
-        confirmButton = { TextButton({ delete = null; run { repository.deleteMessage(row) } }, enabled = !busy) { Text(c("delete")) } },
+        confirmButton = { TextButton({ val conversation=state.selected?.id;delete = null; run { repository.deleteMessage(row,conversation) } }, enabled = !busy) { Text(c("delete")) } },
         dismissButton = { TextButton({ delete = null }) { Text(c("cancel")) } }) }
     confirm?.let { action -> AlertDialog(onDismissRequest = { confirm = null }, title = { Text(action.first) },
         confirmButton = { TextButton({ confirm = null; run(action.second) }, enabled = !busy) { Text(c("accept")) } },

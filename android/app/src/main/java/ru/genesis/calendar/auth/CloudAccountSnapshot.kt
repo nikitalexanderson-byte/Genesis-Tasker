@@ -22,7 +22,16 @@ internal class CloudAccountSnapshot private constructor(
         fun scopeFor(uid: String): String {
             require(uid.isNotBlank() && uid.length <= 256)
             val digest = MessageDigest.getInstance("SHA-256").digest(uid.toByteArray(Charsets.UTF_8))
-            return "account-" + digest.joinToString("") { "%02x".format(it) }.take(32)
+            // Preserve the exact legacy first-16-byte hexadecimal identity.
+            // String.format on every byte dominated tight migration guards.
+            return buildString(40) {
+                append("account-")
+                repeat(16) {
+                    val value=digest[it].toInt() and 255
+                    append("0123456789abcdef"[value ushr 4])
+                    append("0123456789abcdef"[value and 15])
+                }
+            }
         }
 
         fun fromBootstrap(payload: JSONObject): CloudAccountSnapshot {

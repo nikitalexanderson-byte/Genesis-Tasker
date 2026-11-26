@@ -1,7 +1,6 @@
 package ru.genesis.calendar.ui
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -29,10 +28,7 @@ import androidx.compose.ui.unit.dp
     val label = genesisTranslate("Общие майндмепы")
     TooltipBox(positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
         tooltip = { PlainTooltip { Text("Общие майндмепы") } }, state = rememberTooltipState()) {
-        OutlinedIconButton(onClick, interactionSource = interaction, shape = AffairsLayout.controlShape,
-            border = if (LocalAffairsControlOutlined.current) BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = .65f)) else null,
-            colors = IconButtonDefaults.outlinedIconButtonColors(containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = ink),
+        GenesisIconButton(onClick, interactionSource = interaction, contentColor = ink,
             modifier = Modifier.size(width = LocalAffairsControlWidth.current, height = 48.dp).testTag("shared-mindmaps-open")
                 .semantics { contentDescription = label }) {
             MindmapBranchesIcon(ink = ink, paper = paper, spread = spread)

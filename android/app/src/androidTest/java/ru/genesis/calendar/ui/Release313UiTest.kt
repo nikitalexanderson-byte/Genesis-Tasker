@@ -454,7 +454,7 @@ class Release313UiTest {
     @Test fun symbolicMoodScaleKeepsSelectionAndDoesNotSplitItsLabels() {
         var saved: Int? = null
         compose.setContent { Frame { MoodObservationEditor(emptyList(), LocalDate.now(), CalendarMode.PROFANE,
-            "ru", emptyList(), false, null, {}, fixedDate = true) { _, value, _, _, _ -> saved = value } } }
+            "ru", emptyList(), false, null, {}, fixedDate = true, migrationOwner = null) { _, value, _, _, _ -> saved = value } } }
         compose.onNodeWithTag("mood-value-2").performScrollTo().performClick()
         capture("mood-scale")
         compose.onNodeWithTag("mood-entry-save").performScrollTo().performClick()

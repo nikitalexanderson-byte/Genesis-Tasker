@@ -165,6 +165,7 @@ function genesisSharedSyncGoogle(string $userId, string $projectId, int $batchSi
 
 function genesisSharedSyncGoogleLocked(string $userId, string $projectId, int $batchSize): array
 {
+    if(genesisE2eeLegacyScopeBlocked('project',$projectId))throw new DomainException('E2EE_CLIENT_REQUIRED');
     $settings = genesisSharedGoogleSettings($userId, $projectId);
     genesisSharedCleanGoogleCopies($userId, 5);
     if (!$settings['tasksEnabled'] && !$settings['calendarEnabled']) {
@@ -206,6 +207,7 @@ function genesisSharedSyncGoogleLocked(string $userId, string $projectId, int $b
             || !empty($row['task_list_id']) && $row['task_list_id'] !== $listId)
         ? genesisSharedExistingGoogleTasks($user, $listId) : [];
     foreach ($rows as $task) {
+        if(genesisE2eeLegacyScopeBlocked('project',$projectId))throw new DomainException('E2EE_CLIENT_REQUIRED');
         $taskStale = $settings['tasksEnabled'] && (int)($task['task_revision'] ?? 0) < (int)$task['revision'];
         $eventStale = $settings['calendarEnabled'] && (int)($task['event_revision'] ?? 0) < (int)$task['revision']
             && ($task['due_date'] !== null || !empty($task['event_google_id']));
@@ -317,7 +319,9 @@ function genesisSharedCleanGoogleCopies(?string $userId = null, int $limit = 10)
 /** Background sync processes only consented member/project pairs, in small rotating batches. */
 function genesisSharedSyncGoogleCron(): array
 {
-    genesisDb()->prepare('DELETE FROM shared_mutation_receipts WHERE created_at < :cutoff')
+    // Malformed historical JSON is retained for review; it cannot poison a
+    // global cleanup statement or be interpreted as an empty scope binding.
+    genesisDb()->prepare('DELETE FROM shared_mutation_receipts WHERE created_at < :cutoff AND CASE WHEN json_valid(response_json) THEN '.genesisE2eeLegacyRowsAvailableSql('shared_mutation_receipts','shared_mutation_receipts').' ELSE 0 END')
         ->execute(['cutoff' => gmdate('Y-m-d\TH:i:s\Z', time() - 90 * 86400)]);
     $cleanup = genesisSharedCleanGoogleCopies(null, 10);
     $before = gmdate('Y-m-d\TH:i:s\Z', time() - 3600);
@@ -327,10 +331,12 @@ function genesisSharedSyncGoogleCron(): array
         JOIN users u ON u.id = p.user_id AND u.shared_projects_enabled = 1
         WHERE (p.tasks_enabled = 1 OR p.calendar_enabled = 1)
           AND (p.last_sync_attempt_at IS NULL OR p.last_sync_attempt_at < :before)
+          AND '.genesisE2eeLegacyAvailableSql('project','p.project_id').'
         ORDER BY COALESCE(p.last_sync_attempt_at, \'\'), p.updated_at LIMIT 5');
     $query->execute(['before' => $before]);
     $processed = 0; $copied = 0; $failed = 0;
     foreach ($query->fetchAll() as $row) {
+        if(genesisE2eeLegacyScopeBlocked('project',$row['project_id']))continue;
         genesisDb()->prepare('UPDATE shared_google_preferences SET last_sync_attempt_at = :now
             WHERE project_id = :project AND user_id = :user')->execute([
             'now' => genesisNow(), 'project' => $row['project_id'], 'user' => $row['user_id'],

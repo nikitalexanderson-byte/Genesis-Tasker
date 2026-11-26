@@ -33,7 +33,7 @@ class SleepPlan310Test {
             scoringEnabled=true,rules=listOf(SleepRule("qa","bedtime","on-or-before",LocalTime.of(23,0),10.0)))
         compose.setContent {
             CompositionLocalProvider(LocalDensity provides Density(compose.activity.resources.displayMetrics.widthPixels.toFloat()/width,1f),LocalGenesisLanguage provides "ru",LocalEveningTheme provides dark){
-                MaterialTheme(colorScheme=if(dark)evening else standart,typography=GenesisTypography,shapes=GenesisShapes){SleepPlanEditor(plan,true,false,null,{},{})}
+                MaterialTheme(colorScheme=if(dark)evening else standart,typography=GenesisTypography,shapes=GenesisShapes){SleepPlanEditor(plan,true,false,null,onDismiss={},migrationOwner=null,onSave={})}
             }
         }
         compose.onNodeWithTag("sleep-plan-bedtime").performScrollTo().assertIsDisplayed()
@@ -53,7 +53,7 @@ class SleepPlan310Test {
         val calendar=GenesisCalendar();val date=LocalDate.of(2026,10,29)
         var mode by mutableStateOf(CalendarMode.PROFANE)
         compose.setContent { CompositionLocalProvider(LocalGenesisLanguage provides "ru") {
-            MaterialTheme(colorScheme=standart) { MoodObservationEditor(emptyList(),date,mode,"ru",emptyList(),false,null,{}, onSave={_,_,_,_,_->}) }
+            MaterialTheme(colorScheme=standart) { MoodObservationEditor(emptyList(),date,mode,"ru",emptyList(),false,null,{},migrationOwner=null, onSave={_,_,_,_,_->}) }
         } }
         for(choice in CalendarMode.entries){
             compose.runOnIdle {mode=choice}

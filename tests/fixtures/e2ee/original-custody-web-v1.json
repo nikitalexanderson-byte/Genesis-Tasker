@@ -1,0 +1,183 @@
+{
+  "synthetic": true,
+  "warning": "PUBLIC TEST RECOVERY MATERIAL; NEVER USE FOR USER DATA",
+  "producer": "WebCrypto original custody v1",
+  "ownerId": "public-custody-vector",
+  "primaryPin": {
+    "signingKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEQMUJdQkILiv4SVgnYyj6Ph8gLJbCw8v9oeTSjG-LJU7wvhmSYXMRzU2graseKXlB2VAI0egflqzrR4fIr0nf6g",
+    "receivingKey": "BIuWrNsXt2HLmK5b3Ruexga1Fbw5k0ZTIJZyfx7TRaLz3-6oGfpDlNyIWOoQpE-NHVswgEoU8jvnyt0jsQvoU2g"
+  },
+  "recoveryKit": {
+    "protocol": 1,
+    "ownerId": "public-custody-vector",
+    "authority": {
+      "signingKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEQMUJdQkILiv4SVgnYyj6Ph8gLJbCw8v9oeTSjG-LJU7wvhmSYXMRzU2graseKXlB2VAI0egflqzrR4fIr0nf6g",
+      "receivingKey": "BIuWrNsXt2HLmK5b3Ruexga1Fbw5k0ZTIJZyfx7TRaLz3-6oGfpDlNyIWOoQpE-NHVswgEoU8jvnyt0jsQvoU2g"
+    },
+    "protectedKeys": {
+      "protocol": 1,
+      "ownerId": "public-custody-vector",
+      "purpose": "recovery-authority",
+      "salt": "vkCo_iiyNlJEDhh4NonBPjNYukm0dwTV-aX0XrsWxYc",
+      "nonce": "9I-vp6Ms9bQKX6l8",
+      "ciphertext": "V7JLLM1PWRBpNGxl4rTdNK-s-p8x0FUFdcHzQrf16GCDwIsBP5QMP8kjTuba6__AqFhfES8lsj0PstHbSfsrUIwfmH0y7YPsCNa0uplT7B-5sZq1v1TfrljBgFswfgKyBxmWuzfaM1kjV-R8p7llj4FfX6V9_aOmHmg8CvEn68OvQPYOudSoF5x9tPaoMD2Rir0hhj3hlLYWj4t0dc6JO6SxK3cgCrZYBr1OnFggzZtCA5eVOJMyyZ4LzFtwzyMgYehQHp-pnQ9wqM6teGohkFGlV86BV6QgJGUxdgD6ETcGPx2w61bLyH_px2Us549RLRlvC4GkU0uYs0sJr4LHBWwZj2ExfYGPy_tYJkf8llOUTCdYw5sgxqZeXmUKU_1vdKln0f1JtPF4XcpkSao38WshdOrnY4lXGbVWUASL1_xBCIm9A1_s42XZbRbHT2PpDcn4mueup0NAuJHWZaKevWY2GPh0etISlWgBX8waA0JDY6tDVJS8iBtcVLXeJQD0L7Dk0QDqDTX2ZgY7WsbV65DpMPtZ_1GO9CAoLePTntKm0yQhTHNWWFhJnO-rQiVMZ0aLZ55DJs5tx86WCagfSH9s_idiIJNs4Yr-0m1OAV8mNvDueMXSM7dWDnP0Dv95QLBp4KobDaOCFI95QPKmo2eM6XgP8meGJuqQRun_UmTBO5n6gF6kRuvoFRCHymzF0Q"
+    }
+  },
+  "secret": "sKzbz_aTu_idvmbJGCpJcQOTQEgklFPxYGFWV0en92Y",
+  "artifact": {
+    "protocol": 1,
+    "id": "original-custody:Rjs8j0g_g7RTyr6jL6p7Uo8k_tFLQgQVScC2hHK_xKI:256772a6-b2d4-459c-9b55-20d0de221ce4",
+    "bundle": {
+      "protocol": 1,
+      "ownerId": "public-custody-vector",
+      "purpose": "original-root-custody-v1",
+      "salt": "7LQlLLLgBiykZzvDu3tkuEZpj-Y6x0q3CTfqCXDPQ4g",
+      "nonce": "Wy8fO-pPHvav-k7C",
+      "ciphertext": "f_lIshTpQ-OVaaz_ojthKv9mgfDKA8NvN8L8Ke49R9aUXMeFWZY43msA6Kk3Y4uWudFH4CPrwDWlXPot0ST4p5bfyFPvsfsgVuN6CH1sNfjm2iZs4CC8w90iBqZycImmlaJvob5U1JDoRLDmewnUwaLOpwhuQG0O6heUpEnuYljifZ7Rb30wI4PFh76xZh4glBN1LcXYg_aXe6JxnQtPZYeliVC8ALVjpByXNMU2JfcGessupUhEvFeI2CLHe8oJoureJNVYmibE6wAbEfHkKeQx3p3gNIJVgWkhy41WFEULMmTkhLyXvsICgTkPii278-GZDwdWcUhyCFNNfjD6NcQGHYZGbPbsy2DrW2_nbsK8z_05OenyLRQ5V87TK6vNusxC_luVgdaKRCmjID5iSxL98rxwJqBcpueQIdr82Lw-MLYTd2CwHfmwQorrdgjdNlhMkmK1OMOSm3fYIeXzUkU5j3x5H9dvTzGpYOc-sNkg9132hMckj-xxqwwEWJ0hwmJ0QmsPsCknK1tAxDnIT1iUAJrhxnTIMYs4zbo2lw2-RC0yOMOOJ2cqysO3VNX1ArAaMO4B_o_wpj3DOQLlQrWLaiB_pPPx4L4Y9PkC-g-lWgffITyV7NTXnLlLSIYO1QOfgd7ICNFnmyGQC3aoJRaP4nW7nt9WU-eHWLdGZNl_JW1fdbeHcRDuTardvgT_QXvYyvAJT_KFtMx_T-d_1xu4uuajpTWz_XhabNBX1ulatWeWt6h-kROyp8VklCpA43-7wSlHyIb0ulOXEm6D4QPinLNKX65CXCrAAddJOxOKq_mjuTmEyVsTPAQ4RoYE7xBeB4t2EFW4K7LRXfB2J44fxhT6dlqvfFm3WzqZUtg3TFQ6t3qbUtCIXp6LLJ6E01Ic4Qy0Xiyfg28eueqvJt4gcTybWkJhf0ZjwM9XHIzEwykO1CmVvjFr5V9t2GeFI0Sfok9UZMkKA1QKIrJYnqNsp---mNatwzfxXGjCfm3-vN9pU9z3Te-hwgku_P72fFtrbEtjrg_fR1c9r7kdfxafsp5ADr_Zr-0btstQrd7War3lLFZUnQIaf6gOIRjtwzTU3dwdth221ouAYFE7cG3wd8MIy_PKrZ37kKtFppdaSzQySQP95zSggLkcuVNf5TnLOfgW31T6Stss_gmfVxoGbrDDdQ91C0aqy4jcvrpzwlbqRpKEqhNI8grba4bewpLmMIdz4WdDhH37tiUDH95xT24TiKvjXPyipDaR3A3QCgUFpg_TPJ84SAmqpbFgmFsd0T5HiYeqBI0DYaGyuFTVrD41JI26Z6OvIeQnrnoDhR9ofGz2rbIx9BnsBfiAWPyJ_rnPB8twNt1eisvvlMfWXzHzYlpdxY_OT360pYGB_YQd3eCY13yBlxF_t-qsKEsJKROnmMOD-Mob372Y11mv5RbpTg4H8lYWAhKczV9Ga43VtvSy64cyj5K3Ijj8iMveTHgOu7A1JEf6UkkQW9ifelQAnGNRg95P5MtCq0-cG2M4iLKcWMQKqK9PWv9Ie1deaF4uwcm2U_F7NzDR8cBXelo95TZQbKlDrAwIG6UIEB23myptAcXuOQiyfs0b1N8SNBjM684UNUIQb7b_M6M1XATI1-coPu6P_om6PxtYXLWsjENB8wDb78mmyftsXS2fO6w7hlHJ67TEWvo6EW9uX0DKY6eMmfBphl-TvwapYjfFz3xR_K3kRliqc_bZoPLXqwEg0Iex9L1YygsI"
+    }
+  },
+  "reference": {
+    "protocol": 1,
+    "id": "original-custody:Rjs8j0g_g7RTyr6jL6p7Uo8k_tFLQgQVScC2hHK_xKI:256772a6-b2d4-459c-9b55-20d0de221ce4",
+    "hash": "r2btgqcD3-cvCTaqkpHaS8ml9dRxivj855AjKWLTdD4",
+    "original": {
+      "ownerId": "public-custody-vector",
+      "scopeId": "device:public-original-device",
+      "deviceId": "public-original-device",
+      "generation": 1,
+      "cryptoEpoch": 1,
+      "securityEpoch": 1
+    },
+    "keyId": "local:public-original-device",
+    "signer": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE5zbG39_PjR8FdcNQpHhRazWMrpel26ju5-4Fwnk_X-qeqFCgPJQH2nkKRFqB4L2PoIP4_cxbnO7Nx2nO3Zcevw",
+    "authority": {
+      "signingKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEQMUJdQkILiv4SVgnYyj6Ph8gLJbCw8v9oeTSjG-LJU7wvhmSYXMRzU2graseKXlB2VAI0egflqzrR4fIr0nf6g",
+      "receivingKey": "BIuWrNsXt2HLmK5b3Ruexga1Fbw5k0ZTIJZyfx7TRaLz3-6oGfpDlNyIWOoQpE-NHVswgEoU8jvnyt0jsQvoU2g"
+    }
+  },
+  "target": {
+    "ownerId": "public-project-owner",
+    "scopeId": "project:public-custody",
+    "kind": "project"
+  },
+  "stageReference": {
+    "stageId": "e5251137-ecb9-4919-ad57-1f0d7350cadc",
+    "manifestHash": "bgtQR1KEyUmZWLhReTEH_TXI3OurKczblEAZW-Zd-po"
+  },
+  "paths": [
+    {
+      "id": "project.content",
+      "plaintext": "AQf_"
+    }
+  ],
+  "records": [
+    {
+      "key": "21:public-custody-vector29:device:public-original-device14:local-snapshot64:source-stage-catalog:-Tk7rwEx7B9DOJPl1CqkHF30csPUB6bjkdD3wjVW65w",
+      "serial": 2,
+      "envelope": {
+        "context": {
+          "cryptoProtocol": 1,
+          "suite": "A256KW-A256GCM-ES256",
+          "ownerId": "public-custody-vector",
+          "scopeId": "device:public-original-device",
+          "domain": "local-snapshot",
+          "objectId": "source-stage-catalog:-Tk7rwEx7B9DOJPl1CqkHF30csPUB6bjkdD3wjVW65w",
+          "schemaVersion": 1,
+          "dataGeneration": 1,
+          "writerProtocol": 9,
+          "cryptoEpoch": 1,
+          "securityEpoch": 1,
+          "revision": 2,
+          "keyId": "local:public-original-device",
+          "deviceId": "public-original-device",
+          "operationId": "85596890-1b23-4330-9754-5d08b9c857a7"
+        },
+        "wrappedKey": "ol9pWqNmCC2g5IjHhel4qiIpSiVjAFJU6s0Mvm2MItkjYMeDFDnyVg",
+        "nonce": "WVwxeWK08uCXxzpj",
+        "ciphertext": "ZgDp0-Fc2pDCIBv-XRSOKzUC891XjeYF_uok6d3C0eMvVB-0a1ri5Pb_j2bvk_4fclF7zeIeuk-WdJuMoS1NVWUPmm0fpIYAj6ABYz3f1KEyGpGz1XisOMrsNQjhvyGLenQkv29CPniSnk-KEoSmaZPfi6VppQL0X2P6gpyKhKPgYbT3JMWmuMxrciAdiSdYLp0sgGO9FXJvmA6xFisQTbakNJ9Z4Y7AwKAB5dzrWk9Iy-G0gbDuWoIICI7UwEBTSb3m1mwr56wdYjCQeyv5h6N85AGfp212MM5gix-gj_cUIJIAxhCGj6NcnpXE7mgZl0OoDjIBEL2buCCrcpe8nxtJnwabN3phjPRiXUvYKWwROasjF5AFkS2SSKHq2sntdW0Iz0ohwE8QcTe5Go-ZLMXrJ5qLKA77AtJjesNuCK_6Qq-gyr0dHCOIpNyNCCVuuGfrE9hIM8PACXbydD4Sn-uwKnH2cqKLmH1PxPz-b0U9KX2Es9tVHzcw4MhS1LCmvHNeJIi8LVWmNpG61dq6dBBcq_39TPRK4ySdLi1ayqX0WS4ZEllPKt8Y4qiy74CdrC4",
+        "signature": "BMwwxzbsJ55Gg8Bd2ZFX3mnrqlxbrS69FOgSGB3lUTPGxnOA1bs9ZrMzXY900kPabo4jN2bwNkYaLph4T2M8ZQ"
+      }
+    },
+    {
+      "key": "21:public-custody-vector29:device:public-original-device14:local-snapshot104:source-stage:-Tk7rwEx7B9DOJPl1CqkHF30csPUB6bjkdD3wjVW65w:e5251137-ecb9-4919-ad57-1f0d7350cadc:j:00:00000",
+      "serial": 4,
+      "envelope": {
+        "context": {
+          "cryptoProtocol": 1,
+          "suite": "A256KW-A256GCM-ES256",
+          "ownerId": "public-custody-vector",
+          "scopeId": "device:public-original-device",
+          "domain": "local-snapshot",
+          "objectId": "source-stage:-Tk7rwEx7B9DOJPl1CqkHF30csPUB6bjkdD3wjVW65w:e5251137-ecb9-4919-ad57-1f0d7350cadc:j:00:00000",
+          "schemaVersion": 1,
+          "dataGeneration": 1,
+          "writerProtocol": 9,
+          "cryptoEpoch": 1,
+          "securityEpoch": 1,
+          "revision": 4,
+          "keyId": "local:public-original-device",
+          "deviceId": "public-original-device",
+          "operationId": "16274154-2c65-4b73-b281-fcc1a8938879"
+        },
+        "wrappedKey": "-Sp5C6TxHvg-PTF2mqJvBO07tCqDY3oPP93T9Gy-XM53mtET0ugFTQ",
+        "nonce": "KlmIN0qQWGXPuELO",
+        "ciphertext": "0ixWwRY_i0CuAGh5kYwYgplbO_-Kk_1aXcg0eImeNkpHyO8kH1rZ6vPRD_2hsFdlgood0tPp9T42om974UMveFU3-I34s_ia7_bSY0wapD5iJ1qn6qYbT_F02Sw6W1QhTz1FtnS3ETqNovLx_nbHpOzUWorz33FJ_g4knWuqIyDCn1zy2Edk1_YXzP2u_CRRHZoYQ99vRQvdZZ8vtUa_qEH3fnVdL8cXgdthaBGdBGmCVNB1R433C9DTUhYoACrtcshw3upZCsC3cxZ5QlGGhswlfBNdgCWgaoiUD3PAi__dlKATglvDsQeoJvPjtwVZ_w1PUU4NiOTJjMFHN-QFupo_dMCOqGl1VLSvBh3DYX9TBIKQmhG2_sKXviKy7YpOl_DznYyZn34fGKAPlEt71v9Ccu_AewnS5qxu5K_XHej_oTwpaFAaxvt9ZJ-noZVS73aGQiHL50q_ttN75g__C1aGr2SDPJIuWG5GFP1M88_5_K6Q1CVHzFmQYO8F7He9npFgeDieCux9QJMhLlKiLfYajWdZVjwyUR47XYTlyDpUfT_JM1u_c1MLCLFCAizsKuBm72Wxo8Vy9dYO6UEqFnxNmfpoINtks6T12RRsmPBI9JgtUZHPTbzb_hS_aZgLcHyn-FCKItMVtlGWzndllJwQ56FCsPuO5JEf1qrqTglh-R5zyPEZCaxhetD7iw6Z9bS2NtZnehUKYEyvNMZQtunlnfLvJ-1icrgZmgaXl_27tLc5AqAMHIgTp8QIDJ2v3BR0p2mA6KNfOAtmAjTA5koLluvr2fFemtANHQSz3Y58FHGxFrGipUkvfg6iyc_7nwA",
+        "signature": "2k3Y5mMJG8evytd_xzHv9upuRYEwPVmIcVSpT-_ukIkq7THvHPz-4R2_IU8xTsMdBN_rzgzMKxXdbIuec80MFQ"
+      }
+    },
+    {
+      "key": "21:public-custody-vector29:device:public-original-device14:local-snapshot104:source-stage:-Tk7rwEx7B9DOJPl1CqkHF30csPUB6bjkdD3wjVW65w:e5251137-ecb9-4919-ad57-1f0d7350cadc:p:00:00000",
+      "serial": 1,
+      "envelope": {
+        "context": {
+          "cryptoProtocol": 1,
+          "suite": "A256KW-A256GCM-ES256",
+          "ownerId": "public-custody-vector",
+          "scopeId": "device:public-original-device",
+          "domain": "local-snapshot",
+          "objectId": "source-stage:-Tk7rwEx7B9DOJPl1CqkHF30csPUB6bjkdD3wjVW65w:e5251137-ecb9-4919-ad57-1f0d7350cadc:p:00:00000",
+          "schemaVersion": 1,
+          "dataGeneration": 1,
+          "writerProtocol": 9,
+          "cryptoEpoch": 1,
+          "securityEpoch": 1,
+          "revision": 1,
+          "keyId": "local:public-original-device",
+          "deviceId": "public-original-device",
+          "operationId": "f2317a31-cd82-4f5f-a101-c0ebae742031"
+        },
+        "wrappedKey": "ankfA-bKSGBH9S8Q40YYgforIjEuYLTvSkXn9cgsUgjRezZDrMvw8A",
+        "nonce": "8BraAepNJu99TjTn",
+        "ciphertext": "7EHSPM0kQSmTI5lz0-W88XNJSw",
+        "signature": "bLjU4eOPMgVTLc6SCWoM6K4HhHNzDsZMTV2mzM560I5qQSfkUcTJZt0UqLJ6YBLpsykOXuHLQ1Pfu7lYSzYTkA"
+      }
+    },
+    {
+      "key": "21:public-custody-vector29:device:public-original-device14:local-snapshot104:source-stage:-Tk7rwEx7B9DOJPl1CqkHF30csPUB6bjkdD3wjVW65w:e5251137-ecb9-4919-ad57-1f0d7350cadc:m:00:00000",
+      "serial": 1,
+      "envelope": {
+        "context": {
+          "cryptoProtocol": 1,
+          "suite": "A256KW-A256GCM-ES256",
+          "ownerId": "public-custody-vector",
+          "scopeId": "device:public-original-device",
+          "domain": "local-snapshot",
+          "objectId": "source-stage:-Tk7rwEx7B9DOJPl1CqkHF30csPUB6bjkdD3wjVW65w:e5251137-ecb9-4919-ad57-1f0d7350cadc:m:00:00000",
+          "schemaVersion": 1,
+          "dataGeneration": 1,
+          "writerProtocol": 9,
+          "cryptoEpoch": 1,
+          "securityEpoch": 1,
+          "revision": 1,
+          "keyId": "local:public-original-device",
+          "deviceId": "public-original-device",
+          "operationId": "cfb347b8-1277-459a-ac70-7835a385c46f"
+        },
+        "wrappedKey": "Qmy0Rd-omChZgmMVYa5gStwSqmq_5VjbVqrsEzOG9kYXn5bf8wahSw",
+        "nonce": "dZzMDXDVud3IY1LS",
+        "ciphertext": "2sHQwrSBIyDEtGTnH9xHcYhutB-0_uZ1_4-n2apMn3qa4trqRy2AHvw9-7JZmWginCoIQb5ewSRrXylgirXn22oXjkVHbcJNQwJZ04xijjl4J6AkjRjy931LlcaKL-PpIAWaJBkTzDkDWj0Xwqqn4atIfUisEtYr6zI5w8TQvoucCLIqN2ldhCNmc3QoWMKDjzyCOsLcT4L-IWSxKsoyITYhdsjkI6DVzq3B6sOk7qkVEvL1DUme9j2Kdkv2k0vuCtOQhss1vYtbcpL0au-2fCv6bjmjZVpFrkdyFPUM3xxr743CrYcVufC54fz2M3XiOdD6od-l0FQ2cMlD_Wfwig3wWB9_BnVfxY4-irheU8ziVaKfvkjPx5GV2znVnnOcLFIhvwFDOnkvQXAHn91PiG-EH_4q1-JdqdLYEwx6-EVRUaDYUHirejziI0kX6HLxyfVuRTGpWcOXqUHpqbrU8MyrQ3yD6ayxBOIguu-a7MChTrMT21pdxa9Q4ASYZLr0Y3dvk_bR5UYTPpHt6RQ3QEloZcZAe70GpHbJVRwa_A4oi2uJqVCouR838AtGP4CWB5JG-dsmFg5rbqai9iANiZqPC4akQdAZc3kX0CMgqmJuixQ51XQFPwcVWV5ROAugZwkQ607IPzdcsRpagmDHuwJ82_4bOqy1np4pCF8QS2LcoDGJGa84opWzdrQVasUZ39NnPWmp-9MGpw",
+        "signature": "0GKkXSGcjYjni5lR_cGzOQPqQvs7AKiYUNkKhnx1svie7dbAvVnDqCQn0HOF-ii_x2W0iALJ-SCjnMrMte3ETw"
+      }
+    }
+  ]
+}

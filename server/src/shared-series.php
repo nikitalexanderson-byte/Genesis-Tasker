@@ -242,22 +242,28 @@ function genesisSharedSeriesSkip(string $actor,string $projectId,string $taskId,
 
 function genesisSharedSeriesEnqueue(): void
 {
-    $q=genesisDb()->query("SELECT * FROM shared_task_series WHERE paused=0 AND owner_id IS NOT NULL AND generated_count<json_extract(rule_json,'$.limit') ORDER BY checked_at,id LIMIT 100");
-    foreach($q->fetchAll() as $series){
+    $q=genesisDb()->query("SELECT r.* FROM shared_task_series r WHERE paused=0 AND owner_id IS NOT NULL AND generated_count<json_extract(rule_json,'$.limit') AND ".genesisE2eeLegacyAvailableSql('project','r.project_id')." ORDER BY checked_at,id LIMIT 100");
+    $rows=$q->fetchAll();$q->closeCursor();
+    foreach($rows as $series){
+        $db=genesisDb();genesisBeginWriteTransaction($db);
+        try {
+        if(genesisE2eeLegacyScopeBlocked('project',$series['project_id'])){$db->commit();continue;}
         // Rotate every inspected row, including waiting/future/error cases.
         genesisDb()->prepare('UPDATE shared_task_series SET checked_at=? WHERE id=?')->execute([genesisNow(),$series['id']]);
         $settings=json_decode($series['rule_json'],true,32,JSON_THROW_ON_ERROR);
-        if((int)$series['generated_count']>=$settings['limit'])continue;
+        if((int)$series['generated_count']>=$settings['limit']){$db->commit();continue;}
         $today=(new DateTimeImmutable('now',new DateTimeZone($settings['recurrence']['calendarContext']['timeZone'])))->format('Y-m-d');
-        if($settings['timing']==='schedule'&&$series['cursor_date']>=$today)continue;
+        if($settings['timing']==='schedule'&&$series['cursor_date']>=$today){$db->commit();continue;}
         $trigger='';
         if($settings['timing']==='after-completion'){
             $candidate=genesisSharedSeriesAfterCandidate($series,$settings);
-            if(!$candidate||$candidate['date']>$today)continue;
+            if(!$candidate||$candidate['date']>$today){$db->commit();continue;}
             $trigger=':'.$candidate['key'].':'.$candidate['date'].':'.$candidate['triggerRevision'];
         }
         $key='series:'.$series['id'].':'.$series['revision'].':'.$series['cursor_date'].':'.$series['generated_count'].':'.$today;
         genesisBackgroundEnqueue('shared-series',$key.$trigger,['seriesId'=>$series['id'],'revision'=>(int)$series['revision'],'throughDate'=>$today]);
+        $db->commit();
+        }catch(Throwable $error){if($db->inTransaction())$db->rollBack();throw $error;}
     }
 }
 

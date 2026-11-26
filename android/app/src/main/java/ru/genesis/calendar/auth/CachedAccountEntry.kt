@@ -11,13 +11,24 @@ import ru.genesis.calendar.data.LocalCipher
 internal class CachedAccountEntry(private val app: GenesisApplication) {
     data class Entry(val identity: ServerIdentity, val settings: AccountSettings)
     private val kind = "account-entry"
+    // Identity/billing metadata is independent of every private descendant.
+    // Keep the full private SQLite deny barrier; do not whitelist a child path.
+    private fun metadataScope(scope:String)="public-profile-v1:$scope"
+    private fun previousMetadataScope(scope:String)="$scope:public-profile-v1"
     suspend fun read(scope: String): Entry? {
         if (!scope.startsWith("account-")) return null
-        val record = app.database.dao().document(scope, kind) ?: return null
+        val protected=ru.genesis.calendar.security.NativePrivateProducts.isProtected(scope)
+        val record = (if(protected)app.database.dao().document(metadataScope(scope),kind)
+            ?:app.database.dao().document(previousMetadataScope(scope),kind)else null)?:app.database.dao().document(scope, kind) ?: return null
         return runCatching {
-            val response = JSONObject(LocalCipher().decrypt(record.encrypted, "$scope/$kind"))
+            val response = JSONObject(LocalCipher().decrypt(record.encrypted, "${record.scope}/$kind"))
+            // AuthProtocol derives private routing only from the explicit mode.
+            // Adopt the persisted deny marker before decoding an older cache;
+            // a stale identity must not expose legacy UI while the vault is locked.
+            if(protected)response.getJSONObject("user").put("privatePreferencesMode","e2ee")
             val identity = AuthProtocol.identity(response) ?: return null
             require(CloudAccountSnapshot.scopeFor(identity.uid) == scope)
+            if(protected||identity.privateVault){val user=response.getJSONObject("user");user.remove("advicePreferences");user.remove("uiVisibility");user.remove("syncRouting");user.put("privatePreferencesMode","e2ee")}
             Entry(identity, AccountSettings.fromResponse(response) ?: return null)
         }.getOrNull()
     }
@@ -50,8 +61,11 @@ internal class CachedAccountEntry(private val app: GenesisApplication) {
             .put("sharedProjectsEligible", settings.sharedProjectsEligible)
             .put("sharedProjectsLifetimeAccess", settings.sharedProjectsLifetimeAccess)
             .put("sharedProjectsEnabled", settings.sharedProjectsEnabled)
-        val encoded = LocalCipher().encrypt(JSONObject().put("user", user).toString(), "$scope/$kind")
-        app.database.dao().putDocument(DocumentRecord(scope, kind, encoded, System.currentTimeMillis()))
+        if(identity.privateVault){user.put("privatePreferencesMode","e2ee");user.remove("advicePreferences");user.remove("uiVisibility");user.remove("syncRouting")}
+        val target=if(identity.privateVault)metadataScope(scope)else scope
+        val encoded = LocalCipher().encrypt(JSONObject().put("user", user).toString(), "$target/$kind")
+        app.database.dao().putDocument(DocumentRecord(target, kind, encoded, System.currentTimeMillis()))
     }
-    suspend fun clear(scope: String) { app.database.dao().deleteDocument(scope, kind) }
+    suspend fun clear(scope: String) {app.database.dao().deleteDocument(metadataScope(scope),kind)
+        if(!ru.genesis.calendar.security.NativePrivateProducts.isProtected(scope))app.database.dao().deleteDocument(scope, kind) }
 }

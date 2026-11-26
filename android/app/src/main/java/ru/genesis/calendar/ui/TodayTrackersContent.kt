@@ -24,6 +24,7 @@ import ru.genesis.calendar.domain.trackers.*
 @Composable
 internal fun TodayTrackersContent(app: GenesisApplication, date: LocalDate, prefs: UiPreferences) {
     val repo = remember(app, app.workspaceScope) { TrackersRepository(app) }
+    val migrationOwner=rememberLegacyMigrationOwner(app.workspaceScope)
     var data by remember(repo) { mutableStateOf<LocalTrackersWorkspace?>(null) }
     var error by remember(repo) { mutableStateOf<String?>(null) }
     var retry by remember(repo) { mutableIntStateOf(0) }
@@ -45,6 +46,12 @@ internal fun TodayTrackersContent(app: GenesisApplication, date: LocalDate, pref
     var moodEditor by remember(date, repo) { mutableStateOf<List<MoodEntry>?>(null) }
     var sleepEditor by remember(date, repo) { mutableStateOf<Pair<SleepPlan, SleepEntry?>?>(null) }
     var abstinenceEditor by remember(date, repo) { mutableStateOf<Pair<AddictionTracker, AddictionEntry?>?>(null) }
+    RememberMigrationForm(migrationOwner,repo,"today-trackers-view",{!busy&&data!=null}){
+        org.json.JSONObject().put("workspace",data?.let{org.json.JSONObject(TrackersDocument.encode(it))}?:org.json.JSONObject.NULL)
+            .put("revision",data?.revision?:org.json.JSONObject.NULL).put("date",date.toString())
+            .put("moodEditor",moodEditor!=null).put("sleepEditor",sleepEditor?.first?.id?:org.json.JSONObject.NULL)
+            .put("abstinenceEditor",abstinenceEditor?.first?.id?:org.json.JSONObject.NULL).put("busy",busy)
+    }
     val canEdit = !busy && date == LocalDate.now()
     val current = data
     if (current == null) Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -62,25 +69,25 @@ internal fun TodayTrackersContent(app: GenesisApplication, date: LocalDate, pref
                         entry?.note.orEmpty(), entry?.entity?.version ?: 0)
                 }, {}) }
             },
-            use24 = prefs.use24)
+            use24 = prefs.use24,migrationOwner=migrationOwner)
         error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
     }
     moodEditor?.let { snapshot ->
         val entry = snapshot.firstOrNull { it.date == date }
         MoodObservationEditor(snapshot, date, prefs.input, prefs.language, remember(app) { fullEmojiCatalog(app) }, busy, error,
-            onDismiss = { if (!busy) moodEditor = null }, fixedDate = true) { savedDate, value, note, label, emoji ->
+            onDismiss = { if (!busy) moodEditor = null }, fixedDate = true,migrationOwner=migrationOwner) { savedDate, value, note, label, emoji ->
             if (canEdit && savedDate == date) scope.launch { save({
                 repo.saveMood(date, value, note, entry?.tags.orEmpty(), entry?.entity?.version ?: 0, label, emoji)
             }, { moodEditor = null }) }
         }
     }
     sleepEditor?.let { (plan, entry) ->
-        SleepObservationEditor(plan, entry, date, prefs.use24, busy, error, onDismiss = { if (!busy) sleepEditor = null }) { bed, wake, quality, note ->
+        SleepObservationEditor(plan, entry, date, prefs.use24, busy, error, onDismiss = { if (!busy) sleepEditor = null },migrationOwner=migrationOwner) { bed, wake, quality, note ->
             if (canEdit) scope.launch { save({ repo.saveSleep(plan.id, date, bed, wake, quality, note, entry?.entity?.version ?: 0) }, { sleepEditor = null }) }
         }
     }
     abstinenceEditor?.let { (tracker, entry) ->
-        AbstinenceObservationEditor(tracker, entry, busy, error, { if (!busy) abstinenceEditor = null }) { clean, relapse, craving, trigger, note ->
+        AbstinenceObservationEditor(tracker, entry, busy, error, { if (!busy) abstinenceEditor = null },date,migrationOwner) { clean, relapse, craving, trigger, note ->
             if (canEdit) scope.launch { save({ repo.saveAbstinence(tracker.id, date, clean, relapse, craving, trigger, note,
                 entry?.entity?.version ?: 0) }, { abstinenceEditor = null }) }
         }
@@ -92,7 +99,7 @@ internal fun TodayTrackerCards(data: LocalTrackersWorkspace, date: LocalDate, en
     onMood: () -> Unit, onSleep: (SleepPlan, SleepEntry?) -> Unit,
     onAbstinence: (AddictionTracker, AddictionEntry?) -> Unit,
     onAbstinenceChange: (AddictionTracker, AddictionEntry?, Boolean, Boolean, Int) -> Unit,
-    use24: Boolean = true) {
+    use24: Boolean = true,migrationOwner:String?=null) {
     val mood = data.moodEntries.firstOrNull { it.date == date }
     val sleep = data.sleepPlans.filter { it.active && TrackerSchedules.isScheduled(it.schedule, date) }
     val abstinence = data.addictionTrackers.filter {
@@ -104,7 +111,7 @@ internal fun TodayTrackerCards(data: LocalTrackersWorkspace, date: LocalDate, en
             TodayAbstinenceCard(tracker, entry, date, enabled,
                 AddictionTrackerRules.streak(data.addictionEntries, tracker.id, date),
                 onEdit = { onAbstinence(tracker, entry) },
-                onChange = { clean, relapse, craving -> onAbstinenceChange(tracker, entry, clean, relapse, craving) })
+                onChange = { clean, relapse, craving -> onAbstinenceChange(tracker, entry, clean, relapse, craving) },migrationOwner=migrationOwner)
         }
         TodayObservationSummary("Настроение дня", "heart-pulse",
             if (mood == null) "Выбрать настроение" else "Изменить настроение",
@@ -137,8 +144,13 @@ internal fun TodayTrackerCards(data: LocalTrackersWorkspace, date: LocalDate, en
 
 @Composable
 private fun TodayAbstinenceCard(tracker: AddictionTracker, entry: AddictionEntry?, date: LocalDate,
-    enabled: Boolean, streak: Int, onEdit: () -> Unit, onChange: (Boolean, Boolean, Int) -> Unit) {
+    enabled: Boolean, streak: Int, onEdit: () -> Unit, onChange: (Boolean, Boolean, Int) -> Unit,migrationOwner:String?) {
     var craving by rememberSaveable(tracker.id, date.toString()) { mutableIntStateOf(entry?.cravingIntensity ?: 0) }
+    var dragging by remember(tracker.id,date) { mutableStateOf(false) }
+    RememberMigrationForm(migrationOwner,"${tracker.id}:$date","today-abstinence-card",{!dragging}){
+        org.json.JSONObject().put("baseline",org.json.JSONObject(TrackersDocument.encode(LocalTrackersWorkspace(addictionTrackers=listOf(tracker),addictionEntries=listOfNotNull(entry),addictionDataLoaded=true))))
+            .put("date",date.toString()).put("craving",craving).put("dragging",dragging).put("enabled",enabled)
+    }
     LaunchedEffect(entry?.entity?.version) { craving = entry?.cravingIntensity ?: 0 }
     Surface(Modifier.fillMaxWidth().testTag("today-abstinence-${tracker.id}"), shape = AffairsLayout.shape,
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
@@ -174,8 +186,8 @@ private fun TodayAbstinenceCard(tracker: AddictionTracker, entry: AddictionEntry
                 UntranslatedText("$craving/10", style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary)
             }
-            Slider(value = craving.toFloat(), onValueChange = { craving = it.toInt() },
-                onValueChangeFinished = { if (craving != (entry?.cravingIntensity ?: 0))
+            Slider(value = craving.toFloat(), onValueChange = { dragging=true;craving = it.toInt() },
+                onValueChangeFinished = { dragging=false;if (craving != (entry?.cravingIntensity ?: 0))
                     onChange(entry?.cleanDay == true, entry?.relapse == true, craving) },
                 valueRange = 0f..10f, steps = 9, enabled = enabled,
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
@@ -211,12 +223,17 @@ private fun TodayObservationSummary(title: String, icon: String, action: String,
 
 @Composable
 internal fun AbstinenceObservationEditor(tracker: AddictionTracker, entry: AddictionEntry?, busy: Boolean, error: String?,
-    onDismiss: () -> Unit, onSave: (Boolean, Boolean, Int, String, String) -> Unit) {
+    onDismiss: () -> Unit,date:LocalDate,migrationOwner:String?, onSave: (Boolean, Boolean, Int, String, String) -> Unit) {
     var clean by rememberSaveable(tracker.id) { mutableStateOf(entry?.cleanDay == true) }
     var relapse by rememberSaveable(tracker.id) { mutableStateOf(entry?.relapse == true) }
     var craving by rememberSaveable(tracker.id) { mutableIntStateOf(entry?.cravingIntensity ?: 0) }
     var trigger by rememberSaveable(tracker.id) { mutableStateOf(entry?.trigger ?: "") }
     var note by rememberSaveable(tracker.id) { mutableStateOf(entry?.note ?: "") }
+    RememberMigrationForm(migrationOwner,"${tracker.id}:$date","abstinence-observation",{!busy}){
+        org.json.JSONObject().put("baseline",org.json.JSONObject(TrackersDocument.encode(LocalTrackersWorkspace(addictionTrackers=listOf(tracker),addictionEntries=listOfNotNull(entry),addictionDataLoaded=true))))
+            .put("date",date.toString()).put("clean",clean).put("relapse",relapse).put("craving",craving)
+            .put("trigger",trigger).put("note",note).put("busy",busy)
+    }
     Dialog(onDismissRequest = onDismiss) { Surface(shape = MaterialTheme.shapes.large) {
         Column(Modifier.padding(16.dp).imePadding().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             EditorDialogHeader("Воздержание", "abstinence-close", onDismiss)

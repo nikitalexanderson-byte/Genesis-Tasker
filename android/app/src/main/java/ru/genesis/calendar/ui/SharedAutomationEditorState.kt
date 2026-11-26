@@ -38,6 +38,9 @@ internal class SharedAutomationEditorState(private val gateway: SharedWorkspaceG
     var version by mutableStateOf(0); private set
     var error by mutableStateOf(""); private set
     private var active = true; private var epoch = 0
+    private var unregisterMigration:(()->Unit)?=null
+    private fun attachMigration(){if(unregisterMigration!=null)return;unregisterMigration=ru.genesis.calendar.security.NativeMigrationMemory.register(account,"local-work",read={ru.genesis.calendar.security.NativeMigrationMemory.Capture(null,JSONObject().put("format","genesis-shared-automation-editor-input-v1").put("projectId",projectId).put("spaceId",space?:JSONObject.NULL).put("edit",edit?.let(::copy)?:JSONObject.NULL).put("record",record?.let(::copy)?:JSONObject.NULL).put("dirty",dirty).put("phase",phase).put("conflict",conflict).put("stale",stale).put("version",version),!busy)})}
+    private fun detachMigration(){unregisterMigration?.invoke();unregisterMigration=null}
     private val mutex = Mutex()
     val project get() = context?.optJSONObject("project")
     val space get() = project?.getString("spaceId")
@@ -59,8 +62,8 @@ internal class SharedAutomationEditorState(private val gateway: SharedWorkspaceG
         else -> error.message?.takeIf { Regex("[A-Z][A-Z0-9_]{0,99}").matches(it) } ?: "AUTOMATION_PROTOCOL"
     }
     private fun clearLive() { context = null; labels = emptyList(); templates = null; templateNames = emptyMap(); tasks = emptyList(); preview = null; taskCursor = null }
-    fun close() { active = false; epoch++; clearLive(); edit = null; record = null; copies = emptyList(); busy = false }
-    fun pause() { epoch++; clearLive(); edit = null; record = null; copies = emptyList(); busy = false; loaded = false }
+    fun close() { detachMigration(); active = false; epoch++; clearLive(); edit = null; record = null; copies = emptyList(); busy = false }
+    fun pause() { detachMigration(); epoch++; clearLive(); edit = null; record = null; copies = emptyList(); busy = false; loaded = false }
     private fun accept(saved: JSONObject?) { record = saved?.let(::copy); edit = saved?.getJSONObject("edit")?.let(::copy); dirty = false; preview = null; version++ }
     private suspend fun operate(quiet: Boolean = false, action: suspend (Int) -> Unit) = mutex.withLock {
         val ticket = epoch; current(ticket); if (!quiet) { busy = true; error = "" }
@@ -98,7 +101,7 @@ internal class SharedAutomationEditorState(private val gateway: SharedWorkspaceG
         }
     }
     suspend fun load(requestedRule: String?, copyRule: Boolean, calendar: SharedCustomCalendar) = operate { ticket ->
-        require(account.isNotBlank()) { "UNAUTHORIZED" }; clearLive(); lost = false; conflict = false
+        require(account.isNotBlank()) { "UNAUTHORIZED" }; attachMigration(); clearLive(); lost = false; conflict = false
         accept(checked(ticket) { gateway.sharedAutomationEditor(projectId) }); copies = checked(ticket) { gateway.sharedAutomationEditorCopies(projectId) }
         readContext(ticket)
         if (record == null) {

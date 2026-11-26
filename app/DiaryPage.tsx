@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, type FormEvent, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type CSSProperties } from 'react';
 import { useDiary } from './DiaryProvider';
 import { DIARY_COLORS, newDiaryNote, restoreDiaryNote, diaryCustomInk, diaryNoteCategory, type DiaryNote, type DiaryCategory } from './diary-model';
 import type { DiaryRecord } from './diary-storage';
@@ -13,6 +13,7 @@ import { useDialogAccessibility } from './use-dialog-accessibility';
 import './diary.css';
 import { originalAdvicePreview } from './advice-text';
 import { AdviceBodyText } from './AdviceBodyText';
+import deviceHistoryCopy from '../contracts/e2ee/device-history-copy-v1.json';
 
 export function AdviceDislikeIcon() {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17 14V3h4v11h-4Zm0-10H6a2 2 0 0 0-2 1.7l-1 6A2 2 0 0 0 5 14h5v4a3 3 0 0 0 3 3l4-7"/></svg>;
@@ -26,31 +27,34 @@ function customNoteStyle(color?: string): CSSProperties | undefined {
 function NoteEditor({ record, language, onClose, onSaved }: { record?: DiaryRecord; language: string; onClose: () => void; onSaved: (note: DiaryNote) => void }) {
   const text: Copy = diaryCopy(language); const diary = useDiary();
   const [note, setNote] = useState<DiaryNote>(() => record?.note ?? newDiaryNote());
+  const migrationForm=useRef({note,revision:record?.revision??0}),registerMigrationEditor=diary.registerMigrationEditor;
+  useLayoutEffect(()=>{migrationForm.current={note,revision:record?.revision??0};},[note,record?.revision]);
+  useEffect(()=>registerMigrationEditor(()=>migrationForm.current),[registerMigrationEditor]);
   const [error, setError] = useState(''); const [draftStatus, setDraftStatus] = useState(''); const [saving, setSaving] = useState(false);
   const actions = useRef(diary); useEffect(() => { actions.current = diary; }, [diary]);
   const [baseline] = useState(() => JSON.stringify(record?.note ?? note));
   const changed = JSON.stringify(note) !== baseline;
   const persistDraft = async () => {
-    if (!note.body.trim() || !changed) return true;
+    if ((!diary.privateContent&&!note.body.trim()) || !changed) return true;
     try { await actions.current.keepDraft(note, record); setDraftStatus(text.draftSaved); return true; }
     catch { setError(text.draftError); return false; }
   };
-  const close = async () => { if (!saving && await persistDraft()) { if (!changed && !record?.draftKey) diary.discardOwn(note.id); onClose(); } };
+  const close = async () => { if (!saving && await persistDraft()) { try {if (!changed && !record?.draftKey) await diary.discardOwn(note.id); onClose();}catch{setError(text.draftError);} } };
   const ref = useDialogAccessibility<HTMLElement>(() => { void close(); });
   useEffect(() => {
-    if (!changed || !note.body.trim() || saving) return;
-    const timer = window.setTimeout(() => { void actions.current.keepDraft(note, record).then(() => setDraftStatus(text.draftSaved)).catch(() => setError(text.draftError)); }, 650);
+    if (!changed || !diary.privateContent&&!note.body.trim() || saving) return;
+    const timer = window.setTimeout(() => { void actions.current.keepDraft(note, record).then(() => setDraftStatus(text.draftSaved)).catch(() => setError(text.draftError)); }, diary.privateContent?0:650);
     return () => window.clearTimeout(timer);
-  }, [note, record, changed, saving, text]);
+  }, [note, record, changed, saving, text,diary.privateContent]);
   const save = async (event?: FormEvent, asCopy = false) => {
     event?.preventDefault(); setError(''); setSaving(true);
     const value = { ...note, updatedAt: new Date().toISOString() };
     try {
       const saved = asCopy ? { ...value, id: crypto.randomUUID(), advice: undefined, reaction: null, archived: false, createdAt: value.updatedAt } : value;
       await diary.save(saved, asCopy ? undefined : record);
-      if (asCopy) { if (record?.draftKey) diary.discard(record.draftKey); else diary.discardOwn(note.id); }
+      if (asCopy) { if (record?.draftKey) await diary.discard(record.draftKey); else await diary.discardOwn(note.id); }
       onSaved(saved);
-    } catch (failure) { setError(failure instanceof Error && /DIARY_(REVISION_CONFLICT|NOTE_DELETED|LOCAL_UPLOAD_PENDING)/.test(failure.message) ? text.conflict : text.error); }
+    } catch (failure) { setError(failure instanceof Error && /DIARY_(REVISION_CONFLICT|NOTE_DELETED|LOCAL_UPLOAD_PENDING)|E2EE_(PRODUCT_CONFLICT_REVIEW_REQUIRED|LOCAL_CONFLICT)/.test(failure.message) ? text.conflict : text.error); }
     finally { setSaving(false); }
   };
   return <div className="modal-backdrop"><section className="modal diary-editor" data-exp-ui="dialog" ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="diary-editor-title" data-no-translate>
@@ -116,6 +120,7 @@ export default function DiaryPage({ language, onClose }: { language: string; onC
     {diary.loading ? <p role="status">{text.loading}</p> : null}
     {diary.error || error ? <div className="diary-notice" role="alert"><p>{error || text.error}</p><button type="button" onClick={() => { setError(''); void diary.refresh(); }}>{text.retry}</button></div> : null}
     {diary.offline ? <p className="diary-notice" role="status">{text.offline}</p> : null}
+    {diary.localHistory==='not-on-this-device'?<p className="diary-notice" role="status">{deviceHistoryCopy[language as keyof typeof deviceHistoryCopy]??deviceHistoryCopy.en}</p>:null}
     {!diary.syncEnabled ? <p className="diary-notice" role="status">{text.localOnly}</p> : null}
     {drafts.length ? <details className="diary-drafts"><summary>{text.drafts} · {drafts.length}</summary><p>{text.draftHint}</p>{drafts.map(row => <div key={row.draftKey}><button type="button" onClick={() => setEditing(row)}>{row.note.title || text.untitled}</button></div>)}</details> : null}
     {tab === 'archive' ? <div className="diary-archive-heading"><h2>{text.archive}</h2><p>{text.archiveHint}</p></div> : null}

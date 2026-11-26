@@ -1,6 +1,6 @@
 package ru.genesis.calendar.data
 
-import androidx.room.withTransaction
+import ru.genesis.calendar.data.withTransaction
 import java.time.Instant
 import java.util.UUID
 import org.json.JSONArray
@@ -62,11 +62,14 @@ internal class GenesisBackupSnapshot(private val app: GenesisApplication) {
             addRecords("diary",rows,original)
         }
         val aurora=JSONObject()
-        for(kind in listOf("aurora-cache","aurora-pending"))dao.document(scope,kind)?.let {
+        var auroraPending=0
+        for(kind in dao.documentKinds(scope).filter { ru.genesis.calendar.auth.AuroraProtocol.cacheKey(owner,it)!=null })dao.document(scope,kind)?.let {
+            if(kind!="aurora-cache")auroraPending++
+            require(aurora.length()<1025) { "BACKUP_TOO_LARGE" }
             aurora.put(kind,JSONObject(cipher.decrypt(it.encrypted,"$scope/aurora/$owner/$kind")))
         }
         if(aurora.length()>0)sections.put(JSONObject().put("id","aurora").put("source","device").put("capturedAt",at)
-            .put("count",1).put("pending",if(aurora.has("aurora-pending"))1 else 0).put("revision",JSONObject.NULL)
+            .put("count",1).put("pending",auroraPending).put("revision",JSONObject.NULL)
             .put("completeness","partial").put("notices",JSONArray(listOf("DEVICE_CACHE_ONLY")))
             .put("data",JSONObject().put("nativeEnvelopes",aurora)))
         val included=(0 until sections.length()).map { sections.getJSONObject(it).getString("id") }.toSet()

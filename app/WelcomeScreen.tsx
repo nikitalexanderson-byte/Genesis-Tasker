@@ -2,15 +2,17 @@
 import { AccountRecoveryPanel } from './AccountSecurityPanels';
 /* eslint-disable @next/next/no-img-element -- Google requires the official, unmodified sign-in asset. */
 
-import { LANGUAGES, LANGUAGE_LABELS, translateText, type Language } from "./i18n";
+import { isLanguage, LANGUAGES, LANGUAGE_LABELS, LANGUAGE_STORAGE_KEY, translateText, type Language } from "./i18n";
 import {publicProductCopy, publicMerchantHtml} from './public-product';
 import {PublicProduct} from './PublicProduct';
 import './public-product.css';
 import { AndroidDownload } from "./AndroidDownload";
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PartnerInvitation } from './PartnerInvitation';
-import {publicPagePath,currentPublicEdition,type PublicEdition} from './public-route';
+import {publicPagePath,publicRouteForPath,currentPublicEdition,type PublicEdition} from './public-route';
 import {PublicEditionRouting,PublicRegionControl} from './PublicRegionControl';
+import {useWebsiteRegion} from './website-region';
+import {suggestedWebsiteLanguage} from './website-region-policy';
 import pageCopy from './public-page-copy.json';
 
 type WelcomeScreenProps = {
@@ -20,6 +22,7 @@ type WelcomeScreenProps = {
   error: string;
   language: Language;
   onLanguageChange: (language: Language) => void;
+  onLanguageSuggestion: (language: Language) => void;
   onGoogle: () => void;
 };
 
@@ -29,7 +32,21 @@ const FLAG_COUNTRIES: Record<Language, string> = {
   pl: "pl", sr: "rs", uk: "ua", zh: "cn", tr: "tr", ja: "jp",
 };
 
-export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLanguageChange, onGoogle,edition=currentPublicEdition() }: WelcomeScreenProps) {
+function maySuggestLanguage(){
+  if(typeof window==='undefined')return false;
+  const route=publicRouteForPath(window.location.pathname,APP_BASE,window.location.search);
+  return !!route&&(route.page==='home'||route.page==='login')&&!route.explicitLanguage
+    &&!isLanguage(window.localStorage.getItem(LANGUAGE_STORAGE_KEY));
+}
+
+export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLanguageChange, onLanguageSuggestion, onGoogle,edition=currentPublicEdition() }: WelcomeScreenProps) {
+  const region=useWebsiteRegion(maySuggestLanguage()),suggested=useRef(false);
+  useEffect(()=>{
+    if(region.loading||suggested.current||!maySuggestLanguage())return;
+    suggested.current=true;
+    const locales=navigator.languages?.length?navigator.languages:[navigator.language];
+    onLanguageSuggestion(suggestedWebsiteLanguage(region,locales,Intl.DateTimeFormat().resolvedOptions().timeZone));
+  },[region,onLanguageSuggestion]);
   useEffect(() => {
     const anchor = window.location.hash.slice(1);
     if (!['features', 'pricing', 'sign-in'].includes(anchor)) return;

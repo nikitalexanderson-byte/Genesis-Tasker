@@ -20,6 +20,9 @@ function expectedResponse(page,predicate,options) {
 
 let dragSequence=0;
 async function mouseDrag(page,source,target,{after=false,cancel=false}={}) {
+  // Raw mouse events do not have locator.click's actionability checks. Shared
+  // rows can mount before the account's initial workspace is admitted.
+  await page.locator('.workspace-startup-gate').waitFor({state:'hidden'});
   await page.evaluate(()=>document.fonts.ready);
   // Keep the gesture away from viewport-edge autoscroll. Otherwise the row
   // under a self-drop can change between the hit check and pointer release.
@@ -51,6 +54,15 @@ async function mouseDrag(page,source,target,{after=false,cancel=false}={}) {
     return null;
   },after);
   let end=await visibleDropPoint();
+  if(!end&&process.env.GENESIS_QA_WEB_OUTPUT){
+    const diagnostics=await target.evaluate(element=>{
+      const r=element.getBoundingClientRect(),x=Math.min(innerWidth-1,Math.max(0,r.x+r.width/2)),y=Math.min(innerHeight-1,Math.max(0,r.y+r.height/2));
+      return{viewport:{width:innerWidth,height:innerHeight},target:{x:r.x,y:r.y,width:r.width,height:r.height},
+        hit:document.elementsFromPoint(x,y).slice(0,8).map(node=>({tag:node.tagName,className:node.className})),
+        overlays:[...document.querySelectorAll('dialog[open],.modal-backdrop,.workspace-startup-gate')].map(node=>({tag:node.tagName,className:node.className}))};
+    });
+    writeFileSync(path.join(process.env.GENESIS_QA_WEB_OUTPUT,'inbox-obstructed-'+(++dragSequence)+'.json'),JSON.stringify({from,to,...diagnostics},null,2));
+  }
   assert(end,'Drag destination must expose an unobstructed point');
   assert(start.y>=0&&end.y>=0&&Math.max(start.y,end.y)<page.viewportSize().height,'Functional fixture must keep both drag endpoints visible');
   const hitsTarget=()=>target.evaluate((element,point)=>{const hit=document.elementFromPoint(point.x,point.y);return Boolean(hit&&(hit===element||element.contains(hit)));},end);
@@ -149,7 +161,7 @@ export async function verifySharedInbox({context,page,tier,output,check,runtime,
   }
   const taskId=tasks[0].id;
   const url=new URL('/',baseURL);url.searchParams.set('affairs','shared');url.searchParams.set('space',space.id);url.searchParams.set('project',project.id);url.searchParams.set('projectView','board');url.hash='projects';
-  const visit=async(target=page)=>{await target.goto(url.href);await target.locator('.shared-project-chaos').waitFor({state:'attached'});};
+  const visit=async(target=page)=>{await target.goto(url.href);await target.locator('.shared-project-chaos').waitFor({state:'attached'});await target.locator('.workspace-startup-gate').waitFor({state:'hidden'});};
   const prefs=async()=> (await api('session')).user.uiVisibility;
   const task=async(id=taskId)=>(await api(`${projectRoute}/tasks/${id}`)).task;
   const projects=async()=>(await api(`shared/spaces/${space.id}/projects`)).projects;
@@ -163,7 +175,7 @@ export async function verifySharedInbox({context,page,tier,output,check,runtime,
     await action();await saved;await waitForValue(async()=>(await prefs())[key],actual=>actual===value,`${key}: expected ${JSON.stringify(value)}`);
   };
   const choosePosition=async position=>savePreference(()=>inbox().getByRole('combobox',{name:'Расположение хаос-бокса',exact:true}).selectOption(position),'sharedInboxPosition',position);
-  const reload=async()=>{await page.reload();await inbox().waitFor({state:'attached'});};
+  const reload=async()=>{await page.reload();await inbox().waitFor({state:'attached'});await page.locator('.workspace-startup-gate').waitFor({state:'hidden'});};
   const savedLayout=Object.fromEntries(['sharedInboxPosition','sharedInboxHidden','sharedInboxWidth','sharedInboxCompact'].map(key=>[key,session.user.uiVisibility?.[key]??({sharedInboxPosition:'right',sharedInboxHidden:false,sharedInboxWidth:300,sharedInboxCompact:false}[key]) ]));
   let viewerContext;
   try {
@@ -433,7 +445,7 @@ export async function runSharedInbox({baseURL,output,runtime,php,tiers=['busines
 }
 
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href) {
-  const result=await runSharedInbox({baseURL:process.env.GENESIS_QA_WEB_ORIGIN,output:path.resolve(process.env.GENESIS_QA_WEB_OUTPUT??'output/playwright/shared-inbox'),runtime:process.env.GENESIS_QA_BACKEND_RUNTIME,php:process.env.GENESIS_QA_PHP,phase:process.env.GENESIS_QA_INBOX_PHASE??'after'});
+  const result=await runSharedInbox({baseURL:process.env.GENESIS_QA_WEB_ORIGIN,output:path.resolve(process.env.GENESIS_QA_WEB_OUTPUT??'output/playwright/shared-inbox'),runtime:process.env.GENESIS_QA_BACKEND_RUNTIME,php:process.env.GENESIS_QA_PHP,phase:process.env.GENESIS_QA_INBOX_PHASE??'after',...(process.env.GENESIS_QA_TIERS?{tiers:process.env.GENESIS_QA_TIERS.split(',')}: {})});
   console.log(JSON.stringify({status:result.status,cases:result.cases.map(({id,status})=>({id,status}))}));
   if(result.status!=='PASS')process.exitCode=1;
 }
