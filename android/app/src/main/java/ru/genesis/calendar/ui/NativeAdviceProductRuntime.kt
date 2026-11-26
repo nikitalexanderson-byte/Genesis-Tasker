@@ -6,6 +6,7 @@ import android.webkit.*
 import androidx.annotation.Keep
 import kotlinx.coroutines.*
 import org.json.JSONObject
+import ru.genesis.calendar.auth.E2EE_SIGNED_READ_RATE_WAIT_MILLIS
 import ru.genesis.calendar.data.BackupTransfer
 import ru.genesis.calendar.security.E2eeEnvelope
 import ru.genesis.calendar.security.E2eeKeys
@@ -20,8 +21,14 @@ private fun adviceRuntimeCode(error:Throwable)=adviceRuntimeCode(error.message)
  * navigation are blocked in WebView. Narrow native content ports own all keys. */
 internal class NativeAdviceProductRuntime(private val context:Context,private val channel:String="advice-product"){
     init{require(channel in setOf("advice-product","shared-product","shared-aggregate","membership-operation","membership-drafts","personal-restore","shared-bulk"))}
+    suspend fun execute(input: JSONObject, current: () -> Unit, call: suspend (String, JSONObject) -> Any): JSONObject =
+        execute(input, current, call, waitForSignedReads = false)
+
     @SuppressLint("SetJavaScriptEnabled")
-    suspend fun execute(input:JSONObject,current:()->Unit,call:suspend(String,JSONObject)->Any):JSONObject=coroutineScope{
+    suspend fun execute(input: JSONObject, current: () -> Unit, call: suspend (String, JSONObject) -> Any,
+        waitForSignedReads: Boolean): JSONObject = coroutineScope {
+        // Shared reads may be waiting for the server; keep the isolated runtime alive long enough to deliver the signed result.
+        val timeoutMillis = 120_000L + if (waitForSignedReads) E2EE_SIGNED_READ_RATE_WAIT_MILLIS else 0L
         current();val id=UUID.randomUUID().toString();val outcome=CompletableDeferred<JSONObject>();val active=AtomicBoolean(true)
         val operations=CoroutineScope(SupervisorJob(currentCoroutineContext()[Job])+Dispatchers.IO);var view:WebView?=null
         suspend fun deliver(request:String,value:JSONObject){current();val bytes=value.toString().toByteArray(Charsets.UTF_8)
@@ -30,7 +37,7 @@ internal class NativeAdviceProductRuntime(private val context:Context,private va
                 val chunks=encoded.chunked(131072);chunks.forEachIndexed{at,chunk->target.evaluateJavascript("window.GenesisAuroraSourceRuntime.resolveChunk('$id','$request',$at,${at==chunks.lastIndex},'$chunk')",null)}}
         }
         val bridge=AdviceProductRuntimeBridge(id,active,operations,outcome,current,call,::deliver,channel)
-        try{withTimeout(120000){val bytes=input.toString().toByteArray(Charsets.UTF_8);val encoded=try{check(bytes.size<=12*1024*1024){"E2EE_ADVICE_CONTENT_TOO_LARGE"};E2eeEnvelope.encode(bytes)}finally{bytes.fill(0)}
+        try{withTimeout(timeoutMillis){val bytes=input.toString().toByteArray(Charsets.UTF_8);val encoded=try{check(bytes.size<=12*1024*1024){"E2EE_ADVICE_CONTENT_TOO_LARGE"};E2eeEnvelope.encode(bytes)}finally{bytes.fill(0)}
             withContext(Dispatchers.Main.immediate){current();check(nativeWebRuntimeProblem(context,"en")==null){"E2EE_WEB_RUNTIME_UPDATE_REQUIRED"};val started=AtomicBoolean(false)
                 view=WebView(context).apply{
                     settings.javaScriptEnabled=true;settings.domStorageEnabled=false;settings.databaseEnabled=false;settings.allowFileAccess=false;settings.allowContentAccess=false;settings.blockNetworkLoads=true
