@@ -48,7 +48,7 @@ jobs:
           curl -fsS --max-time 30 -H 'Cache-Control: no-cache' \
             "https://genesiscalendar.com/deploy-meta.json?release=$GITHUB_RUN_ID" \
             | jq -e --arg expected "$EXPECTED_CURRENT_COMMIT" '.commit == $expected'
-          grep -Eq 'versionCode = 150$' android/app/build.gradle.kts
+          grep -Eq '^[[:blank:]]*versionCode[[:blank:]]*=[[:blank:]]*150[[:space:]]*$' android/app/build.gradle.kts
           grep -Fq 'versionName = "3.3.6"' android/app/build.gradle.kts
           grep -Fq 'buildConfigField("boolean", "TRIAL_BUILD", "false")' android/app/build.gradle.kts
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6
