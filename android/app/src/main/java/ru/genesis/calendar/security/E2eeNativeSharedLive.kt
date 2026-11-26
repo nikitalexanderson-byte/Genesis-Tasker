@@ -84,7 +84,8 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
                 else->error("E2EE_SHARED_REQUEST_INVALID")
             }.also{current()}}
             return runtime.execute(JSONObject().put("protocol",1).put("mode","shared-product-v1").put("binding",JSONObject().put("scopeId",binding.scopeId).put("kind",binding.scopeKind).put("resourceId",binding.resourceId))
-                .put("actorId",account.ownerId).put("online",!account.offline).put("method",method).put("path",path).put("body",body).put("resumeId",resumeId?:JSONObject.NULL),::current,::call).also{current()}
+                .put("actorId",account.ownerId).put("online",!account.offline).put("method",method).put("path",path).put("body",body).put("resumeId",resumeId?:JSONObject.NULL),::current,::call,
+                waitForSignedReads = !account.offline && method == "GET" && resumeId == null).also{current()}
         }
     }
     private fun bindings():List<JSONObject>{val rows=trust.list();current();val scopes=(0 until rows.length()).map{rows.getJSONObject(it)}
@@ -129,7 +130,8 @@ internal class E2eeNativeSharedLive(private val context:Context,private val acco
             "layoutSeed"->{E2eeKeys.exact(payload,emptySet());check(!account.offline){"E2EE_OFFLINE_CONTENT_UNAVAILABLE"};E2eePrivateTableReader.read({id->val original=account.client.readMigrationOriginal("local-snapshot",id);current();E2eePrivateTableReader.Opened(original.bytes,original.revision)},"private-table:personal.local-work:shared_space_ui","personal.local-work","shared_space_ui",::current)}
             else->error("E2EE_SHARED_REQUEST_INVALID")
         }.also{current()}}
-        return aggregateRuntime.execute(JSONObject().put("protocol",1).put("mode","shared-aggregate-v1").put("actorId",account.ownerId).put("method",method).put("path",path).put("body",body),::current,::call)
+        return aggregateRuntime.execute(JSONObject().put("protocol",1).put("mode","shared-aggregate-v1").put("actorId",account.ownerId).put("method",method).put("path",path).put("body",body),::current,::call,
+            waitForSignedReads = !account.offline && method == "GET")
     }
     private fun pendingLocked(projectId:String?=null):List<JSONObject>{
         val result=mutableListOf<JSONObject>()

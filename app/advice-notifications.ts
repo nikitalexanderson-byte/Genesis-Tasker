@@ -4,7 +4,13 @@ export type AdviceNotifications={enabled:boolean;time:string;timeZone:string};
 export type AdviceTarget={id:string;dayKey:string;collection:AdviceCollection};
 export const advicePushDeviceKey=(userId:string)=>'genesis.advice-push.'+userId;
 export function adviceDeviceTimeZone():string {
-  try{return Intl.DateTimeFormat().resolvedOptions().timeZone||'Europe/Moscow';}catch{return 'Europe/Moscow';}
+  try {
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    // Android WebView can report a numeric zero offset for the device default.
+    return timeZone === '+00:00' || timeZone === '-00:00' ? 'UTC' : timeZone || 'Europe/Moscow';
+  } catch {
+    return 'Europe/Moscow';
+  }
 }
 export function adviceNotificationPreferences(value?:Partial<AdviceNotifications>|null):AdviceNotifications {
   let timeZone=adviceDeviceTimeZone();

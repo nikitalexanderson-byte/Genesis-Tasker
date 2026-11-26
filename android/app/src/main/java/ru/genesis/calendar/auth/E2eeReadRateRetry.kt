@@ -2,9 +2,13 @@ package ru.genesis.calendar.auth
 
 import kotlinx.coroutines.delay
 
+private const val MAX_READ_RATE_RETRIES = 2
+private const val MAX_RETRY_AFTER_SECONDS = 600
+internal const val E2EE_SIGNED_READ_RATE_WAIT_MILLIS = MAX_READ_RATE_RETRIES * MAX_RETRY_AFTER_SECONDS * 1000L
+
 internal fun e2eeReadRetrySeconds(failure: AuthFailure, retries: Int): Int? =
     failure.retryAfterSeconds?.takeIf {
-        failure.kind == AuthFailure.Kind.RATE_LIMIT && failure.httpStatus == 429 && it in 1..600 && retries < 2
+        failure.kind == AuthFailure.Kind.RATE_LIMIT && failure.httpStatus == 429 && it in 1..MAX_RETRY_AFTER_SECONDS && retries < MAX_READ_RATE_RETRIES
     }
 
 /** Only an unobserved, signed read may wait and retry here. Legacy source

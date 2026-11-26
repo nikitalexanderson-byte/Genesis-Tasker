@@ -14,6 +14,10 @@ class DailyAdviceProtocolTest {
         assertEquals("23:15", AdvicePreferences.fromJson(disabled.toJson()).notifications.time)
         assertEquals("Europe/Moscow", AdvicePreferences.fromJson(disabled.toJson()).notifications.timeZone)
         assertFalse(AdvicePreferences.fromJson(disabled.toJson()).notifications.enabled)
+        for (legacyZone in listOf("+00:00", "-00:00")) {
+            val notifications = JSONObject().put("enabled", false).put("time", "09:00").put("timeZone", legacyZone)
+            assertEquals(notifications.toString(), AdviceNotificationPreferences.fromJson(notifications).toJson().toString())
+        }
         for (invalid in listOf(
             JSONObject().put("time", "24:00"), JSONObject().put("time", "9:00"),
             JSONObject().put("timeZone", "+03:00"), JSONObject().put("timeZone", "Unknown/Zone"),
