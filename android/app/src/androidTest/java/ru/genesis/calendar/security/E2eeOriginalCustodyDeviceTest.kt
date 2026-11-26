@@ -85,9 +85,19 @@ class E2eeOriginalCustodyDeviceTest {
     @Test fun actualKeyRecordLimitRefusesBeforeNewArtifactAndRetainsEveryCiphertext(){
         Rig().use{f->f.stage(3);f.preserve();val seeded=ArrayList<File>()
             try{
-                repeat(998){seeded+=File(f.oldFolder,"e2ee-original-custody-${f.ownerHash}-${UUID.randomUUID()}.vault").apply{writeBytes(byteArrayOf(1))}}
-                E2eeSqliteStorage(f.oldContext).use{db->assertEquals(1000L,db.providerUsage().keyRecords);val before=snapshot(db);val names=f.oldFolder.listFiles().orEmpty().map{it.name}.toSet()
-                    assertEquals("E2EE_STORAGE_CAPACITY",assertThrows(Exception::class.java){f.preserve()}.message);assertEquals(names,f.oldFolder.listFiles().orEmpty().map{it.name}.toSet());assertEquals(before,snapshot(db))}
+                val maximum = E2eeStorageAdmission.providerBudget.maximumKeyRecords
+                repeat(Math.toIntExact(maximum - 2)) {
+                    seeded += File(f.oldFolder,"e2ee-original-custody-${f.ownerHash}-${UUID.randomUUID()}.vault").apply { writeBytes(byteArrayOf(1)) }
+                }
+                E2eeSqliteStorage(f.oldContext).use { db ->
+                    assertEquals(maximum,db.providerUsage().keyRecords)
+                    val before = snapshot(db)
+                    val names = f.oldFolder.listFiles().orEmpty().map { it.name }.toSet()
+                    assertEquals("E2EE_STORAGE_CAPACITY",assertThrows(Exception::class.java){f.preserve()}.message)
+                    assertEquals(names,f.oldFolder.listFiles().orEmpty().map { it.name }.toSet())
+                    assertEquals(before,snapshot(db))
+                    assertEquals(Math.toIntExact(maximum - 1),E2eeOriginalCustodyFiles(f.oldContext).list(f.owner,f.current).size)
+                }
             }finally{seeded.forEach{check(it.canonicalFile.parentFile==f.oldFolder.canonicalFile);check(it.delete())}}
         }
     }

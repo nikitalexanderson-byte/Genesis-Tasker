@@ -2,6 +2,7 @@ import {snapshotE2eeValue} from './commands.ts';
 import {commitE2eeIndexedDb} from './indexeddb-write.ts';
 import {exactKeys} from './keys.ts';
 import {openE2eeDatabase} from './storage.ts';
+import {E2EE_PROVIDER_STORAGE_BUDGET} from './storage-capacity.ts';
 import {captureOriginalCustodyReference,originalCustodyPrefix,validateOriginalCustodyId,type OriginalCustodyArtifact,type OriginalCustodyReference,type OriginalCustodyStorage} from './original-custody.ts';
 
 /** Existing keyMaterial store: actual provider-wide count/byte/quota admission
@@ -36,7 +37,7 @@ export class IndexedDbOriginalCustodyStorage implements OriginalCustodyStorage {
   const result=await new Promise<string[]>((resolve,reject)=>{
    const transaction=db.transaction('keyMaterial','readonly'),request=transaction.objectStore('keyMaterial').openKeyCursor(IDBKeyRange.bound(prefix,prefix+'\uffff'));const ids:string[]=[];let failure:unknown;
    request.onsuccess=()=>{try{current();const cursor=request.result;if(!cursor)return;
-    if(ids.length>=1000||typeof cursor.key!=='string')throw new Error('E2EE_STORAGE_CAPACITY');ids.push(cursor.key);cursor.continue();
+    if(ids.length>=E2EE_PROVIDER_STORAGE_BUDGET.maximumKeyRecords||typeof cursor.key!=='string')throw new Error('E2EE_STORAGE_CAPACITY');ids.push(cursor.key);cursor.continue();
    }catch(error){failure=error;transaction.abort();}};
    transaction.oncomplete=()=>resolve(ids);transaction.onabort=transaction.onerror=()=>reject(failure??new Error('E2EE_STORAGE_UNAVAILABLE'));
   });current();for(const id of result){await validateOriginalCustodyId(ownerId,id);current();}return result;

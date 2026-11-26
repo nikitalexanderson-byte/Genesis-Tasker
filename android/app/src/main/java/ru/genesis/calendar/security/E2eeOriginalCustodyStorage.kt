@@ -69,7 +69,7 @@ internal class E2eeOriginalCustodyFiles(context:Context):E2eeOriginalCustodyStor
         assertCurrent();val prefix=prefix(owner);val ids=linkedSetOf<String>();val pattern=Regex(Regex.escape(prefix)+"([a-f0-9-]{36})\\.vault(?:\\.(?:bak|new))?")
         Files.newDirectoryStream(folder.toPath(),prefix+"*").use{files->for(path in files){assertCurrent();val file=path.toFile();val match=pattern.matchEntire(file.name)?:error("E2EE_INVALID_ORIGINAL_CUSTODY")
             check(file.isFile&&file.canonicalFile.parentFile==folder.canonicalFile){"E2EE_INVALID_ORIGINAL_CUSTODY"};val id=E2eeOriginalCustody.prefix(owner)+match.groupValues[1];E2eeOriginalCustody.validateId(owner,id)
-            ids+=id;check(ids.size<=1000){"E2EE_STORAGE_CAPACITY"}
+            ids+=id;check(ids.size.toLong()<=E2eeStorageAdmission.providerBudget.maximumKeyRecords){"E2EE_STORAGE_CAPACITY"}
         }};assertCurrent();ids.sorted()
     }
     override fun toString()="E2eeOriginalCustodyFiles([ciphertext])"

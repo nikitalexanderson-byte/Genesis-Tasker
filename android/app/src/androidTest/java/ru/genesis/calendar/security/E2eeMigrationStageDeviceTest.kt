@@ -142,8 +142,14 @@ class E2eeMigrationStageDeviceTest {
         Rig().use{f->val sources=f.sources{_,out->out.write(ByteArray(E2eeFiles.CHUNK_BYTES){47});error("SYNTHETIC_LATE_TAG")}
             refuses("SYNTHETIC_LATE_TAG"){f.migration(sources).prepareStaged(sources.stagedCapture(),f.options())};assertNull(f.migration(sources).status());f.cold()
             val kept=E2eeSourceStage.inspect(f.vault,f.target,f.current);assertEquals(1,kept.size);assertFalse(kept.single().complete);f.produced=0
-            val replacement=f.sources();refuses("E2EE_SOURCE_STAGE_HISTORY_REVIEW_REQUIRED"){f.migration(replacement).prepareStaged(replacement.stagedCapture(),f.options())}
-            assertEquals(0,f.produced);assertEquals(kept,E2eeSourceStage.inspect(f.vault,f.target,f.current));assertEquals(0,f.transportCalls)
+            val replacement=f.sources()
+            refuses("E2EE_SOURCE_STAGE_REPLAY_CHANGED") {
+                f.migration(replacement).prepareStaged(replacement.stagedCapture(),f.options())
+            }
+            assertEquals(1,f.produced)
+            assertNull(f.migration(replacement).status())
+            assertEquals(kept,E2eeSourceStage.inspect(f.vault,f.target,f.current))
+            assertEquals(0,f.transportCalls)
         }
     }
     @Test fun failedPointerCasRetainsCompleteOrphanInNextPublishedHistory()=runBlocking {
@@ -165,8 +171,19 @@ class E2eeMigrationStageDeviceTest {
         Rig().use{f->val sources=f.sources();f.raceCatalogue=true
             refuses("E2EE_LOCAL_CONFLICT"){f.migration(sources).prepareStaged(sources.stagedCapture(),f.options())};assertFalse(f.raceCatalogue);assertNull(f.migration(sources).status());f.cold()
             val retained=E2eeSourceStage.inspect(f.vault,f.target,f.current);assertEquals(2,retained.size);assertTrue(retained[0].complete);assertFalse(retained[1].complete)
-            val before=f.produced;refuses("E2EE_SOURCE_STAGE_HISTORY_REVIEW_REQUIRED"){f.migration(sources).prepareStaged(sources.stagedCapture(),f.options())}
-            assertEquals(before,f.produced);assertEquals(retained,E2eeSourceStage.inspect(f.vault,f.target,f.current));assertEquals(0,f.transportCalls)
+            val before=f.produced
+            f.migration(sources).prepareStaged(sources.stagedCapture(),f.options())
+            val resumed=E2eeSourceStage.inspect(f.vault,f.target,f.current)
+            assertEquals(before+sources.requiredCoverage.size,f.produced)
+            assertEquals(retained.map{it.id},resumed.map{it.id})
+            assertTrue(resumed.all{it.complete})
+            assertEquals(retained.first(),resumed.first())
+            val publication=f.state().getJSONObject("source")
+            assertEquals(retained.last().id,publication.getJSONObject("reference").getString("stageId"))
+            val history=publication.getJSONArray("history")
+            assertEquals(1,history.length())
+            assertEquals(retained.first().id,history.getJSONObject(0).getString("stageId"))
+            assertEquals(0,f.transportCalls)
         }
     }
 }

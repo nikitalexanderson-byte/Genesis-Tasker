@@ -108,7 +108,8 @@ object E2eeKeys {
     }
     fun openBundle(ownerId: String, purpose: String, secret: ByteArray, source: JSONObject): ByteArray {
         exact(source, setOf("protocol", "ownerId", "purpose", "salt", "nonce", "ciphertext"))
-        if (source.get("protocol") != 1 || source.get("ownerId") != ownerId || source.get("purpose") != purpose) invalid()
+        val protocol = source.get("protocol")
+        if ((protocol != 1 && protocol != 1L) || source.get("ownerId") != ownerId || source.get("purpose") != purpose) invalid()
         val salt = decode(source, "salt", 32); val nonce = decode(source, "nonce", 12)
         val encrypted = decode(source, "ciphertext", 16, MAX_BUNDLE + 16)
         try {
