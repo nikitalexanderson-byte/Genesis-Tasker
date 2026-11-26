@@ -13,7 +13,8 @@ data class AdviceNotificationPreferences(val enabled: Boolean = false, val time:
     val timeZone: String = "UTC") {
     init {
         require(Regex("(?:[01][0-9]|2[0-3]):[0-5][0-9]").matches(time))
-        require(timeZone in ZoneId.getAvailableZoneIds())
+        // Older WebView migration results may already contain this equivalent UTC spelling.
+        require(timeZone == "+00:00" || timeZone == "-00:00" || timeZone in ZoneId.getAvailableZoneIds())
     }
     fun toJson(): JSONObject = JSONObject().put("enabled", enabled).put("time", time).put("timeZone", timeZone)
     companion object {

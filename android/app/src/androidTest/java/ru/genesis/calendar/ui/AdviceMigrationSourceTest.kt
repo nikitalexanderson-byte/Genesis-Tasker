@@ -99,6 +99,23 @@ class AdviceMigrationSourceTest {
         override fun close(){current.set(false);vault.lock();storage.close();legacy.edit().remove(profile).remove("$profile:seen:$ID").commit();app.activateAccount(null)}
         companion object{const val DAY="2026-11-19";const val ID="advice-0123456789abcdef01234567";fun sha(value:String)=sha(value.toByteArray());fun sha(value:ByteArray)=MessageDigest.getInstance("SHA-256").digest(value).joinToString(""){"%02x".format(it)}}
     }
+    @Test fun migratedDefaultNotificationsOpenInTheAndroidProtocol() = runBlocking {
+        Rig().use { fixture ->
+            fixture.seed()
+            val result = withTimeout(90_000L) { fixture.run() }
+            try {
+                val record = result.content.single { it.objectId == "personal-advice-preferences-v1" }
+                val preferences = JSONObject(record.bytes.toString(Charsets.UTF_8)).getJSONObject("preferences")
+                val timeZone = preferences.getJSONObject("notifications").getString("timeZone")
+                assertFalse("A generated default must use a named zone", timeZone.startsWith('+') || timeZone.startsWith('-'))
+                val decoded = try { AdvicePreferences.fromJson(preferences) }
+                catch (error: IllegalArgumentException) { throw AssertionError("Synthetic migrated zone rejected: $timeZone", error) }
+                assertFalse(decoded.notifications.enabled)
+                assertEquals(timeZone, decoded.notifications.timeZone)
+            } finally { result.content.forEach { it.bytes.fill(0) } }
+        }
+    }
+
     @Test fun actualRoomCacheSnapshotsAndProvenLegacyCopiesOpenUnderNewRootAfterOldAliasIsRemoved()=runBlocking{
         val f=Rig();try{
             f.seed();val before=f.originals();val result=withTimeout(90000){f.run()};assertTrue(result.complete);assertEquals(1,f.reads.get());assertEquals(15,f.publicReads.get());assertEquals(6,result.content.size)
