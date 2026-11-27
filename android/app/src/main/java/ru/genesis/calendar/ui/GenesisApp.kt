@@ -79,6 +79,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -187,7 +188,11 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
     }
     val pendingPreferences = observedPreferences.orEmpty()
     val pendingWrites by key(activeScope) {
-        remember(app, activeScope) { app.database.dao().observePendingOutbox(activeScope) }
+        remember(app, activeScope) {
+            ru.genesis.calendar.data.PrivatePersonalDocuments.observePendingWrites(
+                activeScope, app.database.dao().observePendingOutbox(activeScope)
+            ).flowOn(Dispatchers.IO)
+        }
             .collectAsStateWithLifecycle<Boolean?>(null)
     }
     val menuSwipeState = rememberSaveable(activeScope, saver = MenuSwipeStateSaver) { MenuSwipeState() }
@@ -222,7 +227,7 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
     }
     LaunchedEffect(authController, testWorkspace) { if (!testWorkspace) authController.ensureSession() }
     LaunchedEffect(activeScope, authState.user, authState.busy) {
-        if (!testWorkspace && activeScope.startsWith("account-") && authState.user != null && !authState.busy) {
+        if (!testWorkspace && activeScope.startsWith("account-") && authState.user?.privateVault == false && !authState.busy) {
             app.database.dao().observeOutbox(activeScope).debounce(800).collectLatest { pending ->
                 if (pending.isNotEmpty()) authController.syncPending()
             }

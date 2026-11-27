@@ -227,8 +227,11 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     private val connectionRetry = AccountSyncRetry(android.os.SystemClock::elapsedRealtime)
 
     private fun recordConnectionFailure(uid: String?, error: Exception) {
-        if (uid != null && error is AuthFailure && error.kind == AuthFailure.Kind.NETWORK) {
-            connectionRetry.connectionFailed(uid)
+        if (uid == null || error !is AuthFailure) return
+        when (error.kind) {
+            AuthFailure.Kind.NETWORK -> connectionRetry.connectionFailed(uid)
+            AuthFailure.Kind.RATE_LIMIT -> if (error.httpStatus == 429) connectionRetry.rateLimited(uid, error.retryAfterSeconds)
+            else -> Unit
         }
     }
     private val dataSyncMutex = Mutex()
@@ -986,7 +989,9 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             // may unmount the unlock view and cancel its composition scope.
             ru.genesis.calendar.security.NativePrivateProducts.attach(loaded.first,loaded.second,loaded.third)
             client.bindPrivateProduct(generation,uid)
-            mutableState.value=prior.copy(ready=true,busy=false,outgoingSyncIssue=null,accountSettings=projected)
+            mutableTaskSync.value = AccountTaskSyncState(CloudAccountSnapshot.scopeFor(uid), confirmed = !offline)
+            mutableState.value=prior.copy(ready=true,busy=false,outgoingSyncIssue=null,accountSettings=projected,
+                checkedAt = if (offline) prior.checkedAt else System.currentTimeMillis())
             // Subsequent account use keeps its owner/session/lifecycle guards,
             // independent of the now-retired unlock view and one-shot request.
             adopted.set(true)
@@ -2928,8 +2933,11 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             checkSession()
             return
         }
-        syncPending()
-        refreshAccountData()
+        if (user.privateVault) syncPrivateTasks(user.uid, refreshPersonal = true)
+        else {
+            syncPending()
+            refreshAccountData()
+        }
         scope.launch(NativeActivityVisit.requestContext()) { runCatching { flushSharedOfflineTasks() } }
     }
 
@@ -3150,19 +3158,51 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         if (mutableState.value.user?.uid == userId) syncPending(WorkspacePatch.ConflictPolicy.KEEP_REMOTE, fingerprint)
     }
 
+    private fun syncPrivateTasks(uid: String, refreshPersonal: Boolean) {
+        val accountScope = CloudAccountSnapshot.scopeFor(uid)
+        val products = ru.genesis.calendar.security.NativePrivateProducts
+        if (syncJob?.isActive == true || mutableState.value.requiresSignIn || app.workspaceScope != accountScope ||
+            connectionRetry.waiting(uid) || !products.isOpen(accountScope) || products.isOffline(accountScope)) return
+        val generation = client.currentGeneration()
+        val custody = products.custodyRevision.value
+        fun current() = client.isCurrent(generation) && products.custodyRevision.value == custody &&
+            mutableState.value.user?.uid == uid && app.workspaceScope == accountScope
+        val previous = mutableTaskSync.value.takeIf { it.scope == accountScope } ?: AccountTaskSyncState(accountScope)
+        val loading = if (refreshPersonal) previous.copy(loading = true) else null
+        syncJob = scope.launch(NativeActivityVisit.requestContext() + deferPrivateSyncRateWait()) {
+            if (loading != null) mutableTaskSync.value = loading
+            try {
+                products.flush(accountScope, refreshPersonal)
+                if (current()) {
+                    mutableTaskSync.value = previous.copy(loading = false, confirmed = previous.confirmed || refreshPersonal, issue = null)
+                    if (mutableState.value.outgoingSyncIssue == "E2EE_PRIVATE_SYNC_REQUIRED")
+                        mutableState.value = mutableState.value.copy(outgoingSyncIssue = null)
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                if (current()) {
+                    recordConnectionFailure(uid, error)
+                    mutableTaskSync.value = previous.copy(loading = false, confirmed = false)
+                    mutableState.value = mutableState.value.copy(outgoingSyncIssue = "E2EE_PRIVATE_SYNC_REQUIRED")
+                }
+            } finally {
+                if (loading != null && mutableTaskSync.value === loading)
+                    mutableTaskSync.value = previous.copy(loading = false)
+            }
+        }
+    }
+
     private fun syncPending(conflictPolicy: WorkspacePatch.ConflictPolicy, expectedConflictFingerprint: String? = null,
         inBackground: Boolean = false) {
         val identity = mutableState.value.user ?: return
         if(identity.privateVault){
-            if(inBackground||syncJob?.isActive==true||mutableState.value.requiresSignIn||ru.genesis.calendar.security.NativePrivateProducts.isOffline(CloudAccountSnapshot.scopeFor(identity.uid)))return
-            syncJob=scope.launch{
-                try{ru.genesis.calendar.security.NativePrivateProducts.flush(CloudAccountSnapshot.scopeFor(identity.uid))}
-                catch(error:CancellationException){throw error}
-                catch(_:Exception){mutableState.value=mutableState.value.copy(outgoingSyncIssue="E2EE_PRIVATE_SYNC_REQUIRED")}
-            };return
+            if (!inBackground) syncPrivateTasks(identity.uid, refreshPersonal = false)
+            return
         }
         val accountScope = CloudAccountSnapshot.scopeFor(identity.uid)
-        if (app.workspaceScope != accountScope || mutableState.value.requiresSignIn || syncJob?.isActive == true) return
+        if (connectionRetry.waiting(identity.uid) || app.workspaceScope != accountScope ||
+            mutableState.value.requiresSignIn || syncJob?.isActive == true) return
         if (!client.hasConfirmedOwner(identity.uid)) return
         val generation = client.currentGeneration();val workspaceEpoch=app.workspaceEpoch
         fun currentSyncOwner() {

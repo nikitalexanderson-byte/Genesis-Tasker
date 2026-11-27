@@ -241,6 +241,7 @@ class NativePrivateProductHttpsTest {
             coldUnlock()
             withTimeout(120000){repository.workspace.first{row->row.projects.any{it.id==localProject.id&&it.title==localProject.title}}}
             val privateTask = verifyPrivateTaskEdits(accountScope)
+            verifyPrivateTaskSync(auth, accountScope, privateTask)
             val uiPreferences=ru.genesis.calendar.data.LocalPreferences(app,accountScope)
             val retainedUiOriginal=uiPreferences.backupRaw().toString()
             uiPreferences.set("weatherTemperatureUnit","fahrenheit")
@@ -267,6 +268,7 @@ class NativePrivateProductHttpsTest {
             assertTrue(uiPreferences.pending.first().isEmpty())
             assertEquals(retainedUiOriginal,uiPreferences.backupRaw().toString())
             withTimeout(120000){repository.workspace.first{row->row.projects.any{it.id==localProject.id&&it.title=="EDITED $canary"}}}
+            if (args.getString("genesisPersonalTasksOnly") == "true") return@runBlocking
             for((kind,resource)in listOf("project" to project,"space" to space)){
                 // Only provider delivery is synthetic. Refresh its confirmation
                 // before each new scope; the real five-minute server guard,
@@ -277,7 +279,9 @@ class NativePrivateProductHttpsTest {
                 val sharedOwnerGuard=auth.privateUiOwnerGuard(owner)
                 val bound={check(NativeMigrationUiState.state.value?.id==transfer.id){"E2EE_SOURCE_CAPTURE_CHANGED"};sharedOwnerGuard()}
                 val shared=auth.prepareSharedPrivateMigration(target,material.secret,material.kit,bound)
-                try{withTimeout(1200000){shared.run(material.secret,material.kit,::progress)}}
+                // The retained fixture also migrates and verifies each chunk of a 1.3 MiB attachment.
+                val sharedTimeout = if (verifySharedRecords) 45 * 60_000L else 20 * 60_000L
+                try{withTimeout(sharedTimeout){shared.run(material.secret,material.kit,::progress)}}
                 catch(error:AuthFailure){throw AssertionError("Shared controller HTTP refusal: kind=${error.kind}, status=${error.httpStatus}, retryAfterSeconds=${error.retryAfterSeconds}",error)}
                 finally{auth.closePrivateMigration(shared)}
                 auth.finishSharedPrivateMigration(target);NativeMigrationUiState.close(transfer.id)
@@ -367,6 +371,39 @@ class NativePrivateProductHttpsTest {
         assertNull("Private edits never write to the retired task table", app.database.dao().task(scope, edited.id))
         assertNull(app.database.dao().task(scope, series.id))
         return edited
+    }
+
+    private suspend fun verifyPrivateTaskSync(auth: AuthController, scope: String, task: LocalTask) {
+        val pending = ru.genesis.calendar.data.PrivatePersonalDocuments.observePendingWrites(
+            scope, app.database.dao().observePendingOutbox(scope)
+        )
+        assertTrue("The drawer observes the encrypted edit before acknowledgement", pending.first())
+        withContext(Dispatchers.Main) { auth.syncPending() }
+        withTimeout(120_000) { pending.first { !it } }
+        val remoteDescription = "Confirmed in a second product view"
+        withContext(Dispatchers.IO) {
+            val other = E2eePersonalProduct(NativePrivateProducts.currentAccount(scope))
+            val confirmed = other.load()
+            val rows = confirmed.getJSONArray("tasks")
+            val row = (0 until rows.length()).map(rows::getJSONObject).single { it.getString("id") == task.id }
+            assertTrue(row.getBoolean("done"))
+            row.put("description", remoteDescription)
+            other.stageSnapshot(confirmed)
+            other.flush()
+            assertFalse(other.hasPendingChanges())
+        }
+        assertNotEquals(remoteDescription, app.repository.get(task.id)?.description)
+        // Use the ordinary foreground refresh. A previous flush can still be returning from IO
+        // after its acknowledgement has become visible in the pending flow.
+        withTimeout(120_000) {
+            while (app.repository.get(task.id)?.description != remoteDescription) {
+                withContext(Dispatchers.Main) { auth.refreshIfReady() }
+                delay(250)
+            }
+            auth.taskSync.first { it.scope == scope && it.confirmed && !it.loading }
+        }
+        assertFalse(pending.first())
+        assertNull(auth.state.value.outgoingSyncIssue)
     }
 
     private suspend fun verifySharedMaps(

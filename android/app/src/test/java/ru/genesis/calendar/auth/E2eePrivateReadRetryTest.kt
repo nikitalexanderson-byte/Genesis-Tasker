@@ -56,6 +56,21 @@ class E2eePrivateReadRetryTest {
         assertEquals(1, calls)
     }
 
+    @Test fun periodicSyncReleasesTheWriterWithoutSleepingOnRateLimit() = kotlinx.coroutines.runBlocking {
+        val refusal = AuthFailure(AuthFailure.Kind.RATE_LIMIT, 429, 120)
+        var calls = 0
+        val error = kotlinx.coroutines.withContext(deferPrivateSyncRateWait() + kotlinx.coroutines.Dispatchers.IO) {
+            runCatching {
+                e2eePrivateRequestWithRateRetry("/read", JSONObject(), {}, wait = { fail("Held the edit lock while waiting") }) {
+                    calls++
+                    throw refusal
+                }
+            }.exceptionOrNull()
+        }
+        assertSame(refusal, error)
+        assertEquals(1, calls)
+    }
+
     @Test fun aResponseFromARetiredRequestGenerationIsNotReturned() {
         var current = true
         val error = runCatching {

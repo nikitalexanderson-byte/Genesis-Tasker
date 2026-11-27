@@ -16,6 +16,22 @@ class AccountSyncRetryTest {
         assertFalse(retry.waiting("first"))
     }
 
+    @Test fun serverDeadlineSurvivesManualRefreshAndOtherAccountFailures() {
+        var elapsed = 1_000L
+        val retry = AccountSyncRetry { elapsed }
+        retry.rateLimited("first", 120)
+        elapsed = 5_000
+        retry.rateLimited("first", 2)
+        retry.connectionFailed("first")
+        retry.retryNow("first")
+        retry.rateLimited("second", null)
+        elapsed = 35_000
+        assertFalse(retry.waiting("second"))
+        assertTrue(retry.waiting("first"))
+        elapsed = 121_000
+        assertFalse(retry.waiting("first"))
+    }
+
     @Test fun manualRefreshOrRestoredConnectivityCanRetryImmediately() {
         val retry = AccountSyncRetry { 43_000L }
         retry.connectionFailed("first")

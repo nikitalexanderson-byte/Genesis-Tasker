@@ -25,6 +25,22 @@ internal class E2eePersonalProduct(private val account:E2eeProductAccount){
     private fun validate(value:JSONObject):JSONObject{E2eeKeys.exact(value,setOf("protocol","ownerId","contentRevision","workspace","tasks"));check(value.getInt("protocol")==1&&value.getString("ownerId")==account.ownerId){"E2EE_SCOPE_BINDING_MISMATCH"};E2eeCommands.integer(value.get("contentRevision"),1);workspace(value.getJSONObject("workspace"));tasks(value.getJSONObject("tasks"));return value}
     private fun current():E2eePrivateDocument.Opened{account.requireOpen();val value=requireNotNull(view){"E2EE_PRODUCT_READ_REQUIRED"};check(value.conflict==null){"E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED"};return value}
     @Synchronized fun contentRevision():Long=current().value.getLong("contentRevision")
+    @Synchronized fun hasPendingChanges(): Boolean = current().pending
+
+    /** Refresh an already opened product after its local edits have been acknowledged. */
+    fun refreshConfirmed(): Boolean {
+        val previous = synchronized(this) { current() }
+        if (account.offline || previous.pending) return false
+        // Registry writers are serialized. Reads of the visible task list can continue during network IO.
+        val next = document.load()
+        synchronized(this) {
+            check(current() === previous && next.conflict == null && !next.pending && next.remoteRevision >= previous.remoteRevision) {
+                "E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED"
+            }
+            view = next
+        }
+        return next.remoteRevision != previous.remoteRevision
+    }
     @Synchronized fun load(offline:Boolean=false):JSONObject{
         account.requireOpen()
         try{view=document.load(offline)}catch(error:IllegalStateException){
@@ -53,7 +69,18 @@ internal class E2eePersonalProduct(private val account:E2eeProductAccount){
     }
     @Synchronized fun restoreView():JSONObject{val state=current();val deleted=JSONArray();val rows=state.value.getJSONObject("tasks").getJSONArray("tasks");for(at in 0 until rows.length())if(rows.getJSONObject(at).getBoolean("deleted"))deleted.put(rows.getJSONObject(at).getString("id"));return JSONObject().put("snapshot",snapshot()).put("contentRevision",contentRevision()).put("deletedTaskIds",deleted).put("pending",state.pending)}
     @Synchronized fun restoreSnapshot(input:JSONObject,expectedContentRevision:Long){check(contentRevision()==expectedContentRevision){"E2EE_RESTORE_REVIEW_STALE"};stageSnapshot(input);flush()}
-    @Synchronized fun flush():Long{val previous=current();if(!previous.pending||account.offline)return previous.remoteRevision;document.flush();view=document.load(offline=true)
-        check(view?.pending==false&&view?.value?.toString()==previous.value.toString()){"E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED"};return current().remoteRevision}
+    fun flush(): Long {
+        val previous = synchronized(this) { current() }
+        if (!previous.pending || account.offline) return previous.remoteRevision
+        document.flush()
+        val acknowledged = document.load(offline = true)
+        synchronized(this) {
+            check(current() === previous && !acknowledged.pending && E2eeProductJson.same(acknowledged.value, previous.value)) {
+                "E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED"
+            }
+            view = acknowledged
+            return acknowledged.remoteRevision
+        }
+    }
     override fun toString()="E2eePersonalProduct([redacted])"
 }

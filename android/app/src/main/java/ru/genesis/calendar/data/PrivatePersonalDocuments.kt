@@ -49,6 +49,12 @@ internal object PrivatePersonalDocuments{
     fun <T> observe(scope:String,kind:String,legacy:Flow<T>,decode:(String,Long)->T):Flow<T> =
         NativePrivateProducts.revision.flatMapLatest{if(isProtected(scope))privateView(scope){decode(fragment(NativePrivateProducts.snapshot(scope),kind),NativePrivateProducts.contentRevision(scope))}else legacy}
     @OptIn(ExperimentalCoroutinesApi::class)
+    fun observePendingWrites(scope: String, legacy: Flow<Boolean>): Flow<Boolean> =
+        NativePrivateProducts.revision.flatMapLatest {
+            if (isProtected(scope)) privateView(scope) { NativePrivateProducts.hasPendingPersonalChanges(scope) } else legacy
+        }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun <T> observeSnapshot(scope:String,legacy:Flow<T>,decode:(JSONObject)->T):Flow<T> =
         NativePrivateProducts.revision.flatMapLatest{if(isProtected(scope))privateView(scope){decode(projection(NativePrivateProducts.snapshot(scope)))}else legacy}
     suspend fun <T> mutate(scope:String,kind:String,change:suspend(String,Long)->Pair<String,T>):T=NativePrivateProducts.mutate(scope){snapshot->
