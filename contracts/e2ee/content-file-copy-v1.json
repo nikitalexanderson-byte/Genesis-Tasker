@@ -110,5 +110,37 @@
     "file": "文件",
     "current": "当前版本",
     "version": "版本"
+  },
+  "he": {
+    "download": "שמור את הקובץ הנבחר",
+    "binary": "לגרסה זו אין תצוגה מקדימה של JSON. את הבייטים המקוריים שלה ניתן לשמור כקובץ.",
+    "notice": "הקובץ הנבחר פותר את הצפנה. שמור אותו יוצר עותק לא מוצפן מחוץ ל- GENESIS.",
+    "file": "קובץ",
+    "current": "הגרסה הנוכחית",
+    "version": "Version"
+  },
+  "ar": {
+    "download": "حفظ الملف المختار",
+    "binary": "هذا الإصدار لا يحتوي على مسبقة JSON. يمكن حفظ بايتاتها الأصلية كملف.",
+    "notice": "تم فك تشفير الملف المختار. إن حفظه يخلق نسخة غير مشفرة خارج GENESIS.",
+    "file": "الملف",
+    "current": "النسخة الحالية",
+    "version": "Version"
+  },
+  "ko": {
+    "download": "선택한 파일 저장",
+    "binary": "이 버전은 JSON 미리보기가 없습니다. 원래 바이트는 파일로 저장할 수 있습니다.",
+    "notice": "선택한 파일이 복호화됩니다. 저장하면 GENESIS 외부에 암호화되지 않은 사본이 생성됩니다.",
+    "file": "파일",
+    "current": "현재 버전",
+    "version": "Version"
+  },
+  "nl": {
+    "download": "Geselecteerd bestand opslaan",
+    "binary": "Deze versie heeft geen JSON preview, de originele bytes kunnen worden opgeslagen als een bestand.",
+    "notice": "Het geselecteerde bestand wordt ontsleuteld. Opslaan maakt een niet-versleutelde kopie buiten GENESIS.",
+    "file": "Bestand",
+    "current": "De huidige versie",
+    "version": "Version"
   }
 }

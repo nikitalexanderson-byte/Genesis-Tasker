@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { SharedComment, SharedMember } from "./cloud-sync";
-import { translateText } from "./i18n";
+import { runtimeLocale, translateText } from "./i18n";
 
 export function SharedComments({comments,members,english,canComment,busy,onSubmit,highlightedId="",active:visible=true}:{comments:SharedComment[];members:SharedMember[];english:boolean;canComment:boolean;busy:boolean;onSubmit:(body:string,ids:string[])=>Promise<void>;highlightedId?:string;active?:boolean}) {
   const highlighted = useRef<HTMLElement>(null);
@@ -24,7 +24,7 @@ export function SharedComments({comments,members,english,canComment,busy,onSubmi
     return comment.body.split(new RegExp(`(@(?:${escaped.join("|")})(?![\\p{L}\\p{N}_]))`,"u")).map((part,index)=>names.some(name=>part===`@${name}`) ? <mark key={index}>{part}</mark> : part);
   };
   return <section className="shared-task-comments" aria-labelledby="shared-comments-heading"><h3 id="shared-comments-heading">{english ? "Comments" : "Комментарии"} · {comments.length}</h3>
-    <div className="shared-comment-list">{comments.map(comment=><article key={comment.id} data-comment-id={comment.id} ref={comment.id===highlightedId?highlighted:undefined} tabIndex={-1} className={comment.id===highlightedId?"task-location-highlight":undefined}><header><strong data-no-translate>{comment.authorName}</strong><time dateTime={comment.createdAt}>{new Intl.DateTimeFormat(english ? "en" : "ru",{dateStyle:"short",timeStyle:"short"}).format(new Date(comment.createdAt))}</time></header>{comment.importedAuthorName!==undefined?<small>{translateText('Импортировано. Автор источника')}: <span data-no-translate>{comment.importedAuthorName}</span></small>:null}<p data-no-translate>{renderBody(comment)}</p></article>)}</div>
+    <div className="shared-comment-list">{comments.map(comment=><article key={comment.id} data-comment-id={comment.id} ref={comment.id===highlightedId?highlighted:undefined} tabIndex={-1} className={comment.id===highlightedId?"task-location-highlight":undefined}><header><strong data-no-translate>{comment.authorName}</strong><time dateTime={comment.createdAt}>{new Intl.DateTimeFormat(runtimeLocale(english ? 'en' : undefined),{dateStyle:"short",timeStyle:"short"}).format(new Date(comment.createdAt))}</time></header>{comment.importedAuthorName!==undefined?<small>{translateText('Импортировано. Автор источника')}: <span data-no-translate>{comment.importedAuthorName}</span></small>:null}<p data-no-translate>{renderBody(comment)}</p></article>)}</div>
     {!comments.length ? <p>{english ? "Start the discussion here." : "Обсудите задачу здесь."}</p> : null}
     {canComment ? <form onSubmit={event=>{event.preventDefault();const ids=Object.entries(mentions).filter(([,name])=>new RegExp(`@${name.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}(?![\\p{L}\\p{N}_])`,"u").test(body)).map(([id])=>id);void onSubmit(body,ids).then(()=>{setBody("");setMentions({});setToken(null);}).catch(()=>undefined);}}>
       <label>{english ? "Comment · @ to mention a teammate" : "Комментарий · @ для упоминания коллеги"}<textarea ref={input} value={body} maxLength={5000} required aria-controls={choices.length ? "shared-mention-choices" : undefined} aria-activedescendant={choices.length ? `shared-mention-${active}` : undefined}

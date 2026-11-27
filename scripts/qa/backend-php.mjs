@@ -6,7 +6,8 @@ import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const version = '8.4.27';
-const archiveUrl = `https://windows.php.net/downloads/releases/php-${version}-1-nts-Win32-vs17-x64.zip`;
+const archiveName = `php-${version}-1-nts-Win32-vs17-x64.zip`;
+const archiveUrl = `https://windows.php.net/downloads/releases/archives/${archiveName}`;
 const archiveSha256 = 'dbae154a0a89791f36c3d48e68bae797878333e7d6cb5721e74617de59b63ab7';
 const defaultDirectory = join(tmpdir(), `genesis-full-qa-php-${version}`);
 const requiredExtensions = ['pdo_sqlite', 'sqlite3', 'sodium', 'mbstring', 'openssl', 'curl', 'fileinfo'];

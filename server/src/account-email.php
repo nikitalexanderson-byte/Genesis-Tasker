@@ -38,7 +38,7 @@ function genesisEmailRegistrationLanguage(string $token): string
     if(!preg_match('/\A[a-f0-9]{64}\z/D',$token))return 'ru';
     $q=genesisDb()->prepare('SELECT u.language FROM email_registrations r JOIN users u ON u.id=r.user_id WHERE r.token_hash=?');
     $q->execute([hash('sha256',$token)]);$language=$q->fetchColumn();$q->closeCursor();
-    return in_array($language,['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'],true)?$language:'ru';
+    return in_array($language,['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja','he','ar','ko','nl'],true)?$language:'ru';
 }
 
 /** Account notices are mandatory and independent of optional notification preferences. */
@@ -144,7 +144,7 @@ function genesisAccountEmailMessage(array $job): ?array
         $url=$origin.'/?conversation='.rawurlencode($payload['conversationId']);$action=$copy('Открыть сообщения');
         $footer=$copy('Настройки писем доступны в личном кабинете GENESIS.');
     }
-    return ['to'=>$user['email'],'subject'=>$title,'text'=>$text."\n\n".$url."\n\n".$footer,'html'=>genesisEmailHtml($title,$text,$url,$action,$footer)];
+    return ['to'=>$user['email'],'subject'=>$title,'text'=>$text."\n\n".$url."\n\n".$footer,'html'=>genesisEmailHtml($title,$text,$url,$action,$footer,$language)];
 }
 
 /** A short independent lease keeps SMTP outside SQLite write transactions. */

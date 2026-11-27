@@ -5,7 +5,7 @@ require_once __DIR__ . '/advice-age-access.php';
 
 const GENESIS_ADVICE_CATEGORIES = ['aretology', 'hermetica', 'kourotrophy', 'hestiology', 'aphrodisia', 'psychopompia'];
 const GENESIS_ADVICE_COLLECTIONS = ['aurora', 'philosophers'];
-const GENESIS_ADVICE_LANGUAGES = ['ru', 'en', 'el', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'sr', 'uk', 'zh', 'tr', 'ja'];
+const GENESIS_ADVICE_LANGUAGES = ['ru', 'en', 'el', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'sr', 'uk', 'zh', 'tr', 'ja', 'he', 'ar', 'ko', 'nl'];
 const GENESIS_ADVICE_TOPICS = ['nutrition', 'training', 'recovery', 'discipline', 'clothing', 'attributes', 'cleaning', 'home_order', 'parenting', 'sons', 'heritage', 'fatherhood', 'motherhood'];
 
 function genesisAdviceNotificationPreferences(mixed $value): array

@@ -60,6 +60,12 @@
         </activity>
 
         <activity
+            android:name=".ui.AppLockActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|smallestScreenSize"
+            android:theme="@style/Theme.Genesis.Launcher" />
+
+        <activity
             android:name=".LauncherActivity"
             android:exported="false"
             android:taskAffinity=""

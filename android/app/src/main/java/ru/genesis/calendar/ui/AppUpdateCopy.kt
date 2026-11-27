@@ -5,6 +5,10 @@ internal data class AppUpdateCopy(val title: String, val action: String, val lat
 private val appUpdateCopies = mapOf(
     "ru" to AppUpdateCopy("Вышла новая версия приложения", "Обновить", "Позже"),
     "en" to AppUpdateCopy("A new app version is available", "Update", "Later"),
+    "he" to AppUpdateCopy("גרסה חדשה של היישום זמינה", "עדכון", "מאוחר יותר"),
+    "ar" to AppUpdateCopy("إتاحة نسخة جديدة من التطبيق", "آخر المستجدات", "لاحقا"),
+    "ko" to AppUpdateCopy("새로운 앱 버전을 사용할 수 있습니다", "업데이트", "나중에"),
+    "nl" to AppUpdateCopy("Een nieuwe app versie is beschikbaar", "Bijwerken", "Later"),
     "el" to AppUpdateCopy("Διατίθεται νέα έκδοση της εφαρμογής", "Ενημέρωση", "Αργότερα"),
     "de" to AppUpdateCopy("Eine neue App-Version ist verfügbar", "Aktualisieren", "Später"),
     "fr" to AppUpdateCopy("Une nouvelle version est disponible", "Mettre à jour", "Plus tard"),

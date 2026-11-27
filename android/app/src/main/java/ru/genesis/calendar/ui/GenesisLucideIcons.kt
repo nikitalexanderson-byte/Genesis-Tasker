@@ -128,6 +128,7 @@ internal fun GenesisPageIcon.lucideName(): String = when (this) {
     GenesisPageIcon.SETTINGS_REMINDERS -> "bell"
     GenesisPageIcon.SETTINGS_REGION -> "globe"
     GenesisPageIcon.SETTINGS_ACCOUNT -> "user-round"
+    GenesisPageIcon.SETTINGS_SECURITY -> "lock-keyhole"
     GenesisPageIcon.SETTINGS_LINKS -> "external-link"
 }
 

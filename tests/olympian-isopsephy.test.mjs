@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
@@ -11,7 +12,7 @@ import react from "@vitejs/plugin-react";
 import { calendarModule } from "./helpers/calendar-modules.mjs";
 
 const content = JSON.parse(readFileSync(new URL("../app/olympian-isopsephy.json", import.meta.url), "utf8"));
-const languages = ["ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja"];
+const languages = [...REGION_LANGUAGES];
 const { greekIsopsephy, restorationRoot, restorationTrace } = calendarModule("app/stoicheion-restoration-math.ts");
 const expected = {
   zeus: [612, "Закон, ответственность и общий порядок."],
@@ -64,7 +65,7 @@ test("all 13 Olympian names use Greek letters and verified isopsephy with the ap
   assert.equal(restorationRoot(aphrodite.number), 3);
 });
 
-test("all 14 languages contain every metadata field, deity text and Kronos reference", () => {
+test("all supported languages contain every metadata field, deity text and Kronos reference", () => {
   assert.deepEqual(Object.keys(content.locales).sort(), [...languages].sort());
   for (const language of languages) {
     assert.deepEqual(Object.keys(content.locales[language]).sort(), ["title", "subtitle", "intro", "link", "close", "formula", "root"].sort());
@@ -121,7 +122,7 @@ test("the real spoiler, all 13 dialogs and Stoicheion navigation preserve conten
   await writeFile(file, bundle.output.find(row => row.isEntry).code);
   try {
     const api = await import(pathToFileURL(fileURLToPath(file)).href);
-    await t.test("the Olympian catalog starts as a dialog button at the end of Theokyklos in all 14 languages", () => {
+    await t.test("the Olympian catalog starts as a dialog button at the end of Theokyklos in all supported languages", () => {
       for (const language of languages) {
         const lang = language;
         const html = renderToStaticMarkup(createElement(api.TheokyklosView, {

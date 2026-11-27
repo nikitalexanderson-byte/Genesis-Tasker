@@ -124,5 +124,41 @@
     "ownerReview": "アクセス申請を確認",
     "ownerNotice": "別の手段で受信者のアカウントを確認してください。承認するとメンバー構成が変わります。鍵を受け取るには端末を別途承認する必要があります。",
     "inviter": "招待者"
+  },
+  "he": {
+    "pending": "מחכה לאישור הבעלים",
+    "saved": "הבקשה נשמרה. בעל חייב לאשר גישה, ואז לאשר את המכשיר שלך לפני שניתן יהיה לפתוח נתונים מוצפנים.",
+    "device": "הגישה אושרה. בקש מהבעלים לאשר את המכשיר שלך לפני פתיחת נתונים מוצפנים.",
+    "ownerTitle": "בקשות הזמנות",
+    "ownerReview": "בדיקת בקשת גישה",
+    "ownerNotice": "אישור חשבון המקבל באופן עצמאי. אישור משנה את החברות; מכשיר עדיין זקוק לאישור נפרד כדי לקבל מפתחות.",
+    "inviter": "מוזמנים על ידי"
+  },
+  "ar": {
+    "pending": "في انتظار موافقة المالك",
+    "saved": "طلب محفوظ. يجب على المالك الموافقة على الوصول، ثم الموافقة على جهازك قبل فتح البيانات المشفرة.",
+    "device": "الموافقة على الوصول. طلب من المالك الموافقة على جهازك قبل فتح البيانات المشفرة.",
+    "ownerTitle": "طلبات الدعوة",
+    "ownerReview": "استعراض طلب الاطلاع",
+    "ownerNotice": "التحقق من حساب المتلقي بشكل مستقل: الموافقة تغير العضوية؛ لا يزال الجهاز بحاجة إلى موافقة منفصلة لتلقي المفاتيح.",
+    "inviter": "مدعوون من"
+  },
+  "ko": {
+    "pending": "소유자 승인 기다림",
+    "saved": "요청 저장됨. 암호화된 데이터를 열기 전에 소유자가 액세스를 승인하고 장치를 승인해야 합니다.",
+    "device": "액세스 승인: 암호화된 데이터를 열기 전에 소유자에게 기기 승인을 요청합니다.",
+    "ownerTitle": "초대장 요청",
+    "ownerReview": "액세스 요청 검토",
+    "ownerNotice": "승인은 회원 자격을 변경합니다. 장치는 여전히 키를 받기 위해 별도의 승인이 필요합니다.",
+    "inviter": "다음 사람이 초대했습니다"
+  },
+  "nl": {
+    "pending": "In afwachting van eigenaar goedkeuring",
+    "saved": "Een eigenaar moet de toegang goedkeuren en vervolgens uw apparaat goedkeuren voordat versleutelde gegevens kunnen worden geopend.",
+    "device": "Toegang goedgekeurd: Vraag een eigenaar om uw apparaat goed te keuren voordat u gecodeerde gegevens opent.",
+    "ownerTitle": "Uitnodigingsaanvragen",
+    "ownerReview": "Toegangsverzoek bekijken",
+    "ownerNotice": "Goedkeuring verandert het lidmaatschap; een apparaat moet nog steeds afzonderlijk worden goedgekeurd om sleutels te ontvangen.",
+    "inviter": "Uitgenodigd door"
   }
 }

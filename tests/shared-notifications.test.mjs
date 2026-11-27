@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
@@ -58,15 +59,15 @@ test('shared push receipt pruning retains current IDs beyond transport TTL and r
  const stores=new Map(),expired=crypto.randomUUID(),rows=new Map([[`${origin}__shared-push-receipt/${expired}`,new Response(JSON.stringify({receivedAt:Date.now()-3*86400000}))]]);stores.set('genesis-shared-push-receipts-v1',rows);
  const worker=pushWorker({stores});const ids=Array.from({length:50},()=>crypto.randomUUID());for(const deliveryId of ids)await worker.push({deliveryId});assert.equal(worker.shown.length,50);assert.equal(rows.has(`${origin}__shared-push-receipt/${expired}`),false);for(const id of ids)assert.equal(rows.has(`${origin}__shared-push-receipt/${id}`),true);
 });
-test('every notification setting and API error has translated resources with matching parameters in all14 languages',()=>{
+test('every notification setting and API error has translated resources with matching parameters in all 18 languages',()=>{
  const keys=new Set();for(const relative of['app/SharedNotificationPreferences.tsx','app/notification-settings-model.ts'])for(const match of fs.readFileSync(new URL('../'+relative,import.meta.url),'utf8').matchAll(/"([^"\r\n]*[А-Яа-яЁё][^"\r\n]*)"/g))keys.add(match[1]);
  for(const key of['История уведомлений','Отметить непрочитанным','Уведомление больше недоступно. Проверьте доступ и подключение.','Есть новые уведомления в общих делах GENESIS.','Откройте GENESIS, чтобы посмотреть обновления.'])keys.add(key);
  const parameters=text=>[...text.matchAll(/\{[^{}]+\}/g)].map(match=>match[0]).sort();assert.ok(keys.size>=60);
- for(const locale of['en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja']){
+ for(const locale of REGION_LANGUAGES.filter(code => code !== "ru")){
   const catalog={};for(const relative of[`app/translations.${locale}.json`,`app/translations.${locale}.a.json`,`app/translations.${locale}.b.json`,`app/ui-translations/${locale}.json`]){const file=new URL('../'+relative,import.meta.url);if(fs.existsSync(file))Object.assign(catalog,JSON.parse(fs.readFileSync(file,'utf8')));}
   for(const key of keys){assert.ok(catalog[key],`${locale}: ${key}`);if(!(key==='Недоступно'&&['sr','uk'].includes(locale)))assert.notEqual(catalog[key],key,`${locale}: untranslated ${key}`);assert.deepEqual(parameters(catalog[key]),parameters(key),`${locale}: parameters ${key}`);}
  }
- const server=JSON.parse(fs.readFileSync(new URL('../server/resources/shared-notification-copy.json',import.meta.url),'utf8'));assert.equal(Object.keys(server).length,14);for(const [locale,copy]of Object.entries(server))for(const [key,value]of Object.entries(copy))assert.ok(value&&(locale==='ru'||value!==key));
+ const server=JSON.parse(fs.readFileSync(new URL('../server/resources/shared-notification-copy.json',import.meta.url),'utf8'));assert.equal(Object.keys(server).length,18);for(const [locale,copy]of Object.entries(server))for(const [key,value]of Object.entries(copy))assert.ok(value&&(locale==='ru'||value!==key));
 });
 test('logout clears every account device subscription identifier without clearing language preferences',()=>{
  const entries=new Map([['genesis.shared-push.account-a','synthetic-device-a'],['genesis.shared-push.account-b','synthetic-device-b'],['genesis-language-v1','el']]);const storage={get length(){return entries.size;},key:index=>[...entries.keys()][index]??null,removeItem:key=>entries.delete(key)};

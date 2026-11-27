@@ -547,5 +547,10 @@
   "Выбрать шаблон": "Vorlage auswählen",
   "Ранее сохранённые задачи": "Früher gespeicherte Aufgaben",
   "Доска для «{title}»": "Board für „{title}“",
-  "Перетащите сюда задачи и подпроекты, чтобы оставить их вне досок.": "Ziehen Sie Aufgaben und Unterprojekte hierher, um sie außerhalb der Boards abzulegen."
+  "Перетащите сюда задачи и подпроекты, чтобы оставить их вне досок.": "Ziehen Sie Aufgaben und Unterprojekte hierher, um sie außerhalb der Boards abzulegen.",
+  "Задача «{item}» возвращена в хаос-бокс.": "Die Aufgabe „{item}“ ist wieder in der Chaosbox.",
+  "Список «{item}» возвращён в хаос-бокс.": "Die Liste „{item}“ ist wieder in der Chaosbox.",
+  "Задача «{item}» перемещена в проект «{project}».": "Die Aufgabe „{item}“ wurde in das Projekt „{project}“ verschoben.",
+  "Список «{item}» перемещён в проект «{project}».": "Die Liste „{item}“ wurde in das Projekt „{project}“ verschoben.",
+  "Задача «{item}» перемещена в список «{list}».": "Die Aufgabe „{item}“ wurde in die Liste „{list}“ verschoben."
 }

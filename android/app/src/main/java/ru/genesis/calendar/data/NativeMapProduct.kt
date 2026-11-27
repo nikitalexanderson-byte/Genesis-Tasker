@@ -17,7 +17,7 @@ internal interface NativeMapProduct{
     suspend fun serverVersion(id:String):NativeMapRecord
     suspend fun adoptServer(id:String,access:FeatureAccess)
     suspend fun fork(input:MindmapDocument,access:FeatureAccess):MindmapDocument
-    suspend fun saveLocal(name:String,value:JSONObject?)
+    suspend fun saveLocal(name: String, value: JSONObject?, replacingTaskId: String? = null)
     suspend fun readLocal(name:String):JSONObject?
     suspend fun readView(id:String):JSONObject?
 }
@@ -32,7 +32,9 @@ internal class NativePersonalMapProduct(scope:String,owner:String,override val a
     override suspend fun serverVersion(id:String)=delegate.serverVersion(id)
     override suspend fun adoptServer(id:String,access:FeatureAccess){delegate.adoptServer(id,access)}
     override suspend fun fork(input:MindmapDocument,access:FeatureAccess)=delegate.fork(input,access)
-    override suspend fun saveLocal(name:String,value:JSONObject?){delegate.saveLocal(name,value)}
+    override suspend fun saveLocal(name: String, value: JSONObject?, replacingTaskId: String?) {
+        delegate.saveLocal(name, value, replacingTaskId)
+    }
     override suspend fun readLocal(name:String)=delegate.readLocal(name)
     override suspend fun readView(id:String)=delegate.readView(id)
 }

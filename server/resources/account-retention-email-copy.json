@@ -222,5 +222,69 @@
       "complimentary-elite-inactive": "ELITE を無料で付与されたこのアカウントは、3暦月にわたり利用がない場合の規則により、削除が予定されています。",
       "complimentary-elite-year": "以前に ELITE を無料で付与されたこのアカウントは、確認済みの支払いや寄付がないまま、初回登録から365日の期限を迎えようとしています。"
     }
+  },
+  "he": {
+    "subject": "GENESIS: החשבון מיועד למחיקה",
+    "deadline": "המחיקה תתבצע לכל המוקדם ב־{date} (UTC), ובכל מקרה רק לאחר שיחלוף חודש קלנדרי מלא מהמועד שבו שרת הדואר קיבל הודעה זו למסירה.",
+    "actionsInactive": "כדי לבטל את המחיקה עקב חוסר פעילות, יש להיכנס לחשבון באתר או באפליקציה. גם תרומה שאומתה מגינה על החשבון מפני מחיקה אוטומטית.",
+    "actionsYear": "תרומה או תשלום שאומתו ימנעו את המחיקה. כניסה לחשבון לבדה אינה מבטלת את כלל 365 הימים.",
+    "data": "נתוני החשבון האישיים השמורים בשרת יימחקו. על רשומות משותפות השייכות למשתתפים אחרים ועל גיבויים מוגנים חלים כללי שמירה נפרדים.",
+    "footer": "זו הודעת שירות מחייבת. היא תישלח גם אם ההתראות הושבתו בהגדרות.",
+    "action": "פתיחת GENESIS",
+    "reasons": {
+      "free-unreturned": "חשבון FREE זה מיועד למחיקה לאחר 3 חודשים קלנדריים שבהם לא נעשה בו שימוש נוסף מאז ההרשמה.",
+      "free-inactive": "חשבון FREE זה מיועד למחיקה לפי הכלל החל לאחר 6 חודשים קלנדריים ללא שימוש.",
+      "former-paid-inactive": "החשבון היה בעבר בתשלום וכעת הוא במסלול FREE. הוא מיועד למחיקה לפי הכלל החל לאחר 12 חודשים קלנדריים ללא פעילות.",
+      "complimentary-elite-inactive": "חשבון זה קיבל גישה ל־ELITE ללא תשלום. הוא מיועד למחיקה לפי הכלל החל לאחר 3 חודשים קלנדריים ללא פעילות.",
+      "complimentary-elite-year": "תקופת 365 הימים מאז ההרשמה הראשונה של חשבון זה, שקיבל בעבר ELITE ללא תשלום, עומדת להסתיים בלי שאומתו תשלום או תרומה."
+    }
+  },
+  "ar": {
+    "subject": "GENESIS: إشعار بحذف الحساب في موعد محدد",
+    "deadline": "لن يُحذف الحساب قبل {date} (UTC)، وفي جميع الأحوال لن يُحذف قبل انقضاء شهر تقويمي كامل من وقت قبول خادم البريد هذه الرسالة للتسليم.",
+    "actionsInactive": "لإلغاء حذف الحساب بسبب عدم النشاط، سجّل الدخول إلى حسابك على الموقع أو في التطبيق. ويحمي التبرع الذي تم التحقق منه الحساب أيضًا من الحذف التلقائي.",
+    "actionsYear": "يمنع التبرع المؤكّد أو الدفع المؤكّد حذف الحساب. ولا يكفي تسجيل الدخول وحده لإلغاء تطبيق قاعدة الـ365 يومًا.",
+    "data": "ستُحذف بيانات الحساب الشخصية المخزّنة على الخادم. وتخضع السجلات المشتركة التي تخصّ مشاركين آخرين والنسخ الاحتياطية المحمية لسياسات الاحتفاظ الخاصة بكل منها.",
+    "footer": "هذا إشعار خدمة إلزامي. لا يمكن تعطيله من إعدادات الإشعارات.",
+    "action": "فتح GENESIS",
+    "reasons": {
+      "free-unreturned": "هذا الحساب على خطة FREE مُدرج للحذف لمرور 3 أشهر تقويمية على التسجيل دون أي استخدام لاحق.",
+      "free-inactive": "هذا الحساب على خطة FREE مُدرج للحذف بموجب قاعدة عدم الاستخدام لمدة 6 أشهر تقويمية.",
+      "former-paid-inactive": "كان هذا الحساب مدفوعًا وهو الآن على خطة FREE. وقد أُدرج للحذف بموجب قاعدة عدم النشاط لمدة 12 شهرًا تقويميًا.",
+      "complimentary-elite-inactive": "مُنح هذا الحساب خطة ELITE مجانًا. وهو مُدرج للحذف بموجب قاعدة عدم النشاط لمدة 3 أشهر تقويمية.",
+      "complimentary-elite-year": "توشك فترة الـ365 يومًا منذ التسجيل الأول لهذا الحساب، الذي مُنح ELITE مجانًا في السابق، على الانتهاء من دون التحقق من أي دفعة أو تبرع."
+    }
+  },
+  "ko": {
+    "subject": "GENESIS 계정 삭제 예정 안내",
+    "deadline": "삭제는 {date}(UTC) 이후에 이루어집니다. 어떤 경우에도 메일 서버가 이 이메일의 발송을 접수한 시점에서 달력 기준 한 달이 온전히 지나기 전에는 삭제하지 않습니다.",
+    "actionsInactive": "장기 미사용으로 인한 삭제를 취소하려면 웹사이트나 앱에서 계정에 로그인하세요. 기부 내역이 확인된 계정도 자동 삭제 대상에서 제외됩니다.",
+    "actionsYear": "기부 또는 결제 내역이 확인되면 계정이 삭제되지 않습니다. 로그인만으로는 이 365일 규칙이 해제되지 않습니다.",
+    "data": "서버에 저장된 계정의 개인 데이터가 삭제됩니다. 다른 참여자 소유의 공유 기록과 보호된 백업에는 각각 별도의 보관 정책이 적용됩니다.",
+    "footer": "필수 서비스 안내입니다. 알림 설정에서 이 안내를 끌 수 없습니다.",
+    "action": "GENESIS 열기",
+    "reasons": {
+      "free-unreturned": "가입 후 달력 기준 3개월간 추가로 사용하지 않아 이 FREE 계정은 삭제될 예정입니다.",
+      "free-inactive": "이 FREE 계정은 달력 기준 6개월간 사용하지 않은 계정에 적용되는 규정에 따라 삭제될 예정입니다.",
+      "former-paid-inactive": "유료 요금제를 사용했던 이 계정은 현재 FREE 요금제입니다. 달력 기준 12개월간 활동이 없는 계정에 적용되는 규정에 따라 삭제될 예정입니다.",
+      "complimentary-elite-inactive": "ELITE 이용 권한을 무료로 받은 이 계정은 달력 기준 3개월간 활동이 없는 계정에 적용되는 규정에 따라 삭제될 예정입니다.",
+      "complimentary-elite-year": "이전에 ELITE 이용 권한을 무료로 받은 이 계정은 최초 가입일로부터 365일이 되는 기간이 끝나갑니다. 확인된 결제나 기부 내역이 없습니다."
+    }
+  },
+  "nl": {
+    "subject": "GENESIS: geplande verwijdering van je account",
+    "deadline": "Je account wordt op zijn vroegst op {date} (UTC) verwijderd. Er verstrijkt altijd minstens één volledige kalendermaand nadat de mailserver dit bericht voor bezorging heeft aangenomen.",
+    "actionsInactive": "Log op de website of in de app in op je account om verwijdering wegens inactiviteit te annuleren. Ook een geverifieerde donatie beschermt je account tegen automatische verwijdering.",
+    "actionsYear": "Een bevestigde donatie of betaling voorkomt deze verwijdering. Alleen inloggen is niet voldoende om de 365-dagenregel buiten werking te stellen.",
+    "data": "De persoonlijke accountgegevens op de server worden verwijderd. Voor gedeelde gegevens van andere deelnemers en voor beveiligde back-ups gelden afzonderlijke bewaartermijnen en -regels.",
+    "footer": "Dit is een verplicht servicebericht. Je kunt het niet uitschakelen via je meldingsvoorkeuren.",
+    "action": "GENESIS openen",
+    "reasons": {
+      "free-unreturned": "Dit FREE-account staat ingepland voor verwijdering omdat het na registratie 3 kalendermaanden niet meer is gebruikt.",
+      "free-inactive": "Dit FREE-account staat ingepland voor verwijdering volgens de regel voor 6 kalendermaanden zonder gebruik.",
+      "former-paid-inactive": "Dit account had eerder betaalde toegang en gebruikt nu FREE. Het staat ingepland voor verwijdering volgens de regel voor 12 kalendermaanden inactiviteit.",
+      "complimentary-elite-inactive": "Dit account kreeg gratis toegang tot ELITE. Het staat ingepland voor verwijdering volgens de regel voor 3 kalendermaanden inactiviteit.",
+      "complimentary-elite-year": "De periode van 365 dagen sinds de eerste registratie van dit account, dat eerder gratis ELITE kreeg, loopt af zonder geverifieerde betaling of donatie."
+    }
   }
 }

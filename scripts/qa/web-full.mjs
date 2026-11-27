@@ -11,7 +11,7 @@ import { verifySharedInbox } from './web-shared-inbox.mjs';
 import { sanitizeTraceFile } from './trace-sanitize.mjs';
 import { verifyTrialWeb317 } from './web-trials317.mjs';
 import { runHeaderStartup } from './web-header-startup.mjs';
-import { chooseDisplayCalendar } from './display-calendar-control.mjs';
+import { chooseDisplayCalendar, verifyCalendarDuringSessionRefresh } from './display-calendar-control.mjs';
 import { verifyLatestMindmapSave } from './web-mindmap-save.mjs';
 import {verifyPublicRegions} from './web-public-region.mjs';
 
@@ -392,6 +392,12 @@ try {
           await snapshot(`calendar-${mode}`);
           await page.getByRole('tab', { name: 'Месяц', exact: true }).click();
           await month.waitFor();
+        });
+      }
+      if (tier === 'premium4life') {
+        await check('calendar-during-session-refresh', async () => {
+          await verifyCalendarDuringSessionRefresh(page);
+          await snapshot('calendar-during-session-refresh');
         });
       }
       await check('physis-access', async () => {

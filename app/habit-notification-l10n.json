@@ -12,7 +12,63 @@
       "uk": "Приділіть трохи часу для {subject}. Почніть у власному темпі.",
       "zh": "留一点时间给{subject}。按照自己的节奏开始。",
       "tr": "{subject} için biraz zaman ayırın. Kendi hızınızda başlayın.",
-      "ja": "{subject}に少し時間を取りましょう。自分のペースで始めてください。"
+      "ja": "{subject}に少し時間を取りましょう。自分のペースで始めてください。",
+      "he": [
+        "אפשר לחזור לרגע אל {subject} ולהתחיל בקצב שלך.",
+        "הגיע הזמן להקדיש קצת תשומת לב ל־{subject}. די בצעד קטן אחד.",
+        "זה הזמן שבחרת ל־{subject}. אין צורך למהר.",
+        "אפשר לתת ל־{subject} להיות רגע של שקט בתוך היום.",
+        "את הזמן הזה שמרת ל־{subject}. אפשר להתחיל בקטן.",
+        "אפשר לחזור ל־{subject} כשיתאים לך. הקצב שלך חשוב יותר מהמהירות.",
+        "כדאי לפנות מעט מקום ל־{subject}, לנשום עמוק ולעשות את הצעד הראשון.",
+        "גם היום יש מקום ל־{subject}. ברוך כלפי עצמך, צעד אחר צעד.",
+        "{subject} יכול להתחיל בשתי דקות שקטות.",
+        "אפשר להתפנות ל־{subject} בלי לצפות שהכול יהיה מושלם.",
+        "הגיע הזמן ל־{subject}. כדאי להתחיל בצעד שנוח לך.",
+        "דבר קטן שאפשר לעשות היום למען עצמך הוא {subject}."
+      ],
+      "ar": [
+        "يمكنك تخصيص لحظة لـ{subject} والبدء بالوتيرة التي تناسبك.",
+        "حان الوقت لمنح {subject} قليلًا من الاهتمام. تكفي خطوة صغيرة واحدة.",
+        "حان الموعد الذي اخترته لـ{subject}. لا داعي للعجلة.",
+        "لتكن {subject} استراحة هادئة في يومك.",
+        "لقد خصّصت هذا الوقت لـ{subject}. يمكنك البدء بخطوة صغيرة.",
+        "عُد إلى {subject} حين تكون مستعدًا. وتيرتك أهمّ من الإسراع.",
+        "أفسح قليلًا من المجال لـ{subject}. خذ نفسًا واخطُ الخطوة الأولى.",
+        "في يومك متّسع لـ{subject}. ارفق بنفسك وخذ الأمور خطوة خطوة.",
+        "قد تكفي دقيقتان هادئتان للبدء في {subject}.",
+        "اقضِ بعض الوقت مع {subject} من دون أن تطالب نفسك بالكمال.",
+        "حان وقت {subject}. اختر خطوة أولى تناسبك.",
+        "لفتة صغيرة تعتني بها بنفسك اليوم: {subject}."
+      ],
+      "ko": [
+        "잠시 시간을 내어 {subject}에 돌아가 보세요. 자신만의 속도로 시작하면 돼요.",
+        "{subject}에 조금만 마음을 써 보세요. 작은 한 걸음이면 충분해요.",
+        "{subject} 활동을 위해 정해 둔 시간이에요. 서두르지 않아도 돼요.",
+        "{subject} 활동과 함께 오늘 하루 잠깐 쉬어 가세요.",
+        "{subject} 활동을 위해 비워 둔 시간이에요. 작게 시작해 보세요.",
+        "준비가 되면 {subject}에 돌아와도 돼요. 서두르는 것보다 자신의 속도가 중요해요.",
+        "{subject} 활동을 위한 여유를 조금 만들어 보세요. 숨을 고르고 첫걸음을 내디뎌요.",
+        "오늘도 {subject} 활동을 위한 자리가 있어요. 자신에게 다정하게, 한 번에 하나씩 해 보세요.",
+        "차분한 몇 분이면 {subject} 활동을 시작할 수 있어요.",
+        "다 잘해야 한다는 생각은 내려두고 {subject} 활동과 잠시 시간을 보내 보세요.",
+        "{subject} 활동을 시작할 시간이에요. 부담 없는 첫걸음을 골라 보세요.",
+        "오늘 나를 돌보는 작은 실천은 바로 {subject} 활동이에요."
+      ],
+      "nl": [
+        "Neem even de tijd voor {subject}. Begin in je eigen tempo.",
+        "Geef {subject} wat aandacht. Eén kleine stap is genoeg.",
+        "Het is de tijd die je zelf voor {subject} hebt gekozen. Er is geen haast.",
+        "Laat {subject} vandaag een rustig moment zijn.",
+        "Deze tijd had je vrijgehouden voor {subject}. Je kunt klein beginnen.",
+        "Keer terug naar {subject} zodra je eraan toe bent. Je eigen tempo is belangrijker dan haast.",
+        "Maak wat ruimte voor {subject}. Haal adem en zet de eerste stap.",
+        "Er is vandaag ruimte voor {subject}. Wees mild voor jezelf en doe één ding tegelijk.",
+        "Een paar rustige minuten kunnen het begin zijn van {subject}.",
+        "Besteed wat tijd aan {subject} zonder dat alles perfect hoeft te zijn.",
+        "Het is tijd voor {subject}. Kies een eerste stap die prettig voelt.",
+        "Iets kleins om vandaag voor jezelf te doen is {subject}."
+      ]
     },
     "goal": {
       "el": "Απομένουν {count} μικρά βήματα για τον σημερινό σας στόχο.",
@@ -26,7 +82,47 @@
       "uk": "До сьогоднішньої мети залишилося {count} невеликих кроків.",
       "zh": "距离今天的目标还差{count}个小步骤。",
       "tr": "Bugünkü hedefinize {count} küçük adım kaldı.",
-      "ja": "今日の目標まで、あと{count}歩です。"
+      "ja": "今日の目標まで、あと{count}歩です。",
+      "he": [
+        "מספר הפעולות שנותרו עד ליעד שבחרת: {count}. אפשר להתקדם בהדרגה.",
+        "גם היום יש מקום לעוד כמה צעדים קטנים. מספרם: {count}.",
+        "אפשר להשלים את תרגולי היום בנחת. נותרו: {count}.",
+        "כבר התחלת את היום. מספר הפעולות שנותרו כדי להגיע ליעד שבחרת: {count}.",
+        "כדאי להשאיר גם רגע לעצמך. עד ליעד נותרו: {count}.",
+        "אין צורך לרדוף אחרי השלמות. מספר הצעדים עד ליעד שבחרת: {count}.",
+        "אפשר לסיים את היום בקצב שלך. מספר הצעדים שעוד אפשר לעשות: {count}.",
+        "אפשר לחזור למה שבחרת למען עצמך. מספר הפעולות שנותרו: {count}."
+      ],
+      "ar": [
+        "عدد الخطوات المتبقية لبلوغ هدفك: {count}. يمكنك التقدّم على مهل.",
+        "ما زال في يومك متّسع لخطوات صغيرة عددها {count}.",
+        "يمكنك إكمال ممارسات اليوم بهدوء. العدد المتبقي: {count}.",
+        "لقد بدأت يومك بالفعل. عدد الخطوات المتبقية لبلوغ هدفك: {count}.",
+        "خصّص لنفسك بعض الاهتمام أيضًا. المتبقي لبلوغ الهدف: {count}.",
+        "لا حاجة إلى سباق نحو الكمال. عدد الخطوات التي تفصلك عن هدفك: {count}.",
+        "اختتم يومك بالوتيرة التي تناسبك. ما زال بإمكانك التقدّم، وعدد الخطوات المتاحة: {count}.",
+        "عُد إلى ما اخترته لنفسك. عدد الخطوات المتبقية: {count}."
+      ],
+      "ko": [
+        "선택한 목표까지 {count}번의 실천이 남았어요. 조금씩 나아가도 돼요.",
+        "오늘 하루에는 작은 걸음을 {count}번 더 내디딜 여유가 있어요.",
+        "오늘의 실천은 차분히 마무리해도 돼요. 남은 횟수는 {count}회예요.",
+        "이미 하루의 첫걸음을 뗐어요. {count}번 더 실천하면 정한 목표에 닿아요.",
+        "자신을 위한 여유도 조금 남겨 두세요. 목표까지 {count}회 남았어요.",
+        "완벽을 좇지 않아도 돼요. 정한 이정표까지 {count}걸음 남았어요.",
+        "자신의 속도로 하루를 마무리하세요. 아직 {count}걸음을 더 내디딜 수 있어요.",
+        "스스로 선택한 일로 돌아가 보세요. 남은 실천은 {count}회예요."
+      ],
+      "nl": [
+        "Doe rustig aan. Aantal stappen tot je gekozen doel: {count}.",
+        "Je hebt vandaag nog ruimte voor een paar kleine stappen. Aantal: {count}.",
+        "Rond je oefeningen van vandaag rustig af. Nog te doen: {count}.",
+        "Je bent al begonnen. Aantal acties dat je nog van je gekozen doel scheidt: {count}.",
+        "Houd ook wat aandacht voor jezelf over. Nog te doen voor je doel: {count}.",
+        "Je hoeft niet naar perfectie te streven. Aantal stappen tot je gekozen doel: {count}.",
+        "Sluit de dag af in je eigen tempo. Aantal stappen waar nog ruimte voor is: {count}.",
+        "Pak weer op wat je voor jezelf hebt gekozen. Nog te doen: {count}."
+      ]
     }
   },
   "heroic": {
@@ -42,7 +138,63 @@
       "uk": "Ваш наступний крок — {subject}. Почніть зараз.",
       "zh": "下一步是{subject}。现在就开始吧。",
       "tr": "Bir sonraki adımınız {subject}. Şimdi başlayın.",
-      "ja": "次の一歩は{subject}です。今、始めましょう。"
+      "ja": "次の一歩は{subject}です。今、始めましょう。",
+      "he": [
+        "{subject} מחכה לצעד שלך. זה הזמן לפעול ולבסס את דרכך.",
+        "הגיעה השעה ל־{subject}. זה הרגע להפוך כוונה להישג.",
+        "היעד של היום הוא {subject}. עכשיו הזמן לצאת לקראתו.",
+        "בחרת ב־{subject}. עכשיו תורך לפעול.",
+        "פעולה אחת משנה את מהלך היום. אפשר להתחיל ב־{subject}.",
+        "{subject} הוא הצעד הבא שלך בדרך למיומנות. כדאי להמשיך בכיוון הזה.",
+        "הגיע הזמן לממש את {subject} ולהפוך החלטה למעשה.",
+        "דרך נבנית ממעשים. היום ממשיכים בה עם {subject}.",
+        "כדי להתחיל ב־{subject} אין צורך ברגע מושלם. די בצעד הראשון שלך.",
+        "האתגר של {subject} מחכה לך. הכוח גדל תוך כדי עשייה.",
+        "הגיעה השעה להניף את דגל החזון שלך. המשימה שעומדת לפניך היא {subject}.",
+        "{subject} הוא עוד הישג בדרך שלך. זה הזמן להתחיל."
+      ],
+      "ar": [
+        "ينتظر {subject} أن تبادر. اخطُ خطوة ترسّخ بها مسارك.",
+        "حانت ساعة {subject}. حوّل النية إلى إنجاز.",
+        "محطّتك اليوم هي {subject}. تقدّم نحوها.",
+        "لقد اخترت {subject}. والآن جاء دورك، فبادر.",
+        "فعل واحد يغيّر مجرى اليوم. ابدأ بـ{subject}.",
+        "{subject} خطوتك التالية نحو الإتقان. اثبُت على مسارك.",
+        "حان وقت تحقيق {subject}. اجعل قرارك فعلًا.",
+        "بالأفعال يُبنى الطريق. واليوم تواصله مع {subject}.",
+        "لا يتطلّب {subject} لحظة مثالية، بل خطوتك الأولى.",
+        "اقبل تحدّي {subject}. تنمو قوّتك حين تبادر إلى الفعل.",
+        "حان وقت رفع راية ما تطمح إليه. مهمّتك الآن هي {subject}.",
+        "{subject} إنجاز آخر في مسيرتك. انطلق."
+      ],
+      "ko": [
+        "{subject}에 나설 때입니다. 한 걸음을 내디뎌 가는 길을 굳히세요.",
+        "{subject}의 시간이 왔습니다. 마음먹은 일을 성취로 바꾸세요.",
+        "오늘의 이정표는 {subject}입니다. 그쪽으로 나아가세요.",
+        "{subject} 활동을 선택한 건 바로 당신입니다. 이제 행동할 차례입니다.",
+        "단 한 번의 실천이 하루의 흐름을 바꿉니다. {subject}부터 시작하세요.",
+        "숙련을 향한 다음 걸음은 {subject}입니다. 방향을 지키세요.",
+        "{subject} 활동을 실현할 때입니다. 결심을 행동으로 옮기세요.",
+        "길은 행동으로 만들어집니다. 오늘은 {subject} 활동으로 그 길을 이어 가세요.",
+        "{subject}에 완벽한 순간은 필요하지 않습니다. 필요한 것은 당신의 첫걸음입니다.",
+        "{subject} 활동이라는 도전을 받아들이세요. 행동하는 곳에서 힘은 자랍니다.",
+        "뜻을 담은 깃발을 올릴 때입니다. 지금 해야 할 일은 {subject}입니다.",
+        "{subject} 활동은 당신의 길에 더해질 또 하나의 성취입니다. 시작하세요."
+      ],
+      "nl": [
+        "{subject} wacht tot je in actie komt. Zet die stap en versterk je koers.",
+        "Het uur voor {subject} is aangebroken. Zet je voornemen om in een prestatie.",
+        "Je mijlpaal voor vandaag is {subject}. Ga erop af.",
+        "Je koos voor {subject}. Nu ben jij aan zet.",
+        "Eén daad kan de loop van je dag veranderen. Begin met {subject}.",
+        "{subject} is je volgende stap naar meesterschap. Houd koers.",
+        "Het is tijd om {subject} waar te maken. Zet je besluit om in daden.",
+        "Een weg ontstaat door wat je doet. Vandaag ga je verder met {subject}.",
+        "Voor {subject} heb je geen perfect moment nodig. Alleen je eerste stap.",
+        "Ga de uitdaging van {subject} aan. Kracht groeit waar je in actie komt.",
+        "Hijs de vlag van je voornemen. Je opdracht is nu {subject}.",
+        "{subject} wordt weer een mijlpaal op je weg. Begin."
+      ]
     },
     "goal": {
       "el": "Απομένουν {count} βήματα για τον σημερινό στόχο. Συνεχίστε.",
@@ -56,7 +208,47 @@
       "uk": "До сьогоднішньої мети залишилося {count} кроків. Рухайтеся далі.",
       "zh": "距离今天的目标还有{count}步。继续前进。",
       "tr": "Bugünkü hedefe {count} adım kaldı. Devam edin.",
-      "ja": "今日の目標まで、あと{count}歩。進み続けましょう。"
+      "ja": "今日の目標まで、あと{count}歩。進み続けましょう。",
+      "he": [
+        "מספר הפעולות שנותרו עד ליעד של היום: {count}. זה הזמן להשלים את מה שהתחלת.",
+        "הדרך של היום עוד דורשת כמה צעדים. נותרו {count}. כדאי להמשיך באותו כיוון.",
+        "החזון שלך כמעט התגשם. מספר הפעולות שנותרו עד ליעד: {count}.",
+        "הגיע הזמן לסיים. מספר הצעדים שעוד נשארו לך: {count}.",
+        "היום עוד אפשר להגיע להישגים. מספר הפעולות עד ליעד הבא: {count}.",
+        "עוד מעשה יחזק את הקצב של היום. עד ליעד נותרו: {count}.",
+        "אפשר להפוך את התוכנית של היום לתוצאה ממשית. מספר הצעדים שנותרו: {count}.",
+        "קו הסיום כבר נראה. מספר הפעולות שנותרו להשלמת השלב: {count}."
+      ],
+      "ar": [
+        "عدد الخطوات المتبقية لبلوغ محطّة اليوم: {count}. أتمم ما بدأت.",
+        "ما زالت أمامك خطوات على طريق اليوم، وعددها {count}. اثبُت على المسار.",
+        "أوشكت فكرتك أن تصبح واقعًا. عدد الخطوات الباقية لبلوغ الهدف: {count}.",
+        "حان وقت إتمام المهمة. امضِ في الخطوات المتبقية، وعددها {count}.",
+        "ما زال في اليوم مجال للإنجاز. عدد الخطوات حتى محطّتك التالية: {count}.",
+        "عزّز إيقاع يومك بخطوة عملية. المتبقي حتى الهدف: {count}.",
+        "حوّل خطّة اليوم إلى نتيجة ملموسة. عدد الخطوات المتبقية: {count}.",
+        "خطّ النهاية أمامك. أتمم هذه المرحلة بإكمال ما بقي من خطوات، وعددها {count}."
+      ],
+      "ko": [
+        "오늘의 이정표까지 {count}번의 실천이 남았습니다. 시작한 일을 끝맺으세요.",
+        "오늘 걸어갈 길이 {count}걸음 남았습니다. 방향을 지키세요.",
+        "계획이 거의 이루어졌습니다. {count}번 더 실천하면 목표에 닿습니다.",
+        "이제 마무리할 때입니다. 남은 {count}걸음을 내디디세요.",
+        "오늘은 아직 성취할 기회가 있습니다. 다음 이정표까지 {count}번 실천하세요.",
+        "행동으로 오늘의 흐름을 다지세요. 목표까지 {count}회 남았습니다.",
+        "오늘의 계획을 결과로 바꾸세요. {count}걸음 남았습니다.",
+        "결승선이 보입니다. {count}번 더 실천해 이 단계를 마무리하세요."
+      ],
+      "nl": [
+        "Maak af waar je aan begon. Aantal acties tot de mijlpaal van vandaag: {count}.",
+        "Blijf op koers. Aantal stappen dat je vandaag nog te zetten hebt: {count}.",
+        "Je bent er bijna. Aantal acties tot je doel: {count}.",
+        "Het is tijd om het af te maken. Aantal resterende stappen: {count}.",
+        "Er valt vandaag nog iets te bereiken. Aantal acties tot je volgende mijlpaal: {count}.",
+        "Houd het ritme van vandaag vast door iets te doen. Nog te gaan tot je doel: {count}.",
+        "Zet het plan van vandaag om in resultaat. Nog te zetten stappen: {count}.",
+        "De eindstreep is in zicht. Aantal acties om deze etappe af te ronden: {count}."
+      ]
     }
   },
   "ironic": {
@@ -72,7 +264,63 @@
       "uk": "{subject} досі чекає. Почнемо?",
       "zh": "{subject}还在等你。开始吗？",
       "tr": "{subject} hâlâ bekliyor. Başlayalım mı?",
-      "ja": "{subject}がまだ待っています。始めますか？"
+      "ja": "{subject}がまだ待っています。始めますか？",
+      "he": [
+        "{subject} כבר הרגיש בחסרונך. נקרא לזה חימום?",
+        "{subject} עדיין בתוכנית. איכשהו, זה כנראה לא יקרה מעצמו.",
+        "התזכורת על {subject} קצרה יותר מתירוץ מוצלח.",
+        "חיפשנו. ל־{subject} אין כפתור ״לביצוע עצמי״.",
+        "{subject} מבקש דקה. את ארבעים הדקות שלו הפיד כבר קיבל.",
+        "האני העתידי שלך כבר אישר את {subject}. עכשיו רק צריך לשכנע את האני של היום.",
+        "{subject} לא דוחק בך. הוא פשוט בוהה בשעון במבט רב־משמעות.",
+        "הגיע הזמן ל־{subject}. את התירוץ ״אתחיל ביום שני״ מקבלים היום רק בכתב.",
+        "{subject} מחכה. הרי אין לו שום דבר מעניין יותר לעשות מאשר לחכות לך.",
+        "אפשר להתחיל ב־{subject}. על ההכנות הדרמטיות מותר לדלג.",
+        "{subject} מזמין אותך לחזור למציאות. לפעמים גם שם די מעניין.",
+        "הגיע הזמן ל־{subject}. את התירוצים נשמור לספר הזיכרונות."
+      ],
+      "ar": [
+        "يبدو أنّ {subject} لاحظ غيابك. هل نسمّي ذلك إحماءً؟",
+        "ما زال {subject} على الجدول. ويبدو أنّه لن يُنجز من تلقاء نفسه.",
+        "التذكير بـ{subject} أقصر من عذر مُتقن.",
+        "لا يوجد في {subject} زرّ «أنجِز نفسك». تحقّقنا من ذلك.",
+        "يطلب {subject} دقيقة واحدة. أمّا موجز الأخبار فقد أخذ دقائقه الأربعين بالفعل.",
+        "وافقت نسختك المستقبلية على {subject}. بقي إقناع نسختك الحالية.",
+        "لا يستعجلك {subject}. إنّه يكتفي بإلقاء نظرات معبّرة جدًا على الساعة.",
+        "حان وقت {subject}. أمّا «سأبدأ يوم الاثنين» فلا تُقبل اليوم إلّا خطّيًا.",
+        "ينتظرك {subject}. ويبدو أنّه لا يجد ما هو أمتع من انتظارك.",
+        "ابدأ بـ{subject}. يمكنك تجاوز المقدّمات الدرامية.",
+        "يدعوك {subject} إلى العودة للواقع. حتى هناك ما يثير الاهتمام أحيانًا.",
+        "حان وقت {subject}. لنحتفظ بالأعذار لكتاب المذكّرات."
+      ],
+      "ko": [
+        "{subject}도 자리를 비운 걸 눈치챘네요. 준비 운동이었다고 할까요?",
+        "{subject} 활동은 여전히 계획에 있어요. 저절로 끝나지는 않을 모양이네요.",
+        "{subject} 알림은 그럴듯한 핑계보다 짧아요.",
+        "{subject}에는 ‘알아서 끝내기’ 버튼이 없어요. 확인해 봤거든요.",
+        "{subject}에 딱 1분만 내주세요. 뉴스 피드에는 벌써 40분이나 줬잖아요.",
+        "미래의 나는 이미 {subject}에 찬성했어요. 이제 현재의 나만 설득하면 되겠네요.",
+        "{subject} 활동은 재촉하지 않아요. 그저 아주 의미심장하게 시계를 볼 뿐이에요.",
+        "{subject} 시간이에요. 오늘부터 ‘월요일에 시작할게요’는 서면으로만 받습니다.",
+        "{subject} 활동이 기다리고 있어요. 당신을 기다리는 것보다 재미있는 일이 없나 봐요.",
+        "{subject}부터 시작해 보세요. 거창한 준비 장면은 건너뛰어도 돼요.",
+        "{subject} 활동이 현실로 초대하네요. 거기도 가끔은 꽤 재미있어요.",
+        "{subject} 시간이에요. 핑계는 회고록에 쓰기로 해요."
+      ],
+      "nl": [
+        "{subject} heeft je gemist. Zullen we het een warming-up noemen?",
+        "{subject} staat nog steeds op de planning. Blijkbaar gaat het niet vanzelf.",
+        "Deze herinnering aan {subject} is korter dan een goed excuus.",
+        "{subject} heeft geen knop ‘doe het zelf maar’. We hebben het gecontroleerd.",
+        "{subject} vraagt één minuutje. Je nieuwsfeed heeft er al veertig gekregen.",
+        "Je toekomstige ik heeft {subject} goedgekeurd. Nu je huidige ik nog.",
+        "{subject} jaagt je niet op. Het kijkt alleen héél nadrukkelijk op de klok.",
+        "Het is tijd voor {subject}. ‘Ik begin maandag’ nemen we vandaag alleen schriftelijk aan.",
+        "{subject} wacht. Het heeft blijkbaar niets beters te doen dan op jou te wachten.",
+        "Begin met {subject}. De dramatische aanloop mag je overslaan.",
+        "{subject} nodigt je uit om terug te keren naar de werkelijkheid. Ook daar is het soms best interessant.",
+        "Het is tijd voor {subject}. De excuses bewaren we voor je memoires."
+      ]
     },
     "goal": {
       "el": "Ο στόχος δεν θα ολοκληρωθεί μόνος του. Απομένουν {count} βήματα.",
@@ -86,7 +334,47 @@
       "uk": "Мета сама себе не досягне. Залишилося {count} кроків.",
       "zh": "目标不会自己完成。还差{count}步。",
       "tr": "Hedef kendiliğinden tamamlanmaz. {count} adım kaldı.",
-      "ja": "目標はひとりでに達成されません。あと{count}歩です。"
+      "ja": "目標はひとりでに達成されません。あと{count}歩です。",
+      "he": [
+        "היעד היומי עדיין מחכה. נראה שיש לו שפע של סבלנות. נותרו: {count}.",
+        "התוכנית לא התאדתה. בדקנו. מספר הפעולות שנותרו: {count}.",
+        "האני העתידי שלך מבקש לסיים עוד כמה דברים. כמה? {count}. הוא מבקש בנימוס רב. בינתיים.",
+        "מספר הפעולות שנותרו עד ליעד: {count}. זה עדיין מהיר יותר מלדחות אותן.",
+        "מספר הצעדים שנותרו: {count}. אחר כך אפשר לסגור בטקס חגיגי את התוכנית היומית.",
+        "רשימת המשימות לא תחמיא לעצמה. כדאי לתת לה סיבה. מספר הפעולות שנותרו: {count}.",
+        "ליום הזה נותרה עוד קצת שאפתנות. בדיוק כמספר הפעולות שנותרו: {count}.",
+        "התוכנית מוכנה לסוף טוב. מספר הפעולות שעוד חסרות מצד הגיבור הראשי: {count}."
+      ],
+      "ar": [
+        "هدفك اليومي ما زال ينتظر. ويبدو أنّ صبره طويل. المتبقي: {count}.",
+        "لم تتبخّر الخطّة. لقد تحقّقنا. عدد الخطوات المتبقية: {count}.",
+        "نسختك المستقبلية تطلب منك إنهاء بعض الأمور. كم بقي؟ {count}. الطلب في غاية اللطف. حتى الآن.",
+        "عدد الخطوات المتبقية حتى الهدف: {count}. هذا أسرع من التأجيل على أيّ حال.",
+        "عدد الخطوات المتبقية: {count}. بعدها يمكنك اختتام خطّة اليوم بكلّ مراسم الاحتفال.",
+        "قائمة المهام لن تثني على نفسها. أعطها سببًا لذلك. عدد الخطوات المتبقية: {count}.",
+        "ما زال لليوم شيء من الطموح. يكفي بالضبط لهذا العدد من الخطوات: {count}.",
+        "الخطّة جاهزة لنهاية سعيدة. عدد الأفعال التي لا تزال تنتظرها من بطل القصّة: {count}."
+      ],
+      "ko": [
+        "오늘의 목표가 아직 기다려요. 인내심이 대단한 모양이네요. 남은 횟수는 {count}회예요.",
+        "계획은 증발하지 않았어요. 확인해 봤거든요. 남은 일은 {count}개예요.",
+        "미래의 내가 {count}가지만 더 끝내 달래요. 아주 정중하게요. 아직은요.",
+        "목표까지 {count}번 남았어요. 그래도 미루는 것보다는 빠르죠.",
+        "{count}걸음만 더 가면 오늘의 계획을 성대하게 마칠 수 있어요.",
+        "할 일 목록이 스스로를 칭찬할 순 없죠. 이유를 만들어 주세요. {count}번만 더요.",
+        "오늘 하루에 야심이 조금 남았네요. 딱 {count}번 더 해볼 만큼요.",
+        "계획은 해피엔딩을 맞을 준비가 됐어요. 주인공이 할 일만 {count}개 남았네요."
+      ],
+      "nl": [
+        "Je dagdoel wacht nog steeds. Het heeft blijkbaar engelengeduld. Nog te doen: {count}.",
+        "Het plan is niet in rook opgegaan. We hebben het gecheckt. Nog te doen: {count}.",
+        "Je toekomstige ik vraagt je nog wat zaken af te ronden. Hoeveel? {count}. Heel beleefd. Voorlopig.",
+        "Nog te doen voor je doel: {count}. Dat gaat nog altijd sneller dan uitstellen.",
+        "Nog te zetten stappen: {count}. Daarna kun je het dagplan plechtig afsluiten.",
+        "Je takenlijst geeft zichzelf geen compliment. Geef haar een reden. Nog te doen: {count}.",
+        "Deze dag heeft nog een beetje ambitie over. Precies genoeg voor dit aantal acties: {count}.",
+        "Het plan is klaar voor een goede afloop. Nog uit te voeren acties voor de hoofdpersoon: {count}."
+      ]
     }
   }
 }

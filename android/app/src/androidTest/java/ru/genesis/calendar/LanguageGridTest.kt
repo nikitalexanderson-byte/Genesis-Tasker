@@ -1,7 +1,13 @@
 package ru.genesis.calendar
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.*
@@ -13,11 +19,27 @@ import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
+import ru.genesis.calendar.data.publicLanguages
 import ru.genesis.calendar.ui.LanguageChips
+import ru.genesis.calendar.ui.translateGenesisText
 import ru.genesis.calendar.ui.balancedLanguageColumns
 import ru.genesis.calendar.ui.evening
 
 class LanguageGridTest {
+    @Test fun savedQueuedAndConfirmedHaveDistinctLocalizedLabels() {
+        val app = InstrumentationRegistry.getInstrumentation().targetContext
+        val expected = mapOf(
+            "he" to listOf("נשמר במכשיר הזה", "נשמר במכשיר · בהמתנה לסנכרון", "הסנכרון הושלם."),
+            "ar" to listOf("تم الحفظ على هذا الجهاز", "تم الحفظ على الجهاز · بانتظار المزامنة", "اكتملت المزامنة."),
+            "ko" to listOf("이 기기에 저장됨", "기기에 저장됨 · 동기화 대기 중", "동기화가 완료되었습니다."),
+            "nl" to listOf("Opgeslagen op dit apparaat", "Opgeslagen op het apparaat · wacht op synchronisatie", "Gesynchroniseerd."),
+        )
+        val source = listOf("Сохранено на этом устройстве", "Сохранено на устройстве · ожидает синхронизации", "Синхронизировано.")
+        expected.forEach { (language, labels) ->
+            assertEquals(language, labels, source.map { translateGenesisText(app, it, language) })
+        }
+    }
+
     @get:Rule val compose = createAndroidComposeRule<StoicheionGestureActivity>()
 
     @Test fun flagsFormCompleteEqualRowsAndRemainSelectable() {
@@ -29,7 +51,7 @@ class LanguageGridTest {
                 }
             }
         }
-        val codes = listOf("ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja")
+        val codes = publicLanguages
         compose.waitForIdle()
         val bounds = codes.map { compose.onNodeWithTag("language-$it").fetchSemanticsNode().boundsInRoot }
         val rows = bounds.groupBy { it.top.toInt() }.values
@@ -42,6 +64,29 @@ class LanguageGridTest {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         assertTrue(UiDevice.getInstance(instrumentation).takeScreenshot(
             File(instrumentation.targetContext.getExternalFilesDir(null), "language-grid.png")))
+    }
+
+    @Test fun flagsAndNativeNamesRemainSelectableAtLargeFontScale() {
+        val choices = mapOf("he" to "עברית", "ar" to "العربية", "ko" to "한국어", "nl" to "Nederlands")
+        var language by mutableStateOf("en")
+        compose.setContent {
+            val density = LocalDensity.current.density
+            val direction = if (language in setOf("he", "ar")) LayoutDirection.Rtl else LayoutDirection.Ltr
+            CompositionLocalProvider(LocalDensity provides Density(density, 1.3f), LocalLayoutDirection provides direction) {
+                MaterialTheme {
+                    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+                        LanguageChips(language, flagsOnly = false) { language = it }
+                    }
+                }
+            }
+        }
+        for ((code, name) in choices) {
+            val chip = compose.onNodeWithTag("language-$code")
+            chip.performScrollTo().assertContentDescriptionEquals(name).performClick().assertIsSelected()
+            compose.onNodeWithText(name, useUnmergedTree = true).assertExists()
+            val expected = if (code == "he" || code == "ar") LayoutDirection.Rtl else LayoutDirection.Ltr
+            assertEquals(expected, chip.fetchSemanticsNode().layoutInfo.layoutDirection)
+        }
     }
 
     @Test fun additionalLanguagesKeepCompleteRows() {

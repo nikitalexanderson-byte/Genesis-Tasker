@@ -149,6 +149,7 @@ import {
   listSharedCalendarTasks, sharedCalendarProjection,
   mergeLocalWorkspace,
   metricsFor,
+  nextCalendarPreferenceOrder,
   observeCloudTasks,
   observeCloudWorkspace,
   observeEncryptedWorkspaceUpdates,
@@ -169,7 +170,7 @@ import {
   type WorkspaceRecoveryRequest,
 } from "./cloud-sync";
 import { currentLegalPage } from "./legal-route";
-import {publicRouteForPath,publicPagePath} from "./public-route";
+import {publicLanguagePath,publicRouteForPath,publicPagePath} from "./public-route";
 const LegalPage = lazy(() => import('./LegalPage').then(module => ({default: module.LegalPage})));
 import { TimeClockPicker, TimeClockFormatContext } from "./TimeClockPicker";
 import { CalendarDatePicker } from "./CalendarDatePicker";
@@ -262,6 +263,7 @@ import { AndroidDownload } from "./AndroidDownload";
 import {
   LANGUAGE_LOGIN_PENDING_KEY,
   browserLanguage,
+  formatTranslatedText,
   getRuntimeLanguage,
   isLanguage,
   lunarYearStartText,
@@ -1477,7 +1479,11 @@ export function GenesisCalendar() {
   }, [cloudUser?.uid]);
   const cloudUserRef = useRef<GenesisUser | null>(null);
   const displayCalendarSaveRef = useRef<Promise<void>>(Promise.resolve());
-  const displayCalendarRevisionRef = useRef(0);
+  const latestCalendarWrite = useRef<{ uid: string; mode: CalendarMode; settledOrder: number } | null>(null);
+  const calendarForRead = useCallback((user: GenesisUser, readOrder: number) => {
+    const choice = latestCalendarWrite.current;
+    return choice?.uid === user.uid && readOrder <= choice.settledOrder ? choice.mode : user.calendarMode;
+  }, []);
   const themeControllerRef = useRef<GenesisThemeController | null>(null);
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
   const projectTouchDragRef = useRef<ProjectTouchDrag | null>(null);
@@ -1557,6 +1563,17 @@ export function GenesisCalendar() {
     return () => window.removeEventListener(LOCAL_SESSION_ENDED_EVENT, closePrivateWorkspace);
   }, []);
 
+  const applySavedPreferences = useCallback((uid: string, fields: Partial<Pick<GenesisUser,
+    "theme" | "themeRevision" | "uiVisibility" | "language" | "calendarMode">>) => {
+    const current = cloudUserRef.current;
+    if (current?.uid !== uid) return;
+    const updated = { ...current, ...fields };
+    cloudUserRef.current = updated;
+    setCloudUser(previous => previous?.uid === uid ? { ...previous, ...fields } : previous);
+    try { cacheLastUser(updated); }
+    catch { /* Persisted preferences are still available from the server. */ }
+  }, []);
+
   useEffect(() => {
     const controller = createGenesisThemeController({
       root: document.documentElement,
@@ -1566,10 +1583,8 @@ export function GenesisCalendar() {
           if (signal.aborted) throw new DOMException("Theme read aborted", "AbortError");
           const user = fresh ? await loadGenesisSession(signal) : cloudUserRef.current;
           if (!user || user.uid !== accountId) throw new Error("Theme account session changed");
-          if (fresh) {
-            setCloudUser(user);
-            cacheLastUser(user);
-          }
+          if (signal.aborted) throw new DOMException("Theme read aborted", "AbortError");
+          if (fresh) applySavedPreferences(accountId, { theme: user.theme, themeRevision: user.themeRevision });
           return {
             theme: normalizeWebTheme(user.theme),
             revision: Math.max(0, Number(user.themeRevision ?? 0)),
@@ -1581,10 +1596,8 @@ export function GenesisCalendar() {
             expectedThemeRevision: Math.max(0, Number(expectedRevision ?? 0)),
           }, signal);
           if (signal.aborted) throw new DOMException("Theme write aborted", "AbortError");
-          if (cloudUserRef.current?.uid === accountId) {
-            setCloudUser(result.user);
-            cacheLastUser(result.user);
-          }
+          if (result.user.uid !== accountId) throw new Error("Theme account session changed");
+          applySavedPreferences(accountId, { theme: result.user.theme, themeRevision: result.user.themeRevision });
           return {
             theme: normalizeWebTheme(result.user.theme),
             revision: Math.max(0, Number(result.user.themeRevision ?? 0)),
@@ -1599,7 +1612,7 @@ export function GenesisCalendar() {
       controller.destroy();
       themeControllerRef.current = null;
     };
-  }, []);
+  }, [applySavedPreferences]);
 
   useEffect(() => {
     const controller = themeControllerRef.current;
@@ -1794,12 +1807,8 @@ export function GenesisCalendar() {
   const taskFormCalendarMode = visibleCalendarMode(taskFormCalendar ?? activeTaskCalendarMode, storedVisibility);
   const editTaskCalendarMode = editingTask?.calendarMode ?? activeTaskCalendarMode;
   const applyLayoutUser = useCallback((user: GenesisUser) => {
-    setCloudUser(current => current?.uid === user.uid ? user : current);
-    try {
-      const cached = JSON.parse(localStorage.getItem(LAST_USER_KEY) || "null") as GenesisUser | null;
-      if (cached?.uid === user.uid) cacheLastUser(user);
-    } catch { /* Server preferences remain saved when device storage is unavailable. */ }
-  }, []);
+    applySavedPreferences(user.uid, { uiVisibility: user.uiVisibility });
+  }, [applySavedPreferences]);
   const { layout: accountLayout, save: saveLayout, error: layoutError } = useAccountLayout(cloudUser, applyLayoutUser);
   const todayOrderOwner = cloudUser?.uid ?? 'guest';
   const [todayOrderEditor, setTodayOrderEditor] = useState({owner: todayOrderOwner, view, open: false});
@@ -2376,12 +2385,13 @@ export function GenesisCalendar() {
         },
       );
     };
-    const stopUser = observeGenesisUser((user) => {
+    const stopUser = observeGenesisUser((user, readOrder) => {
       if (privateDeviceAccessBlocked()) user = null;
       setAuthResolved(true);
       setSyncError("");
 
       if (!user) {
+        latestCalendarWrite.current = null;
         setAuthResolved(true);
         workspaceReady = false;
         setWorkspaceReadyOwner(null);
@@ -2399,7 +2409,9 @@ export function GenesisCalendar() {
       const pendingLanguageValue = localStorage.getItem(LANGUAGE_LOGIN_PENDING_KEY);
       const pendingLanguage = isLanguage(pendingLanguageValue) ? pendingLanguageValue : null;
       const effectiveLanguage = pendingLanguage ?? serverLanguage;
-      const effectiveUser = { ...user, language: effectiveLanguage };
+      // A coalesced background session read can finish after a newer calendar write.
+      const effectiveUser = { ...user, language: effectiveLanguage,
+        calendarMode: calendarForRead(user, readOrder) };
       setLanguage(effectiveLanguage);
       storeLanguage(effectiveLanguage);
       setCloudUser(effectiveUser);
@@ -2410,8 +2422,7 @@ export function GenesisCalendar() {
           void updateAccountPreferences({ language: pendingLanguage })
             .then((result) => {
               if (!active || !workspaceReady || loadedUserId !== user.uid) return;
-              setCloudUser(result.user);
-              cacheLastUser(result.user);
+              applySavedPreferences(user.uid, { language: result.user.language });
             })
             .catch((error: Error) => {
               if (!active) return;
@@ -2478,6 +2489,7 @@ export function GenesisCalendar() {
       })
         .then(async () => {
           if (!active || loadedUserId !== user.uid) return;
+          const workspaceReadOrder = nextCalendarPreferenceOrder();
           const workspace = await loadGenesisWorkspace();
           if (!active || loadedUserId !== user.uid) return;
           const nextProjects = workspace.hasRemoteStructure ? workspace.projects : local.projects;
@@ -2512,7 +2524,10 @@ export function GenesisCalendar() {
           setNewProjectCategory(nextCategories[0]?.id ?? "");
           workspaceReady = true;
           setWorkspaceReadyOwner(user.uid);
-          setCloudUser({ ...workspace.user, language: effectiveLanguage });
+          setCloudUser({
+            ...workspace.user, language: effectiveLanguage,
+            calendarMode: calendarForRead(workspace.user, workspaceReadOrder),
+          });
           setAuthResolved(true);
           setSyncError(workspace.syncWarning ?? "");
           setSyncStatus(workspace.user.calendarConnected||encryptedAccount ? (workspace.syncWarning ? "offline" : "synced") : "local");
@@ -2585,7 +2600,7 @@ export function GenesisCalendar() {
       stopWorkspace?.();
       stopUser();
     };
-  }, [hydrated]);
+  }, [hydrated, applySavedPreferences, calendarForRead]);
 
   useEffect(() => {
     if (!cloudUser) return undefined;
@@ -2666,11 +2681,7 @@ export function GenesisCalendar() {
     if (!cloudUser) {
       const route = publicRouteForPath(window.location.pathname,APP_BASE,window.location.search);
       if (route) {
-        const url = new URL(window.location.href);
-        const destination = new URL(publicPagePath(nextLanguage,route.page,APP_BASE,route.edition), url.origin);
-        url.pathname = destination.pathname;
-        url.searchParams.set('lang',nextLanguage);
-        window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+        window.history.replaceState(window.history.state, '', publicLanguagePath(nextLanguage, route.page, APP_BASE, route.edition, window.location));
       }
     }
   };
@@ -3467,7 +3478,9 @@ export function GenesisCalendar() {
       updatedAt: timestamp(),
     };
     persistTaskChange(task, nextTask);
-    setProjectMoveAnnouncement(`Задача «${task.title}» перемещена в список «${taskList.title}».`);
+    setProjectMoveAnnouncement(formatTranslatedText("Задача «{item}» перемещена в список «{list}».", language, {
+      item: task.title, list: taskList.title,
+    }));
   };
 
   const toggleTask = (id: string) => {
@@ -4181,18 +4194,18 @@ export function GenesisCalendar() {
       };
       setTasks((current) => current.map((candidate) => candidate.id === nextTask.id ? nextTask : candidate));
       saveTask(nextTask);
-      setProjectMoveAnnouncement(moveToInbox
-        ? `Задача «${item.title}» возвращена в хаос-бокс.`
-        : `Задача «${item.title}» перемещена в проект «${project?.title}».`);
+      setProjectMoveAnnouncement(formatTranslatedText(moveToInbox
+        ? "Задача «{item}» возвращена в хаос-бокс."
+        : "Задача «{item}» перемещена в проект «{project}».", language, { item: item.title, project: project?.title ?? "" }));
       return;
     }
 
     const currentProjectId = taskListLinks.find((link) => link.taskListId === item.id)?.projectId ?? null;
     if (currentProjectId === (project?.id ?? null)) return;
     linkTaskListToProject(item.id, project?.id ?? "");
-    setProjectMoveAnnouncement(moveToInbox
-      ? `Список «${item.title}» возвращён в хаос-бокс.`
-      : `Список «${item.title}» перемещён в проект «${project?.title}».`);
+    setProjectMoveAnnouncement(formatTranslatedText(moveToInbox
+      ? "Список «{item}» возвращён в хаос-бокс."
+      : "Список «{item}» перемещён в проект «{project}».", language, { item: item.title, project: project?.title ?? "" }));
   };
 
   const beginProjectPointerDrag = (event: PointerEvent<HTMLElement>, item: ProjectDragItem) => {
@@ -4588,7 +4601,7 @@ export function GenesisCalendar() {
         if (!cloudUser) throw new Error(language === "en" ? "Sign in to change calendar settings." : "Войдите, чтобы изменить календарь.");
         if (cloudUser.calendarMode === mode) return;
         const result = await updateAccountPreferences({ calendarMode: mode });
-        setCloudUser(result.user);
+        applySavedPreferences(result.user.uid, { calendarMode: result.user.calendarMode });
       },
       stepCalendar: (unit, step) => {
         if (activeCalendarMode === "sacred") {
@@ -5304,20 +5317,23 @@ export function GenesisCalendar() {
   const changeDisplayCalendar = async (mode: CalendarMode) => {
     const user = cloudUserRef.current;
     if (!user || !visibility.enabledCalendars.includes(mode)) return;
-    const revision = ++displayCalendarRevisionRef.current;
+    const choice = { uid: user.uid, mode, settledOrder: Infinity };
+    latestCalendarWrite.current = choice;
     const updatedUser = { ...user, calendarMode: mode };
     cloudUserRef.current = updatedUser;
     setCloudUser(updatedUser);
     try { cacheLastUser(updatedUser); }
     catch { /* The visible choice still works when browser storage is unavailable. */ }
     const save = async () => {
-      if (revision !== displayCalendarRevisionRef.current || cloudUserRef.current?.uid !== user.uid) return;
+      if (latestCalendarWrite.current !== choice || cloudUserRef.current?.uid !== user.uid) return;
       try {
         await updateAccountPreferences({ calendarMode: mode });
       } catch (error) {
-        if (revision === displayCalendarRevisionRef.current && cloudUserRef.current?.uid === user.uid) {
+        if (latestCalendarWrite.current === choice && cloudUserRef.current?.uid === user.uid) {
           setSyncError(error instanceof Error ? error.message : "Не удалось сохранить выбранный календарь. Выбор применён на этом устройстве.");
         }
+      } finally {
+        choice.settledOrder = nextCalendarPreferenceOrder();
       }
     };
     displayCalendarSaveRef.current = displayCalendarSaveRef.current.then(save, save);
@@ -6458,7 +6474,7 @@ export function GenesisCalendar() {
           onEditColor={setEditingCategoryColor} onEditTitle={setEditingCategoryTitle} onEdit={beginCategoryEdit} onCancel={() => setEditingCategoryId("")}
           onSave={saveCategoryEdit} onDelete={deleteCategory} newTitle={newCategoryTitle} onNewTitle={setNewCategoryTitle} onCreate={addCategory}
           onOpen={id => { setExpandedExperimentalProjects(ids => [...new Set([...ids, id])]); document.querySelector(`[data-project-drop-id="${CSS.escape(id)}"]`)?.scrollIntoView({block:"center",behavior:"smooth"}); }}/>
-        <p className="sr-only" aria-live="polite">{projectMoveAnnouncement}</p>
+        <p className="sr-only" aria-live="polite" data-no-translate>{projectMoveAnnouncement}</p>
         {projectTouchPoint && projectDragItem ? (
           <div className="project-drag-preview" style={{ left: projectTouchPoint.x, top: projectTouchPoint.y }}>
             <span>{projectDragItem.kind === "task" ? "Задача" : "Список"}</span>

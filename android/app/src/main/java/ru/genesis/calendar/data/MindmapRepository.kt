@@ -108,7 +108,19 @@ internal class MindmapRepository(private val db:GenesisDatabase,private val scop
     suspend fun saveConversionDraft(task:LocalTask)=operation { product()?.let{it.saveLocal("mindmap-conversion-live-v1",JSONObject(task.json()));return@operation};db.withTransaction { check();db.dao().putDocument(DocumentRecord(scope,"mindmap-conversion",cipher.encrypt(task.json(),"$scope/mindmap-conversion"),0));check() } }
     suspend fun conversionDraft():LocalTask? =operation { product()?.let{val value=it.readLocal("mindmap-conversion-live-v1")?:return@operation null;return@operation LocalTask.from(TaskRecord(scope,value.getString("id"),"",0,false),value.toString())};check();val row=db.dao().document(scope,"mindmap-conversion") ?: return@operation null
         val raw=cipher.decrypt(row.encrypted,"$scope/mindmap-conversion");val json=JSONObject(raw);check();LocalTask.from(TaskRecord(scope,json.getString("id"),"",0,false),raw) }
-    suspend fun clearConversionDraft()=operation{product()?.let{it.saveLocal("mindmap-conversion-live-v1",null);return@operation};db.withTransaction {check();db.dao().deleteDocument(scope,"mindmap-conversion");check()}}
+    suspend fun clearConversionDraft(taskId: String) = operation {
+        product()?.let {
+            it.saveLocal("mindmap-conversion-live-v1", null, replacingTaskId = taskId)
+            return@operation
+        }
+        db.withTransaction {
+            check()
+            val row = db.dao().document(scope, "mindmap-conversion") ?: return@withTransaction
+            val draft = JSONObject(cipher.decrypt(row.encrypted, "$scope/mindmap-conversion"))
+            if (draft.getString("id") == taskId) db.dao().deleteDocument(scope, "mindmap-conversion")
+            check()
+        }
+    }
     suspend fun saveView(id:String,view:JSONObject)=operation { product()?.let{it.saveLocal("mindmap-view:$id",view);return@operation};db.withTransaction { check();db.dao().putDocument(DocumentRecord(scope,"mindmap-view:$id",cipher.encrypt(view.toString(),"$scope/mindmap-view:$id"),1));check() } }
     suspend fun view(id:String):JSONObject? =operation { product()?.let{return@operation it.readView(id)};check();db.dao().document(scope,"mindmap-view:$id")?.let { JSONObject(cipher.decrypt(it.encrypted,"$scope/mindmap-view:$id")) } }
 }

@@ -88,7 +88,7 @@ internal data class DailyAdviceResponse(val day: String, val state: String, val 
 internal object DailyAdviceProtocol {
     private val idPattern = Regex("advice-[a-f0-9]{24}")
     private val artworkPattern = Regex("/advice-art/[a-z0-9-]+/advice-[a-f0-9]{24}\\.webp")
-    private val languages = setOf("ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja")
+    private val languages = ru.genesis.calendar.data.publicLanguages
     fun record(id: String, day: String): JSONObject {
         require(idPattern.matches(id) && LocalDate.parse(day).toString() == day)
         return JSONObject().put("id", id).put("dayKey", day)

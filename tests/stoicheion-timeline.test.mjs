@@ -79,9 +79,9 @@ test("malformed or foreign local records cannot become a draw and stored countdo
   assert.equal(timeline.readLocalTimelineDraw({ getItem() { throw new Error("Storage denied"); } }, day, now), null);
 });
 
-test("all fourteen timeline translations preserve three ordered times and the Greek meanings", () => {
+test("all supported timeline translations preserve three ordered times and the Greek meanings", () => {
   const en = timeline.stoicheionTimelineCopy("en");
-  assert.equal(REGION_LANGUAGES.length, 14);
+  assert.equal(REGION_LANGUAGES.length, 18);
   for (const language of REGION_LANGUAGES) {
     const copy = timeline.stoicheionTimelineCopy(language);
     assert.deepEqual(Object.keys(copy).sort(), Object.keys(en).sort(), language);

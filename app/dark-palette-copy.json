@@ -152,5 +152,49 @@
     "error": "保存できませんでした。もう一度お試しください。",
     "description": "明るいモードと暗いモードに対応する4つの配色。柔らかな背景と明確なアクセントを使います。",
     "blueLight": "空"
+  },
+  "he": {
+    "label": "פלט צבע",
+    "green": "ברירת מחדל",
+    "burgundy": "רובי.",
+    "blue": "שמי הלילה",
+    "violet": "סגול",
+    "premium": "פלטות נוספות זמינות עם Premium.",
+    "error": "לא ניתן לשמור את הפלטה. נסה שוב.",
+    "description": "ארבע פלטות למצב בהיר וחושך, עם רקעים רכים ומבטאים ברורים.",
+    "blueLight": "שמיים."
+  },
+  "ar": {
+    "label": "مجموعة الألوان",
+    "green": "الغابات · الافتراض",
+    "burgundy": "روبي",
+    "blue": "السماء الليلية",
+    "violet": "البنفسجي",
+    "premium": "وتتوفر ألوان إضافية مع Premium.",
+    "error": "لم يكن من الممكن حفظ الورقة، حاول مرة أخرى.",
+    "description": "أربعة أطقم للطريقة الواضحة والظلامية، مع خلفية ناعمة وتركيزات واضحة.",
+    "blueLight": "السماء"
+  },
+  "ko": {
+    "label": "색상 파일",
+    "green": "숲 · 기본값",
+    "burgundy": "루비",
+    "blue": "밤 하늘",
+    "violet": "보라색",
+    "premium": "추가 팔레트는 프리미엄에서 사용할 수 있습니다.",
+    "error": "팔레트를 저장할 수 없습니다. 다시 시도하십시오.",
+    "description": "부드러운 배경과 명확한 악센트가있는 밝고 어두운 모드를위한 네 개의 팔레트.",
+    "blueLight": "하늘"
+  },
+  "nl": {
+    "label": "Het kleurenpalet",
+    "green": "Bos · standaard",
+    "burgundy": "Ruby",
+    "blue": "De nachtelijke hemel",
+    "violet": "Paars",
+    "premium": "Extra paletten zijn beschikbaar bij Premium.",
+    "error": "Het palet kon niet worden opgeslagen. Probeer het opnieuw.",
+    "description": "Vier paletten voor lichte en donkere modus, met zachte achtergronden en duidelijke accenten.",
+    "blueLight": "Hemel"
   }
 }

@@ -1,8 +1,9 @@
+import { runtimeLocale } from '../i18n';
 import { useState } from 'react';
 import { MINERAL_PROFILES, mineralIntake, type MineralIntake } from './mineral-reference-data';
 
 const ageLabel = (row: MineralIntake) => row.maxAge === null ? `${row.minAge}+` : `${row.minAge}–${row.maxAge}`;
-const amount = (value: number, unit: string, en: boolean) => `${value.toLocaleString(en ? 'en' : 'ru')} ${en ? unit : unit === 'mcg' ? 'мкг' : 'мг'}`;
+const amount = (value: number, unit: string, en: boolean) => `${value.toLocaleString(runtimeLocale(en ? 'en' : undefined))} ${en ? unit : unit === 'mcg' ? 'мкг' : 'мг'}`;
 
 export function MineralOverview({ ids, en }: { ids: string[]; en: boolean }) {
   const [age, setAge] = useState(19);

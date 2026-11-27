@@ -1,6 +1,6 @@
 "use client";
 import privateSecurityCopy from '../contracts/e2ee/shared-security-copy-v1.json';
-import {isLanguage} from './i18n';
+import {isLanguage, runtimeLocale} from './i18n';
 import { useEffect, useId, useRef, useState } from "react";
 import { ExperimentalIcon } from "./ExperimentalIcon";
 import type { SharedTaskAttachment } from "./cloud-sync";
@@ -22,8 +22,11 @@ export function taskFileError(error: unknown, english: boolean): string {
   return code;
 }
 export function taskFileSize(size: number, english: boolean) {
-  return size >= 1024 * 1024 ? `${(size / 1024 / 1024).toLocaleString(english ? "en" : "ru", { maximumFractionDigits: 1 })} ${english ? "MB" : "МБ"}`
-    : `${Math.max(1, Math.ceil(size / 1024))} ${english ? "KB" : "КБ"}`;
+  const inMegabytes = size >= 1024 * 1024;
+  const amount = inMegabytes ? size / (1024 * 1024) : Math.max(1, Math.ceil(size / 1024));
+  return new Intl.NumberFormat(runtimeLocale(english ? "en" : undefined), {
+    style: "unit", unit: inMegabytes ? "megabyte" : "kilobyte", unitDisplay: "short", maximumFractionDigits: 1,
+  }).format(amount);
 }
 function readFile(file: File): Promise<string> {
   return new Promise((resolve, reject) => {

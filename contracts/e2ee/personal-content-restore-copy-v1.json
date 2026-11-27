@@ -194,5 +194,61 @@
     "localDiary": "復元した日記はこの端末に保存されます。アップロードするには、日記のプライバシー設定で別途操作が必要です。",
     "sharedNotice": "共有コンテンツは、現在のアクセス権で元のプロジェクトまたはスペースにのみ追加できます。権限と過去の承認は復元されず、自動化は無効のままです。",
     "sharedTarget": "復元先"
+  },
+  "he": {
+    "title": "שחזר תוכן פרטי",
+    "notice": "הוסף רשומות אישיות חסרנות מגרסה זו של הארכיון. הגרסאות הנוכחיות והסימנים למחיקה נשארים במקומם. Google עותקים דורשים אישור נפרד.",
+    "prepare": "התכונן לשחזור",
+    "ack": "עברתי על הספירה ואני רוצה להוסיף את הרשומות החסרות.",
+    "apply": "שחזר את התוכן",
+    "resume": "בדוק או המשך",
+    "added": "להוסיף",
+    "skipped": "שמורה או נדחתה",
+    "done": "התוכן שוחזר",
+    "localDiary": "הערות יומן משוחזרות נשארות במכשיר זה. העלאתן דורשת פעולה נפרדת בהגדרות הפרטיות של היומן.",
+    "sharedNotice": "ניתן להוסיף תוכן משותף רק לאותו פרויקט או חלל עם הגישה הנוכחית שלך. הרשאות ואישורים קודמים לא יוחזרו; כללי אוטומציה מתחילים להיות בלתי פעילים.",
+    "sharedTarget": "שחזר את היעד"
+  },
+  "ar": {
+    "title": "استعادة المحتوى الخاص",
+    "notice": "إضافة السجلات الشخصية المفقودة من هذه النسخة المحفوظة. وتظل النسخ الحالية وعلامات الحذف في مكانها. Google تتطلب النسخ موافقة مستقلة.",
+    "prepare": "إعداد الاستعادة",
+    "ack": "لقد استعرضت الحسابات وأريد أن أضيف السجلات المفقودة.",
+    "apply": "استعادة المحتوى",
+    "resume": "التحقق أو الاستئناف",
+    "added": "يضاف",
+    "skipped": "احتُفظ بها أو أُغفلت",
+    "done": "المحتويات المستعادة",
+    "localDiary": "تبقى ملاحظات اليومية المستعادة على هذا الجهاز. يتطلب تحميلها إجراءً منفصلاً في إعدادات خصوصية اليومية.",
+    "sharedNotice": "يمكن إضافة المحتوى المشترك فقط إلى نفس المشروع أو المساحة مع وصولك الحالي. لا يتم استعادة الإذن والموافقات السابقة؛ تبدأ قواعد الأتمتة في التعطيل.",
+    "sharedTarget": "استعادة الوجهة"
+  },
+  "ko": {
+    "title": "개인 콘텐츠 복원",
+    "notice": "이 아카이브 버전에서 누락된 개인 기록을 추가합니다. 현재 버전과 삭제 마커는 그 자리에 남아 있습니다. Google 사본은 별도의 동의가 필요합니다.",
+    "prepare": "복원 준비",
+    "ack": "카운트를 검토하고 누락된 레코드를 추가하려고 합니다.",
+    "apply": "내용 복원",
+    "resume": "확인 또는 재개",
+    "added": "추가하기",
+    "skipped": "유지하거나 건너뛰기",
+    "done": "내용 복원됨",
+    "localDiary": "복원된 일기 노트는 이 장치에 남아 있습니다. 일기 노트를 업로드하려면 일기 개인 정보 보호 설정에서 별도의 작업이 필요합니다.",
+    "sharedNotice": "공유 콘텐츠는 현재 액세스가 있는 동일한 프로젝트 또는 공간에만 추가할 수 있습니다. 권한 및 이전 승인은 복원되지 않으며 자동화 규칙이 비활성화됩니다.",
+    "sharedTarget": "대상 복원"
+  },
+  "nl": {
+    "title": "Privé-inhoud herstellen",
+    "notice": "Voeg ontbrekende persoonsgegevens uit deze archiefversie toe. Huidige versies en verwijderingsmarkeringen blijven behouden. Google Voor kopieën is afzonderlijke toestemming vereist.",
+    "prepare": "Herstel voorbereiden",
+    "ack": "Ik heb de tellingen bekeken en wil de ontbrekende records toevoegen.",
+    "apply": "Inhoud herstellen",
+    "resume": "Controleren of hervatten",
+    "added": "Om toe te voegen",
+    "skipped": "Behouden of overgeslagen",
+    "done": "Inhoud hersteld",
+    "localDiary": "Herstelde dagboeknotities blijven op dit apparaat staan, maar voor het uploaden ervan moet een aparte actie worden uitgevoerd in de privacyinstellingen van het dagboek.",
+    "sharedNotice": "Gedeelde inhoud kan alleen worden toegevoegd aan hetzelfde project of dezelfde ruimte met uw huidige toegang. Machtigingen en eerdere goedkeuringen worden niet hersteld; automatiseringsregels worden uitgeschakeld.",
+    "sharedTarget": "Bestemming herstellen"
   }
 }

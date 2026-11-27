@@ -38,7 +38,7 @@ test('actual signed source fields and all historical public texts become owner-b
  const prefs=decode(migrated.content[0].bytes);assert.equal(prefs.preferences.philosophersPerDay,3);assert.equal(prefs.originals.preferencesJson,f.remote.preferencesJson);
  const index=decode(migrated.content.find(row=>row.objectId==='personal-advice-history-index-v1').bytes);assert.equal(index.days[0].dayKey,DAY);
  assert.match(index.days[0].objectId,/^personal-advice-day:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/);assert.ok(migrated.content.every(row=>!row.objectId.includes(DAY)&&!row.objectId.includes(entry.id)&&!row.objectId.includes(philosopher.id)));
- const day=decode(migrated.content.find(row=>row.objectId===index.days[0].objectId).bytes);assert.equal(Object.keys(day.pointer.translations).length,14);assert.equal(Object.keys(day.extraEntries[0].translations).length,14);
+ const day=decode(migrated.content.find(row=>row.objectId===index.days[0].objectId).bytes);assert.equal(Object.keys(day.pointer.translations).length,18);assert.equal(Object.keys(day.extraEntries[0].translations).length,18);
  const exact=JSON.parse(readFileSync('server/content/daily-advice/'+entry.contentVersion+'/en.json','utf8'))[entry.id];assert.deepEqual(day.pointer.translations.en,exact);
  assert.equal(day.pointer.entryJson,f.remote.days[0].entryJson);assert.equal(day.entries[0].viewedAt,NOW);assert.equal(day.extraEntries[0].slot,7);
  const history=decode(migrated.content.at(-1).bytes);assert.equal(history.mounted.result.advice.body,'Synthetic previously rendered private snapshot');assert.deepEqual(history.seen,f.memory.seen);assert.equal(history.metrics.habits,3);

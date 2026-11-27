@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -135,9 +136,9 @@ test('both diary categories survive existing encrypted synchronization and offli
  assert.equal(offline.filter(row=>diaryNoteCategory(row.note)===null).length,1);
 });
 
-test('all fourteen diary catalogs contain distinct personal and saved category labels and complete empty states',()=>{
+test('all eighteen diary catalogs contain distinct personal and saved category labels and complete empty states',()=>{
  const catalog=JSON.parse(readFileSync(new URL('../app/diary-copy.json',import.meta.url),'utf8'));
- const languages=['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'];
+ const languages=[...REGION_LANGUAGES];
  assert.deepEqual(Object.keys(catalog).sort(),languages.sort());
  for(const [language,copy]of Object.entries(catalog)){
   for(const field of ['personalNotes','savedNotes','categories','emptyPersonal','emptySaved','personalHint','savedHint']){

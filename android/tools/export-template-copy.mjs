@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../../app/region-language.ts";
 import ts from 'typescript';
 import { readFile, writeFile, readdir } from 'node:fs/promises';
 const app = new URL('../../app/', import.meta.url);
@@ -17,7 +18,7 @@ const issues = strings(copy), flags = strings(options);
 const nativeLabels = JSON.parse(await readFile(new URL('native-template-labels.json', app), 'utf8'));
 const result = {};
 const catalogs = await readdir(app);
-for (const language of ['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja']) {
+for (const language of REGION_LANGUAGES) {
   const base = {};
   for (const file of catalogs.filter(name => new RegExp(`^translations\\.${language}(?:\\.[a-z])?\\.json$`).test(name))) Object.assign(base, JSON.parse(await readFile(new URL(file,app),'utf8')));
   if (language === 'en') Object.assign(base, JSON.parse(await readFile(new URL('curated-translations.en.json',app),'utf8')));
@@ -43,4 +44,4 @@ const path = new URL('native-template-translations.json', app), expected = JSON.
 if (process.argv.includes('--check')) {
   if ((await readFile(path,'utf8')).replaceAll('\r\n','\n') !== expected) throw Error('Native template copy is stale');
 } else await writeFile(path,expected);
-console.log(`Native template copy: ${Object.keys(issues).length + 1} issues and ${Object.keys(flags).length} options in 14 reviewed languages.`);
+console.log(`Native template copy: ${Object.keys(issues).length + 1} issues and ${Object.keys(flags).length} options in ${REGION_LANGUAGES.length} languages.`);

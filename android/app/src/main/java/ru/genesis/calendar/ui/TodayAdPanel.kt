@@ -71,6 +71,10 @@ private data class AdCopy(val label: String, val open: String, val close: String
 private val adCopy = mapOf(
     "ru" to AdCopy("Реклама", "Подробнее", "Закрыть", "Закрыть через", "с"),
     "en" to AdCopy("Advertisement", "Learn more", "Close", "Close in", "s"),
+    "he" to AdCopy("פרסומת", "מידע נוסף", "סגירה", "אפשר לסגור בעוד", "שנ׳"),
+    "ar" to AdCopy("إعلان", "معرفة المزيد", "إغلاق", "يتاح الإغلاق بعد", "ث"),
+    "ko" to AdCopy("광고", "자세히 보기", "닫기", "닫기까지", "초"),
+    "nl" to AdCopy("Advertentie", "Meer informatie", "Sluiten", "Sluiten over", "s"),
     "el" to AdCopy("Διαφήμιση", "Περισσότερα", "Κλείσιμο", "Κλείσιμο σε", "δ."),
     "de" to AdCopy("Anzeige", "Mehr erfahren", "Schließen", "Schließen in", "s"),
     "fr" to AdCopy("Publicité", "En savoir plus", "Fermer", "Fermer dans", "s"),
@@ -87,6 +91,10 @@ private val adCopy = mapOf(
 
 private val manageAdCopy = mapOf(
     "ru" to "Управление рекламой в веб-панели", "en" to "Manage ads in the web panel",
+    "he" to "ניהול פרסומות בלוח הרשת",
+    "ar" to "إدارة الإعلانات في اللوحة الشبكية",
+    "ko" to "웹 패널에서 광고 관리",
+    "nl" to "Advertenties beheren in het webpaneel",
     "el" to "Διαχείριση διαφημίσεων στον ιστό", "de" to "Anzeigen im Web verwalten",
     "fr" to "Gérer les publicités sur le Web", "es" to "Gestionar anuncios en la web",
     "it" to "Gestisci gli annunci sul Web", "pt" to "Gerir anúncios na Web",

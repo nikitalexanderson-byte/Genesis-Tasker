@@ -110,5 +110,37 @@
     "unavailable": "地域を判定できませんでした。言語は引き続き手動で選べます。",
     "donationUnavailable": "Boostyによる国際寄付の接続を準備しています。",
     "privacy": "位置情報は許可をいただいた場合のみ使用します。座標は端末内で処理され、サーバーには送信されません。"
+  },
+  "he": {
+    "title": "אזור ומיקום התקן",
+    "locate": "השתמש במיקום המכשיר",
+    "locating": "בדקתי את האזור...",
+    "unavailable": "לא ניתן לקבוע את האזור. אתה עדיין יכול לבחור שפה ביד.",
+    "donationUnavailable": "אפשרות לתרומות בינלאומיות דרך Boosty נמצאת בהכנה.",
+    "privacy": "המיקום משמש רק באישורך. הקואורדינטות מעובדות במכשיר ואינן נשלחות לשרת."
+  },
+  "ar": {
+    "title": "المنطقة وموقع الجهاز",
+    "locate": "استخدام موقع الجهاز",
+    "locating": "تحقق من المنطقة...",
+    "unavailable": "لم يكن بالإمكان تحديد المنطقة. لا يزال بإمكانك اختيار لغة يدوياً.",
+    "donationUnavailable": "يجري إعداد خدمة التبرّعات الدولية عبر Boosty.",
+    "privacy": "لا يُستخدم موقعك إلا بإذنك. تُعالَج الإحداثيات على جهازك ولا تُرسل إلى الخادم."
+  },
+  "ko": {
+    "title": "지역 및 장치 위치",
+    "locate": "장치 위치 사용",
+    "locating": "지역 확인 중...",
+    "unavailable": "지역을 결정할 수 없습니다. 여전히 언어를 수동으로 선택할 수 있습니다.",
+    "donationUnavailable": "Boosty를 통한 해외 후원 기능을 준비 중입니다.",
+    "privacy": "위치 정보는 사용자가 허용한 경우에만 사용합니다. 좌표는 기기에서 처리되며 서버로 전송되지 않습니다."
+  },
+  "nl": {
+    "title": "Regio en apparaatlocatie",
+    "locate": "Apparaatlocatie gebruiken",
+    "locating": "Controleren van regio…",
+    "unavailable": "De regio kon niet worden bepaald. U kunt nog steeds handmatig een taal kiezen.",
+    "donationUnavailable": "Internationale donaties via Boosty worden voorbereid.",
+    "privacy": "Uw locatie wordt alleen met uw toestemming gebruikt. De coördinaten worden op uw apparaat verwerkt en niet naar de server gestuurd."
   }
 }

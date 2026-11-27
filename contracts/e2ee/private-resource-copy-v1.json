@@ -12,5 +12,29 @@
  "uk":{"pending":"Незавершене створення приватних ресурсів","resume":"Продовжити створення","paused":"Створення призупинено. Зашифровані введені дані збережено в розділі «Акаунт → Безпека спільних даних».","recipients":"Перед завершенням перевірте вказаних одержувачів та їхні схвалені пристрої."},
  "zh":{"pending":"未完成的私密资源创建","resume":"继续创建","paused":"创建已暂停。您输入的数据已加密保存在“账户 → 共享数据安全”中。","recipients":"完成创建前，请核查预期接收者及其已批准的设备。"},
  "tr":{"pending":"Tamamlanmamış özel kaynak oluşturma işlemleri","resume":"Oluşturmaya devam et","paused":"Oluşturma duraklatıldı. Şifrelenmiş girişiniz Hesap → Paylaşılan veri güvenliği bölümünde kayıtlıdır.","recipients":"Oluşturmayı tamamlamadan önce amaçlanan alıcıları ve onaylı cihazlarını inceleyin."},
- "ja":{"pending":"未完了のプライベート作成","resume":"作成を続ける","paused":"作成を一時停止しました。入力したデータは暗号化され、「アカウント → 共有データの安全性」に保存されています。","recipients":"作成を完了する前に、指定した受信者とその承認済みデバイスを確認してください。"}
+ "ja":{"pending":"未完了のプライベート作成","resume":"作成を続ける","paused":"作成を一時停止しました。入力したデータは暗号化され、「アカウント → 共有データの安全性」に保存されています。","recipients":"作成を完了する前に、指定した受信者とその承認済みデバイスを確認してください。"},
+  "he": {
+    "pending": "יצירות פרטיות לא גמור",
+    "resume": "להמשיך ביצירה",
+    "paused": "היצירה נעצרה. הקלט המוצפן שלך נשמר בחשבון → אבטחת נתונים משותפים.",
+    "recipients": "בדוק את המקבלים המתוכננים ואת המכשירים המוסמכים שלהם לפני שתסיים את היצירה הזו."
+  },
+  "ar": {
+    "pending": "إبداعات خاصة غير منتهية",
+    "resume": "مواصلة الإنشاء",
+    "paused": "تم تعليق الإنشاء. يتم حفظ مدخلاتك المشفرة في الحساب → أمن البيانات المشتركة.",
+    "recipients": "استعراض المتلقين المقصودين وأجهزتهم المعتمدة قبل الانتهاء من هذا الإنشاء."
+  },
+  "ko": {
+    "pending": "미완성 개인 작품",
+    "resume": "생성 계속하기",
+    "paused": "생성이 일시 정지되었습니다. 암호화된 입력은 계정 → 공유 데이터 보안에 저장됩니다.",
+    "recipients": "이 작성을 완료하기 전에 의도한 수신자 및 승인된 장치를 검토합니다."
+  },
+  "nl": {
+    "pending": "Onvoltooide privécreaties",
+    "resume": "Ga door met creëren",
+    "paused": "Uw versleutelde invoer wordt opgeslagen in Account → Gedeelde gegevensbeveiliging.",
+    "recipients": "Bekijk de beoogde ontvangers en hun goedgekeurde apparaten voordat u deze creatie voltooit."
+  }
 }

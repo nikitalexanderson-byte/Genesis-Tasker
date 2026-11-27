@@ -12,6 +12,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -2172,6 +2173,11 @@ fun Text(text: String, modifier: Modifier = Modifier, color: Color = Color.Unspe
         fontFamily = fontFamily, letterSpacing = letterSpacing, textDecoration = textDecoration,
         textAlign = textAlign ?: TextAlign.Unspecified, lineHeight = lineHeight).copy(
             hyphens = Hyphens.None, shadow = style.shadow ?: LocalArtworkTextShadow.current)
+    if (softWrap && maxLines > 1 && remember(translated) { hasSpacedHangul(translated) }) {
+        FittedContentText(remember(translated) { AnnotatedString(translated) },
+            modifier, resolvedStyle, overflow, softWrap, maxLines, minLines, onTextLayout, autoSize)
+        return
+    }
     val preferred = resolvedStyle.fontSize.takeIf { it != TextUnit.Unspecified } ?: 14.sp
     val fitting = autoSize ?: remember(preferred, maxLines) { WholeWordTextAutoSize(preferred, maxLines == 1) }
     val audit = LocalGenesisTextLayoutAudit.current

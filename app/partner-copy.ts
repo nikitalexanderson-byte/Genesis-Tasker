@@ -1,5 +1,6 @@
+import { REGION_LANGUAGES } from './region-language.ts';
 import type { Language } from './i18n';
-export const PARTNER_LANGUAGES: readonly Language[] = ['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'];
+export const PARTNER_LANGUAGES: readonly Language[] = REGION_LANGUAGES;
 import rows from './partner-copy.json' with { type: 'json' };
 
 export type PartnerCopyKey = keyof typeof rows;

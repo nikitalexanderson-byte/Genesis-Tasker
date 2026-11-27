@@ -194,5 +194,61 @@
     "tryLunar": "月の暦を試す",
     "close": "ヒントを閉じる",
     "sharedRetry": "共有の予定を開けませんでした。もう一度お試しください。"
+  },
+  "he": {
+    "sharedBefore": "יש לך גישה למשימות ולפרויקטים משותפים. ",
+    "account": "פתיחת מדור המשימות והפרויקטים המשותפים",
+    "sharedAfter": "",
+    "guideStatus": "האייקון של הגדרות החשבון מובחן.",
+    "introTitle": "נסה לוחות שנה אחרים",
+    "introCurrent": "התחלת עם הלוח הגרגוריאני: חודשים מוכרים ושבוע של שבעה ימים.",
+    "sacredBody": "לוח השנה הקדוש מחבר תאריך עם קצב עונתי, מחזורי חמישה ימים ודמויות סימבוליות.",
+    "lunarBody": "לוח השנה הירחני עוקב אחרי שלבי הירח וימים ירחיים, חודשיו מתחילים בירח חדש.",
+    "trySacred": "נסה קדוש",
+    "tryLunar": "נסה ירח.",
+    "close": "סגירת טיפ",
+    "sharedRetry": "לא ניתן לפתוח את מדור המשימות והפרויקטים המשותפים. יש לנסות שוב."
+  },
+  "ar": {
+    "sharedBefore": "يمكنك الوصول إلى المهام والمشاريع المشتركة. ",
+    "account": "فتح قسم المهام والمشاريع المشتركة",
+    "sharedAfter": "",
+    "guideStatus": "ويتم تسليط الضوء على أيقونة إعدادات الحساب.",
+    "introTitle": "جرّب تقويمات أخرى",
+    "introCurrent": "لقد بدأتم بالتقويم الغريغوري: أشهر مألوفة وأسبوع من سبعة أيام.",
+    "sacredBody": "ويربط التقويم المقدس التواريخ بالإيقاعات الموسمية، ودورات الأيام الخمسة والتصورات الرمزية.",
+    "lunarBody": "ويتبع التقويم القمري مراحل القمر وأيام القمر، وتبدأ أشهره عند حلول القمر الجديد.",
+    "trySacred": "حاول المقدس",
+    "tryLunar": "حاول القمر",
+    "close": "إغلاق النقطة",
+    "sharedRetry": "تعذّر فتح قسم المهام والمشاريع المشتركة. حاول مرة أخرى."
+  },
+  "ko": {
+    "sharedBefore": "공유 작업 및 프로젝트를 이용할 수 있습니다. ",
+    "account": "공유 할 일 열기",
+    "sharedAfter": "",
+    "guideStatus": "계정 설정 아이콘이 강조 표시됩니다.",
+    "introTitle": "다른 캘린더 시도하기",
+    "introCurrent": "당신은 그레고리력으로 시작했습니다: 친숙한 달과 7일 주.",
+    "sacredBody": "신성한 달력은 계절 리듬, 5일 주기 및 상징적인 이미지와 날짜를 연결합니다.",
+    "lunarBody": "음력은 달의 위상과 달의 일을 따르며, 월은 초승달에서 시작한다.",
+    "trySacred": "성스러운 것을 시도해 보세요",
+    "tryLunar": "달력을 사용해 보기",
+    "close": "팁 닫기",
+    "sharedRetry": "공유 할 일을 열 수 없습니다. 다시 시도하세요."
+  },
+  "nl": {
+    "sharedBefore": "Je hebt toegang tot gedeelde taken en projecten. ",
+    "account": "Gedeelde taken en projecten openen",
+    "sharedAfter": "",
+    "guideStatus": "Het pictogram voor accountinstellingen is gemarkeerd.",
+    "introTitle": "Probeer andere agenda's",
+    "introCurrent": "Je bent begonnen met de gregoriaanse kalender: vertrouwde maanden en een zevendaagse week.",
+    "sacredBody": "De heilige kalender verbindt data met seizoensritmes, vijfdaagse cycli en symbolische beelden.",
+    "lunarBody": "De maankalender volgt maanfasen en maandagen, de maanden beginnen bij nieuwe maan.",
+    "trySacred": "Probeer het heilige",
+    "tryLunar": "Probeer lunar",
+    "close": "Sluit de tip",
+    "sharedRetry": "De gedeelde taken en projecten konden niet worden geopend. Probeer het opnieuw."
   }
 }

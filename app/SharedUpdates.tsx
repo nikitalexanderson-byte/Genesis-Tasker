@@ -7,7 +7,7 @@ import { ExperimentalIcon } from "./ExperimentalIcon";
 import "./shared-updates.css";
 import { SharedInvitationNotices } from "./SharedInvitationNotices";
 import { sharedUnreadCount } from "./shared-unread-count";
-import { translateText, type Language } from "./i18n";
+import { runtimeLocale, translateText, type Language } from "./i18n";
 
 export type SharedTaskDestination = { spaceId: string; projectId: string; taskId?: string; taskAction?: "locate" | "comments"; commentId?: string };
 export const notificationDestination = (item: SharedNotification): SharedTaskDestination => ({
@@ -78,7 +78,7 @@ export function SharedWorkspaceSummary({ userId, english, language, workspaceAct
           <ExperimentalIcon name={item.action === "project.created" ? "projects" : item.action === "comment.created" ? "comment" : "plus"} />
           <span><small>{item.action === "project.created" ? (english ? "New project" : "Новый проект") : item.action === "comment.created" ? (english ? "New comment" : "Новый комментарий") : (english ? "New task" : "Новая задача")} · <span data-no-translate>{item.actorName}</span></small>
             <strong data-no-translate>{item.taskTitle || item.projectTitle}</strong>{item.commentBody ? <span data-no-translate>{item.commentBody}</span> : null}
-            <small data-no-translate>{item.projectTitle}</small><time dateTime={item.createdAt}>{new Intl.DateTimeFormat(english ? "en" : "ru", { dateStyle: "short", timeStyle: "short" }).format(new Date(item.createdAt))}</time><span className="shared-update-destination"><ExperimentalIcon name="open" />{item.action === "project.created" ? (english ? "Open project" : "Открыть проект") : (english ? "Open task" : "Открыть задачу")}</span></span>
+            <small data-no-translate>{item.projectTitle}</small><time dateTime={item.createdAt}>{new Intl.DateTimeFormat(runtimeLocale(language), { dateStyle: "short", timeStyle: "short" }).format(new Date(item.createdAt))}</time><span className="shared-update-destination"><ExperimentalIcon name="open" />{item.action === "project.created" ? (english ? "Open project" : "Открыть проект") : (english ? "Open task" : "Открыть задачу")}</span></span>
         </button>
         {!item.isRead ? <button type="button" className="shared-update-read" disabled={busy} title={english ? "Mark as read" : "Отметить прочитанным"} aria-label={english ? `Mark as read: ${item.taskTitle || item.projectTitle}` : `Прочитать: ${item.taskTitle || item.projectTitle}`} onClick={() => void read([item.id])}><ExperimentalIcon name="check" /></button> : null}
       </li>)}</ul>

@@ -1,10 +1,11 @@
+import { runtimeLocale } from '../i18n';
 import { NUTRIENT_FOOD_SOURCES } from './nutrient-food-sources-data';
 export { VITAMIN_FOOD_SOURCES, NUTRIENT_FOOD_SOURCES, type VitaminFoodSource, type VitaminFoodProfile } from './nutrient-food-sources-data';
 export function NutrientFoodSources({ id, en }: { id: string; en: boolean }) {
   const profile = NUTRIENT_FOOD_SOURCES[id]; if (!profile) return null;
   const at = en ? 1 : 0;
   const unit = (value: string) => en ? value : value.replace('mcg', 'мкг').replace('mg', 'мг');
-  const number = (value: number) => value.toLocaleString(en ? 'en' : 'ru', { maximumFractionDigits: 3 });
+  const number = (value: number) => value.toLocaleString(runtimeLocale(en ? 'en' : undefined), { maximumFractionDigits: 3 });
   return <section className="physis-reference-foods">
     <h4>{en ? 'Food sources and amounts' : 'Пищевые источники и количество'}</h4>
     <p>{profile.label[at]}</p>

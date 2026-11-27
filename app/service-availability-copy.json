@@ -12,5 +12,21 @@
   "uk": {"title":"Призначення та доступність сервісу","body":"GENESIS призначений для планування й спілкування та не представляє політичні партії або державні інтереси. Доступність оплати й необов'язкових зовнішніх сервісів залежить від країни, банку та чинних правил провайдера. Вибір мови інтерфейсу не змінює цих правил. Приймання всіх карток і робота кожного зовнішнього сервісу в усіх країнах не гарантуються."},
   "zh": {"title":"服务用途与可用性","body":"GENESIS 是规划和沟通工具，不代表任何政党或政府利益。支付方式和可选外部服务的可用性取决于所在国家、银行以及服务提供商的现行规则。选择界面语言不会改变这些规则。不保证接受所有银行卡，也不保证每项外部服务在所有国家均可用。"},
   "tr": {"title":"Hizmetin amacı ve kullanılabilirliği","body":"GENESIS bir planlama ve iletişim aracıdır; siyasi partileri veya devlet çıkarlarını temsil etmez. Ödemelerin ve isteğe bağlı harici hizmetlerin kullanılabilirliği ülkeye, bankaya ve sağlayıcının yürürlükteki kurallarına bağlıdır. Arayüz dilinin seçilmesi bu kuralları değiştirmez. Her kartın kabul edileceği ve her harici hizmetin tüm ülkelerde kullanılabileceği garanti edilmez."},
-  "ja": {"title":"サービスの目的と利用可能性","body":"GENESIS は計画とコミュニケーションのためのツールであり、政党や政府の利益を代表するものではありません。支払い方法や任意の外部サービスを利用できるかどうかは、国、銀行、提供事業者の現行規則によって異なります。画面の言語を選択しても、これらの規則は変わりません。すべてのカードの利用や、すべての国での各外部サービスの提供を保証するものではありません。"}
+  "ja": {"title":"サービスの目的と利用可能性","body":"GENESIS は計画とコミュニケーションのためのツールであり、政党や政府の利益を代表するものではありません。支払い方法や任意の外部サービスを利用できるかどうかは、国、銀行、提供事業者の現行規則によって異なります。画面の言語を選択しても、これらの規則は変わりません。すべてのカードの利用や、すべての国での各外部サービスの提供を保証するものではありません。"},
+  "he": {
+    "title": "מטרת השירות וזמינות",
+    "body": "GENESIS הוא כלי לתכנון ותקשורת ולא מייצג מפלגות פוליטיות או אינטרסים ממשלתיים. שיטות תשלום ושירותים חיצוניים אפשריים תלוי במדינה, הבנק והחוקים הנוכחיים של הספק. בחירת שפה לממשק לא משנה את החוקים הללו. קבלת כל כרטיס וזמינות של כל שירות חיצוני בכל מדינה אינן מובטחות."
+  },
+  "ar": {
+    "title": "الغرض من الخدمة وتوافرها",
+    "body": "GENESIS هي أداة للتخطيط والاتصال ولا تمثل الأحزاب السياسية أو المصالح الحكومية. تعتمد أساليب الدفع والخدمات الخارجية الاختيارية على البلد والمصرف والقواعد الحالية لمقدم الخدمة. اختيار لغة واجهة لا يغير هذه القواعد. قبول كل بطاقة وتوافر كل خدمة خارجية في كل بلد غير مضمونين."
+  },
+  "ko": {
+    "title": "서비스 목적 및 가용성",
+    "body": "GENESIS는 계획 및 커뮤니케이션 도구이며 정당 또는 정부의 이익을 대표하지 않습니다. 결제 방법 및 선택적 외부 서비스는 국가, 은행 및 제공업체의 현재 규정에 따라 달라집니다. 인터페이스 언어를 선택하는 것은 이러한 규정을 변경하지 않습니다. 모든 카드의 수락 및 모든 국가에서 모든 외부 서비스의 사용 가능성은 보장되지 않습니다."
+  },
+  "nl": {
+    "title": "Dienstdoel en beschikbaarheid",
+    "body": "GENESIS is een plannings- en communicatiehulpmiddel en vertegenwoordigt geen politieke partijen of overheidsbelangen. Betaalmethoden en optionele externe diensten zijn afhankelijk van de huidige regels van het land, de bank en de provider. De selectie van een interfacetaal verandert deze regels niet."
+  }
 }

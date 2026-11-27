@@ -101,6 +101,10 @@ export function formatRelativeReminder(minutes: number, locale: string) {
     : new Intl.NumberFormat(locale, {style:"unit",unit:name,unitDisplay:"long"}).format(value);
   if (language === "uk") return `За ${quantity}`;
   if (language === "zh") return `提前${quantity}`;
+  if (language === "he") return `${quantity} לפני המועד`;
+  if (language === "ar") return `قبل الموعد بـ${quantity}`;
+  if (language === "ko") return `${quantity} 전`;
+  if (language === "nl") return `${quantity} van tevoren`;
   if (language === "ja") return `${quantity}前`;
   const before: Record<string,string> = {el:"πριν",de:"vorher",fr:"avant",es:"antes",it:"prima",pt:"antes",pl:"wcześniej",sr:"раније",tr:"önce"};
   return `${quantity} ${before[language] ?? "before"}`;

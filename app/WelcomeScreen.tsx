@@ -27,10 +27,6 @@ type WelcomeScreenProps = {
 };
 
 const APP_BASE = (process.env.NEXT_PUBLIC_GENESIS_BASE_PATH?.trim() || "").replace(/\/$/, "");
-const FLAG_COUNTRIES: Record<Language, string> = {
-  ru: "ru", en: "gb", el: "gr", de: "de", fr: "fr", es: "es", it: "it", pt: "pt",
-  pl: "pl", sr: "rs", uk: "ua", zh: "cn", tr: "tr", ja: "jp",
-};
 
 function maySuggestLanguage(){
   if(typeof window==='undefined')return false;
@@ -57,8 +53,6 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
   const product=publicProductCopy(language,edition);
   const home=publicPagePath(language,'home',APP_BASE,edition),login=`${publicPagePath(language,'login',APP_BASE,edition)}#sign-in`;
   const terms=publicPagePath(language,'terms',APP_BASE,edition),privacy=publicPagePath(language,'privacy',APP_BASE,edition);
-  const visibleLanguages=LANGUAGES;
-  const languageColumns=7;
   const copy = language === "en" ? {
     home: "GENESIS — home",
     tagline: "calendar of clear action",
@@ -133,7 +127,7 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
 
       <section className="welcome-grid">
         <div className="welcome-copy">
-          <span className="welcome-kicker">{copy.kicker}</span>
+          <span className="welcome-kicker" data-no-translate>{pageCopy[language].kicker}</span>
           <h1><span data-no-translate>Genesis Tasker</span><em data-no-translate>{language==='ru'||language==='en'?copy.title:pageCopy[language].title}</em></h1>
           <p className="welcome-purpose">{copy.purpose}</p>
           <div className="public-hero-actions" data-no-translate><a className="public-action" href="#pricing">{product.pricing}</a><a href={login}>{product.getStarted}</a></div>
@@ -173,14 +167,13 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
           <PublicRegionControl language={language}/>
           <div className="welcome-language-picker">
             <span>{copy.chooseLanguage}</span>
-            <div className="language-choice welcome-language-flags" role="radiogroup" aria-label={copy.languageGroup}
-              style={{ gridTemplateColumns: `repeat(${languageColumns}, minmax(0, 1fr))` }}>
-              {visibleLanguages.map((code) => (
+            <div className="language-choice welcome-language-flags" role="radiogroup" aria-label={translateText(copy.languageGroup, language)}>
+              {LANGUAGES.map((code) => (
                 <button key={code} type="button" role="radio" aria-checked={language === code}
                   className={language === code ? "active" : ""} onClick={() => onLanguageChange(code)}
-                  aria-label={LANGUAGE_LABELS[code].name} title={LANGUAGE_LABELS[code].name} data-no-translate>
+                  lang={code} aria-label={LANGUAGE_LABELS[code].name} title={LANGUAGE_LABELS[code].name} data-no-translate>
                   <span className="language-flag" aria-hidden="true">
-                    <img src={`${APP_BASE}/language-flags/${FLAG_COUNTRIES[code]}.svg`} alt="" />
+                    <img src={`${APP_BASE}/language-flags/${LANGUAGE_LABELS[code].country}.svg`} alt="" />
                   </span>
                 </button>
               ))}
@@ -188,8 +181,11 @@ export function WelcomeScreen({ nativeAndroidApkUrl, busy, error, language, onLa
           </div>
 
           <PartnerInvitation language={language} onBusyChange={setInvitationBusy} />
-          <button className="google-login-primary" type="button" onClick={onGoogle} disabled={busy || invitationBusy} aria-label={copy.googleLabel}>
-            <img src={`${APP_BASE}/google-signin-light-pill.svg`} alt="" aria-hidden="true" data-genesis-preserve="google-signin-pill" />
+          <button className="google-login-primary" type="button" onClick={onGoogle} disabled={busy || invitationBusy} aria-label={translateText(copy.googleLabel, language)} data-localized={language !== "en"}>
+            {language === "en" ? <img src={`${APP_BASE}/google-signin-light-pill.svg`} alt="" aria-hidden="true" data-genesis-preserve="google-signin-pill" /> : <>
+              <img src={`${APP_BASE}/google-signin-light-square.svg`} alt="" aria-hidden="true" />
+              <span data-no-translate>{translateText(copy.googleLabel, language)}</span>
+            </>}
           </button>
           {nativeAndroidApkUrl ? <AndroidDownload href={nativeAndroidApkUrl} language={language} /> : null}
 

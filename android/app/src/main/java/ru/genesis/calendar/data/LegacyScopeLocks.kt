@@ -7,6 +7,14 @@ import kotlinx.coroutines.sync.withLock
 import ru.genesis.calendar.auth.AuthApiError
 import java.util.concurrent.ConcurrentHashMap
 
+/** All account imports, Google list changes and outbox sends take the scope permit before
+ * the controller mutex. Nested protected HTTP and Room work borrow that same permit. */
+internal suspend fun <T> Mutex.withAccountSync(db: GenesisDatabase, scope: String,
+    assertCurrent: () -> Unit, operation: suspend () -> T): T =
+    NativeLegacyOperationPermit.run(db, scope, assertCurrent) {
+        withLock { assertCurrent(); operation() }
+    }
+
 /** Current Android app/WorkManager writers use one process (no :process services).
  * Controllers and independent Room instances must use the SAME scope mutex.
  * SQLite separately enforces persistent storage barriers across connections. */

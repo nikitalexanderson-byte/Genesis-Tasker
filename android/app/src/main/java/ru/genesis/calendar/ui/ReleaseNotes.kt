@@ -26,7 +26,7 @@ internal data class Notes(val title: String, val close: String, val changes: Lis
 
 /** The app and Open testing use the same reviewed release copy. */
 internal fun currentReleaseNotes(context: Context, language: String): List<String> {
-    val catalog = context.assets.open("originals/i18n/android-3.3.6-notes.json")
+    val catalog = context.assets.open("originals/i18n/android-3.3.7-notes.json")
         .bufferedReader(Charsets.UTF_8).use { org.json.JSONObject(it.readText()) }
     val items = catalog.optJSONArray(language) ?: catalog.getJSONArray("ru")
     return (0 until items.length()).map { items.getString(it) }
@@ -46,6 +46,30 @@ internal val release331Notes = mapOf(
         "With sacred features off, the calendar has square day cells and compact months without descriptions.",
         "Hide Today panels with the eye button. Life categories have their own button; mind maps are in the header.",
         "Updates go straight to the latest version, skipping intermediate releases."),
+    "he" to listOf(
+        "שיפור בקלות הקריאה של לוחות היום והלוח השנה המוצגים בנושאים קלים.",
+        "מסלול גיבור עוקב אחר פלטת הצבעים שלך מזג האוויר, היסטוריה של חלומות ריקים והדיאלוג של הפרויקט הם קומפקטיים יותר.",
+        "עם מאפיינים קדושים כבויים, ללוח השנה יש תאים של יום ריבועי וחודשים קומפקטיים ללא תיאור.",
+        "הסתיר את לוחות היום עם הכפתור עין. לקטגוריות חיים יש כפתורים משלהם; מפות מוח נמצאות בכותרת.",
+        "עדכונים הולכים ישר לגרסה האחרונה, דוחפים את השחרורים הביניים."),
+    "ar" to listOf(
+        "تحسين قابلية قراءة ألواح اليوم والتقويم المصورة في مواضيع خفيفة.",
+        "يتبع مسار البطل ألوانك. الطقس، تاريخ الأحلام الفارغة وحوار المشروع أكثر دقة.",
+        "مع السمات المقدسة، التقويم لديه خلايا اليوم المربع والأشهر المدمجة دون وصف.",
+        "إخفاء لوحات اليوم مع زر العين. فئات الحياة لديها زر خاص بها؛ الخرائط العقلية في العنوان.",
+        "وتجري عمليات التحديث مباشرة إلى أحدث نسخة، مع تجاوز الإصدارات الوسيطة."),
+    "ko" to listOf(
+        "가벼운 테마에서 일러스트 오늘과 달력 패널의 가독성이 향상되었습니다.",
+        "영웅 경로는 색상 팔레트를 따릅니다. 날씨, 비어있는 꿈 기록 및 프로젝트 대화 상자가 더 컴팩트합니다.",
+        "신성한 기능이 꺼져 있으면, 달력은 사각형 일 셀과 설명 없는 컴팩트 한 달을 가지고 있습니다.",
+        "눈 단추로 오늘 패널을 숨깁니다. 생활 분류는 자체 버튼이 있으며 마인드 맵은 헤더에 있습니다.",
+        "업데이트는 중간 릴리스를 건너뛰고 최신 버전으로 바로 이동합니다."),
+    "nl" to listOf(
+        "Verbeterde leesbaarheid van geïllustreerde panelen Vandaag en Agenda in lichte thema's.",
+        "Hero Path volgt je kleurenpalet, het weer, de lege droomgeschiedenis en het projectdialoogvenster zijn compacter.",
+        "Als de heilige functies zijn uitgeschakeld, heeft de kalender vierkante dagcellen en compacte maanden zonder beschrijvingen.",
+        "Vandaag panelen verbergen met de oog knop.Levenscategorieën hebben hun eigen knop; mindmaps zijn in de header.",
+        "Updates gaan rechtstreeks naar de nieuwste versie, tussentijdse releases worden overgeslagen."),
     "el" to listOf(
         "Πιο ευανάγνωστα εικονογραφημένα πλαίσια στο Σήμερα και στο ημερολόγιο στα φωτεινά θέματα.",
         "Η Πορεία του Ήρωα ακολουθεί την παλέτα σας. Πιο συμπαγής καιρός, κενό ιστορικό ονείρων και παράθυρο έργου.",
@@ -129,6 +153,22 @@ internal val release330Notes = mapOf(
         "Wider Today panels, clearer calendar dates and navigation. Refined light palettes, Moon panel and weather effects.",
         "New habits use a timer only when you enable it. Auto-delete settings stay visible. Search time zones by city or UTC offset.",
         "Brighter Oracle card lettering and pink reversed positions. Advice is cached for the day. Dark blue Hero’s Path and a new Telegram channel."),
+    "he" to listOf(
+        "לוחות היום רחבים יותר, תאריך בלוח השנה ברור יותר וניווט. פלטות אור מתוחכמות, לוח ירח ואפקטים מזג אוויר.",
+        "הרגלים חדשים משתמשים בשעון רק כשאתה מפעיל אותו. הגדרות המיחזור האוטומטי נשארות נראות. חיפוש אזורי זמן לפי עיר או סטייה מ- UTC.",
+        "קלפי אורקל בהירים יותר ומיקומים הופכים ורודים. עצה נשמרת ליום. דרך הגיבור בכחול כהה וערוץ חדש Telegram."),
+    "ar" to listOf(
+        "ألواح اليوم الأوسع، تواريخ التقويم الأكثر وضوحا والملاحة. تنقيح ألوان الضوء، لوحة القمر والتأثيرات الجوية.",
+        "تستخدم العادات الجديدة توقيتاً فقط عندما تقوم بتفعيله. تظل إعدادات الحذف الآلي مرئية. البحث عن مناطق التوقيت بالمدينة أو تغير UTC.",
+        "كتابة بطاقات أوراكل أكثر إشراقاً ومواقع وردية معكوسة. المشورة مخزنة لليوم. مسار البطل الأزرق الداكن وقناة جديدة Telegram."),
+    "ko" to listOf(
+        "더 넓은 오늘 패널, 더 명확한 달력 날짜 및 내비게이션. 세련된 조명 팔레트, 달 패널 및 날씨 효과.",
+        "새로운 습관은 타이머를 활성화할 때만 사용합니다. 자동 삭제 설정은 표시됩니다. 도시 또는 UTC 오프셋으로 시간대를 검색하십시오.",
+        "더 밝은 오라클 카드 글자와 분홍색 반전 위치. 조언이 하루 동안 캐시됩니다. 다크 블루 영웅의 경로와 새로운 Telegram 채널."),
+    "nl" to listOf(
+        "Bredere panelen vandaag, duidelijkere kalenderdata en navigatie.Verfijnde lichtpaletten, maanpaneel en weerseffecten.",
+        "Nieuwe gewoonten gebruiken alleen een timer als u deze inschakelt. Instellingen voor automatisch verwijderen blijven zichtbaar Zoek tijdzones op stad of UTC-verschuiving.",
+        "Helderdere Oracle-kaartletters en roze omgekeerde posities. Advies wordt gecached voor de dag, donkerblauw Hero's Path en een nieuw Telegram-kanaal."),
     "el" to listOf(
         "Πλατύτερα πλαίσια «Σήμερα», σαφέστερες ημερομηνίες και πλοήγηση. Βελτιωμένες φωτεινές παλέτες, Σελήνη και εφέ καιρού.",
         "Το χρονόμετρο νέας συνήθειας ενεργοποιείται μόνο αν το επιλέξετε. Οι ρυθμίσεις αυτόματης διαγραφής παραμένουν ορατές. Αναζήτηση ζώνης ώρας ανά πόλη ή UTC.",
@@ -192,6 +232,30 @@ internal val notes = mapOf(
         "Refined dialogs, button sizes and named branch selection in mind maps.",
         "Updated light palettes, calendar and weather panels.",
         "New detailed nature panoramas for phones and large screens.")),
+    "he" to Notes("מה חדש", "הבנתי", listOf(
+        "מידול צעד אחר צעד עם הסברים ודוגמאות לכל שאלה, שאלות המשך מותאמות ואפשרויות פעולה בטוחות.",
+        "מגוון רחב יותר של מילים מקודשות, עם כללים חדשים לקצב וליחס בין החלקים.",
+        "שופרו תיבות הדו־שיח, גודלי הכפתורים ובחירת ענפים לפי שם במפות חשיבה.",
+        "עודכנו לוחות הצבעים הבהירים ותצוגות לוח השנה ומזג האוויר.",
+        "נוספו תמונות נוף פנורמיות מפורטות לטלפונים ולמסכים גדולים.")),
+    "ar" to Notes("ما الجديد", "حسنًا", listOf(
+        "نمذجة خطوة بخطوة مع شرح وأمثلة لكل سؤال، وأسئلة متابعة تتكيّف مع الإجابات، وخيارات آمنة للتصرّف.",
+        "تنوع أكبر في الكلمات المقدسة بفضل قواعد جديدة للإيقاع والتناسب.",
+        "تحسين مربعات الحوار وأحجام الأزرار واختيار الفروع بالاسم في الخرائط الذهنية.",
+        "تحديث لوحات الألوان الفاتحة ولوحتي التقويم والطقس.",
+        "مشاهد بانورامية جديدة ومفصّلة للطبيعة على الهواتف والشاشات الكبيرة.")),
+    "ko" to Notes("새로운 기능", "확인", listOf(
+        "단계별 모델링에서 질문마다 설명과 예시를 제공합니다. 답변에 맞춘 후속 질문과 안전하게 시도할 수 있는 행동도 제시합니다.",
+        "리듬과 비례에 관한 새 규칙을 적용해 신성한 단어의 구성이 더 다양해졌습니다.",
+        "대화상자와 버튼 크기를 조정하고 마인드맵에서 이름으로 가지를 선택하는 기능을 개선했습니다.",
+        "밝은 테마의 색상과 달력 및 날씨 패널을 새롭게 다듬었습니다.",
+        "휴대전화와 대형 화면에 정교한 자연 파노라마 이미지를 추가했습니다.")),
+    "nl" to Notes("Wat is er nieuw?", "Begrepen", listOf(
+        "Stapsgewijs modelleren met uitleg en voorbeelden bij elke vraag, vervolgvragen die aansluiten op je antwoorden en veilige handelingsmogelijkheden.",
+        "Meer variatie in de heilige woorden dankzij nieuwe regels voor ritme en verhoudingen.",
+        "Verbeterde dialoogvensters, knopafmetingen en selectie van takken op naam in mindmaps.",
+        "Bijgewerkte lichte kleurenpaletten en vernieuwde kalender- en weerpanelen.",
+        "Nieuwe gedetailleerde natuurpanorama’s voor telefoons en grote schermen.")),
     "el" to Notes("Τι νέο υπάρχει", "Κατάλαβα", listOf(
         "Μοντελοποίηση βήμα προς βήμα: εξηγήσεις και παραδείγματα σε κάθε ερώτηση, προσαρμοστικές διευκρινίσεις και ασφαλείς επιλογές δράσης.",
         "Πιο ποικίλες ιερές λέξεις με νέους κανόνες ρυθμού και αναλογιών.",

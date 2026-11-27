@@ -12,5 +12,21 @@
  "uk":{"action":"Визначити результат попередньої спроби","notice":"Якщо проєкт уже створено, його створення продовжиться. Інакше попередню спробу буде остаточно скасовано, а зашифровані введені дані збережено для нової. Склад учасників потрібно буде підтвердити знову."},
  "zh":{"action":"处理上一次尝试","notice":"如果项目已经创建，将继续完成该项目。否则，将永久取消上一次尝试，并保留已加密的输入数据以供重新尝试。您需要再次核查参与者。"},
  "tr":{"action":"Önceki girişimin sonucunu belirle","notice":"Proje zaten oluşturulduysa oluşturma işlemi devam eder. Aksi takdirde önceki girişim kalıcı olarak iptal edilir ve şifrelenmiş girişiniz yeni bir girişim için saklanır. Katılımcıları tekrar incelemeniz gerekir."},
- "ja":{"action":"前回の試行の結果を確認する","notice":"プロジェクトがすでに作成されている場合は、その作成を続行します。それ以外の場合は前回の試行を恒久的に取り消し、暗号化された入力データを新しい試行のために保持します。参加者をもう一度確認する必要があります。"}
+ "ja":{"action":"前回の試行の結果を確認する","notice":"プロジェクトがすでに作成されている場合は、その作成を続行します。それ以外の場合は前回の試行を恒久的に取り消し、暗号化された入力データを新しい試行のために保持します。参加者をもう一度確認する必要があります。"},
+  "he": {
+    "action": "פתר את הניסיון הקודם",
+    "notice": "אם המיזם כבר נוצר, המשך ביצירתו. אחרת, בטל באופן קבוע את הניסיון הקודם ושמר את הקלט המוצפן שלך לניסיון חדש. תבחן שוב את המשתתפים בו."
+  },
+  "ar": {
+    "action": "حل المحاولة السابقة",
+    "notice": "إذا كان المشروع قد أنشئ بالفعل، استمر في إنشاءه. وإلا، ألغِ المحاولة السابقة بشكل دائم واحتفظ بمدخلاتك المشفرة لمحاولة جديدة. ستراجع المشاركين فيه مرة أخرى."
+  },
+  "ko": {
+    "action": "이전 시도 해결",
+    "notice": "만약 프로젝트가 이미 만들어졌다면, 계속 작성하십시오. 그렇지 않으면, 이전 시도를 영구적으로 취소하고 새로운 시도를 위해 암호화된 입력을 유지하십시오. 참여자들을 다시 검토할 것입니다."
+  },
+  "nl": {
+    "action": "De vorige poging oplossen",
+    "notice": "Als het project al is aangemaakt, ga dan verder met het aanmaken van het project. Zo niet, annuleer de vorige poging permanent en bewaar uw versleutelde invoer voor een nieuwe poging."
+  }
 }

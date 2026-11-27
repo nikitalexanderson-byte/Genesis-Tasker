@@ -1,0 +1,1301 @@
+{
+  "protocol": 1,
+  "catalogues": [
+    {
+      "kind": "daily",
+      "version": "aphrodisia-2026-10-29-v1",
+      "language": "ru",
+      "sha256": "6e158c22b33107007331f6e7fc30e755c0d93e7067946790712989e062864485",
+      "bytes": 122442,
+      "path": "advice-catalogues/v1/daily/aphrodisia-2026-10-29-v1/ru.6e158c22b33107007331f6e7fc30e755c0d93e7067946790712989e062864485.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aphrodisia-2026-10-29-v1",
+      "language": "en",
+      "sha256": "9db13675cec8b366d0fc86d3a5ad30dad1584f1a528158c88b3adde142577299",
+      "bytes": 75094,
+      "path": "advice-catalogues/v1/daily/aphrodisia-2026-10-29-v1/en.9db13675cec8b366d0fc86d3a5ad30dad1584f1a528158c88b3adde142577299.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aphrodisia-2026-10-29-v1",
+      "language": "el",
+      "sha256": "d20c54a7535144b686493619e071225e864e59fd4e2e0913e58bb64c27d22c5c",
+      "bytes": 138346,
+      "path": "advice-catalogues/v1/daily/aphrodisia-2026-10-29-v1/el.d20c54a7535144b686493619e071225e864e59fd4e2e0913e58bb64c27d22c5c.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aphrodisia-2026-10-29-v1",
+      "language": "de",
+      "sha256": "1e453f36e681906edf821d14f9356df189612dd954ae2bb9c93b1ea3b1ec0960",
+      "bytes": 85276,
+      "path": "advice-catalogues/v1/daily/aphrodisia-2026-10-29-v1/de.1e453f36e681906edf821d14f9356df189612dd954ae2bb9c93b1ea3b1ec0960.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aphrodisia-2026-10-29-v1",
+      "language": "fr",
+      "sha256": "147a688f085e7f3dd76b0c6b9f1112662fa122e41eb166efb926ffa9031a1b53",
+      "bytes": 84448,
+      "path": "advice-catalogues/v1/daily/aphrodisia-2026-10-29-v1/fr.147a688f085e7f3dd76b0c6b9f1112662fa122e41eb166efb926ffa9031a1b53.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aphrodisia-2026-10-29-v1",
+      "language": "es",
+      "sha256": "01a1620034023ed8759732ae08ce7f4755a9c3a1cca319dbb5b00a0da1f54640",
+      "bytes": 78743,
+      "path": "advice-catalogues/v1/daily/aphrodisia-2026-10-29-v1/es.01a1620034023ed8759732ae08ce7f4755a9c3a1cca319dbb5b00a0da1f54640.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aphrodisia-2026-10-29-v1",
+      "language": "it",
+      "sha256": "b297d3567e5fb4fd5e4d236c4696e23480e8fcc987c5bc552b5f50e08036421c",
+      "bytes": 79868,
+      "path": "advice-catalogues/v1/daily/aphrodisia-2026-10-29-v1/it.b297d3567e5fb4fd5e4d236c4696e23480e8fcc987c5bc552b5f50e08036421c.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aphrodisia-2026-10-29-v1",
+      "language": "pt",
+      "sha256": "6fecc8a689d2d0c1cdefdbc8590d35e232ed72b11590ad36ccdc5d50265429b7",
+      "bytes": 77896,
+      "path": "advice-catalogues/v1/daily/aphrodisia-2026-10-29-v1/pt.6fecc8a689d2d0c1cdefdbc8590d35e232ed72b11590ad36ccdc5d50265429b7.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aphrodisia-2026-10-29-v1",
+      "language": "pl",
+      "sha256": "e9537c16a868c7e19853bbf132c591304b40c2b322818b11bef99428c2865a2d",
+      "bytes": 78199,
+      "path": "advice-catalogues/v1/daily/aphrodisia-2026-10-29-v1/pl.e9537c16a868c7e19853bbf132c591304b40c2b322818b11bef99428c2865a2d.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aphrodisia-2026-10-29-v1",
+      "language": "sr",
+      "sha256": "a8aad1a22795adb62b351b682e002c0200e44cce9b79d471f0a64add3678f348",
+      "bytes": 116328,
+      "path": "advice-catalogues/v1/daily/aphrodisia-2026-10-29-v1/sr.a8aad1a22795adb62b351b682e002c0200e44cce9b79d471f0a64add3678f348.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aphrodisia-2026-10-29-v1",
+      "language": "uk",
+      "sha256": "e68c57dea60e3ff94598adfb27706ad44d055e72919f693c1feb201845a3202b",
+      "bytes": 118261,
+      "path": "advice-catalogues/v1/daily/aphrodisia-2026-10-29-v1/uk.e68c57dea60e3ff94598adfb27706ad44d055e72919f693c1feb201845a3202b.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aphrodisia-2026-10-29-v1",
+      "language": "zh",
+      "sha256": "ef6e8a8ebc1836d0dea0d74e4cb65882eaab6745f6536158a03e26df0c5fc658",
+      "bytes": 66874,
+      "path": "advice-catalogues/v1/daily/aphrodisia-2026-10-29-v1/zh.ef6e8a8ebc1836d0dea0d74e4cb65882eaab6745f6536158a03e26df0c5fc658.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aphrodisia-2026-10-29-v1",
+      "language": "tr",
+      "sha256": "99d9b8eb33ff156084ad19cfbf2bd9f6c3c3c3e9a22a11681f6906a33dbd4d2d",
+      "bytes": 78406,
+      "path": "advice-catalogues/v1/daily/aphrodisia-2026-10-29-v1/tr.99d9b8eb33ff156084ad19cfbf2bd9f6c3c3c3e9a22a11681f6906a33dbd4d2d.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aphrodisia-2026-10-29-v1",
+      "language": "ja",
+      "sha256": "6d81ea3307b4d2e6d2c9fe69fc2e97d8f6da16c5be300102f8b37ef8e13e5534",
+      "bytes": 92913,
+      "path": "advice-catalogues/v1/daily/aphrodisia-2026-10-29-v1/ja.6d81ea3307b4d2e6d2c9fe69fc2e97d8f6da16c5be300102f8b37ef8e13e5534.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aphrodisia-2026-10-29-v1",
+      "language": "he",
+      "sha256": "668acb8424857371b0094edb928a7f7700de986e721d2825cf4274a40a6d6a3d",
+      "bytes": 92423,
+      "path": "advice-catalogues/v1/daily/aphrodisia-2026-10-29-v1/he.668acb8424857371b0094edb928a7f7700de986e721d2825cf4274a40a6d6a3d.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aphrodisia-2026-10-29-v1",
+      "language": "ar",
+      "sha256": "1d66d7debae26425fc719bdbb6c536da6420d26728905e861959e82604bce1bc",
+      "bytes": 98178,
+      "path": "advice-catalogues/v1/daily/aphrodisia-2026-10-29-v1/ar.1d66d7debae26425fc719bdbb6c536da6420d26728905e861959e82604bce1bc.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aphrodisia-2026-10-29-v1",
+      "language": "ko",
+      "sha256": "d8395e7aebc000ae26dba1e3ae41c43f4be760af9b0ba43ff77dec37835a9e29",
+      "bytes": 85782,
+      "path": "advice-catalogues/v1/daily/aphrodisia-2026-10-29-v1/ko.d8395e7aebc000ae26dba1e3ae41c43f4be760af9b0ba43ff77dec37835a9e29.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aphrodisia-2026-10-29-v1",
+      "language": "nl",
+      "sha256": "b9f07cedaa6388ace13b50d52ffd3375dc747c406fd99687b5b74a4f87182518",
+      "bytes": 81463,
+      "path": "advice-catalogues/v1/daily/aphrodisia-2026-10-29-v1/nl.b9f07cedaa6388ace13b50d52ffd3375dc747c406fd99687b5b74a4f87182518.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-22-v2",
+      "language": "ru",
+      "sha256": "7c62a7a5d3001437ee04a021e9c4c58022ddfb9a7366b616aab14497eb7992c1",
+      "bytes": 8969,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-22-v2/ru.7c62a7a5d3001437ee04a021e9c4c58022ddfb9a7366b616aab14497eb7992c1.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-22-v2",
+      "language": "en",
+      "sha256": "6a78f42645849ee5f15864a60941bcfb76445fd3c61a243e5fc2221aab166323",
+      "bytes": 5482,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-22-v2/en.6a78f42645849ee5f15864a60941bcfb76445fd3c61a243e5fc2221aab166323.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-22-v2",
+      "language": "el",
+      "sha256": "ec5b0c1b6d7d9b042ba03fae194afc0819a3bc6f6f79d554932bc2ea529d5ea1",
+      "bytes": 10087,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-22-v2/el.ec5b0c1b6d7d9b042ba03fae194afc0819a3bc6f6f79d554932bc2ea529d5ea1.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-22-v2",
+      "language": "de",
+      "sha256": "0a3908df39364ac803d0b0f1ca2dc07310a3b7cfb14c91d897e631ba723fea68",
+      "bytes": 6154,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-22-v2/de.0a3908df39364ac803d0b0f1ca2dc07310a3b7cfb14c91d897e631ba723fea68.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-22-v2",
+      "language": "fr",
+      "sha256": "46eb1f93d679e758968dc29f588b2a518077aba6027b51ed8b73f69173b738dc",
+      "bytes": 6372,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-22-v2/fr.46eb1f93d679e758968dc29f588b2a518077aba6027b51ed8b73f69173b738dc.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-22-v2",
+      "language": "es",
+      "sha256": "1c1b7d175ed57bd4fb386468e4f3ce2c2621fa4895fa453cd37dfb1b34e83740",
+      "bytes": 5946,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-22-v2/es.1c1b7d175ed57bd4fb386468e4f3ce2c2621fa4895fa453cd37dfb1b34e83740.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-22-v2",
+      "language": "it",
+      "sha256": "4c6d27ce402940b2fbd59cec301e230a8dfdb123f8542027ffd661e8a84fd601",
+      "bytes": 5967,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-22-v2/it.4c6d27ce402940b2fbd59cec301e230a8dfdb123f8542027ffd661e8a84fd601.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-22-v2",
+      "language": "pt",
+      "sha256": "b1d73de11ed48d378aeb4a1924e1525f22ab1efd3d5b017edf426df30ae1378b",
+      "bytes": 5758,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-22-v2/pt.b1d73de11ed48d378aeb4a1924e1525f22ab1efd3d5b017edf426df30ae1378b.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-22-v2",
+      "language": "pl",
+      "sha256": "07217e69ca67e7eea5e08a799571200d9508a44a48fcaef05a97875245b00bf7",
+      "bytes": 5727,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-22-v2/pl.07217e69ca67e7eea5e08a799571200d9508a44a48fcaef05a97875245b00bf7.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-22-v2",
+      "language": "sr",
+      "sha256": "0aec1ef148bb869157891b76121f15a8fbdada592a2b79edf24b39248b949794",
+      "bytes": 8501,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-22-v2/sr.0aec1ef148bb869157891b76121f15a8fbdada592a2b79edf24b39248b949794.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-22-v2",
+      "language": "uk",
+      "sha256": "ff0bb1be400c84a3893bd8c6e2d51d58eba51c15596723240b461a5dbeeae378",
+      "bytes": 8674,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-22-v2/uk.ff0bb1be400c84a3893bd8c6e2d51d58eba51c15596723240b461a5dbeeae378.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-22-v2",
+      "language": "zh",
+      "sha256": "f1a8d44b369eb9790f299ddd578cde6ed9f19d651a74fef540ad2d233dd7864a",
+      "bytes": 5007,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-22-v2/zh.f1a8d44b369eb9790f299ddd578cde6ed9f19d651a74fef540ad2d233dd7864a.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-22-v2",
+      "language": "tr",
+      "sha256": "64018dbae776ab037bd8cc209f696a03ab27c2043c048ea7bf4c48c20fb11115",
+      "bytes": 5799,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-22-v2/tr.64018dbae776ab037bd8cc209f696a03ab27c2043c048ea7bf4c48c20fb11115.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-22-v2",
+      "language": "ja",
+      "sha256": "01b5b7ef07c6f06025a693fed76e77b5669c9e4b0360b197aa6934772a617eef",
+      "bytes": 6261,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-22-v2/ja.01b5b7ef07c6f06025a693fed76e77b5669c9e4b0360b197aa6934772a617eef.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-22-v2",
+      "language": "he",
+      "sha256": "4e05d908d7567c0d66da9c568ba9ae75cad04f98f6c266b2c79b24d4382ffeb9",
+      "bytes": 6665,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-22-v2/he.4e05d908d7567c0d66da9c568ba9ae75cad04f98f6c266b2c79b24d4382ffeb9.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-22-v2",
+      "language": "ar",
+      "sha256": "96deedd84a011037cdca6eee665a5ffe7a834d742907d55a4e27070497638a38",
+      "bytes": 7181,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-22-v2/ar.96deedd84a011037cdca6eee665a5ffe7a834d742907d55a4e27070497638a38.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-22-v2",
+      "language": "ko",
+      "sha256": "aa85aca6041f7b86590fa07e0b14e0eeccb74024ca292000a5130bdd4c17e2f8",
+      "bytes": 6166,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-22-v2/ko.aa85aca6041f7b86590fa07e0b14e0eeccb74024ca292000a5130bdd4c17e2f8.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-22-v2",
+      "language": "nl",
+      "sha256": "a73d84bbe259f14ad7a975958d74a5427eb6dcdf8f7100ff18b00d6097558d99",
+      "bytes": 5844,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-22-v2/nl.a73d84bbe259f14ad7a975958d74a5427eb6dcdf8f7100ff18b00d6097558d99.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-v1",
+      "language": "ru",
+      "sha256": "5ff04f1668f34fc082bc7da953d641251498166f0f7bc78baba45364741ade99",
+      "bytes": 146821,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-v1/ru.5ff04f1668f34fc082bc7da953d641251498166f0f7bc78baba45364741ade99.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-v1",
+      "language": "en",
+      "sha256": "b1f9dda513e355d7f55800b09a5742cb889a9bfb981adba631380f82bcc6b60d",
+      "bytes": 83901,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-v1/en.b1f9dda513e355d7f55800b09a5742cb889a9bfb981adba631380f82bcc6b60d.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-v1",
+      "language": "el",
+      "sha256": "f8e63cdaaddbe35c77dc3e2c1d569484d7022a0c60c8628f05fe4461e1eca694",
+      "bytes": 162630,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-v1/el.f8e63cdaaddbe35c77dc3e2c1d569484d7022a0c60c8628f05fe4461e1eca694.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-v1",
+      "language": "de",
+      "sha256": "d45358862e0640c7f5ebd1205f43d37d3669763c368bcfeb9f54f01eb2ad5886",
+      "bytes": 99221,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-v1/de.d45358862e0640c7f5ebd1205f43d37d3669763c368bcfeb9f54f01eb2ad5886.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-v1",
+      "language": "fr",
+      "sha256": "ee5c8f896ef9647ed2e0e70c06165e295e23d4fd8dd868205734de67db657dd4",
+      "bytes": 101398,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-v1/fr.ee5c8f896ef9647ed2e0e70c06165e295e23d4fd8dd868205734de67db657dd4.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-v1",
+      "language": "es",
+      "sha256": "e20bebca3df839bf3bd3cd1e5564ab802218deada7083be3716bae521660e3fe",
+      "bytes": 93624,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-v1/es.e20bebca3df839bf3bd3cd1e5564ab802218deada7083be3716bae521660e3fe.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-v1",
+      "language": "it",
+      "sha256": "7c4fa5e42d99456aa542c6826610e3c8b9a6117a4010226d6be24d7460f44f4f",
+      "bytes": 94606,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-v1/it.7c4fa5e42d99456aa542c6826610e3c8b9a6117a4010226d6be24d7460f44f4f.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-v1",
+      "language": "pt",
+      "sha256": "0c80158a32f20d9f712df695d8b60aae0414f5c3dd4c8ed0e467283dcfe89d2d",
+      "bytes": 92185,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-v1/pt.0c80158a32f20d9f712df695d8b60aae0414f5c3dd4c8ed0e467283dcfe89d2d.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-v1",
+      "language": "pl",
+      "sha256": "58d5d81a42693492246ddc560084525142db8d64b3fb3f28d80841536cc07524",
+      "bytes": 92587,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-v1/pl.58d5d81a42693492246ddc560084525142db8d64b3fb3f28d80841536cc07524.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-v1",
+      "language": "sr",
+      "sha256": "6b2976030f4eacd2449d9a955846adc3db7349c8b0f1bae755fdb983a3475e38",
+      "bytes": 136254,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-v1/sr.6b2976030f4eacd2449d9a955846adc3db7349c8b0f1bae755fdb983a3475e38.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-v1",
+      "language": "uk",
+      "sha256": "317907384a75c8cea4e3c856ec76d669f1b8089ab03c0e51b724b06b33c10d98",
+      "bytes": 140187,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-v1/uk.317907384a75c8cea4e3c856ec76d669f1b8089ab03c0e51b724b06b33c10d98.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-v1",
+      "language": "zh",
+      "sha256": "c7456e03b4e4322d4d994706c787a352c9b92fcc0dccd3447e4bbb8e00addbd6",
+      "bytes": 89577,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-v1/zh.c7456e03b4e4322d4d994706c787a352c9b92fcc0dccd3447e4bbb8e00addbd6.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-v1",
+      "language": "tr",
+      "sha256": "0b47e1cd2322451f4f112f366ee724c73d058178301e3979b5f4d86aebcebb22",
+      "bytes": 97096,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-v1/tr.0b47e1cd2322451f4f112f366ee724c73d058178301e3979b5f4d86aebcebb22.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-v1",
+      "language": "ja",
+      "sha256": "40b69b38bf9e7047ffb34483baf40eb6678ead71a7ddcbbd4eeecfedc5a41046",
+      "bytes": 118264,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-v1/ja.40b69b38bf9e7047ffb34483baf40eb6678ead71a7ddcbbd4eeecfedc5a41046.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-v1",
+      "language": "he",
+      "sha256": "dd31ae4bbff5a9cc5fb496189afc26c8738555414135b835fabad7f9b5c4ac94",
+      "bytes": 103906,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-v1/he.dd31ae4bbff5a9cc5fb496189afc26c8738555414135b835fabad7f9b5c4ac94.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-v1",
+      "language": "ar",
+      "sha256": "4bf5cc593d9a8b05e020150656c228f916117d10185517c4586512d287cfd398",
+      "bytes": 110673,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-v1/ar.4bf5cc593d9a8b05e020150656c228f916117d10185517c4586512d287cfd398.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-v1",
+      "language": "ko",
+      "sha256": "697ec4a902eec56a8d8e23a26e34d81fdb7c74a6faed115275bd5c3dd4f0f0f5",
+      "bytes": 96675,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-v1/ko.697ec4a902eec56a8d8e23a26e34d81fdb7c74a6faed115275bd5c3dd4f0f0f5.json"
+    },
+    {
+      "kind": "daily",
+      "version": "aretology-2026-10-v1",
+      "language": "nl",
+      "sha256": "978f3416003efb33bd5d2874232d2f8e9c3fbb9f7e76d114757f9d6176552bf4",
+      "bytes": 90371,
+      "path": "advice-catalogues/v1/daily/aretology-2026-10-v1/nl.978f3416003efb33bd5d2874232d2f8e9c3fbb9f7e76d114757f9d6176552bf4.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hermetica-2026-10-25-v1",
+      "language": "ru",
+      "sha256": "64107a6d2115f9220256444a6ef0fd9c99e46654e6ee93782d8d0e6a1022e1cd",
+      "bytes": 146309,
+      "path": "advice-catalogues/v1/daily/hermetica-2026-10-25-v1/ru.64107a6d2115f9220256444a6ef0fd9c99e46654e6ee93782d8d0e6a1022e1cd.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hermetica-2026-10-25-v1",
+      "language": "en",
+      "sha256": "98fbed56e214d494a370be760a9982e9d6e95e9f74f345bd4daedfb009be547b",
+      "bytes": 91091,
+      "path": "advice-catalogues/v1/daily/hermetica-2026-10-25-v1/en.98fbed56e214d494a370be760a9982e9d6e95e9f74f345bd4daedfb009be547b.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hermetica-2026-10-25-v1",
+      "language": "el",
+      "sha256": "fa4164d5a91d8820143dbda8801eeb2508c13fc54087ee6e9315e7d627b0d08a",
+      "bytes": 166272,
+      "path": "advice-catalogues/v1/daily/hermetica-2026-10-25-v1/el.fa4164d5a91d8820143dbda8801eeb2508c13fc54087ee6e9315e7d627b0d08a.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hermetica-2026-10-25-v1",
+      "language": "de",
+      "sha256": "bb5eb7fbc0474689b71dc88a340668cb7654d258fcef328deca447344fc5455d",
+      "bytes": 102700,
+      "path": "advice-catalogues/v1/daily/hermetica-2026-10-25-v1/de.bb5eb7fbc0474689b71dc88a340668cb7654d258fcef328deca447344fc5455d.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hermetica-2026-10-25-v1",
+      "language": "fr",
+      "sha256": "c9565be338d05b0d04efb48ee850be5a6a90bedbaa2d125dc9a16e572ea15e47",
+      "bytes": 102615,
+      "path": "advice-catalogues/v1/daily/hermetica-2026-10-25-v1/fr.c9565be338d05b0d04efb48ee850be5a6a90bedbaa2d125dc9a16e572ea15e47.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hermetica-2026-10-25-v1",
+      "language": "es",
+      "sha256": "1e541d7d8079dd35f1964ff2fb1f4ec57db0966126ec3aae846f94bd78c5d3db",
+      "bytes": 95603,
+      "path": "advice-catalogues/v1/daily/hermetica-2026-10-25-v1/es.1e541d7d8079dd35f1964ff2fb1f4ec57db0966126ec3aae846f94bd78c5d3db.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hermetica-2026-10-25-v1",
+      "language": "it",
+      "sha256": "4e313006d79d3363a31f3da47dbccc9c13628577477f8aa4fcb8611ac04a1c36",
+      "bytes": 96890,
+      "path": "advice-catalogues/v1/daily/hermetica-2026-10-25-v1/it.4e313006d79d3363a31f3da47dbccc9c13628577477f8aa4fcb8611ac04a1c36.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hermetica-2026-10-25-v1",
+      "language": "pt",
+      "sha256": "64468539c153119f47899c01a0edc5fdf1dcdb669d9ff294add7d875103f1a6a",
+      "bytes": 94778,
+      "path": "advice-catalogues/v1/daily/hermetica-2026-10-25-v1/pt.64468539c153119f47899c01a0edc5fdf1dcdb669d9ff294add7d875103f1a6a.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hermetica-2026-10-25-v1",
+      "language": "pl",
+      "sha256": "a59e4fc720b8cf9bc8a805042806040f7ad0d82cc3d5330868f6d3d048772d35",
+      "bytes": 94712,
+      "path": "advice-catalogues/v1/daily/hermetica-2026-10-25-v1/pl.a59e4fc720b8cf9bc8a805042806040f7ad0d82cc3d5330868f6d3d048772d35.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hermetica-2026-10-25-v1",
+      "language": "sr",
+      "sha256": "e20c5b09733bd04090903164d59090aac8a13e66cef9409035f1ddd45d71ed11",
+      "bytes": 139661,
+      "path": "advice-catalogues/v1/daily/hermetica-2026-10-25-v1/sr.e20c5b09733bd04090903164d59090aac8a13e66cef9409035f1ddd45d71ed11.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hermetica-2026-10-25-v1",
+      "language": "uk",
+      "sha256": "9d4549c6277806d024c058cf8af6a113e6d81662ca50921186a55a31baed62ea",
+      "bytes": 143431,
+      "path": "advice-catalogues/v1/daily/hermetica-2026-10-25-v1/uk.9d4549c6277806d024c058cf8af6a113e6d81662ca50921186a55a31baed62ea.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hermetica-2026-10-25-v1",
+      "language": "zh",
+      "sha256": "f6c23ea37ee739ce9bc212521a5ea45e29ae005853b6f1e9bf0c6dc4e1afaf3d",
+      "bytes": 80943,
+      "path": "advice-catalogues/v1/daily/hermetica-2026-10-25-v1/zh.f6c23ea37ee739ce9bc212521a5ea45e29ae005853b6f1e9bf0c6dc4e1afaf3d.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hermetica-2026-10-25-v1",
+      "language": "tr",
+      "sha256": "91dbb5749bd29cd78dc4a155b4fe39bbbcf211ef984c61d6eb6c58b9c2be8983",
+      "bytes": 94753,
+      "path": "advice-catalogues/v1/daily/hermetica-2026-10-25-v1/tr.91dbb5749bd29cd78dc4a155b4fe39bbbcf211ef984c61d6eb6c58b9c2be8983.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hermetica-2026-10-25-v1",
+      "language": "ja",
+      "sha256": "3d0fc5947a61a41af7940157ed39fe1ee58de5ee4695b5fbd7696dcac4cf7349",
+      "bytes": 113314,
+      "path": "advice-catalogues/v1/daily/hermetica-2026-10-25-v1/ja.3d0fc5947a61a41af7940157ed39fe1ee58de5ee4695b5fbd7696dcac4cf7349.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hermetica-2026-10-25-v1",
+      "language": "he",
+      "sha256": "3b037eda0d9bc3613c843699774b1f5b741c28dd57f743f9aa0f6575f1da0321",
+      "bytes": 111572,
+      "path": "advice-catalogues/v1/daily/hermetica-2026-10-25-v1/he.3b037eda0d9bc3613c843699774b1f5b741c28dd57f743f9aa0f6575f1da0321.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hermetica-2026-10-25-v1",
+      "language": "ar",
+      "sha256": "bd94de07c7099df0f3d2b0624dfa21c7e8797d71fb198c6d6977d21863e0f603",
+      "bytes": 117310,
+      "path": "advice-catalogues/v1/daily/hermetica-2026-10-25-v1/ar.bd94de07c7099df0f3d2b0624dfa21c7e8797d71fb198c6d6977d21863e0f603.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hermetica-2026-10-25-v1",
+      "language": "ko",
+      "sha256": "49d686cb77f092b12e67a1331289a01104aea91d3b8160ec23c9294fdc717b0b",
+      "bytes": 103879,
+      "path": "advice-catalogues/v1/daily/hermetica-2026-10-25-v1/ko.49d686cb77f092b12e67a1331289a01104aea91d3b8160ec23c9294fdc717b0b.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hermetica-2026-10-25-v1",
+      "language": "nl",
+      "sha256": "6164e53c1ea4d32b72edba3e0231b4d37bf300e56c6db1d9782c73e265437fcf",
+      "bytes": 97628,
+      "path": "advice-catalogues/v1/daily/hermetica-2026-10-25-v1/nl.6164e53c1ea4d32b72edba3e0231b4d37bf300e56c6db1d9782c73e265437fcf.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hestiology-2026-10-v1",
+      "language": "ru",
+      "sha256": "f5eeffb0ca0550d493f0e64e1582a61b6f7a03c74848380176591da5fb9a0248",
+      "bytes": 133826,
+      "path": "advice-catalogues/v1/daily/hestiology-2026-10-v1/ru.f5eeffb0ca0550d493f0e64e1582a61b6f7a03c74848380176591da5fb9a0248.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hestiology-2026-10-v1",
+      "language": "en",
+      "sha256": "4eaf3cdb12b5fca6915493634b584645c94c601952cb1ad1ef78f155f5f6026d",
+      "bytes": 81984,
+      "path": "advice-catalogues/v1/daily/hestiology-2026-10-v1/en.4eaf3cdb12b5fca6915493634b584645c94c601952cb1ad1ef78f155f5f6026d.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hestiology-2026-10-v1",
+      "language": "el",
+      "sha256": "b4e5c0f6437cd885aa99a84069ffd02d39cee56fc5dab3d9ff346569d1fabc01",
+      "bytes": 156607,
+      "path": "advice-catalogues/v1/daily/hestiology-2026-10-v1/el.b4e5c0f6437cd885aa99a84069ffd02d39cee56fc5dab3d9ff346569d1fabc01.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hestiology-2026-10-v1",
+      "language": "de",
+      "sha256": "ecec8908010d40032e9693bdbc50cb2d576d3d5cab0336df60620cb7eec8f04e",
+      "bytes": 96930,
+      "path": "advice-catalogues/v1/daily/hestiology-2026-10-v1/de.ecec8908010d40032e9693bdbc50cb2d576d3d5cab0336df60620cb7eec8f04e.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hestiology-2026-10-v1",
+      "language": "fr",
+      "sha256": "b4e12ddcb475e2546aea1227b085dea1ec103bd714cbd10aaa901b5a6ac0e315",
+      "bytes": 98105,
+      "path": "advice-catalogues/v1/daily/hestiology-2026-10-v1/fr.b4e12ddcb475e2546aea1227b085dea1ec103bd714cbd10aaa901b5a6ac0e315.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hestiology-2026-10-v1",
+      "language": "es",
+      "sha256": "609e1b20ebe0ea78d0a565cf9c93671938af894e0fcf33a3687b5c39aaabf776",
+      "bytes": 90448,
+      "path": "advice-catalogues/v1/daily/hestiology-2026-10-v1/es.609e1b20ebe0ea78d0a565cf9c93671938af894e0fcf33a3687b5c39aaabf776.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hestiology-2026-10-v1",
+      "language": "it",
+      "sha256": "18e73d40163dfb226c599ac5119e4c1c6c2f102cb31a9aa8d1100ddc1ef4ffc9",
+      "bytes": 92767,
+      "path": "advice-catalogues/v1/daily/hestiology-2026-10-v1/it.18e73d40163dfb226c599ac5119e4c1c6c2f102cb31a9aa8d1100ddc1ef4ffc9.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hestiology-2026-10-v1",
+      "language": "pt",
+      "sha256": "54ccfd5f6013c84f04a55c7b758dfc59367bb59637dbd6dfa1d6fdad62e767bc",
+      "bytes": 89205,
+      "path": "advice-catalogues/v1/daily/hestiology-2026-10-v1/pt.54ccfd5f6013c84f04a55c7b758dfc59367bb59637dbd6dfa1d6fdad62e767bc.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hestiology-2026-10-v1",
+      "language": "pl",
+      "sha256": "22cffe64f326955c331248ba2cce5b470dee9214ad9083aaf61e501af5968ba6",
+      "bytes": 90058,
+      "path": "advice-catalogues/v1/daily/hestiology-2026-10-v1/pl.22cffe64f326955c331248ba2cce5b470dee9214ad9083aaf61e501af5968ba6.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hestiology-2026-10-v1",
+      "language": "sr",
+      "sha256": "d0253f104c766b9c78cad4b87b5675b9528f5a2e1291c63a79ee392e2f8493f2",
+      "bytes": 132154,
+      "path": "advice-catalogues/v1/daily/hestiology-2026-10-v1/sr.d0253f104c766b9c78cad4b87b5675b9528f5a2e1291c63a79ee392e2f8493f2.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hestiology-2026-10-v1",
+      "language": "uk",
+      "sha256": "3c19af04ac1302a835b11b2ac1115db2653572b1f27cca63c5092be10b92fd08",
+      "bytes": 133381,
+      "path": "advice-catalogues/v1/daily/hestiology-2026-10-v1/uk.3c19af04ac1302a835b11b2ac1115db2653572b1f27cca63c5092be10b92fd08.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hestiology-2026-10-v1",
+      "language": "zh",
+      "sha256": "f2b9b5d39a2f72e351f4c793f082657ffc137207d875d9decb6f60196d1a30bb",
+      "bytes": 86154,
+      "path": "advice-catalogues/v1/daily/hestiology-2026-10-v1/zh.f2b9b5d39a2f72e351f4c793f082657ffc137207d875d9decb6f60196d1a30bb.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hestiology-2026-10-v1",
+      "language": "tr",
+      "sha256": "bbd3397ada7e2afc11cbdc9e021ccf2585efc5d3af171864c897fc0206bbd891",
+      "bytes": 94301,
+      "path": "advice-catalogues/v1/daily/hestiology-2026-10-v1/tr.bbd3397ada7e2afc11cbdc9e021ccf2585efc5d3af171864c897fc0206bbd891.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hestiology-2026-10-v1",
+      "language": "ja",
+      "sha256": "5cd7b759021ef992c1dd0bc63502ac3d524aefe72661d6d4fa9533f509793be6",
+      "bytes": 113861,
+      "path": "advice-catalogues/v1/daily/hestiology-2026-10-v1/ja.5cd7b759021ef992c1dd0bc63502ac3d524aefe72661d6d4fa9533f509793be6.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hestiology-2026-10-v1",
+      "language": "he",
+      "sha256": "38e9f9e0c91860323a90507f0aef9d1e7566376d07e6be625f5ee1a526f7e880",
+      "bytes": 99865,
+      "path": "advice-catalogues/v1/daily/hestiology-2026-10-v1/he.38e9f9e0c91860323a90507f0aef9d1e7566376d07e6be625f5ee1a526f7e880.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hestiology-2026-10-v1",
+      "language": "ar",
+      "sha256": "2c596e13a116b0a06156fb03850606869a04aad780f72861e300e81a2b498d0e",
+      "bytes": 106459,
+      "path": "advice-catalogues/v1/daily/hestiology-2026-10-v1/ar.2c596e13a116b0a06156fb03850606869a04aad780f72861e300e81a2b498d0e.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hestiology-2026-10-v1",
+      "language": "ko",
+      "sha256": "c7ec4454f62d4b63e910c4c3feb0cacb3be5d83332a00a283e56c77d5b0720a3",
+      "bytes": 91628,
+      "path": "advice-catalogues/v1/daily/hestiology-2026-10-v1/ko.c7ec4454f62d4b63e910c4c3feb0cacb3be5d83332a00a283e56c77d5b0720a3.json"
+    },
+    {
+      "kind": "daily",
+      "version": "hestiology-2026-10-v1",
+      "language": "nl",
+      "sha256": "8170da4b86dbb9a0ac37fe8ba20c058f8e598b7a9d9ffcf7eaa5fec0a9140753",
+      "bytes": 88436,
+      "path": "advice-catalogues/v1/daily/hestiology-2026-10-v1/nl.8170da4b86dbb9a0ac37fe8ba20c058f8e598b7a9d9ffcf7eaa5fec0a9140753.json"
+    },
+    {
+      "kind": "daily",
+      "version": "kourotrophy-2026-10-25-v1",
+      "language": "ru",
+      "sha256": "0b96e8e3e42d5724e96a5fd65ec4a7c8d0e14b755e78f1c37b23444243bb3489",
+      "bytes": 86503,
+      "path": "advice-catalogues/v1/daily/kourotrophy-2026-10-25-v1/ru.0b96e8e3e42d5724e96a5fd65ec4a7c8d0e14b755e78f1c37b23444243bb3489.json"
+    },
+    {
+      "kind": "daily",
+      "version": "kourotrophy-2026-10-25-v1",
+      "language": "en",
+      "sha256": "19231b0260226602c20a91ef06498e2b3e522675030f66799c54bfddd59d784a",
+      "bytes": 54602,
+      "path": "advice-catalogues/v1/daily/kourotrophy-2026-10-25-v1/en.19231b0260226602c20a91ef06498e2b3e522675030f66799c54bfddd59d784a.json"
+    },
+    {
+      "kind": "daily",
+      "version": "kourotrophy-2026-10-25-v1",
+      "language": "el",
+      "sha256": "09712ee55477e98929457b9f3115f039db11a38bc2ef08de86d600ee8caf3368",
+      "bytes": 101865,
+      "path": "advice-catalogues/v1/daily/kourotrophy-2026-10-25-v1/el.09712ee55477e98929457b9f3115f039db11a38bc2ef08de86d600ee8caf3368.json"
+    },
+    {
+      "kind": "daily",
+      "version": "kourotrophy-2026-10-25-v1",
+      "language": "de",
+      "sha256": "099ff6369c2495914ec297fdcbea25684c1dd7df642b21ccdaf0424b04b304b2",
+      "bytes": 62220,
+      "path": "advice-catalogues/v1/daily/kourotrophy-2026-10-25-v1/de.099ff6369c2495914ec297fdcbea25684c1dd7df642b21ccdaf0424b04b304b2.json"
+    },
+    {
+      "kind": "daily",
+      "version": "kourotrophy-2026-10-25-v1",
+      "language": "fr",
+      "sha256": "0341f6e32ff805359d34961954d73f68f8a71d904dc64e48cb962f41a63cdcb2",
+      "bytes": 61198,
+      "path": "advice-catalogues/v1/daily/kourotrophy-2026-10-25-v1/fr.0341f6e32ff805359d34961954d73f68f8a71d904dc64e48cb962f41a63cdcb2.json"
+    },
+    {
+      "kind": "daily",
+      "version": "kourotrophy-2026-10-25-v1",
+      "language": "es",
+      "sha256": "f33d3ac8ac1fb79563f368ac9d059d4a4f945d8724a8dd09c577b56f878b1f33",
+      "bytes": 57537,
+      "path": "advice-catalogues/v1/daily/kourotrophy-2026-10-25-v1/es.f33d3ac8ac1fb79563f368ac9d059d4a4f945d8724a8dd09c577b56f878b1f33.json"
+    },
+    {
+      "kind": "daily",
+      "version": "kourotrophy-2026-10-25-v1",
+      "language": "it",
+      "sha256": "2e96e7fa55cfc16cab4a2c87e1f7c47a3a74092f08124721019208e23ff658f1",
+      "bytes": 58243,
+      "path": "advice-catalogues/v1/daily/kourotrophy-2026-10-25-v1/it.2e96e7fa55cfc16cab4a2c87e1f7c47a3a74092f08124721019208e23ff658f1.json"
+    },
+    {
+      "kind": "daily",
+      "version": "kourotrophy-2026-10-25-v1",
+      "language": "pt",
+      "sha256": "9c70c7b775422d6dbdbfc541c56873847fb2f7288230082f6e0176c5f5e42a5b",
+      "bytes": 56727,
+      "path": "advice-catalogues/v1/daily/kourotrophy-2026-10-25-v1/pt.9c70c7b775422d6dbdbfc541c56873847fb2f7288230082f6e0176c5f5e42a5b.json"
+    },
+    {
+      "kind": "daily",
+      "version": "kourotrophy-2026-10-25-v1",
+      "language": "pl",
+      "sha256": "4eb53a109a6e89a7a35a6a1f389d17c271567a69e6f5e9ffc5af1f16c57f484e",
+      "bytes": 56884,
+      "path": "advice-catalogues/v1/daily/kourotrophy-2026-10-25-v1/pl.4eb53a109a6e89a7a35a6a1f389d17c271567a69e6f5e9ffc5af1f16c57f484e.json"
+    },
+    {
+      "kind": "daily",
+      "version": "kourotrophy-2026-10-25-v1",
+      "language": "sr",
+      "sha256": "ad3ce561a840990a180330162773ca236398bf3efa2f4ff3681e2467a9e8bf68",
+      "bytes": 84018,
+      "path": "advice-catalogues/v1/daily/kourotrophy-2026-10-25-v1/sr.ad3ce561a840990a180330162773ca236398bf3efa2f4ff3681e2467a9e8bf68.json"
+    },
+    {
+      "kind": "daily",
+      "version": "kourotrophy-2026-10-25-v1",
+      "language": "uk",
+      "sha256": "8102361f4e5615e08b575ff34b7d88cb7351dfa5e1a3744281200b630d91844e",
+      "bytes": 85542,
+      "path": "advice-catalogues/v1/daily/kourotrophy-2026-10-25-v1/uk.8102361f4e5615e08b575ff34b7d88cb7351dfa5e1a3744281200b630d91844e.json"
+    },
+    {
+      "kind": "daily",
+      "version": "kourotrophy-2026-10-25-v1",
+      "language": "zh",
+      "sha256": "3e2127bee7592f7f9b63bacd2a4d0145e4bebaafb5d752bee8caee6846748fe1",
+      "bytes": 48101,
+      "path": "advice-catalogues/v1/daily/kourotrophy-2026-10-25-v1/zh.3e2127bee7592f7f9b63bacd2a4d0145e4bebaafb5d752bee8caee6846748fe1.json"
+    },
+    {
+      "kind": "daily",
+      "version": "kourotrophy-2026-10-25-v1",
+      "language": "tr",
+      "sha256": "1f388745e5f6163858440f35029da5c560544e7e1cf056cb79aff3da29640452",
+      "bytes": 56870,
+      "path": "advice-catalogues/v1/daily/kourotrophy-2026-10-25-v1/tr.1f388745e5f6163858440f35029da5c560544e7e1cf056cb79aff3da29640452.json"
+    },
+    {
+      "kind": "daily",
+      "version": "kourotrophy-2026-10-25-v1",
+      "language": "ja",
+      "sha256": "22771d7f47ee38c2fa54070171481f61542963d22dc1f91f5ac707e285c9d875",
+      "bytes": 65960,
+      "path": "advice-catalogues/v1/daily/kourotrophy-2026-10-25-v1/ja.22771d7f47ee38c2fa54070171481f61542963d22dc1f91f5ac707e285c9d875.json"
+    },
+    {
+      "kind": "daily",
+      "version": "kourotrophy-2026-10-25-v1",
+      "language": "he",
+      "sha256": "62ae4e8886da3bd4bb5e0f207d88c7e780ee62191b8f0d03ca86d27d99444f6a",
+      "bytes": 66269,
+      "path": "advice-catalogues/v1/daily/kourotrophy-2026-10-25-v1/he.62ae4e8886da3bd4bb5e0f207d88c7e780ee62191b8f0d03ca86d27d99444f6a.json"
+    },
+    {
+      "kind": "daily",
+      "version": "kourotrophy-2026-10-25-v1",
+      "language": "ar",
+      "sha256": "c0e617f11484e53e6768c4fb0e85620366cdd58ef5588a11056171fbbcedbdec",
+      "bytes": 69560,
+      "path": "advice-catalogues/v1/daily/kourotrophy-2026-10-25-v1/ar.c0e617f11484e53e6768c4fb0e85620366cdd58ef5588a11056171fbbcedbdec.json"
+    },
+    {
+      "kind": "daily",
+      "version": "kourotrophy-2026-10-25-v1",
+      "language": "ko",
+      "sha256": "30df1fd460784ad5013cbdb43e6b8eb23aa1d5b89e9a24f8462bfef86bcb49aa",
+      "bytes": 61384,
+      "path": "advice-catalogues/v1/daily/kourotrophy-2026-10-25-v1/ko.30df1fd460784ad5013cbdb43e6b8eb23aa1d5b89e9a24f8462bfef86bcb49aa.json"
+    },
+    {
+      "kind": "daily",
+      "version": "kourotrophy-2026-10-25-v1",
+      "language": "nl",
+      "sha256": "a97b46bedd0dc7d8b6f83b1395af82284ce5757b38732d7814ebcf512ee24c05",
+      "bytes": 59183,
+      "path": "advice-catalogues/v1/daily/kourotrophy-2026-10-25-v1/nl.a97b46bedd0dc7d8b6f83b1395af82284ce5757b38732d7814ebcf512ee24c05.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v1",
+      "language": "ru",
+      "sha256": "842eee3ee6d18a6bfd841f7252bf9d8f686a3495598bf3ab706bbf3af0b6ad86",
+      "bytes": 17810,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v1/ru.842eee3ee6d18a6bfd841f7252bf9d8f686a3495598bf3ab706bbf3af0b6ad86.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v1",
+      "language": "en",
+      "sha256": "6aa4c0e6d64143b07fa2874116e6140aa57d0e55a2c8d5356981631da92ece21",
+      "bytes": 10996,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v1/en.6aa4c0e6d64143b07fa2874116e6140aa57d0e55a2c8d5356981631da92ece21.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v1",
+      "language": "el",
+      "sha256": "4b1c1771880c66b64aa8cdc5d8b318872a5d03b69db9a54527c99e17684afa8f",
+      "bytes": 19404,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v1/el.4b1c1771880c66b64aa8cdc5d8b318872a5d03b69db9a54527c99e17684afa8f.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v1",
+      "language": "de",
+      "sha256": "72c155ba7bb148c9e5a133e2d46aa7b878de5e480c3f04555d78cdee43dad3d8",
+      "bytes": 12232,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v1/de.72c155ba7bb148c9e5a133e2d46aa7b878de5e480c3f04555d78cdee43dad3d8.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v1",
+      "language": "fr",
+      "sha256": "a6b456ea9da858d0a6481ca6fe5ac9a68bf7edbbf96355665bf71739df83baf2",
+      "bytes": 12359,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v1/fr.a6b456ea9da858d0a6481ca6fe5ac9a68bf7edbbf96355665bf71739df83baf2.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v1",
+      "language": "es",
+      "sha256": "c01fb1be0bc62f59aa59f7eb8047a46e561a4cf7ca26eb996f2aa6197c9a1fde",
+      "bytes": 11610,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v1/es.c01fb1be0bc62f59aa59f7eb8047a46e561a4cf7ca26eb996f2aa6197c9a1fde.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v1",
+      "language": "it",
+      "sha256": "89d36f3891d8fc040dadd99edb9d3aa3d58cc88690f1ae97b2f962df180fe1a4",
+      "bytes": 11713,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v1/it.89d36f3891d8fc040dadd99edb9d3aa3d58cc88690f1ae97b2f962df180fe1a4.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v1",
+      "language": "pt",
+      "sha256": "cc78d1c6591f0e8605ff4e20f8f391fb5e91f73db617e0e90bbd86130dc2870d",
+      "bytes": 11323,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v1/pt.cc78d1c6591f0e8605ff4e20f8f391fb5e91f73db617e0e90bbd86130dc2870d.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v1",
+      "language": "pl",
+      "sha256": "8a55b906a8a19f6a1da08eb1cd4a289b58b8b8618a8097d30da8cbd52574c02a",
+      "bytes": 11258,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v1/pl.8a55b906a8a19f6a1da08eb1cd4a289b58b8b8618a8097d30da8cbd52574c02a.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v1",
+      "language": "sr",
+      "sha256": "89619750d6be0422735cc1fce35c046055bd45bb8408a9c97536dae63138352b",
+      "bytes": 16515,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v1/sr.89619750d6be0422735cc1fce35c046055bd45bb8408a9c97536dae63138352b.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v1",
+      "language": "uk",
+      "sha256": "d040b60aaba9687cfa1dcda401556fa98b56d89ce1308034e589f6a2c5f89990",
+      "bytes": 16932,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v1/uk.d040b60aaba9687cfa1dcda401556fa98b56d89ce1308034e589f6a2c5f89990.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v1",
+      "language": "zh",
+      "sha256": "cd27ddd01928b04d85ac4b8b128a86a0dc01b750a03501c23637dd7a7b912a5e",
+      "bytes": 9826,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v1/zh.cd27ddd01928b04d85ac4b8b128a86a0dc01b750a03501c23637dd7a7b912a5e.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v1",
+      "language": "tr",
+      "sha256": "4c747032daa564c02f5e98bf16cfda634c5ae6724d067fdbfb725284887c6cb4",
+      "bytes": 11152,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v1/tr.4c747032daa564c02f5e98bf16cfda634c5ae6724d067fdbfb725284887c6cb4.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v1",
+      "language": "ja",
+      "sha256": "c5f7606d1c6e76567275dd0436991d1be09ee453b8d2e2abdc879e59f8fe8670",
+      "bytes": 12965,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v1/ja.c5f7606d1c6e76567275dd0436991d1be09ee453b8d2e2abdc879e59f8fe8670.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v1",
+      "language": "he",
+      "sha256": "3fa77098e16ffc4e790315459c91df16e3b3d32cd452599de0da945f53fa7b35",
+      "bytes": 13403,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v1/he.3fa77098e16ffc4e790315459c91df16e3b3d32cd452599de0da945f53fa7b35.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v1",
+      "language": "ar",
+      "sha256": "c373f52cae26dc067947e7d327f6fb232ce7607e1fe76f09afad27df30460818",
+      "bytes": 14232,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v1/ar.c373f52cae26dc067947e7d327f6fb232ce7607e1fe76f09afad27df30460818.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v1",
+      "language": "ko",
+      "sha256": "f6f6a04b06bca97ce28320e68821decded583410cd7d9859343d4da9a97d694a",
+      "bytes": 12543,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v1/ko.f6f6a04b06bca97ce28320e68821decded583410cd7d9859343d4da9a97d694a.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v1",
+      "language": "nl",
+      "sha256": "14fae3b2a2ccd6e720210abbef85e09ba16d4f4b92a3fad545254d9e367f180f",
+      "bytes": 12134,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v1/nl.14fae3b2a2ccd6e720210abbef85e09ba16d4f4b92a3fad545254d9e367f180f.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v2",
+      "language": "ru",
+      "sha256": "00c4f6397ae4d67dabd6489d2857d37049d795a08b7c58f09bc0750064b007aa",
+      "bytes": 152876,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v2/ru.00c4f6397ae4d67dabd6489d2857d37049d795a08b7c58f09bc0750064b007aa.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v2",
+      "language": "en",
+      "sha256": "936722d9b455b2fc69dda9a29711a17075170600e184df16a581c10011bc934d",
+      "bytes": 95450,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v2/en.936722d9b455b2fc69dda9a29711a17075170600e184df16a581c10011bc934d.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v2",
+      "language": "el",
+      "sha256": "180d1cf28a079cffc9ad187e8ece2caa209185fe8a07b435f288609581be669f",
+      "bytes": 168590,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v2/el.180d1cf28a079cffc9ad187e8ece2caa209185fe8a07b435f288609581be669f.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v2",
+      "language": "de",
+      "sha256": "166e85df293ef77d40227cab56a48752d5d0b5827cbf7590b2b8db753c78ea2b",
+      "bytes": 105369,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v2/de.166e85df293ef77d40227cab56a48752d5d0b5827cbf7590b2b8db753c78ea2b.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v2",
+      "language": "fr",
+      "sha256": "802f4740d032fa7529ae52e2922c010313d5c12f8e10ed4d5ac845cf5b74bb25",
+      "bytes": 105877,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v2/fr.802f4740d032fa7529ae52e2922c010313d5c12f8e10ed4d5ac845cf5b74bb25.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v2",
+      "language": "es",
+      "sha256": "c8cf97b95870078272481298833505d68950fae55ca35937ed3bb5c233228c90",
+      "bytes": 98923,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v2/es.c8cf97b95870078272481298833505d68950fae55ca35937ed3bb5c233228c90.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v2",
+      "language": "it",
+      "sha256": "3a86ecc104156443154326d742a1992e64a4ab4d82ce6c0fbf2a1fae5389d1d0",
+      "bytes": 101355,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v2/it.3a86ecc104156443154326d742a1992e64a4ab4d82ce6c0fbf2a1fae5389d1d0.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v2",
+      "language": "pt",
+      "sha256": "df5cf8e68d97b988c1287f1924744519940e06fbe6a24046ee30fb8fcc4fcff8",
+      "bytes": 97922,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v2/pt.df5cf8e68d97b988c1287f1924744519940e06fbe6a24046ee30fb8fcc4fcff8.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v2",
+      "language": "pl",
+      "sha256": "6979277237665add3c65ebefcd36e89834c4a5fbf2aff2a1b6100f606c0732a5",
+      "bytes": 97879,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v2/pl.6979277237665add3c65ebefcd36e89834c4a5fbf2aff2a1b6100f606c0732a5.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v2",
+      "language": "sr",
+      "sha256": "dc73ef8115f05740dac1ae6dd37bda2b006f990aa7f2003145a553034cb6fa21",
+      "bytes": 143984,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v2/sr.dc73ef8115f05740dac1ae6dd37bda2b006f990aa7f2003145a553034cb6fa21.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v2",
+      "language": "uk",
+      "sha256": "e5e4eafcef0d97a87e1e05928833de2be0cf6d51682c4aebcc85e3b121ffb3db",
+      "bytes": 147517,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v2/uk.e5e4eafcef0d97a87e1e05928833de2be0cf6d51682c4aebcc85e3b121ffb3db.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v2",
+      "language": "zh",
+      "sha256": "6dfd7fd70b4dcb692cffe7bb34c196b65d5c0e8f8af1d5c806509e1c14e14f1b",
+      "bytes": 82310,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v2/zh.6dfd7fd70b4dcb692cffe7bb34c196b65d5c0e8f8af1d5c806509e1c14e14f1b.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v2",
+      "language": "tr",
+      "sha256": "b0011c8c37fb463acc72569c7fecb9451cbded57761f303343f38fa9d239d67d",
+      "bytes": 96502,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v2/tr.b0011c8c37fb463acc72569c7fecb9451cbded57761f303343f38fa9d239d67d.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v2",
+      "language": "ja",
+      "sha256": "595b8359f832f76c78c262504c93078d6b45d9df6aab925213c64f13ff58ebd5",
+      "bytes": 104998,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v2/ja.595b8359f832f76c78c262504c93078d6b45d9df6aab925213c64f13ff58ebd5.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v2",
+      "language": "he",
+      "sha256": "8690d5d149109917bdcd76716210a05a42a4e0f84f7eeb7cac4efbc3e8612ba8",
+      "bytes": 116698,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v2/he.8690d5d149109917bdcd76716210a05a42a4e0f84f7eeb7cac4efbc3e8612ba8.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v2",
+      "language": "ar",
+      "sha256": "9c59c211b5a53b4d2e45115d9c28f392d058bbc414221094d7aa1835703315a2",
+      "bytes": 122912,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v2/ar.9c59c211b5a53b4d2e45115d9c28f392d058bbc414221094d7aa1835703315a2.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v2",
+      "language": "ko",
+      "sha256": "a44a9b85ae2b8d5ebddf0ae8159748ee217f50b1b0b59f7101594493fd928288",
+      "bytes": 109267,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v2/ko.a44a9b85ae2b8d5ebddf0ae8159748ee217f50b1b0b59f7101594493fd928288.json"
+    },
+    {
+      "kind": "daily",
+      "version": "psychopompia-2026-11-v2",
+      "language": "nl",
+      "sha256": "c5e43f3d363b5a3b8ea6f56571d49d68b732d47eb9ee89268037ec3653c30dc0",
+      "bytes": 103178,
+      "path": "advice-catalogues/v1/daily/psychopompia-2026-11-v2/nl.c5e43f3d363b5a3b8ea6f56571d49d68b732d47eb9ee89268037ec3653c30dc0.json"
+    },
+    {
+      "kind": "philosophers",
+      "version": "philosophers-2026-11-v1",
+      "language": "ru",
+      "sha256": "15dddc3ab4e0b9c56c8c4aeab8354e21aabdc6012a232ab8ffcb6e78789f5364",
+      "bytes": 2174720,
+      "path": "advice-catalogues/v1/philosophers/philosophers-2026-11-v1/ru.15dddc3ab4e0b9c56c8c4aeab8354e21aabdc6012a232ab8ffcb6e78789f5364.json"
+    },
+    {
+      "kind": "philosophers",
+      "version": "philosophers-2026-11-v1",
+      "language": "en",
+      "sha256": "6b283eee9c0f2132b11a9cb73d31ba7ea6ece95f13c21ae41b4852cc521f95f4",
+      "bytes": 1658283,
+      "path": "advice-catalogues/v1/philosophers/philosophers-2026-11-v1/en.6b283eee9c0f2132b11a9cb73d31ba7ea6ece95f13c21ae41b4852cc521f95f4.json"
+    },
+    {
+      "kind": "philosophers",
+      "version": "philosophers-2026-11-v1",
+      "language": "el",
+      "sha256": "e33a0db9ef20ece033d7c0fd74a41d3781505b539caf96c7f95578fad2de6f10",
+      "bytes": 2336869,
+      "path": "advice-catalogues/v1/philosophers/philosophers-2026-11-v1/el.e33a0db9ef20ece033d7c0fd74a41d3781505b539caf96c7f95578fad2de6f10.json"
+    },
+    {
+      "kind": "philosophers",
+      "version": "philosophers-2026-11-v1",
+      "language": "de",
+      "sha256": "9a8a9bec5b9d73ecebfea2344ca76981d31247a153bd6666bfbcd9ec9dbb2fbb",
+      "bytes": 1719716,
+      "path": "advice-catalogues/v1/philosophers/philosophers-2026-11-v1/de.9a8a9bec5b9d73ecebfea2344ca76981d31247a153bd6666bfbcd9ec9dbb2fbb.json"
+    },
+    {
+      "kind": "philosophers",
+      "version": "philosophers-2026-11-v1",
+      "language": "fr",
+      "sha256": "fc9c66b8a49e9e895b1b0db4c9c8eebf9ddb03d3df81db201b863fc8e677e75d",
+      "bytes": 1713023,
+      "path": "advice-catalogues/v1/philosophers/philosophers-2026-11-v1/fr.fc9c66b8a49e9e895b1b0db4c9c8eebf9ddb03d3df81db201b863fc8e677e75d.json"
+    },
+    {
+      "kind": "philosophers",
+      "version": "philosophers-2026-11-v1",
+      "language": "es",
+      "sha256": "2042ea7f263112ef6da0077bacbc624823e0c5779bb0dd3ef6e8273646262688",
+      "bytes": 1674895,
+      "path": "advice-catalogues/v1/philosophers/philosophers-2026-11-v1/es.2042ea7f263112ef6da0077bacbc624823e0c5779bb0dd3ef6e8273646262688.json"
+    },
+    {
+      "kind": "philosophers",
+      "version": "philosophers-2026-11-v1",
+      "language": "it",
+      "sha256": "e3fd06cd5c06ae213bb30811d446cb0178edeb16a3417194dd184e02efd2df97",
+      "bytes": 1674890,
+      "path": "advice-catalogues/v1/philosophers/philosophers-2026-11-v1/it.e3fd06cd5c06ae213bb30811d446cb0178edeb16a3417194dd184e02efd2df97.json"
+    },
+    {
+      "kind": "philosophers",
+      "version": "philosophers-2026-11-v1",
+      "language": "pt",
+      "sha256": "9df759f372c79efeb028fa4304df181ed73117aed59426a2a728d3bebd77a8d0",
+      "bytes": 1681864,
+      "path": "advice-catalogues/v1/philosophers/philosophers-2026-11-v1/pt.9df759f372c79efeb028fa4304df181ed73117aed59426a2a728d3bebd77a8d0.json"
+    },
+    {
+      "kind": "philosophers",
+      "version": "philosophers-2026-11-v1",
+      "language": "pl",
+      "sha256": "2bd5014c13dc4a714f14ef3a09196a6fbe2b348dac05e7cd891f2ffc5c06c76e",
+      "bytes": 1674827,
+      "path": "advice-catalogues/v1/philosophers/philosophers-2026-11-v1/pl.2bd5014c13dc4a714f14ef3a09196a6fbe2b348dac05e7cd891f2ffc5c06c76e.json"
+    },
+    {
+      "kind": "philosophers",
+      "version": "philosophers-2026-11-v1",
+      "language": "sr",
+      "sha256": "81616c8d26352d524d1d51dd1d83113b3fb4b2b4cce1110f5fc4154457ebb8ad",
+      "bytes": 2089064,
+      "path": "advice-catalogues/v1/philosophers/philosophers-2026-11-v1/sr.81616c8d26352d524d1d51dd1d83113b3fb4b2b4cce1110f5fc4154457ebb8ad.json"
+    },
+    {
+      "kind": "philosophers",
+      "version": "philosophers-2026-11-v1",
+      "language": "uk",
+      "sha256": "325bd41a43c6f3e25dd520d78386e90152e76699371f0cc363dade3eebb1ee94",
+      "bytes": 2135259,
+      "path": "advice-catalogues/v1/philosophers/philosophers-2026-11-v1/uk.325bd41a43c6f3e25dd520d78386e90152e76699371f0cc363dade3eebb1ee94.json"
+    },
+    {
+      "kind": "philosophers",
+      "version": "philosophers-2026-11-v1",
+      "language": "zh",
+      "sha256": "410e5cd248e007a711fdd6123157d13e201e584d62274c31277d518d14577f8a",
+      "bytes": 1570860,
+      "path": "advice-catalogues/v1/philosophers/philosophers-2026-11-v1/zh.410e5cd248e007a711fdd6123157d13e201e584d62274c31277d518d14577f8a.json"
+    },
+    {
+      "kind": "philosophers",
+      "version": "philosophers-2026-11-v1",
+      "language": "tr",
+      "sha256": "25a6a972ba00f6cabc86bf6908c465a57f0a6f7b32ed22b4985c27c70cc8294e",
+      "bytes": 1704149,
+      "path": "advice-catalogues/v1/philosophers/philosophers-2026-11-v1/tr.25a6a972ba00f6cabc86bf6908c465a57f0a6f7b32ed22b4985c27c70cc8294e.json"
+    },
+    {
+      "kind": "philosophers",
+      "version": "philosophers-2026-11-v1",
+      "language": "ja",
+      "sha256": "6899c4ee5e68ff6da98214cee4db431c1b04fffbc208b50251a50a02bd3ca3a4",
+      "bytes": 1876804,
+      "path": "advice-catalogues/v1/philosophers/philosophers-2026-11-v1/ja.6899c4ee5e68ff6da98214cee4db431c1b04fffbc208b50251a50a02bd3ca3a4.json"
+    },
+    {
+      "kind": "philosophers",
+      "version": "philosophers-2026-11-v1",
+      "language": "he",
+      "sha256": "a12228f24435ff3611a3e7ac6a32d70b72eeaf95e66e5b2651817f7723d124bd",
+      "bytes": 1868725,
+      "path": "advice-catalogues/v1/philosophers/philosophers-2026-11-v1/he.a12228f24435ff3611a3e7ac6a32d70b72eeaf95e66e5b2651817f7723d124bd.json"
+    },
+    {
+      "kind": "philosophers",
+      "version": "philosophers-2026-11-v1",
+      "language": "ar",
+      "sha256": "190ae9abbcc3e6d16a52d60de255420c59fc06eab9d476915c47cb80c59de1ad",
+      "bytes": 1967654,
+      "path": "advice-catalogues/v1/philosophers/philosophers-2026-11-v1/ar.190ae9abbcc3e6d16a52d60de255420c59fc06eab9d476915c47cb80c59de1ad.json"
+    },
+    {
+      "kind": "philosophers",
+      "version": "philosophers-2026-11-v1",
+      "language": "ko",
+      "sha256": "4f5b58d3f21ee5c11ea863883c8d66e6363c8f71e51cc47b4191b4b88e7ba0be",
+      "bytes": 1800155,
+      "path": "advice-catalogues/v1/philosophers/philosophers-2026-11-v1/ko.4f5b58d3f21ee5c11ea863883c8d66e6363c8f71e51cc47b4191b4b88e7ba0be.json"
+    },
+    {
+      "kind": "philosophers",
+      "version": "philosophers-2026-11-v1",
+      "language": "nl",
+      "sha256": "d19b7f2c7d51e44e4b54edd78f6da3155404bb2f807d4a7a8d16f4f752363700",
+      "bytes": 1694474,
+      "path": "advice-catalogues/v1/philosophers/philosophers-2026-11-v1/nl.d19b7f2c7d51e44e4b54edd78f6da3155404bb2f807d4a7a8d16f4f752363700.json"
+    }
+  ]
+}

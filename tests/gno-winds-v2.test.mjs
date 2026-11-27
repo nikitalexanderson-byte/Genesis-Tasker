@@ -1,3 +1,4 @@
+import {REGION_LANGUAGES} from "../app/region-language.ts";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -44,7 +45,7 @@ test('Exact names, epithets, arithmetic and shared Olympus sources remain distin
  assert.equal(m.crossRelation('north','center').numbers.find(n=>n.right.id==='zeusHerkeios').y,1022);
  for(const r of m.crossRelations())for(const n of r.numbers)assert.equal(1+(n.balance.total-1)%9,6);
 });
-test('All 14 packs contain 52 specific situations and 54 selectable sector themes with stable placeholders',()=>{
+test('All language packs contain 52 specific situations and 54 selectable sector themes with stable placeholders',()=>{
  const packs=JSON.parse(readFileSync(new URL('../app/aurora/gno-guided-copy.json',import.meta.url),'utf8'));
  const leaves=v=>Array.isArray(v)?v.flatMap(leaves):typeof v==='object'?Object.values(v).flatMap(leaves):[v];
  for(const [lang,p] of Object.entries(packs)){
@@ -56,7 +57,7 @@ test('All 14 packs contain 52 specific situations and 54 selectable sector theme
   if(!['ru','uk','sr'].includes(lang))assert.ok(strings.every(s=>!/[\p{Script=Cyrillic}]/u.test(s)),`${lang}: unexpected Cyrillic text`);
   p.criteria.forEach(s=>assert.deepEqual(s.match(/\{\w+\}/g),['{object}']));
  }
- assert.equal(Object.keys(packs).length,14);
+ assert.equal(Object.keys(packs).length, REGION_LANGUAGES.length);
 });
 test('Select-only intake covers every external facet, has no silently preselected people or result, and does not shift past dates',()=>{
  assert.equal(g.readiness(g.newGnoDraft()),false);

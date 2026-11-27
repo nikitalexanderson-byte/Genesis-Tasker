@@ -1,3 +1,4 @@
+import {REGION_LANGUAGES} from "../app/region-language.ts";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {cloudSyncClient,deferred} from './helpers/cloud-sync-client.mjs';
@@ -25,9 +26,9 @@ test('timer preferences require writer nine only after explicit configuration an
   assert.deepEqual(JSON.parse(JSON.stringify((await reloaded.client.loadGenesisWorkspace()).habits[0].timerPreferences)),preferences);
 });
 
-test('the deferred conflict dictionary supplies the same complete controls for all fourteen languages',()=>{
+test('the deferred conflict dictionary supplies the same complete controls for all eighteen languages',()=>{
   const copy=JSON.parse(readFileSync(new URL('../app/workspace-conflict-translations.json',import.meta.url),'utf8'));
-  assert.equal(Object.keys(copy).length,14);
+  assert.equal(Object.keys(copy).length, REGION_LANGUAGES.length);
   const fields=Object.keys(copy.ru).sort();
   for(const [language,values]of Object.entries(copy)){
     assert.deepEqual(Object.keys(values).sort(),fields,language);

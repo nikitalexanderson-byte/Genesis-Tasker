@@ -15,6 +15,10 @@ import ukrainianDays from "./calendar-days.uk.json";
 import chineseDays from "./calendar-days.zh.json";
 import turkishDays from "./calendar-days.tr.json";
 import japaneseDays from "./calendar-days.ja.json";
+import hebrewDays from "./calendar-days.he.json";
+import arabicDays from "./calendar-days.ar.json";
+import koreanDays from "./calendar-days.ko.json";
+import dutchDays from "./calendar-days.nl.json";
 import { getRuntimeLanguage, runtimeLocale, translateText, type Language } from "./i18n";
 import { lunarPatronNameRu } from "./lunar-triad";
 
@@ -539,7 +543,7 @@ export function getSacredDay(monthIndex: number, day: number, language: Language
   const index = monthIndex < 12 ? (monthIndex * 30) + day - 1 : 360 + day - 1;
   const catalog = {en:ENGLISH_DAYS,el:greekDays,de:germanDays,fr:frenchDays,es:spanishDays,
     it:italianDays,pt:portugueseDays,pl:polishDays,sr:serbianDays,uk:ukrainianDays,
-    zh:chineseDays,tr:turkishDays,ja:japaneseDays}[language];
+    zh:chineseDays,tr:turkishDays,ja:japaneseDays, he: hebrewDays, ar: arabicDays, ko: koreanDays, nl: dutchDays}[language];
   const localizedDay = catalog[index];
   return localizedDay ? { ...sacredDay, ...localizedDay } : sacredDay;
 }

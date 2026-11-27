@@ -110,5 +110,37 @@
     "unavailable": "スペルチェックを利用できません。認識されたテキストは修正せずに保持しました。",
     "legalTitle": "音声入力の任意のスペルチェック",
     "legalBody": "音声入力のスペルチェックは任意で、初期設定では無効です。個別に有効にし、いつでも無効にできます。有効にすると、新しく認識が確定したロシア語、英語、ウクライナ語の文だけが、端末から HTTPS 経由で無料の外部サービス Yandex.Speller に直接送信されます。提供者はその文のテキストと接続元の IP アドレスを受け取ります。音声、ノートのタイトル、記録やアカウントの識別子、その他のプロフィール情報はリクエストに追加されず、保存済みの記録はチェックに送信されません。GENESIS サーバーはこの転送に関与せず、文の平文をログに記録しません。音声認識は引き続き端末またはブラウザーのサービスが独自の規則に従って行います。チェックは提供者の利用上限内で無料であり、提供者のアカウントや支払情報は不要です。エラー、利用不可、または短い待機時間の超過時には、認識されたテキストはチェックせずに保持され、手動で編集できます。個々のスペルミスを修正する機能であり、すべての文法や句読点の修正を保証するものではありません。"
+  },
+  "he": {
+    "spellcheck": "איות נכון",
+    "privacy": "רק ביטויים כתובים נשלחים ל- Yandex.Speller לבדיקה. בחינם בתוך מגבלות השירות. אתה יכול לכבות את זה.",
+    "credit": "בדיקת איות: Yandex.Speller",
+    "unavailable": "בדיקת האיות אינה זמינה. הטקסט המזוהה נשמר ללא בדיקת האיות.",
+    "legalTitle": "בדיקת איות לבחירה בטקסט שהוכתב",
+    "legalBody": "בדיקת האיות של טקסט שהוכתב היא אפשרות לבחירה והיא כבויה כברירת מחדל. אפשר להפעיל אותה בנפרד ולכבות אותה בכל עת. לאחר ההפעלה נשלחות ישירות מהמכשיר דרך HTTPS לשירות החיצוני החינמי Yandex.Speller רק אמירות חדשות ברוסית, באנגלית או באוקראינית שתמלולן הושלם. ספק השירות מקבל את הטקסט שלהן ואת כתובת ה־IP של החיבור. הבקשה אינה כוללת הקלטת שמע, כותרת של רשומה, מזהי רשומה או חשבון, או פרטי פרופיל אחרים. רשומות שכבר נשמרו אינן נשלחות לבדיקה. שרת GENESIS אינו משתתף בהעברה ואינו רושם ביומנים את הטקסט הגלוי. זיהוי הדיבור ממשיך להתבצע בידי שירות המכשיר או הדפדפן לפי כלליו. הבדיקה חינמית בגבולות המכסות של הספק ואינה מחייבת חשבון אצל הספק או מסירת פרטי תשלום. במקרה של שגיאה, חוסר זמינות או חריגה מזמן ההמתנה הקצר, התמלול נשמר ללא בדיקה ואפשר לערוך אותו ידנית. הבדיקה מתקנת שגיאות איות מסוימות ואינה מבטיחה תיקון של כל שגיאות הדקדוק והפיסוק."
+  },
+  "ar": {
+    "spellcheck": "التهجئة الصحيحة",
+    "privacy": "فقط العبارات المملوثة ترسل إلى Yandex.Speller للتحقق. مجاني ضمن حدود الخدمة. يمكنك إطفاء هذا.",
+    "credit": "تحقق من الإملاء: Yandex.Speller",
+    "unavailable": "التحقق من الإملاء غير متاح. تم الاحتفاظ بالنص المعرف بدونه.",
+    "legalTitle": "التدقيق الإملائي الاختياري للنص المُملَى",
+    "legalBody": "التدقيق الإملائي للنص المُملَى اختياري وموقوف افتراضيًا. يمكنك تفعيله بشكل منفصل وإيقافه في أي وقت. بعد التفعيل، تُرسل العبارات الجديدة التي اكتمل تحويلها إلى نص بالروسية أو الإنجليزية أو الأوكرانية فقط، مباشرةً من الجهاز عبر HTTPS إلى خدمة Yandex.Speller الخارجية المجانية. يتلقّى مقدّم الخدمة نصّ هذه العبارات وعنوان IP للاتصال. ولا يتضمّن الطلب تسجيلًا صوتيًا أو عنوان الملاحظة أو معرّفات التدوينة والحساب أو أي بيانات أخرى من الملف الشخصي. ولا تُرسل التدوينات المحفوظة سابقًا للتدقيق. لا يشارك خادم GENESIS في هذا النقل ولا يدوّن نصّ العبارات بصورته غير المشفّرة في سجلّاته. ويظلّ التعرّف على الكلام من اختصاص خدمة الجهاز أو المتصفّح وفق قواعدها الخاصة. التدقيق مجاني ضمن الحدود التي يضعها مقدّم الخدمة ولا يتطلّب حسابًا لديه أو بيانات دفع. إذا حدث خطأ أو تعذّر الوصول إلى الخدمة أو انقضت مهلة الانتظار القصيرة، يُحفظ النص المتعرَّف عليه من دون تدقيق ويمكن تعديله يدويًا. يعالج التدقيق بعض الأخطاء الإملائية، ولا يضمن تصحيح جميع الأخطاء النحوية أو علامات الترقيم."
+  },
+  "ko": {
+    "spellcheck": "맞춤법 조정",
+    "privacy": "검사를 위해 Yandex.Speller에 전송되는 것은 단지 입력된 문장입니다. 서비스 한도 내에서 무료입니다.",
+    "credit": "맞춤법 검사기: Yandex.Speller",
+    "unavailable": "맞춤법 검사를 사용할 수 없습니다. 인식된 텍스트는 그렇지 않은 상태로 유지되었습니다.",
+    "legalTitle": "받아쓴 텍스트의 선택적 맞춤법 검사",
+    "legalBody": "받아쓴 텍스트의 맞춤법 검사는 선택 기능이며 기본값은 꺼짐입니다. 별도로 켜고 언제든 끌 수 있습니다. 기능을 켜면 러시아어, 영어 또는 우크라이나어로 새로 받아쓰기를 완료한 구절만 기기에서 HTTPS를 통해 무료 외부 서비스인 Yandex.Speller로 직접 전송됩니다. 이 서비스 제공자는 해당 구절의 텍스트와 접속 IP 주소를 받습니다. 요청에는 녹음 파일, 메모 제목, 기록 및 계정 식별자, 그 밖의 프로필 정보가 포함되지 않습니다. 이미 저장된 기록은 전송하지 않습니다. GENESIS 서버는 이 전송에 관여하지 않으며 구절의 평문을 로그에 남기지 않습니다. 음성 인식은 계속해서 기기나 브라우저의 서비스가 자체 정책에 따라 처리합니다. 맞춤법 검사는 제공자의 이용 한도 내에서 무료이며 해당 서비스의 계정이나 결제 정보가 필요하지 않습니다. 오류가 발생하거나 서비스를 이용할 수 없거나 짧은 대기 시간이 지나면 인식된 텍스트를 검사 없이 저장하며, 직접 수정할 수 있습니다. 일부 맞춤법 오류를 바로잡는 기능으로, 모든 문법이나 문장부호를 고친다고 보장하지 않습니다."
+  },
+  "nl": {
+    "spellcheck": "De juiste spelling",
+    "privacy": "Alleen gedicteerde zinnen worden naar Yandex.Speller verzonden voor controle. Gratis binnen de servicelimieten. U kunt deze functie uitschakelen.",
+    "credit": "Spellingcontrole: Yandex.Speller",
+    "unavailable": "Spellingcontrole is niet beschikbaar. De herkende tekst is zonder spellingcontrole bewaard.",
+    "legalTitle": "Optionele spellingcontrole van gedicteerde tekst",
+    "legalBody": "De spellingcontrole voor gedicteerde tekst is optioneel en staat standaard uit. Je kunt die apart inschakelen en op elk moment weer uitzetten. Na inschakeling stuurt je apparaat uitsluitend nieuwe, definitief herkende zinsdelen in het Russisch, Engels of Oekraïens rechtstreeks via HTTPS naar de gratis externe dienst Yandex.Speller. De aanbieder ontvangt de tekst van die zinsdelen en het IP-adres van de verbinding. Het verzoek bevat geen geluidsopname, notitietitel, identificatiegegevens van de notitie of het account, of andere profielgegevens. Eerder opgeslagen notities worden niet ter controle verzonden. De GENESIS-server is niet betrokken bij deze overdracht en schrijft de onversleutelde tekst van de zinsdelen niet in logboeken. De spraakdienst van je apparaat of browser blijft de spraakherkenning volgens zijn eigen regels uitvoeren. De controle is gratis binnen de gebruikslimieten van de aanbieder. Je hebt bij die aanbieder geen account nodig en hoeft geen betaalgegevens op te geven. Bij een fout, onbereikbaarheid of het verstrijken van de korte wachttijd wordt de herkende tekst zonder controle opgeslagen. Je kunt die zelf bewerken. De controle verbetert bepaalde spelfouten, maar garandeert niet dat alle grammatica en interpunctie worden gecorrigeerd."
   }
 }

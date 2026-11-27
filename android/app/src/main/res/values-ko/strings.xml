@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="native_stage">네이티브 앱 개발의 첫 단계</string>
+    <string name="native_title">Genesis Tasker</string>
+    <string name="native_status">이 기본 화면은 Kotlin과 Jetpack Compose로 구현되었습니다.</string>
+    <string name="browser_error_message">GENESIS를 열 수 없습니다. 브라우저를 업데이트하거나 사용 설정한 후 다시 시도하세요.</string>
+    <string name="browser_retry">웹사이트 열기</string>
+</resources>

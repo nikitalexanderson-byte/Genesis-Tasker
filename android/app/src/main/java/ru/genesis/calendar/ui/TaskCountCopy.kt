@@ -7,6 +7,17 @@ private fun slavic(count: Int, one: String, few: String, many: String): String {
 }
 
 internal fun taskCountCopy(count: Int, language: String): String {
+    when (language) {
+        "ar" -> return when (count) {
+            1 -> "مهمة واحدة"
+            2 -> "مهمتان"
+            else -> java.text.NumberFormat.getIntegerInstance(java.util.Locale.forLanguageTag("ar")).format(count) +
+                if (count % 100 in 3..10) " مهام" else " مهمة"
+        }
+        "he" -> return if (count == 1) "משימה אחת" else "$count משימות"
+        "ko" -> return "작업 ${count}개"
+        "nl" -> return if (count == 1) "1 taak" else "$count taken"
+    }
     val noun = when (language) {
         "ru" -> slavic(count, "задача", "задачи", "задач")
         "uk" -> slavic(count, "завдання", "завдання", "завдань")
@@ -29,6 +40,17 @@ internal fun taskCountCopy(count: Int, language: String): String {
 }
 
 internal fun taskListCountCopy(count: Int, language: String): String {
+    when (language) {
+        "ar" -> return when (count) {
+            1 -> "قائمة واحدة"
+            2 -> "قائمتان"
+            else -> java.text.NumberFormat.getIntegerInstance(java.util.Locale.forLanguageTag("ar")).format(count) +
+                if (count % 100 in 3..10) " قوائم" else " قائمة"
+        }
+        "he" -> return if (count == 1) "רשימה אחת" else "$count רשימות"
+        "ko" -> return "목록 ${count}개"
+        "nl" -> return if (count == 1) "1 lijst" else "$count lijsten"
+    }
     val noun = when (language) {
         "ru" -> slavic(count, "список", "списка", "списков")
         "uk" -> slavic(count, "список", "списки", "списків")
@@ -55,7 +77,8 @@ internal fun taskSummaryCopy(total: Int, active: Int, lists: Int, language: Stri
         "ru" -> "активных"; "en" -> "active"; "el" -> "ενεργές"; "de" -> "offen"
         "fr" -> "en cours"; "es" -> "activas"; "it" -> "attive"; "pt" -> "ativas"
         "pl" -> "aktywne"; "sr" -> "активних"; "uk" -> "активних"; "zh" -> "进行中"
-        "tr" -> "etkin"; "ja" -> "進行中"; else -> "active"
+        "tr" -> "etkin"; "ja" -> "進行中"
+        "he" -> "פעילות"; "ar" -> "نشطة"; "ko" -> "진행 중"; "nl" -> "actief"; else -> "active"
     }
     return "${taskCountCopy(total, language)} · $active $activeLabel · ${taskListCountCopy(lists, language)}"
 }

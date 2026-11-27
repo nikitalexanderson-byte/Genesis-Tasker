@@ -547,5 +547,10 @@
   "Выбрать шаблон": "Choisir un modèle",
   "Ранее сохранённые задачи": "Tâches enregistrées précédemment",
   "Доска для «{title}»": "Tableau pour « {title} »",
-  "Перетащите сюда задачи и подпроекты, чтобы оставить их вне досок.": "Faites glisser les tâches et les sous-projets ici pour les conserver en dehors des tableaux."
+  "Перетащите сюда задачи и подпроекты, чтобы оставить их вне досок.": "Faites glisser les tâches et les sous-projets ici pour les conserver en dehors des tableaux.",
+  "Задача «{item}» возвращена в хаос-бокс.": "La tâche « {item} » est de retour dans la boîte du chaos.",
+  "Список «{item}» возвращён в хаос-бокс.": "La liste « {item} » est de retour dans la boîte du chaos.",
+  "Задача «{item}» перемещена в проект «{project}».": "La tâche « {item} » a été déplacée vers le projet « {project} ».",
+  "Список «{item}» перемещён в проект «{project}».": "La liste « {item} » a été déplacée vers le projet « {project} ».",
+  "Задача «{item}» перемещена в список «{list}».": "La tâche « {item} » a été déplacée vers la liste « {list} »."
 }

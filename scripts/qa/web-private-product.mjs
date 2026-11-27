@@ -343,10 +343,45 @@ try{
    const status=await(await context.request.get('/api/e2ee/v1/status')).json();assert(status.scopes.length>0&&status.scopes.every(scope=>scope.state!=='active'));
   });
  }else{
+ let personalStart=migration.begin;
+ if(process.env.GENESIS_QA_FOLLOWUP_SCOPE==='interruption')await check('restart resumes a partially uploaded personal migration with the original recovery kit',async()=>{
+  const endpoint=baseURL+'/api/e2ee/v1/command';
+  const isPart=request=>request.url()===endpoint && request.postDataJSON()?.command?.action==='put';
+  let accepted=0,disconnected=false;
+  const observe=response=>{if(response.ok() && isPart(response.request()))accepted++;};
+  const cut=async route=>{
+   if(accepted>0 && !disconnected && isPart(route.request())){
+    disconnected=true;
+    await context.setOffline(true);
+    await route.abort('internetdisconnected');
+   }else await route.continue();
+  };
+  page.on('response',observe);
+  await page.route(endpoint,cut);
+  try{
+   const dialog=page.locator('.private-migration-dialog');
+   await recoveryInput(dialog);
+   const interrupted=page.waitForEvent('requestfailed',{predicate:r=>disconnected && isPart(r),timeout:180000});
+   await Promise.all([interrupted,dialog.getByRole('button',{name:migration.begin,exact:true}).click()]);
+   await dialog.getByRole('alert').waitFor({timeout:60000});
+  }finally{
+   await page.unroute(endpoint,cut);
+   page.off('response',observe);
+   await context.setOffline(false);
+  }
+  const status=await(await context.request.get('/api/e2ee/v1/status')).json();
+  assert(accepted>0 && disconnected);
+  assert(status.scopes.some(scope=>scope.kind==='personal' && scope.state!=='active'));
+  await page.reload();
+  const reopened=page.locator('.private-migration-dialog');
+  await reopened.getByRole('button',{name:migration.resume,exact:true}).waitFor({timeout:60000});
+  report.interruptedMigration={confirmedWritesBeforeLoss:accepted,networkFailure:true,reloaded:true,activatedBeforeResume:false};
+  personalStart=migration.resume;
+ });
  await check('all personal sources transfer and activate through the mounted controller',async()=>{
   const dialog=page.locator('.private-migration-dialog');
   if(diagnostics)await debug.send('Debugger.setPauseOnExceptions',{state:'all'});
-  if(await continueMigration(dialog,migration.begin,'personal')!=='active')throw new Error('Product migration refused: '+report.caughtCodes.join(', ')+'; '+await dialog.getByRole('alert').innerText());
+  if(await continueMigration(dialog,personalStart,'personal')!=='active')throw new Error('Product migration refused: '+report.caughtCodes.join(', ')+'; '+await dialog.getByRole('alert').innerText());
   await debug.send('Debugger.setPauseOnExceptions',{state:'none'});
   const status=await(await context.request.get('/api/e2ee/v1/status')).json();assert(status.scopes.some(scope=>scope.kind==='personal'&&scope.state==='active'));
   const session=await(await context.request.get('/api/session')).json();assert.equal(session.user.privatePreferencesMode,'e2ee');

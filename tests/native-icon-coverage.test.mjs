@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
@@ -29,9 +30,9 @@ test("literal native Lucide calls resolve to packaged drawables, including overf
   }
 });
 
-test("release 3.1.9 labels cover the same 14 languages without missing text", () => {
+test("release 3.1.9 labels cover the all supported languages without missing text", () => {
   const copy = JSON.parse(readFileSync(new URL("../app/release-319-copy.json", import.meta.url), "utf8"));
-  const languages = ["ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja"];
+  const languages = [...REGION_LANGUAGES];
   assert.deepEqual(Object.keys(copy).sort(), languages.sort());
   for (const [language, labels] of Object.entries(copy)) {
     assert.deepEqual(Object.keys(labels).sort(), Object.keys(copy.ru).sort(), language);

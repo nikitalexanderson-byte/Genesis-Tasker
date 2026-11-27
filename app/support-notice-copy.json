@@ -82,5 +82,29 @@
     "body": "チップでプロジェクトの開発を支援できます。",
     "action": "寄付する",
     "later": "後で"
+  },
+  "he": {
+    "title": "תמיכה בפיתוח GENESIS",
+    "body": "אתה יכול להשאיר טיפ כדי לתמוך בפרויקט.",
+    "action": "שלח תרומה",
+    "later": "מאוחר יותר"
+  },
+  "ar": {
+    "title": "دعم تطوير نظام GENESIS",
+    "body": "يمكنك ترك إكراميات لدعم المشروع",
+    "action": "إرسال تبرع",
+    "later": "لاحقا"
+  },
+  "ko": {
+    "title": "지원 GENESIS 개발",
+    "body": "프로젝트를 지원하기 위해 팁을 남길 수 있습니다.",
+    "action": "기부금 보내기",
+    "later": "나중에"
+  },
+  "nl": {
+    "title": "Ondersteuning GENESIS ontwikkeling",
+    "body": "U kunt een tip achterlaten om het project te steunen.",
+    "action": "Stuur een donatie",
+    "later": "Later"
   }
 }

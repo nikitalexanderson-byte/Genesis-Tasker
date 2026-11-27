@@ -6,7 +6,11 @@ import {stoicheionArtCopy} from './catalog-i18n';
 import {formatGreekTerms} from './greek-terms';
 
 const STOICHEION_CARD_ART_VERSION = "20260906-anatomy-glow";
-const CARD_LABEL = { ru: "Карта", en: "Card", el: "Κάρτα", de: "Karte", fr: "Carte",
+const CARD_LABEL = { ru: "Карта", en: "Card",
+he: "כרטיס",
+ar: "البطاقة",
+ko: "카드",
+nl: "Kaart", el: "Κάρτα", de: "Karte", fr: "Carte",
   es: "Carta", it: "Carta", pt: "Carta", pl: "Karta", sr: "Карта", uk: "Картка",
   zh: "卡牌", tr: "Kart", ja: "カード" } as const;
 

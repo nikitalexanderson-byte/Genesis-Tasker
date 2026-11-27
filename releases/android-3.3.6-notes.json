@@ -12,5 +12,29 @@
   "uk": ["Додано перехід на наскрізне шифрування особистих і спільних даних GENESIS після збереження окремого комплекту відновлення.", "Зашифровані резервні копії відновлюють вміст без перенесення сеансів, підписок і прав доступу.", "Збережено історію повідомлень і пряме оновлення з 3.3.5. Вхід через Google не замінює ключі відновлення.", "Оновлено екрани безпеки, приватні нагадування та переклади всіма 14 мовами."],
   "zh": ["新增个人及共享 GENESIS 数据的端到端加密迁移；迁移前须单独保存恢复套件。", "加密备份仅恢复内容，不转移登录会话、订阅或访问权限。", "保留消息历史，并支持从 3.3.5 直接更新。Google 登录不能替代恢复密钥。", "更新了安全界面、保护隐私的提醒及全部 14 种语言的翻译。"],
   "tr": ["Ayrı bir kurtarma kiti kaydedildikten sonra kişisel ve paylaşılan GENESIS verileri için uçtan uca şifrelemeye geçiş eklendi.", "Şifreli yedekler oturumları, abonelikleri veya erişim haklarını taşımadan içeriği geri yükler.", "Mesaj geçmişi ve 3.3.5 sürümünden doğrudan güncelleme korunur. Google ile giriş, kurtarma anahtarlarının yerini tutmaz.", "Güvenlik ekranları, özel hatırlatıcılar ve 14 dilin tamamındaki çeviriler güncellendi."],
-  "ja": ["個人および共有のGENESISデータをエンドツーエンド暗号化に移行する機能を追加しました。移行前に独立した復元キットの保存が必要です。", "暗号化バックアップは内容のみを復元し、セッション、サブスクリプション、アクセス権は引き継ぎません。", "メッセージ履歴と3.3.5からの直接更新を維持します。Googleログインは復元キーの代わりにはなりません。", "セキュリティ画面、プライバシーに配慮したリマインダー、全14言語の翻訳を更新しました。"]
+  "ja": ["個人および共有のGENESISデータをエンドツーエンド暗号化に移行する機能を追加しました。移行前に独立した復元キットの保存が必要です。", "暗号化バックアップは内容のみを復元し、セッション、サブスクリプション、アクセス権は引き継ぎません。", "メッセージ履歴と3.3.5からの直接更新を維持します。Googleログインは復元キーの代わりにはなりません。", "セキュリティ画面、プライバシーに配慮したリマインダー、全14言語の翻訳を更新しました。"],
+  "he": [
+    "הוסף מעבר להצפנה סוף-סוף עבור נתונים אישיים ומשותפים GENESIS לאחר שמירה של ערכת שיקום נפרדת.",
+    "גיבוי מקודד משחזר תוכן ללא העברת סדנאות, מנויים או זכויות גישה.",
+    "היסטוריית הודעות ועדכונים ישירים מ-3.3.5 נשמרים. Google login לא מחליף את מפתחות ההחזר.",
+    "מסכי אבטחה מעודכנים, תזכורות פרטיות ותרגומים בכל 14 השפות."
+  ],
+  "ar": [
+    "أضيف تحول إلى التشفير من البداية إلى النهاية للبيانات الشخصية والمشتركة GENESIS بعد حفظ مجموعة استعادة مستقلة.",
+    "وتعيد النسخ الاحتياطية المشفرة المحتوى دون نقل الجلسات أو الاشتراكات أو حقوق الوصول.",
+    "يتم الحفاظ على تاريخ الرسائل والتحديثات المباشرة من 3.3.5. لا يحل دخول Google محل مفاتيح الاستعادة.",
+    "استكمال الشاشات الأمنية والتذكيرات الخاصة والترجمات في جميع اللغات 14 اللغات."
+  ],
+  "ko": [
+    "별도의 복구 키트를 저장한 후 개인 및 공유 GENESIS 데이터에 대한 엔드 투 엔드 암호화로 전환하는 기능을 추가했습니다.",
+    "암호화된 백업은 세션, 서브스크립션 또는 액세스 권한을 전송하지 않고 콘텐츠를 복원합니다.",
+    "메시지 기록 및 3.3.5의 직접 업데이트는 보존됩니다. Google 로그인은 복구 키를 대체하지 않습니다.",
+    "업데이트된 보안 화면, 개인 알림 및 모든 14 언어로 번역."
+  ],
+  "nl": [
+    "Een overgang toegevoegd naar end-to-end versleuteling voor persoonlijke en gedeelde GENESIS gegevens na het opslaan van een aparte herstelkit.",
+    "Versleutelde back-ups herstellen content zonder sessies, abonnementen of toegangsrechten over te dragen.",
+    "Berichtgeschiedenis en directe updates van 3.3.5 blijven behouden. Google-aanmelding vervangt herstelsleutels niet.",
+    "Bijgewerkte beveiligingsschermen, privé herinneringen en vertalingen in alle 14 talen."
+  ]
 }

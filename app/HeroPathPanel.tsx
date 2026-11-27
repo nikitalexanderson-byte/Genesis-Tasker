@@ -4,7 +4,7 @@ import { DialogCloseButton } from "./DialogCloseButton";
 
 import { Fragment, useEffect, useRef, useState, type CSSProperties } from "react";
 import { HERO_PATH_CHECKPOINT_ICON_ASSETS } from "./hero-path-assets";
-import type { Language } from "./i18n";
+import { runtimeLocale, type Language } from "./i18n";
 import { HeroicRankSigil } from "./HeroicRankSigil";
 import { useDialogAccessibility } from "./use-dialog-accessibility";
 import {
@@ -73,7 +73,7 @@ function RankPathMap({
         const claimed = checkpoint ? workspace.rewardTransactions.some((transaction) => transaction.idempotencyKey === `hero-path-amphora:self:${item.id}`) : false;
         return <Fragment key={item.id}>
           <article className={`hero-path-rank${hidden ? " hidden-path-rank" : ""}${reached ? " reached" : ""}${current ? " current" : ""}${index % 2 ? " right" : " left"}`} style={{ "--rank-color": item.color } as CSSProperties}>
-            <div className="hero-path-rank-copy"><small>{isEnglish ? `Step ${stepOffset + index + 1}` : `Ступень ${stepOffset + index + 1}`}</small><h3>{isEnglish ? item.titleEn : item.title}</h3><span>{item.threshold.toLocaleString(isEnglish ? "en-US" : "ru-RU")} XP</span>{current ? <em>{isEnglish ? "You are here" : "Вы здесь"}</em> : reached ? <em>✓ {isEnglish ? "Reached" : "Достигнут"}</em> : null}</div>
+            <div className="hero-path-rank-copy"><small>{isEnglish ? `Step ${stepOffset + index + 1}` : `Ступень ${stepOffset + index + 1}`}</small><h3>{isEnglish ? item.titleEn : item.title}</h3><span>{item.threshold.toLocaleString(runtimeLocale(language))} XP</span>{current ? <em>{isEnglish ? "You are here" : "Вы здесь"}</em> : reached ? <em>✓ {isEnglish ? "Reached" : "Достигнут"}</em> : null}</div>
             <HeroicRankSigil compact rankId={item.id} color={item.color} />
           </article>
           {checkpoint ? <article className={`hero-path-checkpoint${hidden ? " hidden-path-checkpoint" : ""}${reached ? " unlocked" : ""}${claimed ? " claimed" : ""}`}>
@@ -159,7 +159,7 @@ export function HeroPathPanel({ workspace, language, onClaimCheckpoint, onReveal
 
         <div className="hero-path-summary" style={{ "--rank-color": rank.color } as CSSProperties}>
           <HeroicRankSigil rankId={rank.id} color={rank.color} />
-          <div><small>{isEnglish ? "Current rank" : "Текущий ранг"}</small><strong>{isEnglish ? rank.titleEn : rank.title}</strong><span>{total.toLocaleString(isEnglish ? "en-US" : "ru-RU")} XP</span><div className="hero-path-progress"><i style={{ width: `${progress}%` }} /></div><em>{nextRank ? (isEnglish ? `${(nextRank.threshold - total).toLocaleString("en-US")} XP to ${nextRank.titleEn}` : `${(nextRank.threshold - total).toLocaleString("ru-RU")} XP до «${nextRank.title}»`) : (isEnglish ? "The visible path is complete" : "Видимый путь пройден")}</em></div>
+          <div><small>{isEnglish ? "Current rank" : "Текущий ранг"}</small><strong>{isEnglish ? rank.titleEn : rank.title}</strong><span>{total.toLocaleString(runtimeLocale(language))} XP</span><div className="hero-path-progress"><i style={{ width: `${progress}%` }} /></div><em>{nextRank ? (isEnglish ? `${(nextRank.threshold - total).toLocaleString(runtimeLocale(language))} XP to ${nextRank.titleEn}` : `${(nextRank.threshold - total).toLocaleString(runtimeLocale(language))} XP до «${nextRank.title}»`) : (isEnglish ? "The visible path is complete" : "Видимый путь пройден")}</em></div>
         </div>
 
         <RankPathMap ranks={FOUNDATIONAL_HEROIC_RANKS} stepOffset={0} currentRankId={rank.id === "unranked" ? null : rank.id} total={total} workspace={workspace} language={language} onClaimCheckpoint={onClaimCheckpoint} />

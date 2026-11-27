@@ -547,5 +547,10 @@
   "Выбрать шаблон": "Şablon seç",
   "Ранее сохранённые задачи": "Önceden kaydedilen görevler",
   "Доска для «{title}»": "“{title}” için pano",
-  "Перетащите сюда задачи и подпроекты, чтобы оставить их вне досок.": "Görevleri ve alt projeleri panoların dışında tutmak için buraya sürükleyin."
+  "Перетащите сюда задачи и подпроекты, чтобы оставить их вне досок.": "Görevleri ve alt projeleri panoların dışında tutmak için buraya sürükleyin.",
+  "Задача «{item}» возвращена в хаос-бокс.": "“{item}” görevi Kaos Kutusu’na geri taşındı.",
+  "Список «{item}» возвращён в хаос-бокс.": "“{item}” listesi Kaos Kutusu’na geri taşındı.",
+  "Задача «{item}» перемещена в проект «{project}».": "“{item}” görevi “{project}” projesine taşındı.",
+  "Список «{item}» перемещён в проект «{project}».": "“{item}” listesi “{project}” projesine taşındı.",
+  "Задача «{item}» перемещена в список «{list}».": "“{item}” görevi “{list}” listesine taşındı."
 }

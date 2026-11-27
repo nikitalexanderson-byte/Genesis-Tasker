@@ -1491,7 +1491,7 @@ private fun SharedProjectsContent(controller: SharedWorkspaceGateway, language: 
         if (taskId.isBlank() && projectToolbar) {
             SharedProjectMenu.entries.forEach { menu -> Box {
                 AffairsIconButton(menu.title, menu.action, { projectMenu = menu }, Modifier.testTag(menu.tag),
-                    selected = projectMenu == menu, tonal = true)
+                    selected = projectMenu == menu, tonal = false)
                 DropdownMenu(projectMenu == menu, { closeActions() }) { actionItems(menu) }
             } }
         } else if (spaceToolbar) {
@@ -1499,7 +1499,7 @@ private fun SharedProjectsContent(controller: SharedWorkspaceGateway, language: 
                 AffairsIconButton(if (menu == SharedProjectMenu.TEAM) "Команда" else "Данные и архивы",
                     if (menu == SharedProjectMenu.TEAM) AffairsAction.TEAM else AffairsAction.ARCHIVE,
                     { projectMenu = menu }, Modifier.testTag(if (menu == SharedProjectMenu.TEAM) "shared-space-team" else "shared-space-data"),
-                    selected = projectMenu == menu, tonal = true)
+                    selected = projectMenu == menu, tonal = false)
                 DropdownMenu(projectMenu == menu, { closeActions() }) { actionItems(menu) }
             } }
         } else if (taskId.isBlank()) Box {
@@ -1658,7 +1658,7 @@ private fun SharedProjectsContent(controller: SharedWorkspaceGateway, language: 
                     kotlin.math.floor((maxWidth.toPx() - buttonGap.toPx() * (buttonCount - 1)) / buttonCount).toDp()
                 })
                 CompositionLocalProvider(LocalAffairsControlWidth provides buttonWidth,
-                    LocalGenesisIconButtonTonal provides true,
+                    LocalGenesisIconButtonTonal provides false,
                     LocalMinimumInteractiveComponentSize provides 0.dp) {
                 Row(Modifier.horizontalScroll(rememberScrollState()).widthIn(min = maxWidth).testTag("shared-create-actions"),
                     horizontalArrangement = Arrangement.spacedBy(buttonGap, androidx.compose.ui.Alignment.CenterHorizontally),

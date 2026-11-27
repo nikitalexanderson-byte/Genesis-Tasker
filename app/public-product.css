@@ -60,7 +60,8 @@
 .public-product,.public-product *,.public-hero-actions,.public-merchant { word-break:normal; overflow-wrap:normal; hyphens:none; }
 #sign-in { scroll-margin-top:40px; }
 .public-language-links { display:flex; flex-wrap:wrap; justify-content:center; gap:4px 12px; margin:20px 0; }
-.public-language-links a { display:inline-flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; color:inherit; text-underline-offset:4px; }
+.public-language-links a { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-width:44px; min-height:44px; color:inherit; text-underline-offset:4px; }
+.public-language-links img { flex:none; border-radius:2px; }
 .public-language-links a[aria-current="page"] { font-weight:700; text-decoration-thickness:2px; }
 @media(max-width:1000px) { .public-plans { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:600px) { .public-footer-details { grid-template-columns:minmax(0,1fr); gap:16px; } .public-footer-prices ul{grid-template-columns:minmax(0,1fr)} }

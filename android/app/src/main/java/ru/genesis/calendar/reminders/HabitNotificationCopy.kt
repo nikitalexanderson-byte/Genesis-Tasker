@@ -10,8 +10,11 @@ internal fun habitNotificationBody(tone: String, kind: String, count: Int, langu
     seed: String = "preview", subject: String? = null): String {
     val pool = habitNotificationMessages["$tone/${if (kind == "goal") "goal" else "habit"}"]
         ?: habitNotificationMessages.getValue("calm/habit")
-    val pair = pool[notificationCopyIndex(seed, pool.size)]
+    val index = notificationCopyIndex(seed, pool.size)
+    val pair = pool[index]
     val names = mapOf("ru" to "«Практика дня»", "en" to "your daily practice",
+        "he" to "התרגול היומי שלך", "ar" to "ممارستك اليومية",
+        "ko" to "오늘의 연습", "nl" to "je dagelijkse oefening",
         "el" to "«Η πρακτική της ημέρας»", "de" to "deine tägliche Übung",
         "fr" to "votre pratique du jour", "es" to "tu práctica diaria",
         "it" to "la tua pratica quotidiana", "pt" to "a sua prática diária",
@@ -23,9 +26,10 @@ internal fun habitNotificationBody(tone: String, kind: String, count: Int, langu
         "ru" -> pair.first
         "en" -> pair.second
         else -> habitNotificationLocalized["$tone/${if (kind == "goal") "goal" else "habit"}"]?.get(language)
-            ?: pair.second
+            ?.let { variants -> variants[index % variants.size] } ?: pair.second
     }
-    return template.replace("{subject}", name).replace("{count}", count.toString())
+    return if (kind == "goal") template.replace("{count}", count.toString())
+        else template.replace("{subject}", name)
 }
 
 internal fun habitNotificationBody(tone: String, kind: String, count: Int, english: Boolean,

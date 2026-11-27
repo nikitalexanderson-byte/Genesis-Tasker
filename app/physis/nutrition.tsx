@@ -1,4 +1,5 @@
 'use client';
+import { runtimeLocale } from '../i18n';
 import { usePhysisMigrationCapture, usePhysisMigrationTask } from './migration-editors';
 /* eslint-disable react/prop-types -- Nested shared props are checked by the imported PhysisFeatureProps TypeScript contract. */
 import { useEffect, useId, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from 'react';
@@ -38,7 +39,7 @@ type Props = PhysisFeatureProps;
 type Translate = (ru: string, en: string) => string;
 const core: NutrientKey[] = ['energy', 'protein', 'fat', 'carbohydrate', 'fiber'];
 const categoryNames: Record<FoodCategory, [string, string]> = { soy: ['Соя и производные', 'Soy and derivatives'], legume: ['Бобовые', 'Legumes'], 'seed-oil': ['Масла из семян', 'Seed oils'] };
-const fmt = (value: number | null | undefined) => value == null ? '—' : Number(value.toFixed(1)).toLocaleString('ru-RU');
+const fmt = (value: number | null | undefined) => value == null ? '—' : Number(value.toFixed(1)).toLocaleString(runtimeLocale());
 const tr = (language: string): Translate => (ru, en) => language === 'ru' ? ru : en;
 function profileFor(props: Props) { return physisRecords<NutritionProfile>(props.store, 'nutrition-profile')[0]; }
 const foodGroups = FOOD_TYPE_GROUPS;

@@ -12,5 +12,45 @@
   "uk": {"title":"Установити на iPhone","intro":"Додайте GENESIS на початковий екран, щоб відкривати його в окремому вікні.","steps":["Відкрийте genesiscalendar.com у Safari.","Натисніть «Поширити» — квадрат зі стрілкою вгору.","Виберіть «На початковий екран», а потім «Додати»."],"close":"Закрити інструкцію"},
   "zh": {"title":"在 iPhone 上安装","intro":"将 GENESIS 添加到主屏幕，即可在独立窗口中打开。","steps":["在 Safari 中打开 genesiscalendar.com。","轻点共享按钮，即带向上箭头的方框。","选择添加到主屏幕，再轻点添加。"],"close":"关闭说明"},
   "tr": {"title":"iPhone’a yükle","intro":"GENESIS’i kendi penceresinde açmak için Ana Ekran’a ekleyin.","steps":["Safari’de genesiscalendar.com adresini açın.","Yukarı oklu kare olan Paylaş simgesine dokunun.","Ana Ekrana Ekle’yi ve ardından Ekle’yi seçin."],"close":"Talimatları kapat"},
-  "ja": {"title":"iPhoneにインストール","intro":"GENESISをホーム画面に追加すると、専用のウインドウで開けます。","steps":["Safariでgenesiscalendar.comを開きます。","上向き矢印のある四角い共有ボタンをタップします。","ホーム画面に追加を選び、追加をタップします。"],"close":"説明を閉じる"}
+  "ja": {"title":"iPhoneにインストール","intro":"GENESISをホーム画面に追加すると、専用のウインドウで開けます。","steps":["Safariでgenesiscalendar.comを開きます。","上向き矢印のある四角い共有ボタンをタップします。","ホーム画面に追加を選び、追加をタップします。"],"close":"説明を閉じる"},
+  "he": {
+    "title": "התקן על iPhone",
+    "intro": "הוספת GENESIS למסך הבית שלך כדי לפתוח אותו בחלון משלו.",
+    "steps": [
+      "פתח את genesiscalendar.com בספארי.",
+      "לחץ על שיתוף: ריבוע עם חץ למעלה.",
+      "בחר הוסף למסך הבית, ואז הוסף."
+    ],
+    "close": "הוראות סגירה"
+  },
+  "ar": {
+    "title": "تثبيت على iPhone",
+    "intro": "أضف GENESIS إلى الشاشة الرئيسية لفتحها في نافذتها الخاصة.",
+    "steps": [
+      "افتح موقع genesiscalendar.com في Safari.",
+      "انقر على مشاركة: المربع مع سهم صاعد.",
+      "اختر إضافة إلى الشاشة الرئيسية، ثم أضف."
+    ],
+    "close": "إغلاق التعليمات"
+  },
+  "ko": {
+    "title": "iPhone에 설치",
+    "intro": "홈 화면에 GENESIS을 추가하여 자체 창에서 열 수 있습니다.",
+    "steps": [
+      "Safari에서 genesiscalendar.com을 엽니다.",
+      "공유: 위로 향하는 화살표가 있는 사각형을 탭합니다.",
+      "홈 화면에 추가를 선택한 다음 추가를 선택하십시오."
+    ],
+    "close": "지침 닫기"
+  },
+  "nl": {
+    "title": "Installeren op iPhone",
+    "intro": "Voeg GENESIS toe aan je startscherm om het in een eigen venster te openen.",
+    "steps": [
+      "Open genesiscalendar.com in Safari.",
+      "Tik op Delen: het vierkantje met een pijl omhoog.",
+      "Kies Toevoegen aan beginscherm en kies vervolgens Toevoegen."
+    ],
+    "close": "Sluit de instructies"
+  }
 }

@@ -1,19 +1,28 @@
 import {publicLegalUpdated} from './legal-content';
 import {legalPresentation} from './legal-presentation';
 import {escapePublicText as escape,publicMerchantHtml,publicProductCopy,publicProductHtml} from './public-product';
-import {publicPagePath,publicPageAlternates,type PublicPage,type PublicEdition} from './public-route';
-import type {RegionLanguage} from './region-language';
+import {publicLanguagePath,publicPagePath,type PublicPage,type PublicEdition} from './public-route';
+import {LANGUAGE_CHOICES, REGION_LANGUAGES, type RegionLanguage} from './region-language';
 import pageCopy from './public-page-copy.json';
 
 type Translate=(source:string)=>string;
 export const PUBLIC_ORIGIN='https://genesiscalendar.com';
 
-export function publicLanguageLinks(language:RegionLanguage,page:PublicPage,translate:Translate,base='',edition:PublicEdition='international') {
-  return `<nav class="public-language-links" aria-label="${escape(translate('Выбор языка'))}">${publicPageAlternates(page,base,edition)
-    .filter(row=>row.language!=='x-default').map(row=>`<a href="${row.path}" lang="${row.language}" hreflang="${row.language}"${row.language===language?' aria-current="page"':''}>${row.language.toUpperCase()}</a>`).join('')}</nav>`;
+export function publicLanguageOptions(page:PublicPage,base='',edition:PublicEdition='international',location?: Pick<URL, "search" | "hash">) {
+  const flagDirectory = base.replace(/\/+$/, "") + "/language-flags";
+  return REGION_LANGUAGES.map(code => {
+    const {name, country} = LANGUAGE_CHOICES[code];
+    return {code,name,href:publicLanguagePath(code,page,base,edition,location),flag:`${flagDirectory}/${country}.svg`};
+  });
 }
 
-export function publicHomeHtml(language:RegionLanguage,translate:Translate,base='',edition:PublicEdition='international') {
+export function publicLanguageLinks(language:RegionLanguage,page:PublicPage,translate:Translate,base='',edition:PublicEdition='international',location?: Pick<URL, "search" | "hash">) {
+  const links = publicLanguageOptions(page,base,edition,location).map(({code,name,href,flag}) =>
+    `<a href="${escape(href)}" lang="${code}" hreflang="${code}" title="${escape(name)}"${code===language?' aria-current="page"':''}><img src="${escape(flag)}" alt="" width="24" height="18"><bdi>${escape(name)}</bdi></a>`);
+  return `<nav class="public-language-links" aria-label="${escape(translate('Выбор языка'))}">${links.join('')}</nav>`;
+}
+
+export function publicHomeHtml(language:RegionLanguage,translate:Translate,base='',edition:PublicEdition='international',page:'home'|'login'='home') {
   const c=publicProductCopy(language,edition),home=publicPagePath(language,'home',base,edition),login=`${publicPagePath(language,'login',base,edition)}#sign-in`;
   const t=(source:string)=>escape(translate(source));
   return `<main class="welcome-screen" aria-labelledby="fallback-title"><div class="welcome-shell">
@@ -26,7 +35,7 @@ export function publicHomeHtml(language:RegionLanguage,translate:Translate,base=
       <p>${t('Сначала Google передаёт только подтверждённый адрес, имя и изображение профиля для безопасного входа. Уже после входа вы сами решаете, подключать ли синхронизацию: GENESIS создаёт отдельный календарь GENESIS, а доступ к Google Tasks использует для показа и двустороннего изменения ваших списков и задач. Разрешения не применяются для рекламы, профилирования или обучения моделей.')}</p></section>
       <section class="google-data-purpose" aria-labelledby="fallback-service-owner"><h2 id="fallback-service-owner">${edition==='domestic'&&language==='ru'?t('Сервис GENESIS и домен'):escape(c.merchantTitle)}</h2>${publicMerchantHtml(language,'home',base,edition)}
       <p>${t('Нейросетевой помощник GENESIS разбирает команды и готовит план задач. GENESIS не создаёт интимные изображения без согласия (AI NCII) и не использует Google API для этой цели.')}</p></section>
-      ${publicLanguageLinks(language,'home',translate,base,edition)}
+      ${publicLanguageLinks(language,page,translate,base,edition)}
     </section><div class="public-product">${publicProductHtml(language,base,edition)}</div></div></main>`;
 }
 

@@ -59,7 +59,7 @@ internal fun allowedSharedRoute(method: String, path: String): Boolean {
     if (path.matches(Regex("/shared/spaces/[a-f0-9-]{36}/custom-fields\\?archived=true"))) return method == "GET"
     if (path.matches(Regex("/shared/spaces/[a-f0-9-]{36}/custom-fields/preview"))) return method == "POST"
     if (path.matches(Regex("/shared/custom-fields/[A-Za-z0-9_-]{1,100}/history"))) return method == "GET"
-    val templateLanguage = "(?:ru|en|el|de|fr|es|it|pt|pl|sr|uk|zh|tr|ja)"
+    val templateLanguage = "(?:ru|en|el|de|fr|es|it|pt|pl|sr|uk|zh|tr|ja|he|ar|ko|nl)"
     val templateKey = "(?:[a-f0-9-]{36}|system%3A(?:event|publication|launch|control))"
     if (path.matches(Regex("/shared/spaces/[a-f0-9-]{36}/templates\\?language=$templateLanguage&deleted=(?:true|false)(?:&cursor=[A-Za-z0-9%+_.~*-]+)?"))) return method == "GET"
     if (path.matches(Regex("/shared/spaces/[a-f0-9-]{36}/templates"))) return method == "POST"
@@ -83,7 +83,7 @@ internal fun allowedSharedRoute(method: String, path: String): Boolean {
     if (path.matches(Regex("/shared/projects/[a-f0-9-]{36}/automations/[a-f0-9-]{36}"))) return method in setOf("GET", "PATCH")
     if (path.matches(Regex("/shared/projects/[a-f0-9-]{36}/automations/[a-f0-9-]{36}/runs(?:\\?cursor=[a-f0-9-]{36})?"))) return method == "GET"
     if (path.matches(Regex("/shared/projects/[a-f0-9-]{36}/automations/[a-f0-9-]{36}/runs/[a-f0-9-]{36}/retry"))) return method == "POST"
-    if (path.matches(Regex("/shared/templates/[A-Za-z0-9_%.-]{1,300}\\?language=(?:ru|en|el|de|fr|es|it|pt|pl|sr|uk|zh|tr|ja)"))) return method == "GET"
+    if (path.matches(Regex("/shared/templates/[A-Za-z0-9_%.-]{1,300}\\?language=(?:ru|en|el|de|fr|es|it|pt|pl|sr|uk|zh|tr|ja|he|ar|ko|nl)"))) return method == "GET"
     if (path == "/shared/notification-settings") return method in setOf("GET", "PUT")
     if (path == "/shared/notification-settings/retry") return method == "POST"
     if (path.matches(Regex("/shared/projects/[a-f0-9-]{36}/tasks/[a-f0-9-]{36}/watch"))) return method in setOf("GET", "PUT")
@@ -206,6 +206,9 @@ internal class AuthSessionClient(context: Context,
         return next
     }
     fun currentGeneration(): Long = synchronized(guard) { generation }
+    fun hasConfirmedOwner(uid: String): Boolean = synchronized(guard) {
+        confirmedPersonalOwnerId == uid && transportEpoch == NativeBackupEpoch.current()
+    }
     fun isCurrent(expected: Long): Boolean = synchronized(guard) { generation == expected && transportEpoch==NativeBackupEpoch.current() }
     /** An independently unlocked, owner-bound local capability may establish
      * offline content routing. This grants neither an HTTP session nor keys. */
@@ -494,7 +497,7 @@ internal class AuthSessionClient(context: Context,
             JSONObject().put("definition", SharedAutomationProtocol.definition(definition)).put("ownerId", SharedAutomationProtocol.id(owner))
                 .put("taskId", task?.let(SharedAutomationProtocol::id) ?: JSONObject.NULL)), owner, task)
     fun sharedAutomationTemplate(expected: Long, template: String, language: String): JSONObject {
-        require(language in setOf("ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja"))
+        require(language in ru.genesis.calendar.data.publicLanguages)
         val raw = request(expected, "/shared/templates/" + java.net.URLEncoder.encode(SharedAutomationProtocol.templateId(template), "UTF-8") + "?language=$language", null).getJSONObject("template")
         require(raw.optString("id") == template && raw.optString("kind") == "task" && raw.opt("title") is String && raw.getString("title").length <= 5000) { "AUTOMATION_PROTOCOL" }
         return JSONObject().put("id", template).put("title", raw.getString("title"))

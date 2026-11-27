@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
@@ -6,7 +7,7 @@ import { calendarModule } from "./helpers/calendar-modules.mjs";
 const read = path => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), "utf8"));
 const data = read("app/olympian-knowledge.json");
 const original = read("app/olympian-isopsephy.json");
-const languages = ["ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja"];
+const languages = [...REGION_LANGUAGES];
 const copies = Object.fromEntries(languages.map(language => [language, read(`app/olympian-knowledge-copy/${language}.json`)]));
 const { greekIsopsephy, restorationRoot } = calendarModule("app/stoicheion-restoration-math.ts");
 const { THEOKYKLOS_SEGMENTS } = calendarModule("app/theokyklos-data.ts");
@@ -46,7 +47,7 @@ test("equal sums, shared roots and meaningful differences remain distinct", () =
   }
 });
 
-test("all 14 reading catalogues have every field and preserve Greek calculation inputs", () => {
+test("all 18 reading catalogues have every field and preserve Greek calculation inputs", () => {
   const keys = Object.keys(copies.ru).sort();
   const greek = value => value.match(/[\p{Script=Greek}\p{M}]+/gu) ?? [];
   for (const [language, copy] of Object.entries(copies)) {

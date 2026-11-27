@@ -3,10 +3,11 @@ package ru.genesis.calendar.ui
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import ru.genesis.calendar.data.publicLanguages
 
 class ReleaseNotesTest {
     @Test fun everyShippedLanguageHasCompleteNotes() {
-        assertEquals(setOf("ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja"), notes.keys)
+        assertEquals(publicLanguages, notes.keys)
         notes.forEach { (language, copy) ->
             assertTrue(language, copy.title.isNotBlank() && copy.close.isNotBlank())
             assertEquals(language, 5, copy.changes.size)

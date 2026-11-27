@@ -14,6 +14,10 @@ internal data class MobileCalendarCopy(
 
 internal fun mobileCalendarCopy(language: String): MobileCalendarCopy = when (language) {
     "en" -> MobileCalendarCopy("Tap the card to change calendars", "Gregorian calendar", "Sacred calendar", "Lunar calendar", "Projects", "Active tasks")
+    "he" -> MobileCalendarCopy("לחץ על הכרטיס כדי לשנות לוח שנה", "לוח השנה הגרגוריאני", "לוח השנה המקודש", "לוח השנה הירחי", "פרויקטים", "משימות פעיל")
+    "ar" -> MobileCalendarCopy("انقر على البطاقة لتغيير التقويم", "التقويم الميلادي", "التقويم المقدّس", "التقويم القمري", "المشاريع", "المهام النشطة")
+    "ko" -> MobileCalendarCopy("카드를 살짝 눌러 캘린더 변경하기", "그레고리력", "성스러운 달력", "음력", "프로젝트", "활성 작업")
+    "nl" -> MobileCalendarCopy("Tik op de kaart om van agenda te wisselen", "Gregoriaanse kalender", "Heilige kalender", "Maankalender", "Projecten", "Actieve taken bekijken")
     "el" -> MobileCalendarCopy("Πατήστε την κάρτα για αλλαγή ημερολογίου", "Γρηγοριανό ημερολόγιο", "Ιερό ημερολόγιο", "Σεληνιακό ημερολόγιο", "Έργα", "Ενεργές εργασίες")
     "de" -> MobileCalendarCopy("Karte antippen, um den Kalender zu wechseln", "Gregorianischer Kalender", "Sakraler Kalender", "Mondkalender", "Projekte", "Aktive Aufgaben")
     "fr" -> MobileCalendarCopy("Touchez la carte pour changer de calendrier", "Calendrier grégorien", "Calendrier sacré", "Calendrier lunaire", "Projets", "Tâches actives")
@@ -42,6 +46,10 @@ internal data class SpringYearCopy(val title: String, val body: String, val acti
 
 internal fun springYearCopy(language: String): SpringYearCopy = when (language) {
     "en" -> SpringYearCopy("Begin the year in spring", "Nature awakens in March. You can start the displayed Gregorian year then.", "Start in March", "Dismiss suggestion")
+    "he" -> SpringYearCopy("התחילו את השנה באביב.", "הטבע מתעורר במרץ אתה יכול להתחיל את השנה הגרגוריאנית המוצגת אז.", "התחל במרץ", "דחיית ההצעה")
+    "ar" -> SpringYearCopy("تبدأ السنة في الربيع", "تستيقظ الطبيعة في مارس ويمكنك أن تبدأ السنة الغريغورية المعروضة عندئذ", "تبدأ في آذار/مارس", "رفض الاقتراح")
+    "ko" -> SpringYearCopy("봄에 일년을 시작", "자연은 3월에 깨어납니다. 그렇게 되면 그레고리력을 시작할 수 있습니다.", "3월에 시작", "제안 취소")
+    "nl" -> SpringYearCopy("Begin het jaar in de lente", "De natuur ontwaakt in maart en dan kunt u het weergegeven gregoriaanse jaar beginnen.", "Start in maart", "Suggestie negeren")
     "el" -> SpringYearCopy("Ξεκινήστε το έτος την άνοιξη", "Η φύση ξυπνά τον Μάρτιο. Μπορείτε να αρχίσετε τότε το προβαλλόμενο Γρηγοριανό έτος.", "Αρχή τον Μάρτιο", "Κλείσιμο πρότασης")
     "de" -> SpringYearCopy("Das Jahr im Frühling beginnen", "Im März erwacht die Natur. Das angezeigte gregorianische Jahr kann dann beginnen.", "Ab März beginnen", "Hinweis schließen")
     "fr" -> SpringYearCopy("Commencer l’année au printemps", "La nature s’éveille en mars. Vous pouvez y faire commencer l’année grégorienne affichée.", "Commencer en mars", "Fermer la suggestion")

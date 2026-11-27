@@ -20,9 +20,21 @@
     "uprightEffect": "Пневма (πνεῦμα): благоприятные возможности и приток духа или дыхания.",
     "reversedEffect": "Истерима (Ὑστέρημα): недостаток или застой энергии.",
     "positions": [
-      { "id": "past", "title": "Прошлое", "meaning": "Фундамент событий: опыт и причины, из которых выросла текущая ситуация." },
-      { "id": "present", "title": "Настоящее", "meaning": "Точка приложения воли: происходящее сейчас и пространство для вашего действия." },
-      { "id": "future", "title": "Будущее", "meaning": "Вероятный исход текущих вибраций и возникающее направление событий." }
+      {
+        "id": "past",
+        "title": "Прошлое",
+        "meaning": "Фундамент событий: опыт и причины, из которых выросла текущая ситуация."
+      },
+      {
+        "id": "present",
+        "title": "Настоящее",
+        "meaning": "Точка приложения воли: происходящее сейчас и пространство для вашего действия."
+      },
+      {
+        "id": "future",
+        "title": "Будущее",
+        "meaning": "Вероятный исход текущих вибраций и возникающее направление событий."
+      }
     ]
   },
   "en": {
@@ -46,9 +58,21 @@
     "uprightEffect": "Pneuma (πνεῦμα): favorable opportunities and an influx of spirit or breath.",
     "reversedEffect": "Hysterema (Ὑστέρημα): a lack or stagnation of energy.",
     "positions": [
-      { "id": "past", "title": "Past", "meaning": "The foundation: the experience and causes from which the current situation has grown." },
-      { "id": "present", "title": "Present", "meaning": "The point where will can act: what is happening now and the space for your action." },
-      { "id": "future", "title": "Future", "meaning": "The probable outcome of current vibrations and the emerging direction of events." }
+      {
+        "id": "past",
+        "title": "Past",
+        "meaning": "The foundation: the experience and causes from which the current situation has grown."
+      },
+      {
+        "id": "present",
+        "title": "Present",
+        "meaning": "The point where will can act: what is happening now and the space for your action."
+      },
+      {
+        "id": "future",
+        "title": "Future",
+        "meaning": "The probable outcome of current vibrations and the emerging direction of events."
+      }
     ]
   },
   "el": {
@@ -504,6 +528,158 @@
         "id": "future",
         "title": "未来",
         "meaning": "現在の振動から生じる可能性のある結果と、現れつつある出来事の方向。"
+      }
+    ]
+  },
+  "he": {
+    "title": "נבואת שלושה קלפים",
+    "subtitle": "זמנים וזרימה של אירועים",
+    "begin": "חשוף שלושה קלפים",
+    "reroll": "תור שלושה קלפים מחדש",
+    "rerollUsed": "נעשה שימוש בציור מחדש",
+    "rerollExpired": "חלון סגור",
+    "motion": "חשוף שלוש פעמים באמצעות תנועה.",
+    "motionGeneralHint": "הזז את העכבר ברחבי המסך או הסר אותו מספר פעמים. התוצאה תראה כאשר השדה אסף מספיק תנועה.",
+    "motionHint": "הזז את העכבר ברחבי המסך או סובב אותו מספר פעמים. כל שלושת הקלפים מופיעים יחד כאשר השדה אסף מספיק תנועה.",
+    "method": "איך זה עובד?",
+    "paragraphs": [
+      "זוהי שיטה בסיסית של מנטיקה, אמנות הנבואה (μαντική). שלושה קלפים סטויכיון (στοιχεῖον) הם אותיות המייצגות גם את האלמנטים של הקוסמוס.",
+      "הקלף השמאלי מתאר את העבר, הקלף המרכזי את ההווה, והקלף הימני את העתיד המתעורר. העבר הוא הבסיס, ההווה הוא הנקודה שבה הרצון יכול לפעול, והעתיד הוא התוצאה הסבירה של הרטט הנוכחי.",
+      "קלף זקוף מסמל הזדמנויות טובות וזרימה של פנומה (πνεῦμα), רוח או נשימה. קלף הפוך מצביע על היסטרמה (Ὑστέρημα), מחסור או קיפאון באנרגיה."
+    ],
+    "upright": "מצב אנכית",
+    "reversed": "מיקום הפוך",
+    "uprightEffect": "פנומה (πνεῦμα): הזדמנויות חיוביות והזרמת רוח או נשימה.",
+    "reversedEffect": "היסטרמה (Ὑστέρημα): חוסר או קיפאון של אנרגיה.",
+    "positions": [
+      {
+        "id": "past",
+        "title": "עבר.",
+        "meaning": "הבסיס: הניסיון והסיבות שמהן גדלה המצב הנוכחי."
+      },
+      {
+        "id": "present",
+        "title": "עכשיו.",
+        "meaning": "הנקודה שבה הרצון יכול לפעול: מה שקורה עכשיו והמרחב לפעולה שלך."
+      },
+      {
+        "id": "future",
+        "title": "עתיד.",
+        "meaning": "התוצאה הצפויה של תנודות זרם והכיוון המתפתח של אירועים."
+      }
+    ]
+  },
+  "ar": {
+    "title": "التنبؤ بثلاث أوراق",
+    "subtitle": "التوقيت وتدفق الأحداث",
+    "begin": "كشف ثلاث بطاقات",
+    "reroll": "إعادة سحب ثلاث بطاقات",
+    "rerollUsed": "إعادة السحب المستخدمة",
+    "rerollExpired": "أغلق نافذة إعادة الرسم",
+    "motion": "كشف ثلاث مرات من خلال الحركة",
+    "motionGeneralHint": "حرك الفأرة عبر الشاشة أو اسحبها عدة مرات. تظهر النتيجة عندما يجمع الحقل حركة كافية.",
+    "motionHint": "حرك الفأرة عبر الشاشة أو اسحبها عدة مرات. ستظهر جميع البطاقات الثلاث معاً بمجرد أن يجمع الحقل الحركة الكافية.",
+    "method": "كيف يعمل هذا التوزيع",
+    "paragraphs": [
+      "هذا هو الأسلوب الأساسي لعلم الحكمة، فن التنبؤ (μαντική). ثلاث بطاقات stoicheion (στοιχεῖον) هي أحرف تمثل أيضا عناصر الكون.",
+      "إن الورقة اليسرى تصف الماضي، والورقة الوسطى تصف الحاضر، والورقة اليمنى تصف المستقبل الناشئ. والماضي هو الأساس، والحاضر هو النقطة التي تستطيع الإرادة أن تعمل عندها، والمستقبل هو النتيجة المحتملة للاهتزازات الحالية.",
+      "البطاقة الرأسية تشير إلى الفرص المواتية وتدفق Pneuma (πνεῦμαتشير بطاقة مقلوبة إلى هيستيريما (Hysterema)Ὑστέρημα)١٢( انظر الفقرة ١٣ من الوثيقة E/CN.4/Sub.2/1998/3."
+    ],
+    "upright": "الوضع المستقيم",
+    "reversed": "الوضع العكسي",
+    "uprightEffect": "Pneuma (πνεῦμα): الفرص المواتية وتدفق الروح أو التنفس.",
+    "reversedEffect": "Hysterema (Ὑστέρημα): نقص أو ركود الطاقة.",
+    "positions": [
+      {
+        "id": "past",
+        "title": "الماضي",
+        "meaning": "الأساس: التجربة والأسباب التي نشأ عنها الوضع الراهن."
+      },
+      {
+        "id": "present",
+        "title": "الحالية",
+        "meaning": "النقطة التي تستطيع فيها الإرادة أن تعمل: ما يحدث الآن والفضاء لعملك."
+      },
+      {
+        "id": "future",
+        "title": "المستقبل",
+        "meaning": "النتيجة المحتملة للاهتزازات الحالية والاتجاه الناشئ للأحداث."
+      }
+    ]
+  },
+  "ko": {
+    "title": "세 카드 점술",
+    "subtitle": "시간과 이벤트의 흐름",
+    "begin": "카드 3장 보여주기",
+    "reroll": "세 장의 카드를 다시 줍니다",
+    "rerollUsed": "사용한 재그림",
+    "rerollExpired": "창을 다시 그립니다",
+    "motion": "움직임을 통해 세 번 공개",
+    "motionGeneralHint": "화면에서 마우스를 이동하거나 여러 번 쓸어넘기십시오. 필드가 충분히 움직이면 결과가 나타납니다.",
+    "motionHint": "마우스를 화면 위로 움직이거나 몇 번 쓸어넘기십시오. 필드가 충분히 움직이면 세 장의 카드가 모두 함께 나타납니다.",
+    "method": "이 스프레드 작동 방법",
+    "paragraphs": [
+      "이것은 mantics의 기본적인 방법, 예언의 예술 (μαντική). 세 stoicheion 카드 (στοιχεῖον)는 또한 우주의 요소를 나타내는 문자입니다.",
+      "왼쪽 카드는 과거를, 중앙 카드는 현재를, 오른쪽 카드는 떠오르는 미래를 설명합니다. 과거는 기초이고, 현재는 의지가 행동할 수있는 지점이며, 미래는 현재 진동의 가능한 결과입니다.",
+      "수직 카드는 유리한 기회와 Pneuma (πνεῦμα), 정신 또는 호흡의 유입을 의미합니다. 반전 카드 Hysterema (Ὑστέρημα), 부족이나 에너지의 정체를 가리킵니다."
+    ],
+    "upright": "수직 위치",
+    "reversed": "반전된 위치",
+    "uprightEffect": "Pneuma (πνεῦμα): 유리한 기회와 정신 또는 호흡의 유입.",
+    "reversedEffect": "히스테레마(Ὑστέρημα): 에너지의 부족 또는 정체.",
+    "positions": [
+      {
+        "id": "past",
+        "title": "과거",
+        "meaning": "기초: 현재 상황이 성장한 경험과 원인."
+      },
+      {
+        "id": "present",
+        "title": "현재",
+        "meaning": "의지가 행동할 수 있는 지점: 지금 일어나고 있는 일과 당신의 행동을 위한 공간."
+      },
+      {
+        "id": "future",
+        "title": "미래",
+        "meaning": "현재 진동의 가능한 결과와 이벤트의 떠오르는 방향."
+      }
+    ]
+  },
+  "nl": {
+    "title": "Drie-kaart waarzeggerij",
+    "subtitle": "Tijden en de stroom van gebeurtenissen",
+    "begin": "Ontdek drie kaarten",
+    "reroll": "Drie kaarten opnieuw trekken",
+    "rerollUsed": "Hertekening gebruikt",
+    "rerollExpired": "Opnieuw tekenen venster gesloten",
+    "motion": "Onthul drie keer door beweging",
+    "motionGeneralHint": "Beweeg de muis over het scherm of swipe meerdere keren en het resultaat verschijnt zodra het veld genoeg beweging heeft verzameld.",
+    "motionHint": "Beweeg de muis over het scherm of swipe meerdere keren en alle drie de kaarten verschijnen samen als het veld genoeg beweging heeft verzameld.",
+    "method": "Hoe deze spread werkt",
+    "paragraphs": [
+      "Dit is een basismethode van mantics, de kunst van waarzeggerij (μαντική). Drie stoicheion kaarten (στοιχεῖον) zijn letters die ook elementen van de kosmos vertegenwoordigen.",
+      "De linkerkaart beschrijft het verleden, de middelste kaart het heden en de rechterkaart de opkomende toekomst. Het verleden is de basis, het heden is het punt waar de wil kan handelen en de toekomst is de waarschijnlijke uitkomst van de huidige trillingen.",
+      "Een rechtopstaande kaart duidt op gunstige kansen en een instroom van Pneuma (πνεῦμα), geest of adem, een omgekeerde kaart wijst op Hysterema (Ὑστέρημα), een gebrek of stagnatie van energie."
+    ],
+    "upright": "In rechtopstaande positie",
+    "reversed": "De omgekeerde positie",
+    "uprightEffect": "Pneuma (πνεῦμα): gunstige kansen en een instroom van geest of adem.",
+    "reversedEffect": "Hysterema (Ὑστέρημα): een gebrek of stagnatie van energie.",
+    "positions": [
+      {
+        "id": "past",
+        "title": "Verleden",
+        "meaning": "De basis: de ervaring en oorzaken waaruit de huidige situatie is gegroeid."
+      },
+      {
+        "id": "present",
+        "title": "Present",
+        "meaning": "Het punt waar wil kan handelen: wat er nu gebeurt en de ruimte voor jouw actie."
+      },
+      {
+        "id": "future",
+        "title": "Toekomst",
+        "meaning": "De waarschijnlijke uitkomst van huidige trillingen en de opkomende richting van gebeurtenissen."
       }
     ]
   }

@@ -2,7 +2,7 @@ import {readFileSync,readdirSync} from 'node:fs';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
 
-export const advicePublicLanguages=Object.freeze(['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja']);
+export const advicePublicLanguages=Object.freeze(['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja','he','ar','ko','nl']);
 const roots={daily:'server/content/daily-advice',philosophers:'server/content/philosopher-aphorisms-locales'};
 
 /** Public editorial metadata for LOCAL selection. This input contains no
@@ -69,8 +69,13 @@ export function collectAdvicePublicAssets(root){
   }
  }
  const manifest={protocol:1,catalogues};
- verifyAdvicePublicPins(manifest,JSON.parse(readFileSync(join(root,'contracts/public-advice-editions-v1.json'),'utf8')));
- assets.push({fileName:'advice-catalogues/v1/manifest.json',source:JSON.stringify(manifest)});
+ const legacy=JSON.parse(readFileSync(join(root,'contracts/public-advice-editions-v1.json'),'utf8'));
+ const legacyPaths=new Set(legacy.catalogues.map(edition=>edition.path));
+ verifyAdvicePublicPins({protocol:1,catalogues:catalogues.filter(edition=>legacyPaths.has(edition.path))},legacy);
+ verifyAdvicePublicPins(manifest,JSON.parse(readFileSync(join(root,'contracts/public-advice-editions-v2.json'),'utf8')));
+ // Clients through 3.3.6 require exactly their original fourteen languages.
+ assets.push({fileName:'advice-catalogues/v1/manifest.json',source:JSON.stringify(legacy)});
+ assets.push({fileName:'advice-catalogues/v2/manifest.json',source:JSON.stringify(manifest)});
  const metadata=collectAdviceSelectionMetadata(root),pin=JSON.parse(readFileSync(join(root,'contracts/public-advice-metadata-v1.json'),'utf8'));
  if(JSON.stringify(pin)!==JSON.stringify(metadata.pin))throw new Error('ADVICE_PUBLIC_METADATA_CHANGED_UPDATE_PIN');
  assets.push({fileName:metadata.pin.path,source:metadata.source});

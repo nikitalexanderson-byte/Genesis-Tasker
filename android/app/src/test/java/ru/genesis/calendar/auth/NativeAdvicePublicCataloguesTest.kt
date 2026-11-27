@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
+import ru.genesis.calendar.data.publicLanguages
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.net.CookieHandler
@@ -14,8 +15,8 @@ import javax.net.ssl.HttpsURLConnection
 
 class NativeAdvicePublicCataloguesTest {
     private fun root():File=generateSequence(File(requireNotNull(System.getProperty("user.dir")))){it.parentFile}
-        .first{File(it,"contracts/public-advice-editions-v1.json").isFile}
-    private fun manifest()=File(root(),"contracts/public-advice-editions-v1.json").readBytes()
+        .first{File(it,"contracts/public-advice-editions-v2.json").isFile}
+    private fun manifest()=File(root(),"contracts/public-advice-editions-v2.json").readBytes()
     private suspend fun reject(code:String,run:suspend ()->Unit){try{run();fail("Expected $code")}catch(error:IllegalStateException){assertEquals(code,error.message)}}
     @Test fun exactCompiledPublicPinsResolveRealEditionsAndNeverAcceptAnArbitraryPath()=runBlocking{
         val manifest=manifest();val rows=JSONObject(manifest.toString(Charsets.UTF_8)).getJSONArray("catalogues");var calls=0
@@ -24,12 +25,15 @@ class NativeAdvicePublicCataloguesTest {
             val directory=if(row.getString("kind")=="daily")"daily-advice" else "philosopher-aphorisms-locales"
             File(root(),"server/content/$directory/${row.getString("version")}/${row.getString("language")}.json").readBytes().also{assertEquals(maximum,it.size)}
         })
-        assertEquals(126,JSONObject(reader.read("advice-catalogues/v1/manifest.json",{}).toString(Charsets.UTF_8)).getJSONArray("catalogues").length());assertEquals(0,calls)
-        for(index in 0..13){val row=rows.getJSONObject(index);assertEquals(row.getInt("bytes"),reader.read(row.getString("path"),{}).size)}
-        assertEquals(14,calls)
-        for(path in listOf("https://foreign.invalid/private","../private","advice-catalogues/v1/manifest.json?owner=private","advice-catalogues/v1/daily/unknown/en."+"0".repeat(64)+".json"))
+        assertEquals(162,JSONObject(reader.read("advice-catalogues/v2/manifest.json",{}).toString(Charsets.UTF_8)).getJSONArray("catalogues").length());assertEquals(0,calls)
+        val firstEdition = (0 until rows.length()).map { rows.getJSONObject(it) }
+            .filter { it.getString("version") == rows.getJSONObject(0).getString("version") }
+        assertEquals(publicLanguages, firstEdition.map { it.getString("language") }.toSet())
+        firstEdition.forEach { row -> assertEquals(row.getInt("bytes"), reader.read(row.getString("path"), {}).size) }
+        assertEquals(publicLanguages.size,calls)
+        for(path in listOf("https://foreign.invalid/private","../private","advice-catalogues/v2/manifest.json?owner=private","advice-catalogues/v1/daily/unknown/en."+"0".repeat(64)+".json"))
             reject("E2EE_ADVICE_CATALOGUE_UNAVAILABLE"){reader.read(path,{})}
-        assertEquals(14,calls)
+        assertEquals(publicLanguages.size,calls)
     }
     @Test fun changedPublicBytesLostOwnerAndAnIncompletePinMatrixNeverBecomeFallbackText()=runBlocking{
         val manifest=manifest();val value=JSONObject(manifest.toString(Charsets.UTF_8));val row=value.getJSONArray("catalogues").getJSONObject(0);val path=row.getString("path")
@@ -41,7 +45,7 @@ class NativeAdvicePublicCataloguesTest {
         reject("E2EE_ACCOUNT_CHANGED"){lost.read(path,{check(active){"E2EE_ACCOUNT_CHANGED"}})}
         value.getJSONArray("catalogues").remove(0)
         val incomplete=NativeAdvicePublicCatalogues({value.toString().toByteArray()},download={_,_,_->error("No network")})
-        reject("E2EE_ADVICE_CATALOGUE_UNAVAILABLE"){incomplete.read("advice-catalogues/v1/manifest.json",{})}
+        reject("E2EE_ADVICE_CATALOGUE_UNAVAILABLE"){incomplete.read("advice-catalogues/v2/manifest.json",{})}
     }
     private class Reply(private val bytes:ByteArray,private val status:Int=200,private val mime:String="application/json",private val declared:Long=bytes.size.toLong()):HttpsURLConnection(URL("https://example.invalid/")){
         var closed=false;var read=false

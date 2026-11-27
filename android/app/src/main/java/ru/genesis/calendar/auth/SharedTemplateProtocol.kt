@@ -8,7 +8,7 @@ import java.util.UUID
 
 /** C1 uses the existing server manifest and mutation receipts; previews are never synthetic success. */
 internal object SharedTemplateProtocol {
-    val languages = setOf("ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja")
+    val languages = ru.genesis.calendar.data.publicLanguages
     val starters = setOf("system:event", "system:publication", "system:launch", "system:control")
     val transfer = listOf("descriptions", "tags", "labels", "customFields", "assignees", "checklists", "subtasks", "dependencies", "dates", "approvals")
     val errors = setOf("TEMPLATE_INVALID", "TEMPLATE_REFERENCE_INVALID", "TEMPLATE_DATE_INVALID", "TEMPLATE_DATE_OUTSIDE_RANGE", "TEMPLATE_LANGUAGE_INVALID",

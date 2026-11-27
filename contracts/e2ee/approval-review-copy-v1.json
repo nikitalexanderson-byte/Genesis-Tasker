@@ -96,5 +96,33 @@
     "empty": "当前没有有效的完成提议。请刷新任务或请组织者发起完成请求。",
     "details": "提议的任务详情",
     "confirm": "确认"
+  },
+  "he": {
+    "title": "השלמה של ביקורת",
+    "notice": "בדוק את גרסת המשימה המוצעת לפני אישור. החתימה שלך מאשרת את גרסה זו בדיוק. שינויים מאוחרים יותר דורשים בדיקה חדשה.",
+    "empty": "אין הצעה זמינה להשלמת המשימה הנוכחית. רענן את המשימה או בקש מהמארגן שלה לבקש השלמתה.",
+    "details": "פרטים על המשימה המוצעת",
+    "confirm": "אישור"
+  },
+  "ar": {
+    "title": "إنجاز الاستعراض",
+    "notice": "راجع نسخة المهمة المقترحة قبل التأكيد. توقيعك يوافق على هذه النسخة بالضبط. التغييرات اللاحقة تتطلب مراجعة جديدة.",
+    "empty": "لا يوجد مقترح إنجاز حالي متاح. تجدد المهمة أو أطلب من منظمها طلب الإنجاز.",
+    "details": "تفاصيل المهام المقترحة",
+    "confirm": "تأكيد"
+  },
+  "ko": {
+    "title": "검토 완료",
+    "notice": "확인하기 전에 제안된 작업 버전을 검토하십시오. 서명은 이 정확한 버전을 승인합니다. 나중에 변경하면 새로운 검토가 필요합니다.",
+    "empty": "현재 사용 가능한 완료 제안이 없습니다. 작업을 새로 고침하거나 집행자에게 완료를 요청하십시오.",
+    "details": "제안된 작업 세부 정보",
+    "confirm": "확인"
+  },
+  "nl": {
+    "title": "Voltooiing van beoordeling",
+    "notice": "Bekijk de voorgestelde taakversie voordat u deze bevestigt. Uw handtekening keurt deze exacte versie goed, latere wijzigingen vereisen een nieuwe beoordeling.",
+    "empty": "Vernieuw de taak of vraag de organisator van de taak om voltooiing aan te vragen.",
+    "details": "Details van voorgestelde taak",
+    "confirm": "Bevestigen"
   }
 }

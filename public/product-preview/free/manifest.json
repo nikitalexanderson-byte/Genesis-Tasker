@@ -5533,6 +5533,1733 @@
         1425,
         990
       ]
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "יום שישי27 בנובמבר 2026",
+        "תרגול בוקר: הטכניקה של ההרכבה העצמית",
+        "עכשיו — בוקר. · אלמנט האוויר"
+      ],
+      "images": true,
+      "id": "today",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "831722f294d8c22d73fa642c9fcadf613e62be2b870374301edc749a3b0c666e",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "תרגול בוקר: הטכניקה של ההרכבה העצמית",
+        "עכשיו — בוקר. · אלמנט האוויר",
+        "משימות היום — 1/3",
+        "אישי",
+        "יצירה · עניין אישי."
+      ],
+      "images": true,
+      "id": "task-create",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "90f090f58815f027028ea93b383d781969a58d03f3a5adb1d0f02904677f1bd5",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "תרגול בוקר: הטכניקה של ההרכבה העצמית",
+        "עכשיו — בוקר. · אלמנט האוויר",
+        "משימות היום — 1/3",
+        "אישי",
+        "יצירה · עניין אישי."
+      ],
+      "images": true,
+      "id": "task-recurrence",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "17bff72a67556f1dd2b8d9e37842d82b1c1a4419e61c275d8666df7fcded0fcf",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "משימות היום — 1/3",
+        "אישי",
+        "מעקב אישי"
+      ],
+      "images": true,
+      "id": "today-tasks",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "e22ea54316f086704f0784dd161bbcef6ebd09f2702b5e20b355940e1ff1810d",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "מצב הרוח היום",
+        "תאריך בלוח השנה האזרחי"
+      ],
+      "images": true,
+      "id": "mood",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "4d90ef308cf8074a8586c322c9336fb1edaf28930887266a5b9c45b459c4590f",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "הזמן של הומרוס של פנומה",
+        "משימות היום — 1/3",
+        "אישי",
+        "מעקב אישי"
+      ],
+      "images": true,
+      "id": "day-rhythm",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "c9d51a0f26f2a0635075911911ffd40f4f7e1052e9f78acbf82a7829fa751e80",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "פעילויות אישיות",
+        "עץ הפרויקט"
+      ],
+      "images": true,
+      "id": "projects",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "7b8c709c69002f1202b4a13278c7b3dac99e7a7ed591435e9e59d38f853331fe",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "פרוייקט חדש",
+        "פעילויות אישיות",
+        "עץ הפרויקט"
+      ],
+      "images": true,
+      "id": "project-create",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "3392f91f093cd8ade095220877a9d9e42bea760503a6cbe46ed3c25cbbe0c625",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "יומן",
+        "הרשימות האישיות שלך יופיעו כאן",
+        "הערה חדשה"
+      ],
+      "images": true,
+      "id": "diary",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "d9dea40b0378935abf95e4ff28fdee893ac04373d49f3a08963872f6952373f0",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "מפת חשיבה · למידה ויצירה"
+      ],
+      "images": true,
+      "id": "mindmap",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "27fdd29716690d10dcfba6acfacad0fd7b87e4ef2065ce1d78283b9e3d6801d0",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "נובמבר"
+      ],
+      "images": true,
+      "id": "calendar-gregorian",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "53a999a140ac706b7a982792a21e69606bd93e00555409d17deefe552fdabfa9",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "AGROTERA"
+      ],
+      "images": true,
+      "id": "calendar-sacred",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "9393fe6e893170c00d791c031df65c55674f3b770987459495214f8005c82f7e",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "סופיון."
+      ],
+      "images": true,
+      "id": "calendar-lunar",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "2fa8c8b5f794f4a1ac329f1285404bf5cde245ad1f9b5b5708d267f92e9582d3",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "שנת הירח 2026–2027"
+      ],
+      "images": true,
+      "id": "calendar-year",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "a5f8c1d99f76582fb201b1fea4251afd55398ac8cfb0ccea5daa1e5678104038",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "הרגלים - תבניות",
+        "ליבה של הרגל.",
+        "הרגלים ראשונים."
+      ],
+      "images": true,
+      "id": "habits",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "1ef1e9679592cf1fa2a4f474f956968e33e8f56fb7e32096e18bb7602d068be5",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "הרגלים - תבניות",
+        "ליבה של הרגל.",
+        "הרגלים ראשונים.",
+        "הרגל חדש."
+      ],
+      "images": true,
+      "id": "habit-settings",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "a358d2ac2044afa1bc09854ef96c04a03724cfd426a2becedc2448fecd67fbeb",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "מטריקה של מעקב עצמאי",
+        "לוח שנה של השלמת הרגלים"
+      ],
+      "images": true,
+      "id": "habit-statistics",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "26b62d46b655dcef17abd35f2902f831f39f32242f24aaaa60b2d76e33388496",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "הרגלים - מודולים",
+        "שינה.",
+        "התנזרות.",
+        "יומן חלומות.",
+        "תוכנית שינה"
+      ],
+      "images": true,
+      "id": "sleep",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "6b1b0521be704e604a10ed3a78ca64826ac129a7f3c6383ce0d805b8de13833d",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "בחר אות"
+      ],
+      "images": true,
+      "id": "stoicheion",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "a4426df010009c38e10f5534925fc58a9ae9c47258e3f62e6c08c7c46e478d8b",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "he",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Theokyklos",
+        "מעגל של כוחות אלוהיים"
+      ],
+      "images": true,
+      "id": "theokyklos",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "8ca87c078ee8d28a098ed7dd6765193b7e54efd8c1d6134deccf2553bf646594",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "الجمعة27 نوفمبر 2026",
+        "الممارسة الصباحية: تقنية التجميع الذاتي",
+        "الآن — صباحا · العنصر الهواء"
+      ],
+      "images": true,
+      "id": "today",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "a38b2462f8c7f7ed8ddb0adba2769fda4278a5e1f21c799e8505de85d02c3bb7",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "الممارسة الصباحية: تقنية التجميع الذاتي",
+        "الآن — صباحا · العنصر الهواء",
+        "مهام اليوم — 1/3",
+        "شخصي",
+        "إنشاء · مسألة شخصية"
+      ],
+      "images": true,
+      "id": "task-create",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "e828117d1d80024493779bcdce34a90db4403448b8480c1b03318bf0962fe60c",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "الممارسة الصباحية: تقنية التجميع الذاتي",
+        "الآن — صباحا · العنصر الهواء",
+        "مهام اليوم — 1/3",
+        "شخصي",
+        "إنشاء · مسألة شخصية"
+      ],
+      "images": true,
+      "id": "task-recurrence",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "1810883557336c5666ff832b9aeaa1d50c6eeca006242ad7a1a84606bb5fffec",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "مهام اليوم — 1/3",
+        "شخصي",
+        "أجهزة تعقب الأفراد"
+      ],
+      "images": true,
+      "id": "today-tasks",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "db3c1ab2ecfc6a977d05970fbc8623fd4aadace1cc3622d86e6f5174aedc4b86",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "مزاج اليوم",
+        "التاريخ في التقويم المدني"
+      ],
+      "images": true,
+      "id": "mood",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "cf9192c16c1fcf3207dea80d00c5d5ae0a2477673c645a223c1cc7967f62b0d5",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "زمن هومر من Pneuma",
+        "مهام اليوم — 1/3",
+        "شخصي",
+        "أجهزة تعقب الأفراد"
+      ],
+      "images": true,
+      "id": "day-rhythm",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "bb46a7ab2a24e2883afb256a5df9cb9a1f46eca3ab52d9d1a5ff53674c909a8f",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "الأعمال · الشخصية",
+        "شجرة المشاريع"
+      ],
+      "images": true,
+      "id": "projects",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "f3ef4cc43a49d49dc0b282b94671b4118bfeb62ae146af6410bd83525ab1e62e",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "مشروع جديد",
+        "الأعمال · الشخصية",
+        "شجرة المشاريع"
+      ],
+      "images": true,
+      "id": "project-create",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "fd739e5269391667d9e38da9d2a170825e6fd786b65d50aada0c8776f384cd57",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "اليومية",
+        "ملاحظاتك الشخصية ستظهر هنا",
+        "مذكرة جديدة"
+      ],
+      "images": true,
+      "id": "diary",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "0134a7007a05c46ba7a8d004e334f4f9ad3304c1bc6699c1185a483a92bd1cea",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "خريطة ذهنية · التعلّم والإبداع"
+      ],
+      "images": true,
+      "id": "mindmap",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "03b7501e33f08e909047c89d7380e605d5c8ffe9d268a0490a79d3427620d8d2",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "نوفمبر"
+      ],
+      "images": true,
+      "id": "calendar-gregorian",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "b4075ef40f76b5ab7093e6305e4537b682a635ffa5e3dd51c91686ffbef9f88a",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "AGROTERA"
+      ],
+      "images": true,
+      "id": "calendar-sacred",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "7f2c9a900963b79887e3133d491eaa6cae95c19a865217438bb58746e637a45f",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "سوفيون"
+      ],
+      "images": true,
+      "id": "calendar-lunar",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "79812a2eae096ac5f62111c63f7eb3cc1544e06dde40ab80bc89f09ec275dd3d",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "السنة القمرية 2026–2027"
+      ],
+      "images": true,
+      "id": "calendar-year",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "040e06fc4b15108efc7c6acd5f4911f4ed8cbc4b9fea718861092360e46079a2",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "العادات - النماذج",
+        "نواة العادات",
+        "عادات المبتدئين"
+      ],
+      "images": true,
+      "id": "habits",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "3710e71369ecc5eaca1698fde8635b9b9339a8ff0534efa79e399b04aab9852d",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "العادات - النماذج",
+        "نواة العادات",
+        "عادات المبتدئين",
+        "عادات جديدة"
+      ],
+      "images": true,
+      "id": "habit-settings",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "f19da13bf13a63429e52c72a9cb1b4e57bf2cac7dc564fbea1cd7e7a446a8133",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "مقاييس التتبع المستقلة",
+        "الجدول الزمني لإكمال العادات"
+      ],
+      "images": true,
+      "id": "habit-statistics",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "1b66c1d22284f678494245d782aebff6b003b4e1b2469892c8c4d1ef77f2be6c",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "العادات - الوحدات النمطية",
+        "النوم",
+        "الامتناع عن الجنس",
+        "يومية الأحلام",
+        "خطة النوم"
+      ],
+      "images": true,
+      "id": "sleep",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "4b48dd2f89b3bc3620b81ce674d5a920815917d75494a5a44b573fe706efe524",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "اختار حرفا"
+      ],
+      "images": true,
+      "id": "stoicheion",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "4d46d668f4822139a9c1cc13854ceb264a1e99c1d6ed7eb597ec5be62c8a55d4",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ar",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Theokyklos",
+        "دائرة القوى الإلهية"
+      ],
+      "images": true,
+      "id": "theokyklos",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "e6907d73a83f56d16ae480a06bb44a484fbdabbdde4d9d1e9920262afbd63fc7",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "금요일2026년 11월 27일",
+        "아침 연습: 자기 조립의 기술",
+        "이제 — 아침 · 요소 공기"
+      ],
+      "images": true,
+      "id": "today",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "1ae11abb33f9ae6a0cb68596002dd5a67243fb96e547961486e174035d6cc4fd",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "아침 연습: 자기 조립의 기술",
+        "이제 — 아침 · 요소 공기",
+        "오늘의 작업 — 1/3",
+        "개인",
+        "만들기 · 개인적인 일이에요"
+      ],
+      "images": true,
+      "id": "task-create",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "3eea553bbe80f27a094bdd9ecb896360f51177f018bdc832fc53a8cf1cdea2f4",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "아침 연습: 자기 조립의 기술",
+        "이제 — 아침 · 요소 공기",
+        "오늘의 작업 — 1/3",
+        "개인",
+        "만들기 · 개인적인 일이에요"
+      ],
+      "images": true,
+      "id": "task-recurrence",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "e12285f5b50e286be44182f3a04ecc99f713dda6a04922950a4eaee0b86b79fb",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "오늘의 작업 — 1/3",
+        "개인",
+        "개인 트래커"
+      ],
+      "images": true,
+      "id": "today-tasks",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "6cb08f4b591917137120805d665e97cc790516f9fab5faf890091906b8ce18a2",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "오늘의 기분",
+        "민간 달력의 날짜"
+      ],
+      "images": true,
+      "id": "mood",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "3ed7a52d6a4a35da61faf4ce5a8f99297e9e5184ba3e9f24685aed0a0fb7793a",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "호메로스의 시간 Pneuma",
+        "오늘의 작업 — 1/3",
+        "개인",
+        "개인 트래커"
+      ],
+      "images": true,
+      "id": "day-rhythm",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "760cafa2ffc76e21655823c8c7c417801076e5758ff3fa72f715a4180388e8e6",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "할 일 · 개인",
+        "프로젝트 트리"
+      ],
+      "images": true,
+      "id": "projects",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "f95a588b2675daf4f9fab83b33f37b715aade1747f606f7cf4c998306c01145a",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "새 프로젝트",
+        "할 일 · 개인",
+        "프로젝트 트리"
+      ],
+      "images": true,
+      "id": "project-create",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "93ae6f9cfae39dba072984b0c88ab8c4726d8c89873987a3ea2b32fc567784fb",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "일기",
+        "개인 메모가 여기에 나타납니다.",
+        "새 노트"
+      ],
+      "images": true,
+      "id": "diary",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "8c210dc11f2df620b19cfb471563a8ada1510845f7d6b363236fc590c9d95aa5",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "마인드맵 · 학습과 창작"
+      ],
+      "images": true,
+      "id": "mindmap",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "2c56f4185db45b188e495be6cef7f31890b7ddf75f2c8ba4c3e5e892f2f187ec",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "11월"
+      ],
+      "images": true,
+      "id": "calendar-gregorian",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "26d2714c31c9e7e2d4958ee480e33e0f41556603689658ac2cd07d7f74bc4196",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "AGROTERA"
+      ],
+      "images": true,
+      "id": "calendar-sacred",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "872e39fa534989502d95b7a2bbc22f55bb9aafa865418046ec4dc5cb5129fc9f",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "소피온"
+      ],
+      "images": true,
+      "id": "calendar-lunar",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "5a4017b3ce995359453e789177d8264dac8d091b9f6a46c9d5a4c05adccf02a0",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "음력 연도 2026–2027"
+      ],
+      "images": true,
+      "id": "calendar-year",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "269640b9a306d8d1290d095d6094986f773df284e351d8a05884b5871118c3ef",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "습관 - 템플릿",
+        "습관 코어",
+        "스타터 습관"
+      ],
+      "images": true,
+      "id": "habits",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "7868918b5dcce1e454c0fd991b0a3f2bcaf60a82043bc01d0d27f3a685de6231",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "습관 - 템플릿",
+        "습관 코어",
+        "스타터 습관",
+        "새로운 습관"
+      ],
+      "images": true,
+      "id": "habit-settings",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "7fb64e8eb836f18b6cd31b7c7fac77819efe3f204bc4084bd3453d1ceae54e7c",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "독립적인 트래커 지표",
+        "습관 완성 달력"
+      ],
+      "images": true,
+      "id": "habit-statistics",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "f7b8aeb0bdec725575c791acf8e06c9013527fc777a7781cd2b7868f8f566d8c",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "습관 - 모듈",
+        "잠자기",
+        "절제",
+        "꿈의 일기",
+        "수면 계획"
+      ],
+      "images": true,
+      "id": "sleep",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "76b58a04edb6faab6350afef05dba01e68194640f24cb8e2881a72364c658e99",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "문자를 선택하세요"
+      ],
+      "images": true,
+      "id": "stoicheion",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "dfe09c68464f6784382c025f0e7a179f33021ee7555a544a1d61c6e89853c36a",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "ko",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Theokyklos",
+        "신성한 세력의 원"
+      ],
+      "images": true,
+      "id": "theokyklos",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "222a7953183065ca991cae5bdb8381dc094ab101c48ac1f4e52d0e0cd7bf1755",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Vrijdag27 november 2026",
+        "Ochtendpraktijk: De techniek van zelfassemblage"
+      ],
+      "images": true,
+      "id": "today",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "19903f5deeda9d67d875bdbe14ca736782a73326418dbd4a8d4049fecd556960",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Ochtendpraktijk: De techniek van zelfassemblage",
+        "Nu. — Morgen. · Element Lucht",
+        "De taken van vandaag — 1/3",
+        "Persoonlijk",
+        "Aanmaken · Een persoonlijke affaire"
+      ],
+      "images": true,
+      "id": "task-create",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "451aa6dfe98ac1da523d1000b06e44409f29a753c1dd01c1ac6bd0a5f862c244",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Ochtendpraktijk: De techniek van zelfassemblage",
+        "Nu. — Morgen. · Element Lucht",
+        "De taken van vandaag — 1/3",
+        "Persoonlijk",
+        "Aanmaken · Een persoonlijke affaire"
+      ],
+      "images": true,
+      "id": "task-recurrence",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "cedb0a58bafd16f5311877a55345d6d793c76a7f1a0499a156cea2d162cfdb50",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "De taken van vandaag — 1/3",
+        "Persoonlijk",
+        "Persoonlijke trackers"
+      ],
+      "images": true,
+      "id": "today-tasks",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "85fb888dcca8a26f696e77d317b594e93649d2a3946bb86cf47003ed6001b701",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Stemming van de dag",
+        "Datum in de burgerlijke kalender"
+      ],
+      "images": true,
+      "id": "mood",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "6ce960ae706aac1afbc7fd1ea2d429c62fe39c612b79064a7229591ecbd5bc92",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Homerus' tijd van Pneuma",
+        "De taken van vandaag — 1/3",
+        "Persoonlijk",
+        "Persoonlijke trackers"
+      ],
+      "images": true,
+      "id": "day-rhythm",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "28f207b5f45d7120b415f0ae817e1b11f73a3e3b72724259ef411857906581af",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Activiteiten · persoonlijk",
+        "De projectboom"
+      ],
+      "images": true,
+      "id": "projects",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "cfd7e567c6fd11fd051d5578efe8150ed0a6e78664d21b1aad78ff14fd28aaab",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Een nieuw project",
+        "Activiteiten · persoonlijk",
+        "De projectboom"
+      ],
+      "images": true,
+      "id": "project-create",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "31ddea043b7a4893fa54f905260752cb29765bc989906b9982bec531cc29546b",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Dagboek",
+        "Uw persoonlijke notities verschijnen hier",
+        "Een nieuwe notitie"
+      ],
+      "images": true,
+      "id": "diary",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "2d5c418bd5a14ab6181696604f40a3d8907b0dd01e3730f4e40ca8cacc0a1a06",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Mindmap · Leren en creativiteit"
+      ],
+      "images": true,
+      "id": "mindmap",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "7721a46a913c027bcbc2e5eda45b9025c65cd77bdcfd73ff0d65754ff68237d3",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "november"
+      ],
+      "images": true,
+      "id": "calendar-gregorian",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "64ce6fcde63429365e33f4b7150906faa74a1d3364137addd6e221dc1f993083",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "AGROTERA"
+      ],
+      "images": true,
+      "id": "calendar-sacred",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "9fc806688d2ecfaf96d402e0a909c6430b0443f7f0e6535b19eb92db5fc967c6",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Sophia."
+      ],
+      "images": true,
+      "id": "calendar-lunar",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "4539d88b49bec656e9b075993f9b3d534cebb3a3fcc5230c1a23d378dc8fa2ae",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Maanjaar 2026–2027"
+      ],
+      "images": true,
+      "id": "calendar-year",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "7bff1464901767a3bae7ae92fd0925da02df7c15227b3dcb0852a41231f66f44",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Gewoonten - Templates",
+        "De kern van gewoonte",
+        "Starter gewoonten"
+      ],
+      "images": true,
+      "id": "habits",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "894ba9047a2fdc25f571ab9ea767280cf42e1f8ee3cc7ba8467950f1e927aefa",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Gewoonten - Templates",
+        "De kern van gewoonte",
+        "Starter gewoonten",
+        "Een nieuwe gewoonte"
+      ],
+      "images": true,
+      "id": "habit-settings",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "3dc10de9f81299885e2678f4e1b1a229d113e2ca4decb04b44e2db1f95ae2316",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Onafhankelijke tracker statistieken",
+        "Habit voltooiing kalender"
+      ],
+      "images": true,
+      "id": "habit-statistics",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "a670a78274ac93869036fd765634906ea8b7cf8c1e45f3f3495b3733eb5d33a5",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Gewoonten - Modules",
+        "Sleep",
+        "Onthouding",
+        "Het droomdagboek",
+        "Een slaapplan"
+      ],
+      "images": true,
+      "id": "sleep",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "dd165dd6f8c37103114b42492525ebcc788639cf3659fe1381b43d9888e29378",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Kies een letter"
+      ],
+      "images": true,
+      "id": "stoicheion",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "6bf6bea8a29f7c6e349675ced54445d9659fbe5b42b29fd05bb4e41d64dee6af",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
+    },
+    {
+      "language": "nl",
+      "theme": "standart-dark",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "headings": [
+        "Theokyklos",
+        "Cirkel van goddelijke krachten"
+      ],
+      "images": true,
+      "id": "theokyklos",
+      "pixels": [
+        1440,
+        1000
+      ],
+      "sha256": "7607b7be4f4902a5f0f5aef727f2b12b5c59397d9f65445a3d230b2f22fdb538",
+      "capturedAt": "2026-11-27",
+      "sourceBase": "e692e079"
     }
   ]
 }

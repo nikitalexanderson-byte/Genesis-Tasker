@@ -26,7 +26,7 @@ internal suspend fun <T> legacyReminderOperation(context:Context,scope:String,op
         return if(scope.startsWith("account-"))NativeLegacyOperationPermit.run(app.database,scope,::current){operation(::current).also{current()}}
             else operation(::current).also{current()}
     } catch(error:AuthApiError) {
-        if(error.code!="E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN")throw error
-        throw CancellationException(error.code)
+        if(error.code!="E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN" && error.code!="E2EE_INVALID_LEGACY_OPERATION")throw error
+        throw CancellationException(error.code).apply { initCause(error) }
     }
 }

@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {resolvePublicCurrency,publicCurrency} from '../app/public-currency.ts';
@@ -22,8 +23,8 @@ test('unknown IP falls back to explicit regional hints before language',()=>{
   assert.equal(resolvePublicCurrency({locales:['bad_locale'],language:'en'}).currency,'USD');
   assert.equal(resolvePublicCurrency({}).currency,'USD');
 });
-test('currency, consent and unavailable USD checkout explanations cover all fourteen languages',()=>{
-  assert.deepEqual(Object.keys(copy).sort(),['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'].sort());
+test('currency, consent and unavailable USD checkout explanations cover all supported languages',()=>{
+  assert.deepEqual(Object.keys(copy).sort(),[...REGION_LANGUAGES].sort());
   for(const [language,strings]of Object.entries(copy)){
     assert.deepEqual(Object.keys(strings).sort(),Object.keys(copy.en).sort(),language);
     for(const text of Object.values(strings))assert.ok(typeof text==='string'&&text.trim(),language);

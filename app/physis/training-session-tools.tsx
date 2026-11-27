@@ -1,3 +1,4 @@
+import { runtimeLocale } from '../i18n';
 import { usePhysisMigrationCapture } from './migration-editors';
 import { useState } from 'react';
 import { usePhysisAction } from './fields';
@@ -5,7 +6,7 @@ import { exerciseTagLabel } from './exercise-media';
 import { exerciseDisplayName, trainingDistanceFromKm, trainingWeightFromKg, type ExerciseChoice, type ExerciseDefinition, type TrainingExercise, type TrainingSet } from './training-domain';
 
 export function setDescription(set: TrainingSet, definition: ExerciseDefinition, weightUnit: 'kg' | 'lb', distanceUnit: 'km' | 'mi', en: boolean) {
-  const number = (v: number) => Number(v.toFixed(2)).toLocaleString(en ? 'en' : 'ru');
+  const number = (v: number) => Number(v.toFixed(2)).toLocaleString(runtimeLocale(en ? 'en' : undefined));
   if (definition.metric === 'time') return set.seconds === null ? '—' : `${number(set.seconds)} ${en ? 's' : 'сек'}`;
   if (definition.metric === 'distance') return set.distanceKm === null ? '—' : `${number(trainingDistanceFromKm(set.distanceKm, distanceUnit))} ${distanceUnit}${set.seconds ? ` · ${number(set.seconds)} ${en ? 's' : 'сек'}` : ''}`;
   return `${set.weightKg === null ? '—' : number(trainingWeightFromKg(set.weightKg, weightUnit))} ${weightUnit} × ${set.reps ?? '—'}${set.repsMax ? `–${set.repsMax}` : ''}`;

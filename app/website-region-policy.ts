@@ -11,7 +11,8 @@ export function suggestedWebsiteLanguage(region:Pick<WebsiteRegion,'ip'|'device'
   if(websiteRegionRussia(region))return 'ru';
   for(const locale of locales){
     const base=locale.split(/[-_]/,1)[0].toLowerCase();
-    const supported=REGION_LANGUAGES.find(language=>language===base);
+    const canonical = base === "iw" ? "he" : base;
+    const supported=REGION_LANGUAGES.find(language=>language===canonical);
     if(supported)return supported;
   }
   return languageForRegion(timeZone,regionFromLocales(locales));

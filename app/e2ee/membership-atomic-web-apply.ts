@@ -4,6 +4,7 @@ import {validateDeviceAccessTarget} from './device-access-contract.ts';
 import {membershipBeforeHash} from './membership-contract.ts';
 import {exactKeys} from './keys.ts';
 import {samePrivateJson as same} from './product-json.ts';
+import {retryE2eeRead} from './read-rate-retry.ts';
 import type {WebPrivateAccount} from './product-session.ts';
 import type {MembershipTransport} from './membership-product.ts';
 import type {MembershipPeerPorts} from './membership-exchange.ts';
@@ -33,7 +34,8 @@ export function webMembershipAtomicApply(account:WebPrivateAccount,transport:Mem
   product:async(packet,item)=>{const {records}=await open(item.scopeId,packet.command.ownerId);await records.product.confirmPrepared(item.intentId,item.result as unknown as Record<string,WireValue>,packet);current();},
   acl:async intentId=>{const stager=account.membershipAtomic(),state=await stager.inspect(intentId);current();
    for(let index=0;index<state.plan.pages.length;index++){const page=await stager.readPlanPage(intentId,index);current();if(page.kind!=='acl')continue;
-    const response=await transport.membershipState(page.items.map(({table,key})=>({table,key})));current();exactKeys(response,['rows']);
+    const keys=page.items.map(({table,key})=>({table,key}));
+    const response=await retryE2eeRead(()=>transport.membershipState(keys),current);current();exactKeys(response,['rows']);
     if(!Array.isArray(response.rows)||response.rows.length!==page.items.length)throw new Error('E2EE_MEMBERSHIP_READBACK_MISMATCH');
     for(const [at,row]of response.rows.entries()){const wanted=page.items[at];exactKeys(row,['table','key','before','beforeHash']);const after=wanted.after===null?null:{...wanted.key,...wanted.after};
      if(row.table!==wanted.table||!same(row.key,wanted.key)||row.beforeHash!==membershipBeforeHash(wanted.table,row.before)||row.beforeHash!==membershipBeforeHash(wanted.table,after))throw new Error('E2EE_MEMBERSHIP_READBACK_MISMATCH');

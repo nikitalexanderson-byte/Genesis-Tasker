@@ -12,5 +12,25 @@
   "uk": { "title": "Енциклопедія 24 літер", "expanded": "Розгорнуто", "collapsed": "Згорнуто" },
   "zh": { "title": "24个字母百科", "expanded": "已展开", "collapsed": "已收起" },
   "tr": { "title": "24 harf ansiklopedisi", "expanded": "Genişletildi", "collapsed": "Daraltıldı" },
-  "ja": { "title": "24文字の百科事典", "expanded": "展開中", "collapsed": "折りたたみ中" }
+  "ja": { "title": "24文字の百科事典", "expanded": "展開中", "collapsed": "折りたたみ中" },
+  "he": {
+    "title": "אנציקלופדיה של 24 אותיות",
+    "expanded": "מורחב",
+    "collapsed": "התכווץ"
+  },
+  "ar": {
+    "title": "موسوعة الحروف 24",
+    "expanded": "الموسعة",
+    "collapsed": "انكمش"
+  },
+  "ko": {
+    "title": "24 문자의 백과사전",
+    "expanded": "확장됨",
+    "collapsed": "축소됨"
+  },
+  "nl": {
+    "title": "Encyclopedie van 24 letters",
+    "expanded": "Uitgevouwen",
+    "collapsed": "Ingeklapt"
+  }
 }

@@ -1,3 +1,4 @@
+import { languageDirection } from "./region-language";
 import {useEffect,useId,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {OlympianIsopsephyContent,OlympianIsopsephyDialog,type OlympianDeity} from './OlympianIsopsephy';
@@ -16,7 +17,7 @@ type Boot={language:Language;dark:boolean;palette:string;colors:Record<string,st
 declare global {interface Window {GenesisOlympianBridge:{navigate:(kind:string,id:string)=>void};GenesisOlympianRuntime:{init:(payload:string)=>void;back:()=>void;theme:(payload:string)=>void}}}
 const decode=(payload:string)=>JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(payload),c=>c.charCodeAt(0))));
 function theme(boot:Boot){
- document.documentElement.lang=boot.language;
+ document.documentElement.lang=boot.language; document.documentElement.dir=languageDirection(boot.language);
  document.documentElement.dataset.genesisTheme=boot.dark?'standart-dark':'standart';
  document.documentElement.dataset.genesisPalette=boot.palette;
  for(const [name,value] of Object.entries(boot.colors))if(/^--[a-z-]+$/.test(name)&&/^#[a-f0-9]{6,8}$/i.test(value))document.documentElement.style.setProperty(name,value);

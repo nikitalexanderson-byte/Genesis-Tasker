@@ -68,7 +68,7 @@ internal class NativeRemindersSourceRuntime(context:Context):E2eePersonalSourceR
 internal class NativeArchivesSourceRuntime(context:Context):E2eePersonalSourceReconciler by NativePersonalSourceRuntime(context,PersonalSourceKind.ARCHIVES)
 internal class NativeRelationalSourceRuntime(context:Context):E2eePersonalSourceReconciler by NativePersonalSourceRuntime(context,PersonalSourceKind.RELATIONAL)
 internal class NativeAdviceSourceRuntime(context:Context,
-    publicBytes:suspend (String,()->Unit)->ByteArray=NativeAdvicePublicCatalogues({context.assets.open("originals/catalogs/public-advice-editions-v1.json").use{it.readBytes()}})::read)
+    publicBytes:suspend (String,()->Unit)->ByteArray=NativeAdvicePublicCatalogues({context.assets.open("originals/catalogs/public-advice-editions-v2.json").use{it.readBytes()}})::read)
     :E2eePersonalSourceReconciler by NativePersonalSourceRuntime(context,PersonalSourceKind.ADVICE,publicBytes)
 
 /** One owner-bound job in a newly constructed, network-disabled WebView. Only

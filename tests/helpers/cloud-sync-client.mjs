@@ -62,7 +62,7 @@ export async function cloudSyncClient({ storage = new MemoryStorage(), sessionSt
       requests.push({ url, init });
       return fetchResponse(url, init);
     },
-    console, TextEncoder, TextDecoder, Uint8Array, ArrayBuffer, Event, EventTarget,
+    console, performance: timers.performance ?? performance, TextEncoder, TextDecoder, Uint8Array, ArrayBuffer, Event, EventTarget,
     CustomEvent: class extends Event { constructor(type, options = {}) { super(type, options); this.detail = options.detail; } },
     Error, TypeError, DOMException, AbortController, AbortSignal, URL, URLSearchParams,
     Response, Request, Headers, Blob, FormData, atob, btoa, structuredClone,

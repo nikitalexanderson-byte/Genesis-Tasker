@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from "node:assert/strict";
 import test from "node:test";
 import fs from "node:fs";
@@ -25,7 +26,7 @@ test("device recovery retains only operation identity and pending request, and l
 });
 test("bulk action copy exists in every translated locale with matching placeholders",()=>{
  const files=["app/SharedBulkActions.tsx","app/shared-bulk-model.ts"],keys=new Set(files.flatMap(file=>[...fs.readFileSync(file,"utf8").matchAll(/"([^"\n]*[А-Яа-яЁё][^"\n]*)"/g)].map(match=>match[1])));
- for(const locale of ["en","el","de","fr","es","it","pt","pl","sr","uk","zh","tr","ja"]){
+ for(const locale of REGION_LANGUAGES.filter(code => code !== "ru")){
   const paths=[`app/ui-translations/${locale}.json`,`app/shared-work-translations/${locale}.json`,`app/translations.${locale}.json`,`app/translations.${locale}.a.json`,`app/translations.${locale}.b.json`,`app/curated-translations.${locale}.json`].filter(fs.existsSync);
   const dictionary=Object.assign({},...paths.map(path=>JSON.parse(fs.readFileSync(path,"utf8"))));
   for(const key of keys){assert.ok(dictionary[key],`${locale}: ${key}`);assert.deepEqual([...dictionary[key].matchAll(/\{\w+\}/g)].map(match=>match[0]).sort(),[...key.matchAll(/\{\w+\}/g)].map(match=>match[0]).sort(),`${locale}: parameters in ${key}`);}

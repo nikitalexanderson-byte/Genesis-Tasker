@@ -35,7 +35,7 @@ internal fun allowedAdminExtensionRoute(method: String, path: String): Boolean {
 
 internal object AdminProtocol {
     val plans = listOf("free", "standart", "premium", "business", "premium4life", "elite_plus")
-    private val languages = setOf("ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja")
+    private val languages = ru.genesis.calendar.data.publicLanguages
     fun userId(value: String) = value.also { require(Regex("[A-Za-z0-9_-]{1,100}").matches(it)) { "ADMIN_SCOPE_INVALID" } }
     fun adId(value: String) = value.also { require(Regex("[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}").matches(it)) { "ADMIN_SCOPE_INVALID" } }
     fun subscription(user: JSONObject, plan: String): JSONObject {

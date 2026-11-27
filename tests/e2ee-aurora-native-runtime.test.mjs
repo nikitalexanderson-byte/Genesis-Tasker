@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import {resolve} from 'node:path';
 import {calendarModule} from './helpers/calendar-modules.mjs';
-import {collectAdvicePublicAssets} from '../scripts/advice-public-assets.mjs';
+import {collectAdvicePublicAssets,advicePublicLanguages} from '../scripts/advice-public-assets.mjs';
 import {createHash} from 'node:crypto';
 const require=createRequire(import.meta.url),ts=require('typescript');
 // Load ordinary modules before installing the isolated native window capability.
@@ -144,15 +144,15 @@ async function adviceFixture(){
  return{...f,advice:entry,day};
 }
 
-test('actual Advice entry resolves all fourteen exact public editions through bounded native RPC and keeps dates inside its encrypted index',async()=>{
+test('actual Advice entry resolves all eighteen exact public editions through bounded native RPC and keeps dates inside its encrypted index',async()=>{
  const f=await adviceFixture(),before=JSON.stringify(f.input);
  await withRuntime(f,async rig=>{start(rig.runtime,f.input);const result=await rig.outcome;assert.equal(result.kind,'complete');assert.equal(result.complete,true);
   assert.equal(result.content.length,4);assert.ok(result.content.every(row=>row.domain==='workspace'&&!row.objectId.includes(f.day)&&!row.objectId.includes(f.advice.id)));
   const decode=row=>JSON.parse(new TextDecoder().decode(decodeE2eeBytes(row.bytes)));
   const index=decode(result.content.find(row=>row.objectId==='personal-advice-history-index-v1'));assert.equal(index.days[0].dayKey,f.day);assert.match(index.days[0].objectId,/^personal-advice-day:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/);
-  const day=decode(result.content.find(row=>row.objectId===index.days[0].objectId));assert.equal(Object.keys(day.pointer.translations).length,14);
+  const day=decode(result.content.find(row=>row.objectId===index.days[0].objectId));assert.equal(Object.keys(day.pointer.translations).length,18);
   const history=decode(result.content.find(row=>row.objectId==='personal-advice-local-history-v1'));assert.equal(history.mounted.result.advice.body,'Synthetic private old advice display');assert.equal(history.mounted.result.canNext,undefined);
-  assert.equal(rig.requests.length,15);assert.ok(rig.requests.every(row=>row.kind==='public-catalogue'&&publicAssets.has(row.path)&&!row.path.includes(f.advice.id)));assert.ok(rig.replyChunks>15);
+  assert.equal(rig.requests.length,1+advicePublicLanguages.length);assert.ok(rig.requests.every(row=>row.kind==='public-catalogue'&&publicAssets.has(row.path)&&!row.path.includes(f.advice.id)));assert.ok(rig.replyChunks>rig.requests.length);
  });assert.equal(JSON.stringify(f.input),before);
 });
 

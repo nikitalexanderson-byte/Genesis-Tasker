@@ -164,9 +164,9 @@ test("Kourotrophy interests use only eligible private tasks and active habits in
   }
 });
 
-test("all fourteen interface locales cover every control and all six categories", async () => {
+test("all eighteen interface locales cover every control and all six categories", async () => {
   const copy = JSON.parse(await readFile(new URL("../app/daily-advice-copy.json", import.meta.url), "utf8"));
-  assert.equal(Object.keys(copy).length, 14);
+  assert.equal(Object.keys(copy).length, 18);
   for (const locale of Object.values(copy)) {
     assert.deepEqual(Object.keys(locale).sort(), Object.keys(copy.ru).sort());
     assert.equal(locale.categories.length, adviceCategories.length);
@@ -175,9 +175,9 @@ test("all fourteen interface locales cover every control and all six categories"
   }
 });
 
-test("published advice has complete titles and bodies in all fourteen languages and distinct real artwork", async () => {
+test("published advice has complete titles and bodies in all eighteen languages and distinct real artwork", async () => {
   const result = await verifyDailyAdvice();
-  assert.deepEqual(result, { published: 853, drafts: 0, languages: 14, illustrations: 853 });
+  assert.deepEqual(result, { published: 853, drafts: 0, languages: 18, illustrations: 853 });
   const catalog = JSON.parse(await readFile(new URL("../server/content/daily-advice.json", import.meta.url), "utf8"));
   assert.equal(catalog.items.filter(entry => entry.categories.includes("hestiology")).length, 152);
   assert.equal(catalog.items.filter(entry => entry.categories.includes("kourotrophy")).length, 89);
@@ -200,7 +200,12 @@ test("reviewed locale pairs reject another advice's title or body in every langu
     assert.doesNotThrow(() => verifyAdvicePairing(fasting, language, locale[fasting.id], review.entries[fasting.id]));
     assert.throws(() => verifyAdvicePairing(fasting, language, { ...locale[fasting.id], title: locale[other.id].title }, review.entries[fasting.id]), /title\/body pairing/);
     assert.throws(() => verifyAdvicePairing(fasting, language, { ...locale[fasting.id], body: locale[other.id].body }, review.entries[fasting.id]), /title\/body pairing/);
-    const formerTitle = review.titleCorrections.find(change => change.id === fasting.id).locales[language].before;
+    const historical = review.titleCorrections.find(change => change.id === fasting.id).locales;
+    if (!Object.hasOwn(historical,language)) {
+      assert.ok(["he","ar","ko","nl"].includes(language), "A historical locale lost its reviewed correction");
+      continue;
+    }
+    const formerTitle = historical[language].before;
     assert.throws(() => verifyAdvicePairing(fasting, language, { ...locale[fasting.id], title: formerTitle }, review.entries[fasting.id]), /title\/body pairing/);
   }
 });

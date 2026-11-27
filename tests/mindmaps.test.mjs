@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -347,7 +348,7 @@ test('100 bundled PNG icons and feature labels cover every supported language',(
  const catalog=JSON.parse(readFileSync('app/mindmap-icon-catalog.json','utf8')),names=JSON.parse(readFileSync('app/mindmap-icon-names.json','utf8')),copy=JSON.parse(readFileSync('app/mindmap-feature-copy.json','utf8'));
  assert.equal(catalog.length,100);assert.equal(new Set(catalog.map(i=>i.id)).size,100);
  for(const icon of catalog)assert.equal(readFileSync(`public/mindmap-icons/${icon.id}.png`).subarray(1,4).toString(),'PNG');
- for(const language of ['ru','en','de','fr','es','it','pt','pl','el','sr','uk','zh','tr','ja']){
+ for(const language of [...REGION_LANGUAGES]){
   assert.equal(names[language].length,100);assert.ok(names[language].every(v=>typeof v==='string'&&v.trim()));assert.deepEqual(Object.keys(copy[language]).sort(),Object.keys(copy.ru).sort());assert.ok(Object.values(copy[language]).every(v=>typeof v==='string'&&v.trim()));
  }
 });

@@ -89,4 +89,4 @@ jobs:
           -PgenesisUrl=https://localhost.invalid/
           -Pkotlin.compiler.execution.strategy=in-process
           '-Dorg.gradle.jvmargs=-Xmx6144m -Dfile.encoding=UTF-8'
-          --max-workers=2 --no-daemon --console=plain
+          --max-workers=2 --no-daemon --console=plain --info

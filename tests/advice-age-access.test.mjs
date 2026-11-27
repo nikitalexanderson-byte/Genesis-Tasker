@@ -46,9 +46,9 @@ test('notifications remain adult-free even after both acknowledgements',()=>{
   for(const value of [card,{...card,categories:['aphrodisia'],containsAlcohol:false},{...card,categories:['aretology'],requiresAdult:true},{...card,categories:['aretology'],requiresAdult:false,containsAlcohol:true}])assert.equal(adviceNotificationSafe(value),false);
   assert.equal(adviceNotificationSafe({...card,categories:['aretology'],requiresAdult:false,containsAlcohol:false}),true);
 });
-test('all14 gate locales contain11 stable subcategory labels and clear unknown/blocked messages',async()=>{
+test('all 18 gate locales contain11 stable subcategory labels and clear unknown/blocked messages',async()=>{
   const copy=JSON.parse(await readFile(new URL('../app/advice-psychopompia-copy.json',import.meta.url),'utf8'));
-  const locales='ru en el de fr es it pt pl sr uk zh tr ja'.split(' ');assert.deepEqual(Object.keys(copy).sort(),locales.sort());
+  const locales='ru en el de fr es it pt pl sr uk zh tr ja he ar ko nl'.split(' ');assert.deepEqual(Object.keys(copy).sort(),locales.sort());
   const ids=ADVICE_AGE_POLICY.subcategories.map(row=>row.id).sort();
   for(const row of Object.values(copy)){
     for(const key of ['adult','age','country','region','unknown','blocked','privacy','pending'])assert.ok(row[key]?.trim().length>0,key);

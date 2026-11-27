@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { matchesAffair } from "../app/affairs-search.ts";
@@ -25,10 +26,10 @@ test("private messages authenticate both peers, context, revisions and encrypted
   const restored=await importMessagingBackup(backup,recoveryKey);assert.equal(restored.keyId,alice.keyId);
   const recovered=await conversationKey(restored,bob.publicKey,'conversation','space');assert.equal(await decryptPrivateMessage(recovered,context,payload,ids),'Только двое · 私信 · Ελληνικά');
 });
-test("collaboration copy explicitly covers all fourteen supported languages", () => {
-  const locales=['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'];
+test("collaboration copy explicitly covers all eighteen supported languages", () => {
+  const locales=[...REGION_LANGUAGES];
   for(const [key,rows] of Object.entries(collaborationCopy)){
-    assert.equal(rows.length,14,key);
+    assert.equal(rows.length,locales.length,key);
     for(const [index,locale] of locales.entries()){assert.ok(rows[index].trim(),`${locale}/${key}`);assert.equal(collaborationText(key,locale),rows[index]);if(!['ru','sr','uk'].includes(locale))assert.doesNotMatch(rows[index],/[А-Яа-яЁё]/u,`${locale}/${key}`);}
   }
 });

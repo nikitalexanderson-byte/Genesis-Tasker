@@ -114,7 +114,7 @@ function genesisGoogleCacheWithLock(array $user, callable $operation, bool $pers
         // Unlink/reassignment can finish while this request obtains the file
         // mutex. A stale captured account must not open the former snapshot.
         genesisGoogleCacheOwner($user);
-        $snapshot = [];$previousGrant=null;
+        $snapshot = []; $previousGrant=null; $savedSnapshot=null;
         if (is_file($path . '.enc')) {
             if(filesize($path.'.enc')>32*1024*1024)throw new DomainException('E2EE_PROVIDER_CACHE_REVIEW_REQUIRED');
             $original=file_get_contents($path.'.enc');
@@ -123,12 +123,17 @@ function genesisGoogleCacheWithLock(array $user, callable $operation, bool $pers
             try{$plain=genesisDecrypt($original);if(is_string($plain))genesisE2eeProviderJson($plain);$decoded=is_string($plain)?json_decode($plain,true,40,JSON_THROW_ON_ERROR):null;}
             catch(Throwable){throw new DomainException('E2EE_PROVIDER_CACHE_CORRUPT');}
             if(!is_array($decoded)||!is_string($decoded['fingerprint']??null)||!preg_match('/\A[a-f0-9]{64}\z/D',$decoded['fingerprint']))throw new DomainException('E2EE_PROVIDER_CACHE_CORRUPT');
-            if(hash_equals($decoded['fingerprint'],genesisGoogleCacheFingerprint($user)))$snapshot=$decoded;
+            if (hash_equals($decoded['fingerprint'], genesisGoogleCacheFingerprint($user))) {
+                $savedSnapshot = $decoded;
+                $snapshot = $decoded;
+            }
             else $previousGrant=$original;
         }
         $snapshot['fingerprint'] = genesisGoogleCacheFingerprint($user);
         $result = $operation($snapshot);
-        if (!$persist) return $result;
+        // A poll may return a fresh snapshot without changing it. Keep its original ciphertext
+        // under the same lock; new grants and new snapshots must still take the write path.
+        if (!$persist || ($savedSnapshot !== null && $snapshot === $savedSnapshot)) return $result;
         if($previousGrant!==null)genesisGoogleCacheRetainOriginal($path,$previousGrant);
         $encoded = genesisEncrypt(json_encode($snapshot, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
         $temporary = $path . '.' . bin2hex(random_bytes(8)) . '.tmp';

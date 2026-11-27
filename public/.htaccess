@@ -26,9 +26,9 @@ RewriteCond %{QUERY_STRING} !(^|&)lang=
 RewriteRule ^ru/(login|privacy|terms|refund|support|delete-account)(?:\.html)?/?$ /$1?lang=ru [R=302,L,QSA,NE]
 RewriteRule ^ru/(login|privacy|terms|refund|support|delete-account)(?:\.html)?/?$ /$1 [R=302,L,NE]
 # Language queries never change the origin, API, session or OAuth callbacks.
-RewriteCond %{QUERY_STRING} (^|&)lang=(ru|el|de|fr|es|it|pt|pl|sr|uk|zh|tr|ja)(&|$)
+RewriteCond %{QUERY_STRING} (^|&)lang=(ru|el|de|fr|es|it|pt|pl|sr|uk|zh|tr|ja|he|ar|ko|nl)(&|$)
 RewriteRule ^(?:index\.html)?$ _public-locales/%2/index.html [L]
-RewriteCond %{QUERY_STRING} (^|&)lang=(ru|el|de|fr|es|it|pt|pl|sr|uk|zh|tr|ja)(&|$)
+RewriteCond %{QUERY_STRING} (^|&)lang=(ru|el|de|fr|es|it|pt|pl|sr|uk|zh|tr|ja|he|ar|ko|nl)(&|$)
 RewriteRule ^(login|privacy|terms|refund|support|delete-account)(?:\.html)?/?$ _public-locales/%2/$1.html [L]
 # A missing immutable module is a real 404, never the SPA HTML document.
 RewriteCond %{REQUEST_FILENAME} !-f

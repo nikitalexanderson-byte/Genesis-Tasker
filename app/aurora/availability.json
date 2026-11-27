@@ -68,5 +68,25 @@
     "login": "このメソッドの作業を保存するには、ログインして暗号化ワークスペースを開いてください。",
     "content": "新しい対話型コンテンツは現在ロシア語で利用できます。",
     "loadError": "モジュールを開けません。ウィンドウを閉じて再試行してください。"
+  },
+  "he": {
+    "login": "היכנס ופתח את חלל העבודה המוצפן שלך כדי לשמור את עבודתך בשיטה זו.",
+    "content": "התוכן האינטראקטיבי החדש זמין כיום ברוסית.",
+    "loadError": "לא ניתן לפתוח את המודול. סגור את החלון ונסי שוב."
+  },
+  "ar": {
+    "login": "تسجيل الدخول وفتح مساحة العمل المشفرة لحفظ عملك بهذه الطريقة.",
+    "content": "والمحتوى التفاعلي الجديد متاح حاليا باللغة الروسية.",
+    "loadError": "لا يمكن فتح الوحدة. أغلق النافذة وحاول مرة أخرى."
+  },
+  "ko": {
+    "login": "이 방법으로 작업을 저장하려면 로그인하고 암호화된 작업 공간의 잠금을 해제합니다.",
+    "content": "새로운 대화형 콘텐츠는 현재 러시아어로 제공됩니다.",
+    "loadError": "모듈을 열 수 없습니다. 창을 닫고 다시 시도하십시오."
+  },
+  "nl": {
+    "login": "Meld u aan en ontgrendel uw versleutelde werkruimte om uw werk met deze methode op te slaan.",
+    "content": "De nieuwe interactieve inhoud is momenteel beschikbaar in het Russisch.",
+    "loadError": "De module kan niet worden geopend. Sluit het venster en probeer het opnieuw."
   }
 }

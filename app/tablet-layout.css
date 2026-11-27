@@ -1,5 +1,12 @@
 /* Width follows the current window, including tablet split view. */
-.welcome-language-picker .welcome-language-flags { gap: 4px; }
+.welcome-language-picker { container-type: inline-size; }
+.welcome-language-picker .welcome-language-flags { grid-template-columns: repeat(3, minmax(44px, 1fr)); gap: 4px; }
+@container (min-width: 284px) {
+  .welcome-language-picker .welcome-language-flags { grid-template-columns: repeat(6, minmax(44px, 1fr)); }
+}
+@container (max-width: 139px) {
+  .welcome-language-picker .welcome-language-flags { grid-template-columns: repeat(auto-fit, minmax(44px, 1fr)); }
+}
 .welcome-language-picker .welcome-language-flags button { min-width: 0; min-height: 48px; padding: 6px 2px; }
 .welcome-language-picker .welcome-language-flags .language-flag img { max-width: 100%; }
 

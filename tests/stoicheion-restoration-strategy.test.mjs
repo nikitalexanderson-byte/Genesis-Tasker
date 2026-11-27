@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -11,7 +12,7 @@ const { EMPTY_HABIT_WORKSPACE } = calendarModule("app/habits.ts");
 const { RESTORATION_SECTORS, RESTORATION_LETTER_FOCI, RESTORATION_AUXILIARIES } = calendarModule("app/stoicheion-restoration-data.ts");
 const { SACRED_PRACTICES } = calendarModule("app/sacred-practices.ts");
 const { restorationLocal, restorationCopy } = calendarModule("app/stoicheion-restoration-copy.ts");
-const languages = ["ru","en","el","de","fr","es","it","pt","pl","sr","uk","zh","tr","ja"];
+const languages = [...REGION_LANGUAGES];
 const options = {today:"2026-10-22",startedAt:"2026-10-22T10:00:00Z",calendarMode:"sacred",language:"ru"};
 const clone = value => JSON.parse(JSON.stringify(value));
 function fixture() {
@@ -199,7 +200,7 @@ test("one existing habit cannot be assigned to two different cards", () => {
   assert.throws(()=>commit.materializeRestorationStrategy(source,{...before,habits:[habit]},options),/DUPLICATE_HABIT/);
   assert.equal(habit.stoicheionRestoration,undefined);
 });
-test("all 14 languages cover every recommendation, preserve source indexes, and fit saved snapshots", () => {
+test("all supported languages cover every recommendation, preserve source indexes, and fit saved snapshots", () => {
   const sources=new Map();
   const collect=value=>{if(!value||typeof value!=="object")return;if(typeof value.ru==="string"&&typeof value.en==="string"){if(!sources.has(value.en))sources.set(value.en,value);}else Object.values(value).forEach(collect);};
   const content=JSON.parse(readFileSync(new URL("../app/stoicheion-restoration-content.json",import.meta.url),"utf8"));collect(content);

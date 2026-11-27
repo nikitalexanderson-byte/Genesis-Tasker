@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import assert from 'node:assert/strict';
@@ -5,9 +6,9 @@ import { editableSharedViewDefinition, repairSharedViewContext } from '../app/sh
 
 const definition = () => ({version:1,title:'Personal week',filter:{projectIds:['project-a'],priority:[0,3],approvalPending:false},sort:'priority',relative:'this-week',calendarMode:'lunar',calendarContext:{version:2,timeZone:'Europe/Moscow',gregorianYearStart:'march'}});
 
-test('native saved-view recovery copy ships in fourteen offline languages with all placeholders', async () => {
+test('native saved-view recovery copy ships in eighteen offline languages with all placeholders', async () => {
   const copy = JSON.parse(await readFile(new URL('../app/native-saved-views-translations.json', import.meta.url), 'utf8'));
-  const languages = ['ru', 'en', 'el', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'sr', 'uk', 'zh', 'tr', 'ja'];
+  const languages = [...REGION_LANGUAGES];
   assert.deepEqual(Object.keys(copy).sort(), languages.sort());
   const keys = Object.keys(copy.ru).sort();
   for (const language of languages) {

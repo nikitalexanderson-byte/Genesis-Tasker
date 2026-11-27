@@ -12,9 +12,12 @@ export function notificationCopyIndex(seed: string, length: number): number {
 export function habitNotificationMessage(tone: HabitNotificationTone, kind: "habit" | "goal",
   seed: string, language: Language, subject: string, count = 1): string {
   const pool = messages[tone][kind];
-  const template = language === "ru" || language === "en"
-    ? pool[notificationCopyIndex(seed, pool.length)][language === "en" ? 1 : 0]
+  const index = notificationCopyIndex(seed, pool.length);
+  const choice = language === "ru" || language === "en"
+    ? pool[index][language === "en" ? 1 : 0]
     : localized[tone][kind][language];
-  return template
-    .replaceAll("{subject}", subject).replaceAll("{count}", String(count));
+  const template = Array.isArray(choice) ? choice[index] : choice;
+  return kind === "habit"
+    ? template.replaceAll("{subject}", () => subject)
+    : template.replaceAll("{count}", String(count));
 }

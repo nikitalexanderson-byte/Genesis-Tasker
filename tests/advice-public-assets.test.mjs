@@ -6,10 +6,15 @@ import {tmpdir} from 'node:os';
 import {createHash} from 'node:crypto';
 import {collectAdvicePublicAssets,verifyAdvicePublicPins,advicePublicLanguages} from '../scripts/advice-public-assets.mjs';
 
-test('all actual public historical advice editions retain exact source bytes in fourteen languages without any account fields',()=>{
+test('all actual public historical advice editions retain exact source bytes in eighteen languages without any account fields',()=>{
  const {assets,manifest}=collectAdvicePublicAssets(resolve('.'));
- assert.equal(manifest.protocol,1);assert.equal(manifest.catalogues.length,9*14);
+ assert.equal(manifest.protocol,1);assert.equal(manifest.catalogues.length,9*18);
  assert.equal(new Set(manifest.catalogues.map(row=>row.path)).size,manifest.catalogues.length);
+ const legacy=JSON.parse(readFileSync('contracts/public-advice-editions-v1.json','utf8'));
+ assert.equal(legacy.catalogues.length,9*14);
+ assert.deepEqual(JSON.parse(assets.find(item=>item.fileName==='advice-catalogues/v1/manifest.json').source),legacy);
+ assert.deepEqual(JSON.parse(assets.find(item=>item.fileName==='advice-catalogues/v2/manifest.json').source),manifest);
+ assert.deepEqual(manifest.catalogues.filter(row=>!['he','ar','ko','nl'].includes(row.language)),legacy.catalogues);
  for(const row of manifest.catalogues){
   const directory=row.kind==='daily'?'daily-advice':'philosopher-aphorisms-locales';
   const original=readFileSync(`server/content/${directory}/${row.version}/${row.language}.json`);

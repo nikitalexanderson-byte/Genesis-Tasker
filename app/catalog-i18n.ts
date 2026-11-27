@@ -11,6 +11,10 @@ import ukrainian from "./catalog-translations/uk.json";
 import chinese from "./catalog-translations/zh.json";
 import turkish from "./catalog-translations/tr.json";
 import japanese from "./catalog-translations/ja.json";
+import hebrew from "./catalog-translations/he.json";
+import arabic from "./catalog-translations/ar.json";
+import korean from "./catalog-translations/ko.json";
+import dutch from "./catalog-translations/nl.json";
 import { translateText, type Language } from "./i18n";
 import { formatGreekTerms } from "./greek-terms";
 
@@ -25,6 +29,7 @@ const catalogues: Record<Exclude<Language, "ru">, Catalog> = {
   en: english, el: greek, de: german, fr: french, es: spanish, it: italian,
   pt: portuguese, pl: polish, sr: serbian, uk: ukrainian, zh: chinese,
   tr: turkish, ja: japanese,
+  he: hebrew, ar: arabic, ko: korean, nl: dutch,
 };
 
 export type LocalizedPair = { ru: string; en: string };

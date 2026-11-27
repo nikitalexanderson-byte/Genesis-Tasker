@@ -4,7 +4,10 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.text.modifiers.TextAutoSizeLayoutScope
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
@@ -16,10 +19,53 @@ internal fun isInsideWord(text: String, offset: Int): Boolean {
     if (offset <= 0 || offset >= text.length) return false
     fun isWordLetter(char: Char): Boolean = char.isLetterOrDigit() && when (Character.UnicodeScript.of(char.code)) {
         Character.UnicodeScript.HAN, Character.UnicodeScript.HIRAGANA,
-        Character.UnicodeScript.KATAKANA, Character.UnicodeScript.HANGUL -> false
+        Character.UnicodeScript.KATAKANA -> false
         else -> true
     }
     return isWordLetter(text[offset - 1]) && isWordLetter(text[offset])
+}
+
+private val koreanWords = Regex("""[^ \t\r\n\u0085\u2028\u2029\u3000]+""")
+
+internal fun hasSpacedHangul(text: String): Boolean = text.any { it.isWhitespace() } &&
+    text.any { it >= '\u1100' && Character.UnicodeScript.of(it.code) == Character.UnicodeScript.HANGUL }
+
+/** The platform permits breaks between Hangul syllables. Add paragraph boundaries at the
+ * original spaces so selection, accessibility and annotations keep the original characters. */
+internal fun wrapKoreanWords(text: AnnotatedString, unwrapped: TextLayoutResult, width: Int): AnnotatedString {
+    if (unwrapped.multiParagraph.maxIntrinsicWidth <= width) return text
+    fun advance(start: Int, end: Int): Float {
+        var result = 0f
+        for (offset in start until end) result += unwrapped.getBoundingBox(offset).width
+        return result
+    }
+    val breaks = mutableListOf<Int>()
+    var lineWidth = 0f
+    var previousEnd = 0
+    var previousLine = -1
+    for (word in koreanWords.findAll(text.text)) {
+        val start = word.range.first
+        val end = word.range.last + 1
+        val line = unwrapped.getLineForOffset(start)
+        val wordWidth = advance(start, end)
+        val gap = if (line == previousLine) advance(previousEnd, start) else 0f
+        if (line == previousLine && lineWidth + gap + wordWidth > width) {
+            breaks.add(start)
+            lineWidth = wordWidth
+        } else {
+            lineWidth = (if (line == previousLine) lineWidth + gap else 0f) + wordWidth
+        }
+        previousEnd = end
+        previousLine = line
+    }
+    if (breaks.isEmpty()) return text
+    return buildAnnotatedString {
+        var start = 0
+        for (end in breaks + text.length) {
+            withStyle(ParagraphStyle()) { append(text, start, end) }
+            start = end
+        }
+    }
 }
 
 internal fun TextLayoutResult.splitsWord(): Boolean = (0 until (lineCount - 1).coerceAtLeast(0)).any { line ->

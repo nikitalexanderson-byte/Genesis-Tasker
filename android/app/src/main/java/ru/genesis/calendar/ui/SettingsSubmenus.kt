@@ -36,13 +36,15 @@ internal data class SettingsSectionDestination(
     val id: String, val ru: String, val en: String, val icon: GenesisPageIcon,
     val descriptionRu: String, val descriptionEn: String
 ) {
-    fun title(language: String) = if (language == "en") en else ru
-    fun description(language: String) = if (language == "en") descriptionEn else descriptionRu
+    fun title(language: String) = if (id == "security") appLockCopy(language).section else if (language == "en") en else ru
+    fun description(language: String) = if (id == "security") appLockCopy(language).title else if (language == "en") descriptionEn else descriptionRu
 }
 
 internal val settingsSections = listOf(
     SettingsSectionDestination("appearance", "Оформление", "Appearance", GenesisPageIcon.SETTINGS_APPEARANCE,
         "Темы, меню, язык, календари и время", "Themes, menus, language, calendars and time"),
+    SettingsSectionDestination("security", appLockCopy("ru").section, appLockCopy("en").section,
+        GenesisPageIcon.SETTINGS_SECURITY, appLockCopy("ru").title, appLockCopy("en").title),
     SettingsSectionDestination("habits", "Привычки", "Habits", GenesisPageIcon.SETTINGS_HABITS,
         "Трекинг, уведомления и отклик на выполнение", "Tracking, notifications and completion feedback"),
     SettingsSectionDestination("reminders", "Напоминания", "Reminders", GenesisPageIcon.SETTINGS_REMINDERS,

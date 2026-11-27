@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -11,7 +12,7 @@ function visit(node){if(ts.isObjectLiteralExpression(node)){const properties=Obj
 visit(source);
 test('both orientations are separated without losing any paragraph in all 336 localized cards',()=>{
  assert.equal(Object.keys(ru).length,24);
- for(const language of ['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja']){
+ for(const language of [...REGION_LANGUAGES]){
   const cards=language==='ru'?ru:JSON.parse(readFileSync(new URL(`../app/catalog-translations/${language}.json`,import.meta.url),'utf8')).stoicheion;
   for(const [id,{content}] of Object.entries(cards)){
    const split=splitStoicheionReading(content,id);

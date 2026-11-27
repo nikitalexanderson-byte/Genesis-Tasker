@@ -3,6 +3,10 @@ import type { Language } from "./i18n";
 export const TASK_SUMMARY_LABELS: Record<Language, { total: string; active: string; completed: string; list: string }> = {
   ru: { total: "всего", active: "активных", completed: "завершено", list: "Список" },
   en: { total: "total", active: "active", completed: "completed", list: "List" },
+  he: {"total": "סך הכל", "active": "פעיל", "completed": "הושלם", "list": "רשימה"},
+  ar: {"total": "المجموع الكلي", "active": "نشطة", "completed": "أُنجزت", "list": "القائمة"},
+  ko: {"total": "합계", "active": "활성", "completed": "완료됨", "list": "목록"},
+  nl: {"total": "totaal", "active": "actief", "completed": "voltooid", "list": "Lijst"},
   el: { total: "συνολικά", active: "ενεργές", completed: "ολοκληρωμένες", list: "Λίστα" },
   de: { total: "insgesamt", active: "offen", completed: "erledigt", list: "Liste" },
   fr: { total: "au total", active: "en cours", completed: "terminées", list: "Liste" },
@@ -24,7 +28,18 @@ function slavicForm(count: number, one: string, few: string, many: string) {
   return last === 1 ? one : last >= 2 && last <= 4 ? few : many;
 }
 
+function arabicCount(count: number, one: string, two: string, few: string, other: string): string {
+  if (count === 1) return one;
+  if (count === 2) return two;
+  const plural = new Intl.PluralRules("ar").select(count);
+  return `${new Intl.NumberFormat("ar").format(count)} ${plural === "few" ? few : other}`;
+}
+
 export function formatTaskCount(count: number, language: Language): string {
+  if (language === "ar") return arabicCount(count, "مهمة واحدة", "مهمتان", "مهام", "مهمة");
+  if (language === "he") return count === 1 ? "משימה אחת" : `${count} משימות`;
+  if (language === "ko") return `작업 ${count}개`;
+  if (language === "nl") return `${count} ${count === 1 ? "taak" : "taken"}`;
   const noun = (() => {
     switch (language) {
       case "ru": return slavicForm(count, "задача", "задачи", "задач");
@@ -52,6 +67,10 @@ export function formatTaskListCount(count: number, language: Language): string {
 }
 
 export function formatProjectCount(count: number, language: Language): string {
+  if (language === "ar") return arabicCount(count, "مشروع واحد", "مشروعان", "مشاريع", "مشروع");
+  if (language === "he") return count === 1 ? "פרויקט אחד" : `${count} פרויקטים`;
+  if (language === "ko") return `프로젝트 ${count}개`;
+  if (language === "nl") return `${count} ${count === 1 ? "project" : "projecten"}`;
   if(language==='ru')return `${count} ${slavicForm(count,'проект','проекта','проектов')}`;
   if(language==='uk')return `${count} ${slavicForm(count,'проєкт','проєкти','проєктів')}`;
   if(language==='sr')return `${count} ${slavicForm(count,'пројекат','пројекта','пројеката')}`;

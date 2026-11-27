@@ -1,3 +1,5 @@
+import { auroraLanguage } from "./localization";
+import { languageDirection } from "../region-language";
 import {createRoot} from 'react-dom/client';
 import {GnoWizard} from './GnoWizard';
 import {AuroraRepository,type Sealed} from './repository';
@@ -34,7 +36,11 @@ function applyTheme(boot:Pick<Boot,'dark'|'palette'|'colors'>){
 }
 let initialized=false;
 window.GenesisAuroraRuntime={
- init(payload){if(initialized)return;initialized=true;const boot=decode(payload) as Boot;applyTheme(boot);document.documentElement.dataset.auroraNative='true';
+ init(payload){if(initialized)return;initialized=true;const boot=decode(payload) as Boot;applyTheme(boot);
+  const locale=auroraLanguage(boot.language);
+  document.documentElement.lang=locale;
+  document.documentElement.dir=languageDirection(locale);
+  document.documentElement.dataset.auroraNative='true';
   const fitViewport=()=>{
    const height=window.visualViewport?.height||window.innerHeight||document.documentElement.clientHeight;
    if(height>0)document.documentElement.style.setProperty('--aurora-native-height',`${Math.floor(height)}px`);

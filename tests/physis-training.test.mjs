@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
@@ -493,7 +494,7 @@ test('expanded movement library preserves historical exercise identity and suppl
   assert.ok(guides.length >= 98);
   const facePull = guides.find(guide => guide.id === 'cable-face-pull');
   const facePullCopy = JSON.parse(readFileSync(new URL('../app/physis/exercise-face-pull-copy.json', import.meta.url), 'utf8'));
-  assert.deepEqual(Object.keys(facePullCopy).sort(), ['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'].sort());
+  assert.deepEqual(Object.keys(facePullCopy).sort(), [...REGION_LANGUAGES].sort());
   assert.deepEqual(facePull.steps, facePullCopy.ru.steps);
   assert.deepEqual(facePull.stepsEn, facePullCopy.en.steps);
   for (const localized of Object.values(facePullCopy)) {

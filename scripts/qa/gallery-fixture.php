@@ -11,7 +11,7 @@ define('GENESIS_LOCAL_TEST_CONFIG',$directory.'/config.php');
 foreach(['bootstrap','repository'] as $module)require_once dirname(__DIR__,2).'/server/src/'.$module.'.php';
 if(genesisConfig()['db_path']!==$directory.'/genesis.sqlite')throw new RuntimeException('Database isolation mismatch');
 $fixture=json_decode(file_get_contents($directory.'/users.json'),true,16,JSON_THROW_ON_ERROR);
-foreach(['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'] as $language){
+foreach(['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja','he','ar','ko','nl'] as $language){
     $tier='gallery-'.$language;$id='qa-'.$owner['runId'].'-'.$tier;$email='demo-'.$language.'@example.invalid';
     genesisDb()->prepare("INSERT OR IGNORE INTO users(id,google_sub,email,display_name,auth_provider,subscription_plan,shared_projects_enabled,calendar_mode,task_calendar_mode,language,created_at,updated_at) VALUES(?,?,?,'GENESIS Demo','google','free',0,'profane','profane',?,?,?)")
         ->execute([$id,'synthetic-'.$id,$email,$language,genesisNow(),genesisNow()]);
@@ -26,4 +26,4 @@ foreach(['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'] 
     $fixture['users'][$tier]=['id'=>$id,'plan'=>'free','role'=>'ordinary-user','validUntil'=>null,'loginPath'=>'/api/qa/login?tier='.$tier];
 }
 file_put_contents($directory.'/users.json',json_encode($fixture,JSON_PRETTY_PRINT|JSON_THROW_ON_ERROR),LOCK_EX);
-echo "14 isolated Free gallery accounts ready; external delivery disabled.\n";
+echo "All isolated Free gallery accounts ready; external delivery disabled.\n";

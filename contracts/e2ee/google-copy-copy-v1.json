@@ -124,5 +124,41 @@
   "uncertain": "结果不确定。请重新检查已保存的副本；系统不会自动创建另一个任务。",
   "error": "无法发送副本。内容仍保存在此设备上。",
   "review": "查看已保存的副本"
- }
+ },
+  "he": {
+    "title": "עותק Google חיצוני",
+    "send": "לשלוח עותק זה",
+    "pending": "עותקים שנשמרו",
+    "complete": "העתק החיצוני מאושר.",
+    "uncertain": "התוצאה אינה ברורה. בדוק שוב את העתק השמור; משימה נוספת לא תיווצר באופן אוטומטי.",
+    "error": "לא ניתן לשלוח את העתק המסמך. התוכן שלו נשמר במכשיר זה.",
+    "review": "בדוק את העתק השמור"
+  },
+  "ar": {
+    "title": "الخارجي Google نسخة",
+    "send": "إرسال هذه النسخة",
+    "pending": "النسخ المحفظة",
+    "complete": "تؤكد النسخة الخارجية.",
+    "uncertain": "النتيجة غير مؤكدة. تحقق من النسخة المحفوظة مرة أخرى؛ لن تنشأ مهمة أخرى تلقائياً.",
+    "error": "لم يكن من الممكن إرسال النسخة، تم الاحتفاظ بمحتوياتها على هذا الجهاز.",
+    "review": "استعراض النسخة المحفوظة"
+  },
+  "ko": {
+    "title": "외부 Google 사본",
+    "send": "이 복사본 보내기",
+    "pending": "저장된 사본",
+    "complete": "외부 사본이 확인됩니다.",
+    "uncertain": "결과가 불확실합니다. 저장된 복사본을 다시 확인하십시오. 다른 작업이 자동으로 생성되지 않습니다.",
+    "error": "복사본을 보낼 수 없습니다. 내용이 이 장치에 남아 있습니다.",
+    "review": "저장된 사본 검토하기"
+  },
+  "nl": {
+    "title": "Externe Google kopie",
+    "send": "Verstuur deze kopie",
+    "pending": "Opgeslagen kopieën",
+    "complete": "De externe kopie wordt bevestigd.",
+    "uncertain": "Het resultaat is onzeker. Controleer de opgeslagen kopie opnieuw; er wordt niet automatisch een nieuwe taak aangemaakt.",
+    "error": "De kopie kan niet worden verzonden. De inhoud ervan wordt op dit apparaat bewaard.",
+    "review": "De opgeslagen kopie bekijken"
+  }
 }

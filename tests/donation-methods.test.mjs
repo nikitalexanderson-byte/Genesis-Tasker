@@ -14,8 +14,8 @@ test('only verified Boosty donation destinations are usable without account data
   for(const boosty of [{available:true,url:null},{available:false,url},{available:'true',url},{available:true,url:url+'?uid=someone'}])assert.throws(()=>readDonationMethods({schemaVersion:1,region:'RU',boosty}));
 });
 
-test('donation choices preserve complete localized copy in fourteen languages',()=>{
-  assert.equal(Object.keys(copy).length,14);
+test('donation choices preserve complete localized copy in eighteen languages',()=>{
+  assert.equal(Object.keys(copy).length,18);
   for(const [language,text]of Object.entries(copy)){
     assert.deepEqual(Object.keys(text),Object.keys(copy.en),language);
     for(const value of Object.values(text))assert.ok(typeof value==='string'&&value.trim(),language);

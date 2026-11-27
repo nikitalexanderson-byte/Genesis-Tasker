@@ -38,7 +38,7 @@ export async function startWebServer({ port = 4380, apiPort = 4381, directory = 
         response.writeHead(302,{'Location':`/${publicDocument?.[2]??''}${url.search}`,'Cache-Control':'no-store'});response.end();return;
       }
       const requested = url.searchParams.get('lang');
-      const language = ['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'].includes(requested) ? requested : 'en';
+      const language = ['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja','he','ar','ko','nl'].includes(requested) ? requested : 'en';
       const localeDirectory = language === 'en' ? '' : `_public-locales/${language}`;
       candidate = path.join(directory, localeDirectory, `${publicDocument?.[2] ?? 'index'}.html`);
     }

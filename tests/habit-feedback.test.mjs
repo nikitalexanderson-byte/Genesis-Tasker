@@ -1,3 +1,4 @@
+import {REGION_LANGUAGES} from "../app/region-language.ts";
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
@@ -63,9 +64,9 @@ test('all 18 authored sounds are distinct, short stereo PCM files with soft tail
   assert.equal(hashes.size,18);
 });
 
-test('feedback labels cover every scheme and event in all fourteen languages', () => {
+test('feedback labels cover every scheme and event in all eighteen languages', () => {
   const copy=JSON.parse(readFileSync(new URL('../app/habit-feedback-copy.json',import.meta.url)));
-  assert.equal(Object.keys(copy).length,14);
+  assert.equal(Object.keys(copy).length, REGION_LANGUAGES.length);
   for(const [language,text] of Object.entries(copy)) {
     assert.deepEqual(Object.keys(text).sort(),Object.keys(copy.en).sort(),language);
     for(const value of Object.values(text))assert.ok(typeof value==='string'&&value.trim(),language);

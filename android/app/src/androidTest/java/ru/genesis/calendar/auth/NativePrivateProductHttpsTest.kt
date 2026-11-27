@@ -154,9 +154,14 @@ class NativePrivateProductHttpsTest {
                 }}
                 val ui=UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
                 val pin=By.text(Pattern.compile(Pattern.quote("Use device screen lock"),Pattern.CASE_INSENSITIVE or Pattern.UNICODE_CASE))
-                assertTrue("Explicit production credential prompt",ui.wait(Until.hasObject(pin),20000));requireNotNull(ui.findObject(pin)).click()
-                ui.wait(Until.findObject(By.res("com.android.systemui:id/button_use_credential")),5000)?.click()
-                assertTrue("Observed system PIN field",ui.wait(Until.hasObject(By.pkg(Pattern.compile("com\\.android\\.(settings|systemui)")).clazz(Pattern.compile(".*(EditText|PasswordTextView)"))),20000))
+                val credentialField = By.pkg(Pattern.compile("com\\.android\\.(settings|systemui)"))
+                    .clazz(Pattern.compile(".*(EditText|PasswordTextView)"))
+                // Without an enrolled biometric Android opens the credential field directly.
+                if (ui.wait(Until.findObject(credentialField), 1500) == null) {
+                    ui.wait(Until.findObject(pin), 10000)?.click()
+                    ui.wait(Until.findObject(By.res("com.android.systemui:id/button_use_credential")),5000)?.click()
+                }
+                assertTrue("Observed system PIN field",ui.wait(Until.hasObject(credentialField),20000))
                 ui.dumpWindowHierarchy(File(app.getExternalFilesDir(null),"genesis-owned-unlock-prompt.xml"))
                 val fingerprint=java.security.MessageDigest.getInstance("SHA-256").digest(certificate.encoded).joinToString(""){"%02X".format(it)}
                 File(app.getExternalFilesDir(null),"genesis-controller-pin-ready.json").writeText(JSONObject().put("fixture",fingerprint).put("request",attempt).toString())

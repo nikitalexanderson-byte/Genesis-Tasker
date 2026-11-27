@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="native_stage">Eerste fase van de native app</string>
+    <string name="native_title">Genesis Tasker</string>
+    <string name="native_status">Dit basisscherm is gebouwd met Kotlin en Jetpack Compose.</string>
+    <string name="browser_error_message">GENESIS kan niet worden geopend. Werk je browser bij of schakel een browser in en probeer het opnieuw.</string>
+    <string name="browser_retry">Website openen</string>
+</resources>

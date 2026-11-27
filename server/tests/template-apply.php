@@ -102,7 +102,7 @@ try{
     $db->prepare("INSERT INTO shared_project_members(project_id,user_id,role,joined_at) VALUES(?,?,'viewer',?)")->execute([$library['id'],$member,genesisNow()]);
     $policyPreview=genesisSharedPreviewTemplate($member,$id,$options);
     taCheck(!$policyPreview['canApply']&&in_array('SHARED_PROJECT_FORBIDDEN',array_column($policyPreview['blockers'],'code'),true)&&in_array('TEMPLATE_CATEGORY_CREATE_FORBIDDEN',array_column($policyPreview['blockers'],'code'),true),'Preview ignored custom space permissions for a new project');$db->rollBack();
-    foreach(['ru','en','de','el','es','fr','it','ja','pl','pt','sr','tr','uk','zh'] as $language){
+    foreach(['ru','en','de','el','es','fr','it','ja','pl','pt','sr','tr','uk','zh','he','ar','ko','nl'] as $language){
         $starters=genesisSharedStarterTemplates($language);taCheck(count($starters)===4&&count(array_unique(array_column($starters,'id')))===4,'Missing localized system starter');
         foreach($starters as $starter){taCheck($starter['system']&&$starter['revision']===1,'System marker lost');genesisTemplateManifest($starter['manifest']);
             $systemPreview=genesisSharedPreviewTemplate($user,$starter['id'],[...$taskOptions,'projectId'=>$starter['kind']==='task'?$target['id']:null,'language'=>$language,

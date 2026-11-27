@@ -547,5 +547,10 @@
   "Выбрать шаблон": "Escolher modelo",
   "Ранее сохранённые задачи": "Tarefas guardadas anteriormente",
   "Доска для «{title}»": "Quadro para «{title}»",
-  "Перетащите сюда задачи и подпроекты, чтобы оставить их вне досок.": "Arraste tarefas e subprojetos para aqui para os manter fora dos quadros."
+  "Перетащите сюда задачи и подпроекты, чтобы оставить их вне досок.": "Arraste tarefas e subprojetos para aqui para os manter fora dos quadros.",
+  "Задача «{item}» возвращена в хаос-бокс.": "A tarefa «{item}» voltou à caixa do caos.",
+  "Список «{item}» возвращён в хаос-бокс.": "A lista «{item}» voltou à caixa do caos.",
+  "Задача «{item}» перемещена в проект «{project}».": "A tarefa «{item}» foi movida para o projeto «{project}».",
+  "Список «{item}» перемещён в проект «{project}».": "A lista «{item}» foi movida para o projeto «{project}».",
+  "Задача «{item}» перемещена в список «{list}».": "A tarefa «{item}» foi movida para a lista «{list}»."
 }

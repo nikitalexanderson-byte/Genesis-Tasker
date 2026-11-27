@@ -584,7 +584,7 @@ test('actual Advice preferences and historical texts pass durable migration and 
         days:[{dayKey:day,adviceId:editorial.id,entryJson:JSON.stringify(editorial),createdAt:now,viewedAt:now,dismissedAt:null,selectionJson:'{}'}],entries:[],extraEntries:[],metrics:null};
     },catalogues:{async resolve(kind,version,language,id){assert.equal(reads,1);catalogueReads++;const row=assets.manifest.catalogues.find(row=>row.kind===kind&&row.version===version&&row.language===language);assert.ok(row);return JSON.parse(publicRows.get(row.path).toString('utf8'))[id];}},
   }):null});
-  await f.make().prepare();assert.equal(reads,0);assert.equal(catalogueReads,0);assert.equal(await f.make().run(),'active');assert.equal(reads,1);assert.equal(catalogueReads,14);
+  await f.make().prepare();assert.equal(reads,0);assert.equal(catalogueReads,0);assert.equal(await f.make().run(),'active');assert.equal(reads,1);assert.equal(catalogueReads,18);
   assert.ok(!JSON.stringify([...f.storage.rows,...f.server.objects]).includes(canary));
   const directory=await verifyDeviceDirectory('owner',f.scopeId,f.recovery.kit.authority,f.events),device={ownerId:'owner',deviceId:'device',vault:f.vault,requireOpen:()=>f.vault.assertUnlocked(),keys:()=>f.keys,
     rememberDirectory:async(_scope,pin,events,_owner,callback)=>verifyDeviceDirectory('owner',f.scopeId,pin,events,undefined,callback)};
@@ -599,7 +599,7 @@ test('actual Advice preferences and historical texts pass durable migration and 
   try{const index=JSON.parse(new TextDecoder().decode(indexRecord.bytes));assert.equal(index.days[0].dayKey,day);dayObject=index.days[0].objectId;assert.match(dayObject,/^personal-advice-day:[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/);}finally{indexRecord.bytes.fill(0);}
   for(const [id,verify]of [
     ['personal-advice-preferences-v1',value=>{assert.equal(value.preferences.philosophersPerDay,2);assert.equal(value.preferences.smart,false);}],
-    [dayObject,value=>{assert.equal(Object.keys(value.pointer.translations).length,14);assert.equal(value.pointer.entryJson,JSON.stringify(editorial));}],
+    [dayObject,value=>{assert.equal(Object.keys(value.pointer.translations).length,18);assert.equal(value.pointer.entryJson,JSON.stringify(editorial));}],
     ['personal-advice-local-history-v1',value=>{assert.equal(value.mounted.result.advice.body,canary);assert.equal(value.mounted.result.canNext,undefined);}],
   ]){const opened=await normal.read('workspace',id);assert.ok(opened);try{verify(JSON.parse(new TextDecoder().decode(opened.bytes)));}finally{opened.bytes.fill(0);}}
 });

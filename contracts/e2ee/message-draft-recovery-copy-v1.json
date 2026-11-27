@@ -12,5 +12,25 @@
  "uk":{"restore":"Відкрити цю чернетку","notice":"Перед відкриттям вибраної чернетки поточну буде збережено окремо. Повідомлення не буде надіслано.","copy":"Збережена чернетка"},
  "zh":{"restore":"打开此草稿","notice":"打开所选草稿前，将单独保存当前草稿。不会发送任何消息。","copy":"已保存的草稿"},
  "tr":{"restore":"Bu taslağı aç","notice":"Seçilen taslak açılmadan önce geçerli taslağınız ayrı olarak kaydedilir. Hiçbir mesaj gönderilmez.","copy":"Kaydedilen taslak"},
- "ja":{"restore":"この下書きを開く","notice":"選択した下書きを開く前に、現在の下書きを別に保存します。メッセージは送信されません。","copy":"保存済みの下書き"}
+ "ja":{"restore":"この下書きを開く","notice":"選択した下書きを開く前に、現在の下書きを別に保存します。メッセージは送信されません。","copy":"保存済みの下書き"},
+  "he": {
+    "restore": "שחזר את הטיוטה הזו",
+    "notice": "הטיוטה הנוכחית שלך תושמר בנפרד לפני פתיחת הטיוטה הנבחרת. לא יישלח הודעה.",
+    "copy": "טיוטה שומרת"
+  },
+  "ar": {
+    "restore": "استعادة هذه المسودة",
+    "notice": "ستحفظ مسودة الرسالة الحالية بشكل منفصل قبل فتح المسودة المختارة. لن ترسل أي رسالة.",
+    "copy": "مسودة محفوظة"
+  },
+  "ko": {
+    "restore": "이 초안 복원",
+    "notice": "선택한 초안을 열기 전에 현재 초안이 별도로 저장됩니다. 메시지를 보내지 않습니다.",
+    "copy": "저장된 초안"
+  },
+  "nl": {
+    "restore": "Dit concept herstellen",
+    "notice": "Uw huidige concept wordt apart opgeslagen voordat u het geselecteerde concept opent. Er wordt geen bericht verzonden.",
+    "copy": "Opgeslagen concept"
+  }
 }

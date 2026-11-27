@@ -12,5 +12,29 @@
   "uk": {"by":"Сортувати за", "original":"Початковий порядок", "ascending":"За зростанням", "descending":"За спаданням"},
   "zh": {"by":"排序依据", "original":"原始顺序", "ascending":"升序", "descending":"降序"},
   "tr": {"by":"Sıralama ölçütü", "original":"İlk sıra", "ascending":"Artan", "descending":"Azalan"},
-  "ja": {"by":"並べ替え", "original":"元の順序", "ascending":"昇順", "descending":"降順"}
+  "ja": {"by":"並べ替え", "original":"元の順序", "ascending":"昇順", "descending":"降順"},
+  "he": {
+    "by": "סדר לפי",
+    "original": "הסדר המקורי",
+    "ascending": "בסדר עולה",
+    "descending": "יורד"
+  },
+  "ar": {
+    "by": "الترتيب حسب",
+    "original": "الطلب الأصلي",
+    "ascending": "تصاعدي",
+    "descending": "تنازلي"
+  },
+  "ko": {
+    "by": "정렬 순서",
+    "original": "원래 순서",
+    "ascending": "올라가는",
+    "descending": "내려가는 순서"
+  },
+  "nl": {
+    "by": "Sorteer op prijs",
+    "original": "De oorspronkelijke orde",
+    "ascending": "Oplopend",
+    "descending": "Aflopend"
+  }
 }

@@ -16,14 +16,17 @@ test('philosopher presentation separates context and author, preserving punctuat
   assert.equal(philosopherQuoteParts('(Неоконченная вводная.','').quote,'(Неоконченная вводная.');
 });
 
-test('all 36,428 localized aphorisms have readable context and one separate author',async()=>{
+test('all 46,836 localized aphorisms have readable context and one separate author',async()=>{
   const corpus=await load('server/content/philosopher-aphorisms.json');
   const manifest=await load('server/content/philosopher-aphorisms-provenance.json');
   let count=0;
-  for(const language of manifest.languages){
+  for(const language of [...manifest.languages,'he','ar','ko','nl']){
     const locale=await load(`server/content/philosopher-aphorisms-locales/${corpus.translationVersion}/${language}.json`);
     for(const entry of corpus.items){
-      const source=locale[entry.id];const parts=philosopherQuoteParts(source.body,source.sources[0].author);
+      const source=locale[entry.id];
+      assert.equal(source.sources[0].url,entry.sources[0].url);
+      assert.equal(source.body.split('\n').at(-1),source.sources[0].author);
+      const parts=philosopherQuoteParts(source.body,source.sources[0].author);
       assert.ok(parts.quote.trim(),`${entry.id}:${language}`);
       assert.doesNotMatch(parts.context,/[()（）]/);
       assert.doesNotMatch(parts.quote,/^[（(]/,`${entry.id}:${language}`);
@@ -33,7 +36,7 @@ test('all 36,428 localized aphorisms have readable context and one separate auth
       assert.ok(withoutCredit.endsWith(parts.quote),'Quotation was rewritten');count++;
     }
   }
-  assert.equal(count,36428);
+  assert.equal(count,46836);
 });
 test('Google Sheets aphorisms preserve all accepted records, author counts and every localized cell',async()=>{
   const corpus=await load('server/content/philosopher-aphorisms.json');

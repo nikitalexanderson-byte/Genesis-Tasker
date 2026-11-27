@@ -169,6 +169,12 @@ for (const asset of REQUIRED_VISUAL_ASSETS) {
 if (missingVisualAssets.length) throw new Error(`Required visual assets are missing: ${missingVisualAssets.join(", ")}`);
 
 const javascriptAssets = (await readdir(assetsRoot)).filter((fileName) => fileName.endsWith(".js"));
+for (const fileName of javascriptAssets) {
+  if (!precacheUrls.includes(`${basePath}assets/${fileName}`)) throw new Error(`Offline JavaScript missing from precache: ${fileName}`);
+}
+for (const flag of (await readdir(new URL("language-flags/", outputRoot))).filter(name => name.endsWith(".svg"))) {
+  if (!precacheUrls.includes(`${basePath}language-flags/${flag}`)) throw new Error(`Offline language flag missing: ${flag}`);
+}
 const javascriptAssetSizes = await Promise.all(javascriptAssets.map(async (fileName) => ({
   fileName,
   bytes: (await stat(new URL(fileName, assetsRoot))).size,

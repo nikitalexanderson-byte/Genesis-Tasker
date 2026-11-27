@@ -35,7 +35,7 @@ class SharedTemplateProtocolTest {
     private fun page(from: Int, size: Int, total: Int, next: String?) = JSONObject().put("templates", JSONArray((from until from + size).map(::summary)))
         .put("systemTemplates", templateStarters()).put("total", total).put("hasMore", next != null).put("nextCursor", next ?: JSONObject.NULL)
 
-    @Test fun allFiftySixRealPhpSourcesRoundTripAcrossEverySupportedLanguage() {
+    @Test fun realPhpStarterSourcesRoundTripAcrossEverySupportedLanguage() {
         val corpus = JSONObject(templateFile("starters"))
         assertEquals(SharedTemplateProtocol.languages, corpus.keys().asSequence().toSet())
         for (language in SharedTemplateProtocol.languages) {

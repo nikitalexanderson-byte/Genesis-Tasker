@@ -1,9 +1,12 @@
 package ru.genesis.calendar.data
 
 import kotlinx.coroutines.asContextElement
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import ru.genesis.calendar.auth.AuthApiError
+import kotlin.coroutines.AbstractCoroutineContextElement
+import kotlin.coroutines.CoroutineContext
 
 /** One owner operation may cross the local WebView bridge several times. Its
  * mutex belongs to this opaque native capability, not a JS/thread-local boolean.
@@ -16,11 +19,16 @@ internal class NativeLegacyOperationPermit private constructor(
     private var open=true
     private var pending=0
     private var released=false
+    // An independent Main.immediate lifecycle job may begin on another operation's thread.
+    // Only a coroutine that inherited this element can borrow the operation.
+    private class Owner(val permit: NativeLegacyOperationPermit) : AbstractCoroutineContextElement(Key) {
+        companion object Key : CoroutineContext.Key<Owner>
+    }
     companion object {
         private val context=ThreadLocal<NativeLegacyOperationPermit?>()
         fun current()=context.get()
         suspend fun <T> run(db:GenesisDatabase,scope:String,assertCurrent:()->Unit,operation:suspend ()->T):T {
-            val existing=current()
+            val existing=currentCoroutineContext()[Owner]?.permit
             if(existing!=null) {
                 existing.bound(db,scope);assertCurrent()
                 return existing.borrow { operation().also { assertCurrent() } }
@@ -30,7 +38,7 @@ internal class NativeLegacyOperationPermit private constructor(
         }
         suspend fun acquire(db: GenesisDatabase, scope: String, assertCurrent: () -> Unit): NativeLegacyOperationPermit {
             require(scope.matches(Regex("account-[a-f0-9]{32}"))) { "E2EE_SCOPE_BINDING_MISMATCH" }
-            if(current()!=null)throw AuthApiError("E2EE_NESTED_LEGACY_OPERATION")
+            if(currentCoroutineContext()[Owner]!=null)throw AuthApiError("E2EE_NESTED_LEGACY_OPERATION")
             try { check(!genesisRoomTransactionActive()&&!db.inTransaction()) }
             catch(_: IllegalStateException) { throw AuthApiError("E2EE_LEGACY_TRANSACTION_IO_FORBIDDEN") }
             val mutex=LegacyScopeLocks.mutex(db,scope);val owner=Any()
@@ -63,7 +71,7 @@ internal class NativeLegacyOperationPermit private constructor(
     }
     suspend fun <T> borrow(operation: suspend () -> T): T {
         enter()
-        try { return withContext(context.asContextElement(this)) { check();operation().also { check() } } }
+        try { return withContext(Owner(this) + context.asContextElement(this)) { check();operation().also { check() } } }
         finally { leave() }
     }
     fun <T> borrowTransport(db: GenesisDatabase, scope: String, current: () -> Unit, operation: () -> T): T {

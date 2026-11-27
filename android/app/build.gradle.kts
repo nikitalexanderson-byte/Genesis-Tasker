@@ -44,8 +44,8 @@ android {
         applicationId = "ru.genesis.calendar"
         minSdk = 26
         targetSdk = 37
-        versionCode = 150
-        versionName = "3.3.6"
+        versionCode = 151
+        versionName = "3.3.7"
         buildConfigField("boolean", "PLAY_DISTRIBUTION", "false")
         buildConfigField("boolean", "PLAY_BILLING_ENABLED", "false")
         buildConfigField("boolean", "TRIAL_BUILD", "false")
@@ -129,14 +129,15 @@ val genesisAssets = tasks.register<GenesisAssetsTask>("genesisAssets") {
     }
     from(rootProject.file("third-party-licenses")) { into("third-party-licenses") }
     from(rootProject.file("../app/translations.en.json")) { into("i18n") }
-    from(rootProject.file("../releases/android-3.3.6-notes.json")) { into("i18n") }
+    from(rootProject.file("../releases/android-3.3.7-notes.json")) { into("i18n") }
     from(rootProject.file("../app")) { include("solar-model-localization.js", "solar-model-labels.json", "ui-refinement-copy.json"); into("i18n") }
     from(rootProject.file("../app")) {
         include("translations.el.a.json", "translations.el.b.json", "translations.de.json", "translations.de.b.json", "translations.fr.json", "translations.fr.b.json",
             "translations.es.json", "translations.es.b.json", "translations.it.json", "translations.it.b.json", "translations.pt.json",
             "translations.pl.json", "translations.pl.b.json", "translations.sr.a.json", "translations.sr.b.json",
             "translations.uk.a.json", "translations.uk.b.json",
-            "translations.zh.json", "translations.tr.json", "translations.ja.json", "translations.ja.b.json")
+            "translations.zh.json", "translations.tr.json", "translations.ja.json", "translations.ja.b.json",
+            "translations.he.json", "translations.ar.json", "translations.ko.json", "translations.nl.json")
         into("i18n")
     }
     from(rootProject.file("../app/curated-translations.en.json")) { into("i18n") }
@@ -222,7 +223,7 @@ val genesisAssets = tasks.register<GenesisAssetsTask>("genesisAssets") {
         into("i18n/year-translations")
     }
     // Only public edition pins are bundled; large catalogue bodies stay lazy.
-    from(rootProject.file("../contracts/public-advice-editions-v1.json")) { into("catalogs") }
+    from(rootProject.file("../contracts/public-advice-editions-v2.json")) { into("catalogs") }
     from(rootProject.file("../contracts/public-advice-metadata-v1.json")) { into("catalogs") }
     into(assetsDirectory.dir("originals"))
 }
@@ -238,10 +239,12 @@ abstract class GenesisAuroraAssetsTask : DefaultTask() {
 }
 val genesisAuroraAssets = tasks.register<GenesisAuroraAssetsTask>("genesisAuroraAssets") {
     assetsDirectory.set(layout.buildDirectory.dir("generated/auroraAssets"))
-    inputs.files(rootProject.fileTree("../app") { include("aurora/**", "e2ee/**", "*.css", "*.ts", "*.json", "Olympian*.tsx", "olympian-native.*", "olympian-knowledge-copy/**", "BackupPanel.tsx", "BackupJournalChoices.tsx", "backup-native-entry.tsx", "backup-native.html", "backup-locales/**", "catalog-translations/**") })
+    // The native web entry points also import shared dictionaries and style sheets transitively.
+    inputs.files(rootProject.fileTree("../app") {
+        include("**/*.ts", "**/*.tsx", "**/*.js", "**/*.json", "**/*.css", "**/*.html")
+    })
     inputs.file(rootProject.file("../scripts/aurora/build-native.mjs"))
-    inputs.file(rootProject.file("../contracts/native-web-runtime-v1.json"))
-    inputs.files(rootProject.fileTree("../contracts/e2ee") { include("*.json") })
+    inputs.files(rootProject.fileTree("../contracts") { include("*.json", "e2ee/**/*.json") })
     inputs.file(rootProject.file("../pnpm-lock.yaml"))
 }
 androidComponents.onVariants { variant ->

@@ -12,5 +12,9 @@
   "uk": "{day} із {total} днів року",
   "zh": "一年 {total} 天中的第 {day} 天",
   "tr": "Yılın {total} gününün {day}. günü",
-  "ja": "全{total}日中{day}日目"
+  "ja": "全{total}日中{day}日目",
+  "he": "יום {day} של {total}",
+  "ar": "اليوم {day} من {total}",
+  "ko": "일 {day} 다음 중 하나 {total}",
+  "nl": "Dag {day} van {total}"
 }

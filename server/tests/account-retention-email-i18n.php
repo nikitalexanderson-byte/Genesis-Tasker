@@ -18,11 +18,11 @@ if(PHP_SAPI!=='cli')exit(1);
         $expect=static function(bool $ok,string $reason): void {if(!$ok)throw new RuntimeException($reason);};
         $json=(string)file_get_contents(dirname(__DIR__).'/resources/account-retention-email-copy.json');
         $catalog=genesisRetentionEmailCopy($json);
-        $languages=['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'];
+        $languages=['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja','he','ar','ko','nl'];
         $rules=['free-unreturned','free-inactive','former-paid-inactive','complimentary-elite-inactive','complimentary-elite-year'];
         $fields=['subject','deadline','actionsInactive','actionsYear','data','footer','action'];
         $actualLanguages=array_keys($catalog);$expectedLanguages=$languages;sort($actualLanguages);sort($expectedLanguages);
-        $expect($actualLanguages===$expectedLanguages,'Mandatory warning does not cover exactly fourteen supported languages');
+        $expect($actualLanguages===$expectedLanguages,'Mandatory warning does not cover every supported language');
         $flatten=static function(array $copy): array {
             $result=$copy;unset($result['reasons']);
             foreach($copy['reasons']as$key=>$value)$result['reasons.'.$key]=$value;
@@ -75,6 +75,8 @@ if(PHP_SAPI!=='cli')exit(1);
                 $expect($message['promisedDeleteAt']===$case['expected'],$context.': full month/rule deadline/previous promise was shortened or shifted from UTC');
                 $expect(substr_count($message['text'],$case['expected'])===1&&str_contains($message['text'],'UTC'),$context.': UTC deadline missing from plain text');
                 $expect(substr_count($message['html'],$case['expected'])===1,$context.': UTC deadline missing from HTML');
+                $direction=in_array($language,['he','ar'],true)?'rtl':'ltr';
+                $expect(str_contains($message['html'],'<html lang="'.$language.'" dir="'.$direction.'">'),$context.': wrong HTML language or direction');
                 $actions=$copy[$rule==='complimentary-elite-year'?'actionsYear':'actionsInactive'];
                 $otherActions=$copy[$rule==='complimentary-elite-year'?'actionsInactive':'actionsYear'];
                 foreach([$copy['reasons'][$rule],str_replace('{date}',$case['expected'],$copy['deadline']),$actions,$copy['data'],$copy['footer'],$url]as$part)
@@ -134,7 +136,7 @@ if(PHP_SAPI!=='cli')exit(1);
         $expect($rejected,'Unknown rule prepared a misleading mandatory warning');
         $escaped=genesisEmailHtml('<img src=x onerror="fixture">','<script>fixture</script> & text','https://localhost.invalid/?a=1&b="fixture"','<b>Open</b>','<i>Mandatory</i>');
         $expect(!str_contains($escaped,'<script>')&&!str_contains($escaped,'<img ')&&str_contains($escaped,'&lt;script&gt;')&&str_contains($escaped,'&amp;b=&quot;fixture&quot;'),'Shared HTML renderer stopped escaping plain content or URLs');
-        echo 'Account retention email i18n: 14 languages x 5 rules, '.$rendered." UTC/calendar-month renders, localized rescue/data/service/action text, safe English fallback, private-field exclusion, HTML/header escaping and corrupt-catalog rejection passed.\n";
+        echo 'Account retention email i18n: ' .count($languages).' languages x 5 rules, '.$rendered." UTC/calendar-month renders, localized rescue/data/service/action text, safe English fallback, private-field exclusion, HTML/header escaping and corrupt-catalog rejection passed.\n";
     }finally{
         date_default_timezone_set($previousZone);
         if($fixture!==null){

@@ -180,5 +180,57 @@
     "speechLanguage": "音声入力の言語を利用できません。Android の音声認識サービスに言語を追加してください。",
     "speechAudio": "マイクを利用できません。マイクを使用している他のアプリを閉じて再試行してください。",
     "speechSilence": "音声が聞き取れませんでした。「夢を音声入力」をタップして話し始めてください。"
+  },
+  "he": {
+    "donation": "תרמו לפיתוח אפליקציות",
+    "voiceFinish": "סיים וזיהה",
+    "voiceListening": "מקשיב...",
+    "voiceRecognizing": "אני מזהה...",
+    "micDenied": "אפשר גישה למיקרופון בהגדרות Android.",
+    "speechError": "לא ניתן היה לזהות את הדיבור. נסה להכתיב שוב או להקליד את הטקסט.",
+    "speechUnavailable": "זיהוי דיבור אינו זמין במכשיר זה. הפעל או עדכן את השירות בהגדרות Android",
+    "speechNetwork": "זיהוי דיבור דורש חיבור לרשת. בדוק את החיבור שלך ונסה להכתיב שוב.",
+    "speechLanguage": "שפת הדיקציה אינה זמינה. אנא הוסף אותה לשירות זיהוי הדיבור Android ונסה שוב.",
+    "speechAudio": "המיקרופון אינו זמין. סגור את התוכניות האחרות המשתמשות בו ונסי שוב.",
+    "speechSilence": "לא נשמע דיבור. לחץ על \"כתוב חלום\" והתחיל לדבר."
+  },
+  "ar": {
+    "donation": "التبرع لتطوير التطبيق",
+    "voiceFinish": "الانتهاء والاعتراف",
+    "voiceListening": "أستمع",
+    "voiceRecognizing": "وإذ تسلم ...",
+    "micDenied": "السماح بالوصول إلى الميكروفون في إعدادات Android.",
+    "speechError": "لم يكن بالإمكان التعرف على الكلام، حاول إملاء النص مرة أخرى أو كتابته.",
+    "speechUnavailable": "التعرف على الكلام غير متاح على هذا الجهاز. قم بتفعيل أو تحديث الخدمة في إعدادات Android.",
+    "speechNetwork": "يحتاج التعرف على الكلام إلى اتصال بالشبكة. تحقق من اتصالك وحاول الإملاء مرة أخرى.",
+    "speechLanguage": "لغة الإملاء غير متاحة. أضفها في خدمة التعرف على الكلام Android وحاول مرة أخرى.",
+    "speechAudio": "الميكروفون غير متاح. أغلق التطبيقات الأخرى التي تستخدمه وحاول مرة أخرى.",
+    "speechSilence": "لم يسمع أي خطاب. انقر على \"إملاء الحلم\" وبدأ في الكلام."
+  },
+  "ko": {
+    "donation": "앱 개발에 기부하기",
+    "voiceFinish": "완료하고 인식",
+    "voiceListening": "듣는 중...",
+    "voiceRecognizing": "인식 중...",
+    "micDenied": "Android 설정에서 마이크 액세스를 허용합니다.",
+    "speechError": "음성을 인식할 수 없습니다. 받아쓰기를 다시 시도하거나 텍스트를 입력하십시오.",
+    "speechUnavailable": "이 장치에서 음성 인식을 사용할 수 없습니다. Android 설정에서 서비스를 활성화하거나 업데이트하십시오.",
+    "speechNetwork": "음성 인식에는 네트워크 연결이 필요합니다. 연결 상태를 확인하고 받아쓰기를 다시 시도하십시오.",
+    "speechLanguage": "받아쓰기 언어를 사용할 수 없습니다. Android 음성 인식 서비스에 추가하고 다시 시도하십시오.",
+    "speechAudio": "마이크를 사용할 수 없습니다. 마이크를 사용하는 다른 앱을 닫고 다시 시도하십시오.",
+    "speechSilence": "연설이 들리지 않았습니다. \"꿈 지시\"를 탭하고 말하기 시작하십시오."
+  },
+  "nl": {
+    "donation": "Doneer aan app-ontwikkeling",
+    "voiceFinish": "Afwerken en herkennen",
+    "voiceListening": "Aan het luisteren…",
+    "voiceRecognizing": "Het herkennen van…",
+    "micDenied": "Microfoontoegang toestaan in Android-instellingen.",
+    "speechError": "Spraak kon niet worden herkend. Probeer opnieuw te dicteren of typ de tekst.",
+    "speechUnavailable": "Spraakherkenning is niet beschikbaar op dit apparaat. Schakel de service in of werk deze bij in Android-instellingen.",
+    "speechNetwork": "Spraakherkenning vereist een netwerkverbinding. Controleer uw verbinding en probeer opnieuw te dicteren.",
+    "speechLanguage": "De dicteertaal is niet beschikbaar, voeg deze toe in de Android-spraakherkenningsservice en probeer het opnieuw.",
+    "speechAudio": "De microfoon is niet beschikbaar. Sluit andere apps die de microfoon gebruiken en probeer het opnieuw.",
+    "speechSilence": "Er werd geen spraak gehoord. Tik op 'Droom dicteren' en begin te spreken."
   }
 }

@@ -10,7 +10,7 @@ function rig(){
  let live=true;const calls=[],data=new Map(assets);
  const check=()=>{if(!live)throw new Error('E2EE_ACCOUNT_CHANGED');};
  const client=new PublicAdviceCatalogues(async(path)=>{calls.push(path);assert.ok(data.has(path),'Only emitted public assets may be requested');return new Uint8Array(data.get(path));},check);
- return{client,data,calls,check,lock(){live=false;},manifest(change){const copy=structuredClone(exported.manifest);change(copy);data.set('advice-catalogues/v1/manifest.json',new TextEncoder().encode(JSON.stringify(copy)));}};
+ return{client,data,calls,check,lock(){live=false;},manifest(change){const copy=structuredClone(exported.manifest);change(copy);data.set('advice-catalogues/v2/manifest.json',new TextEncoder().encode(JSON.stringify(copy)));}};
 }
 
 test('each actual historical edition resolves exact translations in every language without sending the selected identity',async()=>{
@@ -20,7 +20,7 @@ test('each actual historical edition resolves exact translations in every langua
   const result=await f.client.resolve(row.kind,row.version,row.language,id);assert.deepEqual(result,texts[id]);
   result.body='Changed caller copy';assert.deepEqual(await f.client.resolve(row.kind,row.version,row.language,id),texts[id]);
  }
- assert.equal(f.calls.length,127);assert.ok(f.calls.every(path=>!/advice-[a-f0-9]{24}/.test(path)&&!path.includes('?')));
+ assert.equal(f.calls.length,1+exported.manifest.catalogues.length);assert.ok(f.calls.every(path=>!/advice-[a-f0-9]{24}/.test(path)&&!path.includes('?')));
  assert.equal(new Set(exported.manifest.catalogues.map(row=>row.language)).size,advicePublicLanguages.length);
 });
 
@@ -48,16 +48,16 @@ test('the actual public HTTP reader omits account credentials/referrer and permi
  const calls=[];let open=true;const reader=publicAdviceCatalogueReader(new URL('https://example.invalid/app/'),()=>{if(!open)throw new Error('E2EE_ACCOUNT_CHANGED');},async(url,options)=>{
   calls.push({url:String(url),options});return new Response('{}',{headers:{'Content-Type':'application/json; charset=utf-8'}});
  });
- assert.equal(new TextDecoder().decode(await reader('advice-catalogues/v1/manifest.json')),'{}');
- assert.equal(calls[0].url,'https://example.invalid/app/advice-catalogues/v1/manifest.json');
+ assert.equal(new TextDecoder().decode(await reader('advice-catalogues/v2/manifest.json')),'{}');
+ assert.equal(calls[0].url,'https://example.invalid/app/advice-catalogues/v2/manifest.json');
  assert.deepEqual(calls[0].options,{credentials:'omit',referrerPolicy:'no-referrer',redirect:'error',cache:'no-cache'});
- for(const path of ['https://foreign.invalid/advice-catalogues/v1/manifest.json','../advice-catalogues/v1/manifest.json','advice-catalogues/v1/manifest.json?owner=private'])await assert.rejects(reader(path),/CATALOGUE_INVALID/);
- assert.equal(calls.length,1);open=false;await assert.rejects(reader('advice-catalogues/v1/manifest.json'),/ACCOUNT_CHANGED/);
+ for(const path of ['https://foreign.invalid/advice-catalogues/v2/manifest.json','../advice-catalogues/v2/manifest.json','advice-catalogues/v2/manifest.json?owner=private'])await assert.rejects(reader(path),/CATALOGUE_INVALID/);
+ assert.equal(calls.length,1);open=false;await assert.rejects(reader('advice-catalogues/v2/manifest.json'),/ACCOUNT_CHANGED/);
  assert.throws(()=>publicAdviceCatalogueReader(new URL('http://example.invalid/'),()=>{}),/CATALOGUE_INVALID/);
 });
 
 test('HTTP missing editions, HTML/redirect responses, declared or streamed oversize and late owner changes fail before use',async()=>{
- const path='advice-catalogues/v1/manifest.json';
+ const path='advice-catalogues/v2/manifest.json';
  for(const response of [new Response('{}',{status:404}),new Response('<html>',{headers:{'content-type':'text/html'}}),new Response('{}',{status:302}),new Response('{}',{headers:{'content-type':'application/json','content-length':String(1024*1024+1)}})]){
   const reader=publicAdviceCatalogueReader(new URL('https://example.invalid/'),()=>{},async()=>response);await assert.rejects(reader(path),/CATALOGUE_/);
  }

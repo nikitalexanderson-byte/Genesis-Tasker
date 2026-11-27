@@ -12,9 +12,13 @@ import uk from './gno-locales/uk.json';
 import zh from './gno-locales/zh.json';
 import tr from './gno-locales/tr.json';
 import ja from './gno-locales/ja.json';
+import he from './gno-locales/he.json';
+import ar from './gno-locales/ar.json';
+import ko from './gno-locales/ko.json';
+import nl from './gno-locales/nl.json';
 import type {Language} from '../i18n';
 export type GnoCopy=typeof ru;
-const locales:Record<string,GnoCopy>={ru,en,el,de,fr,es,it,pt,pl,sr,uk,zh,tr,ja};
+const locales:Record<string,GnoCopy>={ru,en,el,de,fr,es,it,pt,pl,sr,uk,zh,tr,ja,he,ar,ko,nl};
 export function gnoCopy(language:string):GnoCopy {return locales[language]??en;}
 export function fillGno(text:string,values:Record<string,string|number>):string {
  return text.replace(/\{(\w+)\}/g,(token,key)=>Object.hasOwn(values,key)?String(values[key]):token);

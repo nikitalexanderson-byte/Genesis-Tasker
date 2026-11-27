@@ -71,21 +71,28 @@ import ukrainianYear from "./year-translations/uk.json";
 import chineseYear from "./year-translations/zh.json";
 import turkishYear from "./year-translations/tr.json";
 import japaneseYear from "./year-translations/ja.json";
-import { languageForRegion, regionFromLocales, REGION_LANGUAGES, type RegionLanguage } from "./region-language";
+import hebrewTranslations from "./translations.he.json";
+import ui_he from "./ui-translations/he.json";
+import work_he from "./shared-work-translations/he.json";
+import hebrewYear from "./year-translations/he.json";
+import arabicTranslations from "./translations.ar.json";
+import ui_ar from "./ui-translations/ar.json";
+import work_ar from "./shared-work-translations/ar.json";
+import arabicYear from "./year-translations/ar.json";
+import koreanTranslations from "./translations.ko.json";
+import ui_ko from "./ui-translations/ko.json";
+import work_ko from "./shared-work-translations/ko.json";
+import koreanYear from "./year-translations/ko.json";
+import dutchTranslations from "./translations.nl.json";
+import ui_nl from "./ui-translations/nl.json";
+import work_nl from "./shared-work-translations/nl.json";
+import dutchYear from "./year-translations/nl.json";
+import { languageDirection, languageForRegion, languageManifest, regionFromLocales, REGION_LANGUAGES, LANGUAGE_CHOICES, type RegionLanguage } from "./region-language";
 import {publicRouteForPath,publicPagePath,publicPageAlternates} from './public-route';
 
 export const LANGUAGES = REGION_LANGUAGES;
 export type Language = RegionLanguage;
-export const LANGUAGE_LABELS: Record<Language, { name: string; flag: string }> = {
-  ru: { name: "Русский", flag: "🇷🇺" }, en: { name: "English", flag: "🇬🇧" },
-  el: { name: "Ελληνικά", flag: "🇬🇷" }, de: { name: "Deutsch", flag: "🇩🇪" },
-  fr: { name: "Français", flag: "🇫🇷" }, es: { name: "Español", flag: "🇪🇸" },
-  it: { name: "Italiano", flag: "🇮🇹" }, pt: { name: "Português", flag: "🇵🇹" },
-  pl: { name: "Polski", flag: "🇵🇱" }, sr: { name: "Српски", flag: "🇷🇸" },
-  uk: { name: "Українська", flag: "🇺🇦" },
-  zh: { name: "简体中文", flag: "🇨🇳" }, tr: { name: "Türkçe", flag: "🇹🇷" },
-  ja: { name: "日本語", flag: "🇯🇵" },
-};
+export const LANGUAGE_LABELS = LANGUAGE_CHOICES;
 
 export const LANGUAGE_STORAGE_KEY = "genesis-language-v1";
 export const LANGUAGE_LOGIN_PENDING_KEY = "genesis-language-login-pending-v1";
@@ -96,6 +103,10 @@ const ENGLISH_DESCRIPTION = "GENESIS is a task calendar and project manager with
 const PAGE_TITLES: Record<Language, string> = {
   ru: "Genesis Tasker — календарь задач и менеджер проектов",
   en: "Genesis Tasker — Task Calendar and Project Manager",
+  he: "Genesis Tasker — לוח שנה למשימות וניהול פרויקטים",
+  ar: "Genesis Tasker — تقويم المهام وإدارة المشاريع",
+  ko: "Genesis Tasker — 작업 캘린더 및 프로젝트 관리",
+  nl: "Genesis Tasker — takenkalender en projectbeheer",
   el: "Genesis Tasker — Ημερολόγιο εργασιών και διαχείριση έργων",
   de: "Genesis Tasker — Aufgabenkalender und Projektverwaltung",
   fr: "Genesis Tasker — Calendrier des tâches et gestion de projets",
@@ -327,7 +338,7 @@ const curatedTranslations: Record<string, string> = {
   "История": "History",
   "Контекстный проект": "Context project",
   "Найти узел": "Find node",
-  "Мысль или связанное дело": "Thought or linked affair",
+  "Мысль или связанное дело": "Idea or linked item",
   "Вся карта": "Whole map",
   "Найденные узлы": "Matching nodes",
   "· Показать ветку": "· Show branch",
@@ -455,7 +466,7 @@ const curatedTranslations: Record<string, string> = {
   "Для переноса удерживайте задачу или список, затем перетащите. Для прокрутки проведите пальцем без удержания.": "To move a task or list, hold it, then drag. To scroll, swipe without holding.",
   "Дела": "Affairs",
   "Поиск задач и проектов по названию или #тегу": "Find tasks and projects by title or #tag",
-  "Результаты поиска дел": "Affair search results",
+  "Результаты поиска дел": "Task and project search results",
   "Результаты поиска": "Search results",
   "Совпадений нет. Попробуйте другое название или тег.": "No matches. Try another title or tag.",
   "Завершено": "Completed",
@@ -465,11 +476,11 @@ const curatedTranslations: Record<string, string> = {
   "Завершённых проектов пока нет": "No completed projects yet",
   "· Завершено": "· Completed",
   "автоматический расчёт для региона устройства": "automatic calculation for the device region",
-  "Общее дело": "Shared affair",
-  "Личное дело": "Personal affair",
-  "Доступ к делу": "Affair access",
+  "Общее дело": "Shared item",
+  "Личное дело": "Personal item",
+  "Доступ к делу": "Item access",
   "Общее": "Shared",
-  "Тип дела": "Affair type",
+  "Тип дела": "Item type",
   "работа, запуск": "work, launch",
   "работа, развитие": "work, growth",
   "Показывать время восхода и заката": "Show sunrise and sunset times",
@@ -948,6 +959,10 @@ const englishCatalog: Record<string, string> = {
 };
 
 const rawCatalogs: Record<Exclude<Language, "ru">, Record<string, string>> = {
+  he: { ...hebrewTranslations, ...ui_he, ...hebrewYear },
+  ar: { ...arabicTranslations, ...ui_ar, ...arabicYear },
+  ko: { ...koreanTranslations, ...ui_ko, ...koreanYear },
+  nl: { ...dutchTranslations, ...ui_nl, ...dutchYear },
   en: englishCatalog, el: { ...greekTranslationsA, ...greekTranslationsB, ...ui_el, ...greekYear }, de: { ...germanTranslations, ...germanSecurityTranslations, ...ui_de, ...germanYear },
   fr: { ...frenchTranslations, ...frenchSecurityTranslations, ...ui_fr, ...frenchYear }, es: { ...spanishTranslations, ...spanishLegalTranslations, ...ui_es, ...spanishYear }, it: { ...italianTranslations, ...italianLegalTranslations, ...ui_it, ...italianYear }, pt: { ...portugueseTranslations, ...ui_pt, ...portugueseYear },
   pl: { ...polishTranslations, ...polishLegalTranslations, ...ui_pl, ...polishYear }, sr: { ...serbianTranslationsA, ...serbianTranslationsB, ...ui_sr, ...serbianYear },
@@ -955,7 +970,7 @@ const rawCatalogs: Record<Exclude<Language, "ru">, Record<string, string>> = {
   zh: { ...chineseTranslations, ...ui_zh, ...chineseYear }, tr: { ...turkishTranslations, ...ui_tr, ...turkishYear }, ja: { ...japaneseTranslations, ...japaneseYandexTranslations, ...ui_ja, ...japaneseYear },
 };
 const sharedWorkTranslations = { en:work_en, el:work_el, de:work_de, fr:work_fr, es:work_es, it:work_it, pt:work_pt,
-  pl:work_pl, sr:work_sr, uk:work_uk, zh:work_zh, tr:work_tr, ja:work_ja };
+  pl:work_pl, sr:work_sr, uk:work_uk, zh:work_zh, tr:work_tr, ja:work_ja, he:work_he, ar:work_ar, ko:work_ko, nl:work_nl };
 for (const language of Object.keys(rawCatalogs) as Exclude<Language, "ru">[]) {
   // Prepared 3.2.2 backup surfaces currently provide RU/EN; other locales use English.
   for (const [source, translated] of Object.entries(backupEnglish)) if (!(source in rawCatalogs[language])) rawCatalogs[language][source]=translated;
@@ -990,6 +1005,7 @@ const yearCatalogs: Record<Exclude<Language, "ru">, Record<string, string>> = {
   en: englishYear, el: greekYear, de: germanYear, fr: frenchYear, es: spanishYear,
   it: italianYear, pt: portugueseYear, pl: polishYear, sr: serbianYear,
   uk: ukrainianYear, zh: chineseYear, tr: turkishYear, ja: japaneseYear,
+  he: hebrewYear, ar: arabicYear, ko: koreanYear, nl: dutchYear,
 };
 
 export function lunarYearStartText(date: string, months: number, language: Language): string {
@@ -1002,7 +1018,7 @@ const englishToRussian = new Map(Object.entries(englishCatalog).map(([ru, en]) =
 const partialTranslations = Object.fromEntries(Object.entries(catalogs).map(([language, catalog]) => [
   language,
   Object.entries(catalog)
-    .map(([source, translated]) => [source.trim(), catalog[source.trim()] ?? translated.trim()] as [string, string])
+    .map(([source, translated]) => [source.trim(), (catalog[source.trim()] ?? translated).trim()] as [string, string])
     .filter(([source, translated]) => source.length >= 2 && source.length <= 180 && source !== translated)
     .sort(([left], [right]) => right.length - left.length),
 ])) as Record<Exclude<Language, "ru">, [string, string][]>;
@@ -1072,8 +1088,14 @@ export function localizeCategoryName(category: { id: string; name: string }, lan
   return language === "ru" ? builtInNames.ru : catalogs[language][builtInNames.ru] ?? builtInNames.en;
 }
 
-export function runtimeLocale() {
-  return ({ ru: "ru-RU", en: "en-US", el: "el-GR", de: "de-DE", fr: "fr-FR", es: "es-ES", it: "it-IT", pt: "pt-PT", pl: "pl-PL", sr: "sr-RS", uk: "uk-UA", zh: "zh-CN", tr: "tr-TR", ja: "ja-JP" })[runtimeLanguage];
+const FORMATTER_LOCALES: Record<Language, string> = {
+  ru: "ru-RU", en: "en-US", el: "el-GR", de: "de-DE", fr: "fr-FR", es: "es-ES", it: "it-IT",
+  pt: "pt-PT", pl: "pl-PL", sr: "sr-RS", uk: "uk-UA", zh: "zh-CN", tr: "tr-TR", ja: "ja-JP",
+  he: "he-IL", ar: "ar", ko: "ko-KR", nl: "nl-NL",
+};
+
+export function runtimeLocale(language: string = runtimeLanguage) {
+  return FORMATTER_LOCALES[isLanguage(language) ? language : runtimeLanguage];
 }
 
 export function translateText(source: string, language: Language = runtimeLanguage, allowPartial = false) {
@@ -1155,6 +1177,7 @@ export function useDocumentLanguage(language: Language) {
   useEffect(() => {
     runtimeLanguage = language;
     document.documentElement.lang = language;
+    document.documentElement.dir = languageDirection(language);
     document.documentElement.dataset.language = language;
     const publicRoute=publicRouteForPath(window.location.pathname,APP_BASE,window.location.search);
     if(publicRoute) {
@@ -1167,15 +1190,14 @@ export function useDocumentLanguage(language: Language) {
     }
     localizeTree(document.body, language);
     const headTimer = window.setTimeout(() => {
-      document.title = PAGE_TITLES[language];
-      const description = document.querySelector<HTMLMetaElement>('meta[name="description"]');
-      if (description) {
-        description.content = language === "ru"
-          ? "GENESIS — календарь задач и менеджер проектов с планом дня, напоминаниями и необязательной синхронизацией Google Calendar и Google Tasks."
-          : language === "en" ? ENGLISH_DESCRIPTION : PAGE_TITLES[language];
+      if (!publicRoute || publicRoute.page === "home" || publicRoute.page === "login") {
+        document.title = PAGE_TITLES[language];
+        const description = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+        if (description) description.content = language === "en" ? ENGLISH_DESCRIPTION : translateText(
+          "GENESIS — календарь задач и менеджер проектов с планом дня, напоминаниями и необязательной синхронизацией Google Calendar и Google Tasks.", language);
       }
       const manifest = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
-      if (manifest) manifest.href = `${APP_BASE}/${language === "ru" ? "manifest.webmanifest" : "manifest.en.webmanifest"}`;
+      if (manifest) manifest.href = `${APP_BASE}/${languageManifest(language)}`;
     }, 100);
 
     const observer = new MutationObserver((mutations) => {

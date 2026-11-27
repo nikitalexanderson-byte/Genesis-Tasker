@@ -1,3 +1,4 @@
+import {REGION_LANGUAGES} from "../app/region-language.ts";
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import test from 'node:test';
@@ -140,9 +141,9 @@ test('approximate timezone locations never request provider weather',async()=>{
   const stop=store.subscribe(()=>{});await flush();store.resume();h.advance(10_000_000);assert.equal(calls,0);assert.equal(store.getSnapshot().status,'requires-location');stop();
 });
 
-test('all fourteen locale copies contain the same weather states, conditions and attribution labels',()=>{
+test('all eighteen locale copies contain the same weather states, conditions and attribution labels',()=>{
   const copy=JSON.parse(readFileSync(new URL('../app/weather-copy.json',import.meta.url),'utf8'));
-  assert.equal(Object.keys(copy).length,14);const keys=Object.keys(copy.en).sort(),conditions=Object.keys(copy.en.conditions).sort();
+  assert.equal(Object.keys(copy).length, REGION_LANGUAGES.length);const keys=Object.keys(copy.en).sort(),conditions=Object.keys(copy.en.conditions).sort();
   for(const [language,entry] of Object.entries(copy)) {
     assert.deepEqual(Object.keys(entry).sort(),keys,language);assert.deepEqual(Object.keys(entry.conditions).sort(),conditions,language);
     assert.ok(Object.values(entry.conditions).every(value=>typeof value==='string'&&value.trim()));

@@ -343,7 +343,7 @@ function genesisUserForClient(array $user): array
     $theme = in_array($user['theme'] ?? '', ['standart', 'standart-dark', 'experimental', 'experimental-dark'], true)
         ? (string)$user['theme']
         : 'standart';
-    $language = in_array($user['language'] ?? '', ['ru', 'en', 'el', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'sr', 'uk', 'zh', 'tr', 'ja'], true)
+    $language = in_array($user['language'] ?? '', ['ru', 'en', 'el', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'sr', 'uk', 'zh', 'tr', 'ja', 'he', 'ar', 'ko', 'nl'], true)
         ? (string)$user['language']
         : 'ru';
     $syncRoutingMode = in_array($user['sync_routing_mode'] ?? '', ['fixed', 'choose', 'category'], true)
@@ -1543,7 +1543,7 @@ function genesisUpdateAccountPreferencesInTransaction(string $userId, array $pay
     }
     if (array_key_exists('language', $payload)) {
         $language = trim((string)$payload['language']);
-        if (!in_array($language, ['ru', 'en', 'el', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'sr', 'uk', 'zh', 'tr', 'ja'], true)) {
+        if (!in_array($language, ['ru', 'en', 'el', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'sr', 'uk', 'zh', 'tr', 'ja', 'he', 'ar', 'ko', 'nl'], true)) {
             throw new InvalidArgumentException('Неизвестный язык интерфейса.');
         }
         $updates[] = 'language = :language';

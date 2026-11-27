@@ -96,5 +96,33 @@
     "rerollCard": "このカードを引き直す",
     "historical": "この保存済みセッションでは以前の 9 枚のスプレッドを使用しており、閲覧のみ可能です。現在のスプレッドで計算するには、新しいセッションを開始してください。",
     "included": "Premium、Business、Elite / Elite+ に追加料金なしで含まれます。計算は引いた 9 枚のカードに連動します。"
+  },
+  "he": {
+    "weeklyRule": "סדרת תשעת הקלפים נמשכת פעם בשבוע בלוח השנה, מיום שני עד יום ראשון. Gno Meter Basileia כוללת את Premium, Business ו- Elite / Elite + ללא תשלום נוסף ומשתמשת רק בתשעה הקלפים הללו.",
+    "unlimitedRule": "Elite+: ניתן לגלגל מחדש כל קלף בכל זמן, ללא הגבלה על מספר הניסיונות.",
+    "rerollCard": "תגלגל מחדש את הקלף הזה",
+    "historical": "השהייה הנשמרת הזאת משתמשת בשלב מוקדם יותר של תשעה קלפים והיא לקריאה בלבד. התחל בשלב חדש כדי לחשב מהשלב הנוכחי.",
+    "included": "כולל בפרמיום, עסקים ואליטה / אליטה + ללא תשלום נוסף. חישובים קשורים לתשעה קלפים שנלקחו."
+  },
+  "ar": {
+    "weeklyRule": "وتسحب البطاقات التسع مرة واحدة في كل أسبوع تقويمي، من الاثنين إلى الأحد. ويشمل برنامج غنو متر بايزيلا (Gno Meter Basileia) بطاقات Premium و Business و Elite/Elite+ دون أي تكلفة إضافية ولا يستخدم سوى هذه البطاقات التسع.",
+    "unlimitedRule": "Elite+: إعادة رمي أي بطاقة في أي وقت، بدون حد للمحاولات.",
+    "rerollCard": "أعيد لف هذه البطاقة",
+    "historical": "هذه الجلسة المحفوظة تستخدم توسيع تسعة بطاقات سابقة وهي قراءة فقط. بدء جلسة جديدة لحساب من التوسيع الحالي.",
+    "included": "مشمولة في Premium و Business و Elite / Elite + بدون تكلفة إضافية. الحسابات مرتبطة بالبطاقات التسعة المسحوبة."
+  },
+  "ko": {
+    "weeklyRule": "9장의 카드 스프레드는 월요일부터 일요일까지 일주일에 한 번 추첨됩니다. Gno Meter Basileia는 프리미엄, 비즈니스 및 Elite / Elite+에 추가 요금 없이 포함되어 있으며 이 9장의 카드만 사용합니다.",
+    "unlimitedRule": "엘리트+: 시도 제한 없이 언제든지 모든 카드를 재롤할 수 있습니다.",
+    "rerollCard": "이 카드를 다시 굴립니다",
+    "historical": "이 저장된 세션은 이전 9카드 스프레드를 사용하고 읽기 전용입니다. 현재 스프레드에서 계산하기 위해 새 세션을 시작합니다.",
+    "included": "프리미엄, 비즈니스 및 엘리트/엘리트+에 추가 요금 없이 포함됩니다. 계산은 9장의 카드로 이루어집니다."
+  },
+  "nl": {
+    "weeklyRule": "De spread van negen kaarten wordt één keer per kalenderweek getrokken, van maandag tot en met zondag. Gno Meter Basileia is zonder extra kosten inbegrepen bij Premium, Business en Elite / Elite+ en gebruikt alleen deze negen kaarten.",
+    "unlimitedRule": "Elite+: rol elke kaart op elk moment opnieuw, zonder limiet aan pogingen.",
+    "rerollCard": "Rol deze kaart opnieuw",
+    "historical": "Deze opgeslagen sessie gebruikt een eerdere spread van negen kaarten en is alleen-lezen. Start een nieuwe sessie om te berekenen vanaf de huidige spread.",
+    "included": "Inbegrepen in Premium, Business en Elite/Elite+ zonder extra kosten Berekeningen zijn gebonden aan de negen getrokken kaarten."
   }
 }

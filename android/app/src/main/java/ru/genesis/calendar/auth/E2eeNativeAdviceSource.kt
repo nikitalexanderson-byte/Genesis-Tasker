@@ -13,7 +13,7 @@ import java.time.Instant
 internal class E2eeAdviceRows(val documents:List<DocumentRecord>,val outbox:List<OutboxRecord>,val generation:Long,
     val pendingGeneration:Long?,val knownPreferences:List<String>,val mounted:JSONObject?){override fun toString()="E2eeAdviceRows([redacted])"}
 internal class E2eeAdviceLegacyRows(val entries:Map<String,String>,val unknownCount:Int){override fun toString()="E2eeAdviceLegacyRows([redacted])"}
-internal val adviceMigrationLanguages=listOf("ru","en","el","de","fr","es","it","pt","pl","sr","uk","zh","tr","ja")
+internal val adviceMigrationLanguages=listOf("ru","en","el","de","fr","es","it","pt","pl","sr","uk","zh","tr","ja", "he", "ar", "ko", "nl")
 
 /** Real owner-scoped Room + proven v1 lookups. Unknown shared preference hashes
  * are never assigned/copied to this owner. Their presence blocks reconciliation

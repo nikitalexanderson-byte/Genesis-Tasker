@@ -12,5 +12,25 @@
   "uk":{"help":"Утримуйте й перетягуйте. Перший вигляд відкривається за замовчуванням. Клавіатура: Alt + ←/→.","first":"Вигляд за замовчуванням: {view}.","changed":"Порядок змінився. Перетягніть ще раз."},
   "zh":{"help":"按住并拖动。默认打开第一个视图。键盘：Alt + ←/→。","first":"默认视图：{view}。","changed":"顺序已更改，请重新拖动。"},
   "tr":{"help":"Basılı tutup sürükleyin. İlk görünüm varsayılan olarak açılır. Klavye: Alt + ←/→.","first":"Varsayılan görünüm: {view}.","changed":"Sıralama değişti. Tekrar sürükleyin."},
-  "ja":{"help":"長押ししてドラッグします。最初の表示が既定で開きます。キーボード：Alt + ←/→。","first":"既定の表示：{view}。","changed":"順序が変更されました。もう一度ドラッグしてください。"}
+  "ja":{"help":"長押ししてドラッグします。最初の表示が既定で開きます。キーボード：Alt + ←/→。","first":"既定の表示：{view}。","changed":"順序が変更されました。もう一度ドラッグしてください。"},
+  "he": {
+    "help": "החזיק והזיז. התצוגה הראשונה נפתחת ברירת המחדל. מקלדת: Alt + ←/ →.",
+    "first": "תצוגה ברירת המחדל: {view}.",
+    "changed": "הסדר השתנה."
+  },
+  "ar": {
+    "help": "تمسك وسحب. العرض الأول يفتح تلقائياً. لوحة المفاتيح: Alt + ←/→.",
+    "first": "العرض الافتراضي: {view}.",
+    "changed": "الترتيب تغير, اسحب مجدداً"
+  },
+  "ko": {
+    "help": "길게 누르고 드래그합니다. 기본적으로 첫 번째 보기가 열립니다. 키보드: Alt + ←/→.",
+    "first": "기본 보기: {view}.",
+    "changed": "순서가 바뀌었습니다. 다시 드래그하십시오."
+  },
+  "nl": {
+    "help": "Houd ingedrukt en sleep. De eerste weergave wordt standaard geopend. Toetsenbord: Alt + ←/→.",
+    "first": "Standaardweergave: {view}.",
+    "changed": "De volgorde is gewijzigd. Sleep opnieuw."
+  }
 }

@@ -49,6 +49,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -180,10 +182,14 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
         display = savedPrefs.display.takeIf { it.wireValue in visibleCalendarChoices } ?: fallbackCalendar,
         input = savedPrefs.input.takeIf { it.wireValue in visibleCalendarChoices } ?: fallbackCalendar))
         .copy(navigationLabels = true, settingsSubmenuEnabled = true)
-    val pendingPreferences by prefsStore.pending.collectAsStateWithLifecycle(emptyMap())
-    val pendingWrites by remember(app, activeScope) {
-        app.database.dao().observeOutbox(activeScope).map { it.size }
-    }.collectAsStateWithLifecycle(-1)
+    val observedPreferences by key(activeScope) {
+        prefsStore.pending.collectAsStateWithLifecycle<Map<String, String>?>(null)
+    }
+    val pendingPreferences = observedPreferences.orEmpty()
+    val pendingWrites by key(activeScope) {
+        remember(app, activeScope) { app.database.dao().observePendingOutbox(activeScope) }
+            .collectAsStateWithLifecycle<Boolean?>(null)
+    }
     val menuSwipeState = rememberSaveable(activeScope, saver = MenuSwipeStateSaver) { MenuSwipeState() }
     val settingsScrollStates = remember(activeScope) { mutableMapOf<String, ScrollState>() }
     var menuVisibilityExpanded by rememberSaveable(activeScope) { mutableStateOf(false) }
@@ -232,7 +238,7 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
             if (remote.weekStart in setOf("sunday", "monday")) prefsStore.setRemote("weekStart", remote.weekStart)
             if (remote.gregorianYearStart in setOf("january", "march"))
                 prefsStore.setRemote("gregorianYearStart", remote.gregorianYearStart)
-            if (remote.language in setOf("ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja")) prefsStore.setRemote("language", remote.language)
+            if (remote.language in ru.genesis.calendar.data.publicLanguages) prefsStore.setRemote("language", remote.language)
             prefsStore.setRemote("stoicheionDivinationDisabled", remote.divinationDisabled.toString())
         }
     }
@@ -293,15 +299,24 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
     var newTaskListId by rememberSaveable { mutableStateOf<String?>(null) }
     val mindmapUid=mindmapAccountUid(authState.user?.uid,authState.ready,activeScope)
     val mapsAccess=rememberUpdatedState(authState.accountSettings?.featureAccess ?: ru.genesis.calendar.auth.FeatureAccess())
-    val mapsRepo=remember(mindmapUid,activeScope) {mindmapUid?.let {uid->ru.genesis.calendar.data.MindmapRepository(app.database,activeScope,uid,authController.mindmapTransport(uid),{ mapsAccess.value })}}
+    val workspaceLifetime = authController.workspaceLifetime()
+    val mapsRepo = remember(mindmapUid, activeScope, workspaceLifetime) {
+        mindmapUid?.let { uid -> ru.genesis.calendar.data.MindmapRepository(
+            app.database, activeScope, uid, authController.mindmapTransport(uid), { mapsAccess.value }) }
+    }
+    var checkedConversionDraft by remember(activeScope, mindmapUid) { mutableStateOf(false) }
     LaunchedEffect(mapsRepo) {
+        if (checkedConversionDraft) return@LaunchedEffect
         val repository=mapsRepo ?: return@LaunchedEffect
         try {
             repository.conversionDraft()?.let { draft ->
-                if(app.repository.get(draft.id)==null) {
+                if (app.repository.get(draft.id) != null) {
+                    repository.clearConversionDraft(draft.id)
+                } else if (editId == null) {
                     mindmapTaskDraft=draft;newTaskProjectId=draft.projectId;newTaskListId=null;editId=null;creating=true;mindmapsOpen=true
-                } else repository.clearConversionDraft()
+                }
             }
+            checkedConversionDraft = true
         } catch(error:kotlinx.coroutines.CancellationException) { throw error }
         catch(error:Exception) {
             // Startup/session transitions must preserve a failed draft without crashing sign-in.
@@ -525,11 +540,14 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
         onContext = { nativeGuidance?.contextual(it) }, onVisibility = { nativeGuidance?.comparisonVisible = it })
     MaterialTheme(colorScheme=if (eveningTheme) darkScheme else lightScheme, typography = GenesisTypography,
         shapes = GenesisShapes) {
+      val deviceAppLock = LocalAppLockHost.current
+      LaunchedEffect(deviceAppLock, language, eveningTheme) { deviceAppLock?.updateAppearance(language, eveningTheme) }
       CompositionLocalProvider(LocalEveningTheme provides eveningTheme, LocalDarkPalette provides darkPalette) {
       CompositionLocalProvider(LocalGenesisLanguage provides language,
           LocalWeatherDisplayUnits provides WeatherDisplayUnits(WeatherTemperatureUnit.fromWire(prefs.weatherTemperatureUnit),
               WeatherPressureUnit.fromWire(prefs.weatherPressureUnit)),
           LocalContext provides frameworkContext, LocalConfiguration provides frameworkConfiguration,
+          LocalLayoutDirection provides if (frameworkConfiguration.layoutDirection == android.view.View.LAYOUT_DIRECTION_RTL) LayoutDirection.Rtl else LayoutDirection.Ltr,
           LocalEnabledCalendars provides CalendarMode.entries
               .filter { it.wireValue in uiVisibility.visibleCalendars }.toSet(),
           LocalSacredFeaturesEnabled provides uiVisibility.sacredFeaturesEnabled,
@@ -562,11 +580,11 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
             else "Локальные черновики · аккаунт не подключён"
             val saveStatus = when {
                 testWorkspace -> "Сохранено на этом устройстве"
+                pendingWrites == true || pendingPreferences.isNotEmpty() -> "Сохранено на устройстве · ожидает синхронизации"
                 authState.outgoingSyncIssue != null || accountTaskSync?.issue != null -> "Ошибка синхронизации"
                 authState.requiresSignIn -> "Сохранено на устройстве · требуется вход"
-                pendingWrites > 0 || pendingPreferences.isNotEmpty() -> "Сохранено на устройстве · ожидает синхронизации"
                 authState.busy || accountTaskSync?.loading == true -> "Синхронизация…"
-                pendingWrites == 0 && accountTaskSync?.confirmed == true && authState.checkedAt != null -> "Синхронизировано."
+                pendingWrites == false && observedPreferences != null && accountTaskSync?.confirmed == true && authState.checkedAt != null -> "Синхронизировано."
                 else -> "Сохранено на этом устройстве"
             }
             val destinations = mobileDestinations(visiblePages, uiVisibility, sharedProjectsEnabled,
@@ -587,12 +605,8 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
             val screenStates = rememberSaveableStateHolder()
             MobileWorkspaceShell(tab, menuSwipeState.section(tab), destinations, "$accountStatus\n$saveStatus",
                 footerStatusLines = if (activeScope.startsWith("account-")) listOf(
-                    genesisTranslate("Аккаунт Genesis.").trimEnd('.') + " · " + genesisTranslate(when {
-                        authState.outgoingSyncIssue != null || accountTaskSync?.issue != null -> "Ошибка синхронизации"
-                        authState.requiresSignIn -> "Требуется вход"
-                        pendingWrites > 0 || pendingPreferences.isNotEmpty() || authState.busy || accountTaskSync?.loading == true -> "Синхронизация…"
-                        else -> "Синхронизировано."
-                    }).trimEnd('.'), genesisTranslate("Защищенная локальная копия.").trimEnd('.')) else null,
+                    genesisTranslate("Аккаунт Genesis.").trimEnd('.') + " · " + genesisTranslate(saveStatus).trimEnd('.'),
+                    genesisTranslate("Защищенная локальная копия.").trimEnd('.')) else null,
                 calendarMode = prefs.display,
                 gesturesEnabled = !mindmapsOpen,
                 onNavigate = { destination ->
@@ -610,7 +624,7 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                         CalendarModeSwitcher(prefs.display, {
                             changeDisplayCalendar(nextAvailableCalendarMode(prefs.display,
                                 CalendarMode.entries.filter { it.wireValue in uiVisibility.visibleCalendars }.toSet()))
-                        }, size = 48.dp, interactive = uiVisibility.visibleCalendars.size > 1, headerControl = true)
+                        }, size = 48.dp, interactive = uiVisibility.visibleCalendars.size > 1)
                     }
                 }, footerActions = {
                     TodayThemeButton(eveningTheme, !themeSwitchBusy, plainIcon = true) {
@@ -771,11 +785,10 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                         DiaryScreen(diary, onClose = ::navigateBack)
                     }
                     "Сообщения" -> authState.user?.uid?.let { uid ->
-                        val messagingLifetime=authController.messagingLifetime()
-                        val repository = remember(app, activeScope, uid,privateCustodyRevision,messagingLifetime) {
+                        val repository = remember(app, activeScope, uid,privateCustodyRevision,workspaceLifetime) {
                             ru.genesis.calendar.data.MessagingRepository.room(app.database, activeScope, uid, authController.messagingGateway(uid))
                         }
-                        val messenger = remember(app, activeScope, uid,privateCustodyRevision,messagingLifetime) {
+                        val messenger = remember(app, activeScope, uid,privateCustodyRevision,workspaceLifetime) {
                             ru.genesis.calendar.data.MessengerRepository.room(app.database, activeScope, uid, authController.messagingGateway(uid))
                         }
                         MessengerScreen(messenger, prefs.language, initialProjectId=messagingProjectId,
@@ -964,12 +977,29 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                 }
             }
             val existing=tasks.find { it.id==editId }
+            val conversionId = mindmapTaskDraft?.id?.takeIf { creating && existing == null }
+            fun closeTaskEditor() {
+                creating = false
+                editId = null
+                newTaskEntryType = "task"
+                mindmapTaskDraft = null
+                auroraTaskDraft = null
+                if (conversionId != null && mapsRepo != null) scope.launch {
+                    try {
+                        mapsRepo.clearConversionDraft(conversionId)
+                    } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                        throw cancelled
+                    } catch (error: Exception) {
+                        android.util.Log.w("GenesisMaps", "DRAFT_CLEANUP: ${error.javaClass.simpleName}")
+                    }
+                }
+            }
             if(creating || existing!=null) TaskEditor(existing ?: mindmapTaskDraft ?: auroraTaskDraft,selected,prefs,structure,newTaskProjectId,
                 authState.accountSettings,taskLists,newTaskListId,
-                onDismiss={creating=false;editId=null;newTaskEntryType="task";mindmapTaskDraft=null;auroraTaskDraft=null;scope.launch {mapsRepo?.clearConversionDraft()}},
-                onSave={draft -> model.saveEditor(draft){creating=false;editId=null;newTaskEntryType="task";mindmapTaskDraft=null;auroraTaskDraft=null;scope.launch {mapsRepo?.clearConversionDraft()}}},
+                onDismiss = ::closeTaskEditor,
+                onSave = { draft -> model.saveEditor(draft, ::closeTaskEditor) },
                 onSwitchToShared=if(existing==null && tab=="Проекты" && sharedProjectsEnabled) ({
-                    creating=false; creatingSharedTask=true
+                    creating=false; mindmapTaskDraft=null; auroraTaskDraft=null; creatingSharedTask=true
                 }) else null,
                 onTransfer=existing?.takeIf { sharedProjectsEnabled }?.let { selectedTask ->
                     { transferTask=selectedTask;creating=false;editId=null }
@@ -1812,6 +1842,7 @@ private fun SettingsScreen(app:GenesisApplication,prefs:UiPreferences,sectionId:
             NativeAccountPlanHeader()
         } else sectionHeader()
         when (section.id) {
+        "security" -> AppLockSettings(prefs.language)
         "appearance" -> {
         AppearancePanel(app, workspace, prefs.use24, prefs.theme, { onSet("theme", it) },
             darkPalette = prefs.darkPalette, onPalette = { onSet("darkPalette", it) })

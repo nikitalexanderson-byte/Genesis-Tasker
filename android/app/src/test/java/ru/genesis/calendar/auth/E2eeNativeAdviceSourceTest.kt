@@ -5,6 +5,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
+import ru.genesis.calendar.data.publicLanguages
 import ru.genesis.calendar.data.DocumentRecord
 import ru.genesis.calendar.data.OutboxRecord
 import ru.genesis.calendar.security.*
@@ -39,7 +40,7 @@ class E2eeNativeAdviceSourceTest {
     private suspend fun reject(code:String,run:suspend ()->Unit){try{run();fail("Expected $code")}catch(error:IllegalStateException){assertEquals(code,error.message)}}
     @Test fun rawOwnerRowsAndOnlyReproducibleV1KeysAreCapturedBeforeSignedHistoryOrEngineIO()=runBlocking{
         val f=Rig();val raw=f.capture();val snapshot=JSONObject(raw.toString(Charsets.UTF_8));assertEquals(0,f.signed);assertEquals(0,f.engines);assertEquals(1,f.captures)
-        assertEquals(14,snapshot.getJSONArray("knownProfiles").length());assertEquals(14,f.known.size);assertTrue(f.hash in f.known);assertEquals(1,snapshot.getJSONArray("legacy").length())
+        assertEquals(publicLanguages.size,snapshot.getJSONArray("knownProfiles").length());assertEquals(publicLanguages.size,f.known.size);assertTrue(f.hash in f.known);assertEquals(1,snapshot.getJSONArray("legacy").length())
         assertTrue(f.source.reconcile(raw,emptyList(),f.lease).complete);assertEquals(1,f.signed);assertEquals(1,f.engines);assertEquals("synthetic-exact-ciphertext",f.documents.single().encrypted)
     }
     @Test fun unassignedLegacyPendingGenerationAndUnsentAdviceQueuesStopBeforePrivateRead()=runBlocking{

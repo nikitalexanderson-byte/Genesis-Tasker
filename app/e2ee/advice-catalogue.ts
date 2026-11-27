@@ -1,7 +1,8 @@
+import { REGION_LANGUAGES } from '../region-language.ts';
 import {exactKeys} from './keys.ts';
 import {backupJson} from '../backup-format.ts';
 
-export const ADVICE_CATALOGUE_LANGUAGES=['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'] as const;
+export const ADVICE_CATALOGUE_LANGUAGES=REGION_LANGUAGES;
 export type AdviceCatalogueLanguage=typeof ADVICE_CATALOGUE_LANGUAGES[number];
 export type AdviceCatalogueKind='daily'|'philosophers';
 export type AdviceCatalogueText={title:string;body:string;sources?:{kind:'quote'|'inspired';author?:string;work?:string;reference?:string;url?:string}[]};
@@ -41,7 +42,7 @@ export class PublicAdviceCatalogues{
  constructor(fetchPublicBytes:(path:string)=>Promise<Uint8Array>,assertCurrent:()=>void){this.#fetch=fetchPublicBytes;this.#check=assertCurrent;}
  async #editions():Promise<Edition[]>{
   this.#check();if(!this.#manifest)this.#manifest=(async()=>{
-   const raw=await this.#fetch('advice-catalogues/v1/manifest.json');this.#check();const value=parse(raw,1024*1024);exactKeys(value,['protocol','catalogues']);
+   const raw=await this.#fetch('advice-catalogues/v2/manifest.json');this.#check();const value=parse(raw,1024*1024);exactKeys(value,['protocol','catalogues']);
    if(value.protocol!==1||!Array.isArray(value.catalogues)||value.catalogues.length<1||value.catalogues.length>2048)invalid();
    const names=new Set<string>(),editions=new Map<string,Set<string>>();
    for(const row of value.catalogues){exactKeys(row,['kind','version','language','sha256','bytes','path']);reference(row.kind,row.version,row.language);
@@ -87,7 +88,7 @@ export function publicAdviceCatalogueReader(base:URL,assertCurrent:()=>void,requ
  if(base.protocol!=='https:'&&!(base.protocol==='http:'&&['127.0.0.1','localhost','[::1]'].includes(base.hostname)))invalid();
  const directory=new URL(base.href.endsWith('/')?base.href:base.href+'/');
  return async(path:string):Promise<Uint8Array>=>{
-  assertCurrent();if(!/^advice-catalogues\/v1\/(?:manifest\.json|metadata\.[a-f0-9]{64}\.json|(?:daily|philosophers)\/[-a-z0-9]{1,80}\/[a-z]{2}\.[a-f0-9]{64}\.json)$/.test(path))invalid();
+  assertCurrent();if(path!=='advice-catalogues/v2/manifest.json'&&!/^advice-catalogues\/v1\/(?:metadata\.[a-f0-9]{64}\.json|(?:daily|philosophers)\/[-a-z0-9]{1,80}\/[a-z]{2}\.[a-f0-9]{64}\.json)$/.test(path))invalid();
   const limit=path.endsWith('/manifest.json')?1024*1024:MAX;
   const response=await request(new URL(path,directory),{credentials:'omit',referrerPolicy:'no-referrer',redirect:'error',cache:path.endsWith('/manifest.json')?'no-cache':'force-cache'});assertCurrent();
   if(response.status!==200||!/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type')??''))throw new Error('E2EE_ADVICE_CATALOGUE_UNAVAILABLE');

@@ -96,5 +96,33 @@
     "error": "確認を受信できませんでした。保存した操作は引き続き利用できます。",
     "spread": "九つの顔",
     "timeline": "タイムライン"
+  },
+  "he": {
+    "message": "המבצע נשמר. שלח אותו שוב כדי לאשר את התוצאה.",
+    "retry": "ניסו מחדש את הפעולה שנשמרה",
+    "error": "אישור לא התקבל. הפעולה שנשמרה עדיין זמינה.",
+    "spread": "תשע פנים.",
+    "timeline": "קווי זמן"
+  },
+  "ar": {
+    "message": "تم حفظ العملية. أرسلها مرة أخرى للتأكد من النتيجة.",
+    "retry": "إعادة محاولة العملية المحفوظة",
+    "error": "لم يرد تأكيد، ولا تزال العملية المحفوظة متاحة.",
+    "spread": "الوجوه التسعة",
+    "timeline": "الجدول الزمني"
+  },
+  "ko": {
+    "message": "작업이 저장되었습니다. 결과를 확인하려면 다시 보내십시오.",
+    "retry": "저장된 작업을 다시 시도하기",
+    "error": "확인을 받지 못했습니다. 저장된 작업은 여전히 사용할 수 있습니다.",
+    "spread": "나인 페이스",
+    "timeline": "시간대"
+  },
+  "nl": {
+    "message": "De bewerking wordt opgeslagen. Verstuur deze opnieuw om het resultaat te bevestigen.",
+    "retry": "Opgeslagen bewerking opnieuw proberen",
+    "error": "Er is geen bevestiging ontvangen. De opgeslagen bewerking is nog steeds beschikbaar.",
+    "spread": "De negen gezichten",
+    "timeline": "Tijdlijn"
   }
 }

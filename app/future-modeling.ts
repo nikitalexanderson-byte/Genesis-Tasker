@@ -11,6 +11,10 @@ import uk from "./future-modeling-locales/uk.json";
 import zh from "./future-modeling-locales/zh.json";
 import tr from "./future-modeling-locales/tr.json";
 import ja from "./future-modeling-locales/ja.json";
+import he from "./future-modeling-locales/he.json";
+import ar from "./future-modeling-locales/ar.json";
+import ko from "./future-modeling-locales/ko.json";
+import nl from "./future-modeling-locales/nl.json";
 
 function baseLocale(language: "ru" | "en") {
   return {
@@ -20,7 +24,7 @@ function baseLocale(language: "ru" | "en") {
   };
 }
 
-const locales = { ru: baseLocale("ru"), en: baseLocale("en"), el, de, fr, es, it, pt, pl, sr, uk, zh, tr, ja };
+const locales = { ru: baseLocale("ru"), en: baseLocale("en"), el, de, fr, es, it, pt, pl, sr, uk, zh, tr, ja, he, ar, ko, nl };
 export type FutureModelingLanguage = keyof typeof locales;
 
 export function futureModelingCopy(language: string) {

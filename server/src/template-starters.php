@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 function genesisTemplateLanguage(mixed $language):string
 {
-    if(!is_string($language)||!in_array($language,['ru','en','de','el','es','fr','it','ja','pl','pt','sr','tr','uk','zh'],true))throw new InvalidArgumentException('TEMPLATE_LANGUAGE_INVALID');return $language;
+    if(!is_string($language)||!in_array($language,['ru','en','de','el','es','fr','it','ja','pl','pt','sr','tr','uk','zh','he','ar','ko','nl'],true))throw new InvalidArgumentException('TEMPLATE_LANGUAGE_INVALID');return $language;
 }
 
 function genesisSharedStarterTemplates(string $language):array

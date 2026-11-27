@@ -1,0 +1,1466 @@
+[
+  {
+    "name": "Areios Ridzomatos (Areios · التجذّر)",
+    "description": "إرساء أساس الإرادة وإيقاظ القوى الداخلية مثل جذور العالم في ثيوجونيا هسيود."
+  },
+  {
+    "name": "Areios Klidonios (Areios · متدفّق بقوّة)",
+    "description": "تيار من الطاقة البدائية يزيل الحواجز، مثل غضب أنهار هوميروس."
+  },
+  {
+    "name": "Areios Pnevmatikos (Areios · مُحيي الروح)",
+    "description": "الكلمة تعطي شكلاً للقصد وأول صرخة معركة تطير في الهواء."
+  },
+  {
+    "name": "Areios Pirivrontos (Areios · رعد النار)",
+    "description": "وميض الوعي وحرارة اللهب الإبداعي يشكلان درع الروح."
+  },
+  {
+    "name": "Areios Aiterios (Areios · سماوي)",
+    "description": "نور العقل النقي، يتوج أول انتصار على الجمود."
+  },
+  {
+    "name": "Areios Stenaros (Areios · مقتدر)",
+    "description": "الحصول على الصلابة الجسدية والدعم غير القابل للتدمير في الإجراء المختار."
+  },
+  {
+    "name": "Areios Gidrelatos (Areios · الفولاذ السيّال)",
+    "description": "مرونة الإستراتيجية والقدرة على تجنب العقبات والحفاظ على الضغط."
+  },
+  {
+    "name": "Areios Glavkopis (Areios · العيون البرّاقة)",
+    "description": "سطوع الفكر وحكمة أثينا يسمح لك برؤية جوهر الأشياء من خلال الضباب."
+  },
+  {
+    "name": "Areios Flegeton (Areios · العقل المتوقّد)",
+    "description": "حرق مكثف للأفكار وتدمير الشكوك بلا رحمة."
+  },
+  {
+    "name": "Areios Epoptes (Areios · التأمّل)",
+    "description": "إيجاد نقطة راحة ونظرة خارقة لمجال نشاطه."
+  },
+  {
+    "name": "Areios Enkespalos (Areios · مُلوّح بالرمح)",
+    "description": "التطبيق الدقيق للقوة ولحظة الضربة الحاسمة على الهدف المقصود."
+  },
+  {
+    "name": "Areios Katarsios (Areios · مُطهّر)",
+    "description": "تحويل العمل الجاد إلى إتقان خالص من خلال التطهير الداخلي."
+  },
+  {
+    "name": "Areios Pteroforos (Areios · مجنّح)",
+    "description": "سهولة التنفيذ وسرعة المناورة عندما يكون الفكر متقدما على الحركة."
+  },
+  {
+    "name": "Areios Akamatos (Areios · لا يكلّ)",
+    "description": "استمرارية العمل وحرارة الإرادة التي لا تنضب، وعدم معرفة التعب."
+  },
+  {
+    "name": "Areios Bazileios (Areios · ملكي)",
+    "description": "إرساء النظام في حياة الفرد وانتصار الروح المنظمة."
+  },
+  {
+    "name": "Areios Erkeios (Areios · حارس الحدود)",
+    "description": "تعزيز الحدود الشخصية وحماية المساحة الخاصة بك من التأثيرات الفوضوية الخارجية."
+  },
+  {
+    "name": "Areios Kallinikos (Areios · النصر المجيد)",
+    "description": "فرحة التغلب على الصعوبات بصدق والولاء للطريق المختار."
+  },
+  {
+    "name": "Areios Talaurkh (Areios · راسخ)",
+    "description": "الصبر والتحمل لتحمل أي ضغط من الظروف."
+  },
+  {
+    "name": "Areios Enialios (Areios · النشوة المحمومة)",
+    "description": "الحد الأقصى لتركيز جميع الموارد قبل الرمي الأخير للشهر."
+  },
+  {
+    "name": "Areios Isoteos (Areios · شبيه بالآلهة)",
+    "description": "حالة من التدفق تصبح فيها أفعال الإنسان شريكة في الإيقاع الإلهي."
+  },
+  {
+    "name": "Areios Polimetis (Areios · وافر الحكمة)",
+    "description": "استخدام المكر والاستراتيجية لتحقيق الأهداف بأقصر الطرق الممكنة."
+  },
+  {
+    "name": "Areios Melididzos (Areios · عذب الصوت كالعسل)",
+    "description": "قوة الكلمة المقنعة ومهارة التفاوض في النضال من أجل مصالحهم."
+  },
+  {
+    "name": "Areios Aiolos (Areios · كثير التغيّر)",
+    "description": "الحرية الداخلية والقدرة على التكيف الفوري مع الظروف العالمية المتغيرة."
+  },
+  {
+    "name": "Areios Daifron (Areios · حكمة النار)",
+    "description": "مزيج مثالي من القلب الساخن والعقل البارد والحساب."
+  },
+  {
+    "name": "Areios Pankrates (Areios · القدرة المطلقة)",
+    "description": "السيطرة الكاملة على الموارد الداخلية والوعي بقوتك."
+  },
+  {
+    "name": "Areios Khtonii (Areios · أرضي)",
+    "description": "التوحيد النهائي للنتائج التي تم تحقيقها خلال الشهر في العالم المادي."
+  },
+  {
+    "name": "Areios Polimnios (Areios · غزير المياه)",
+    "description": "تراكم الخبرة العميقة وإيجاد راحة البال بعد المرحلة النشطة."
+  },
+  {
+    "name": "Areios Fizizoos (Areios · واهب الحياة)",
+    "description": "انبثقت نسمة حياة جديدة من خلال انضباط الشهر وقسوته."
+  },
+  {
+    "name": "Areios Pirifos (Areios · حمل النار)",
+    "description": "نور الوعي، الذي ينير الطريق المرسوم، ويشير إلى آفاق جديدة."
+  },
+  {
+    "name": "Areios Giperion (Areios · جوّال في الأعالي)",
+    "description": "أعلى نقطة للانتصار الشخصي والانتقال إلى طاقات الشهر المقبل."
+  },
+  {
+    "name": "Antesis Filomeides (Antesis · مُحبّ الابتسام)",
+    "description": "مظهر من مظاهر السحر الجسدي ومتعة الحياة المولودة من انسجام المادة (Epithetus of Aphrodite in Homer)."
+  },
+  {
+    "name": "Antesis Pontogeniya (Antesis · مولود من البحر)",
+    "description": "الاندفاع العاطفي ونعومة المشاعر تتصاعد من الأعماق مثل المياه قبالة سواحل قبرص."
+  },
+  {
+    "name": "Antesis Ligis (Antesis · رنّان)",
+    "description": "تنفس سهل وأول همسة ربيع نقية تملأ الهواء بالإلهام."
+  },
+  {
+    "name": "Antesis Piriforos (Antesis · حمل النار)",
+    "description": "ومضة من الإثارة الإبداعية وحرارة الحب، تحول الفكرة إلى جاذبية حية."
+  },
+  {
+    "name": "Antesis Panmata (Antesis · الإشراق التام)",
+    "description": "وحدة المثل الجمالي والوعي النقي الذي ينير كل شيء."
+  },
+  {
+    "name": "Antesis Pankarpos (Antesis · الخصب الشامل)",
+    "description": "قوة النبت ووفرة المواد الواثقة المتجذرة في التربة."
+  },
+  {
+    "name": "Antesis Kalliroos (Antesis · الجريان الجميل)",
+    "description": "نقاء التدفق الداخلي وسلاسة الحركات التي لا تقابل العوائق."
+  },
+  {
+    "name": "Antesis Ierofillos (Antesis · ذو الأوراق المقدّسة)",
+    "description": "نفس الطبيعة المقدس والقدرة على سماع اهتزازات الحياة الدقيقة في الفضاء."
+  },
+  {
+    "name": "Antesis Termos (Antesis · دافئ)",
+    "description": "حرارة النضج الخصبة وطاقة الدفء الصادق في العلاقات الإنسانية."
+  },
+  {
+    "name": "Antesis Kharidotis (Antesis · واهب الفرح)",
+    "description": "حالة من كرم الروح واكتساب النعمة الداخلية."
+  },
+  {
+    "name": "Antesis Antefor (Antesis · حمل الزهور)",
+    "description": "ذروة الرخاء الجسدي وتزيين عالمك بثمار العمل الحقيقية."
+  },
+  {
+    "name": "Antesis Gidrelatos (Antesis · حامل الرطوبة)",
+    "description": "يملأك بعصائر الحياة ويغذي جذورك العميقة."
+  },
+  {
+    "name": "Antesis Pnevmatoforos (Antesis · حامل الروح)",
+    "description": "الإثارة الخفية التي تأتي مع الرياح الحرة والأفكار الجديدة."
+  },
+  {
+    "name": "Antesis Khrizofaes (Antesis · متألّق بالذهب)",
+    "description": "نار الخلق الشمسية، تغير المظهر والكاريزما."
+  },
+  {
+    "name": "Antesis Epiratos (Antesis · الجاذبية)",
+    "description": "مغناطيسية الشخصية وكمال الشكل يمكن إدراكها على مستوى الأثير."
+  },
+  {
+    "name": "Antesis Poliantos (Antesis · متعدّد الألوان)",
+    "description": "تنوع التعبيرات الإبداعية وثروة الموارد المتاحة هنا والآن."
+  },
+  {
+    "name": "Antesis Limenaios (Antesis · ساحلي)",
+    "description": "نقطة الاستراحة بالقرب من الماء، حيث تلتقي المشاعر مع الوعي الواضح بالأهداف."
+  },
+  {
+    "name": "Antesis Aurios (Antesis · تحمله الريح)",
+    "description": "التحرر من التقاليد ومتعة الانتقال السهل والسهل إلى المطلوب."
+  },
+  {
+    "name": "Antesis Flegeton (Antesis · ملتهب)",
+    "description": "شدة عيش كل لحظة والشغف الشديد بعملهم."
+  },
+  {
+    "name": "Antesis Olimpios (Antesis · أولمبي)",
+    "description": "الانتصار السامي للروح على العادي وبلوغ التدبير الإلهي."
+  },
+  {
+    "name": "Antesis Gestor (Antesis · مُقيم النظام)",
+    "description": "ترتيب المساحة من حولك من أجل الجمال والأداء الوظيفي."
+  },
+  {
+    "name": "Antesis Pelagios (Antesis · للبحر)",
+    "description": "عمق التعاطف والخيال اللامحدود الذي يغذي الحواس."
+  },
+  {
+    "name": "Antesis Psikhikos (Antesis · للروح)",
+    "description": "إقامة اتصالات دقيقة مع العالم والتوافق مع إيقاعات الناس من حولهم."
+  },
+  {
+    "name": "Antesis Pirivrontos (Antesis · رعد النار)",
+    "description": "قوة الرغبة غير القابلة للتدمير، قادرة على تغيير الواقع لتناسب احتياجاتك."
+  },
+  {
+    "name": "Antesis Uranios (Antesis · سماوي)",
+    "description": "الحب الفكري العالي والوعي بالجمال كقانون عالمي."
+  },
+  {
+    "name": "Antesis Terpsikhoros (Antesis · الابتهاج بالرقص)",
+    "description": "الاحتفال بالكائن الجسدي والتجسيد الإيقاعي للخطط في المادة."
+  },
+  {
+    "name": "Antesis Mirion (Antesis · عطِر)",
+    "description": "نشر نفوذك وترك بصمة طيبة في نفوس الآخرين."
+  },
+  {
+    "name": "Antesis Psitiros (Antesis · هامس)",
+    "description": "فهم المعاني السرية للجمال والمعرفة البديهية للطريق الصحيح."
+  },
+  {
+    "name": "Antesis Khrizostefanos (Antesis · مُتوّج بالذهب)",
+    "description": "تتويج جهود الربيع والحصول على نتيجة مشرقة."
+  },
+  {
+    "name": "Antesis Teos (Antesis · إلهي)",
+    "description": "الاندماج الكامل مع الطاقة الإبداعية للكون والانتقال إلى حرارة الصيف."
+  },
+  {
+    "name": "Psitiros Khtonios (Psitiros · أرضي)",
+    "description": "تغلغل الفكر في كثافة المادة وهمس الحياة الهادئ تحت التربة، مثل جذور العالم عند هسيود."
+  },
+  {
+    "name": "Psitiros Gidrelatos (Psitiros · حامل الرطوبة)",
+    "description": "سيولة الكلام والقدرة على إيجاد لغة مشتركة، مثل أنهار هوميروس التي تربط الأرض."
+  },
+  {
+    "name": "Psitiros Pnevmatikos (Psitiros · مُحيي الروح)",
+    "description": "حفيف أوراق الشجر وأول نفس من الوحي يأتي عبر الهواء والهواجس."
+  },
+  {
+    "name": "Psitiros Piripnoos (Psitiros · نفث النار)",
+    "description": "شرارة الذكاء وحرارة الاهتمام تضيء قلوب المستمعين."
+  },
+  {
+    "name": "Psitiros Angelos (Psitiros · الرسول)",
+    "description": "الحصول على رسالة واضحة من الذات العليا والاستعداد لنقلها إلى العالم."
+  },
+  {
+    "name": "Psitiros Godios (Psitiros · للطريق)",
+    "description": "النجاح في المهام وإيجاد الاتجاه الصحيح في متاهة الشؤون اليومية."
+  },
+  {
+    "name": "Psitiros Potamios (Psitiros · نهري)",
+    "description": "ديمومة التغيير ومتعة التجديد من خلال التدفق المستمر للمعلومات."
+  },
+  {
+    "name": "Psitiros Ptinos (Psitiros · مجنّح)",
+    "description": "سرعة الحركة وسهولة الفكر التي لا تعرف الحدود والحواجز."
+  },
+  {
+    "name": "Psitiros Flogeros (Psitiros · التوهّج)",
+    "description": "البلاغة والإقناع القادران على إذابة جليد عدم الثقة."
+  },
+  {
+    "name": "Psitiros Diaktoros (Psitiros · الدليل)",
+    "description": "إتقان الملاحة في الأنظمة المعقدة والقدرة على قيادة الآخرين."
+  },
+  {
+    "name": "Psitiros Agreios (Psitiros · جامح)",
+    "description": "إظهار القوة البدائية والوعي بغرائزك الطبيعية كدعم."
+  },
+  {
+    "name": "Psitiros Krenaios (Psitiros · للنبع)",
+    "description": "نقاء الحدس من أعماق اللاوعي كالمصادر المقدسة."
+  },
+  {
+    "name": "Psitiros Siriktis (Psitiros · صوت الناي)",
+    "description": "إيجاد الانسجام الداخلي والانسجام مع إيقاعات الطبيعة."
+  },
+  {
+    "name": "Psitiros Termopnoos (Psitiros · دافئ الأنفاس)",
+    "description": "الطاقة الحيوية وحرارة الحياة التي تملأ كل حركة بالمعنى."
+  },
+  {
+    "name": "Psitiros Nomios (Psitiros · يرعى القطيع)",
+    "description": "معرفة قوانين الطبيعة والقدرة على إدارة مواردك بما يتوافق مع الكل."
+  },
+  {
+    "name": "Psitiros Kerdios (Psitiros · جالب الكسب)",
+    "description": "القدرة على الاستفادة من أي اتصال وتجسيد الأفكار من خلال الاتصالات."
+  },
+  {
+    "name": "Psitiros Limenaios (Psitiros · للمرفأ)",
+    "description": "فن إبطاء الزمن وإيجاد مكان آمن لمعالجة التجربة."
+  },
+  {
+    "name": "Psitiros Pteroforos (Psitiros · حامل الأجنحة)",
+    "description": "تلقي الأخبار الهامة وتوسيع الآفاق من خلال الاتصالات الخارجية."
+  },
+  {
+    "name": "Psitiros Akamatos (Psitiros · لا يكلّ)",
+    "description": "قوة الروح في الشؤون واهتمام لا نهاية له باستكشاف الجديد."
+  },
+  {
+    "name": "Psitiros Episkopos (Psitiros · يقظ)",
+    "description": "القدرة على رؤية الدوافع الخفية والتحكم في تدفق المعلومات."
+  },
+  {
+    "name": "Psitiros Germaios (Psitiros · للحدّ الفاصل)",
+    "description": "وتحديد حدود المسموحات وحماية مصالحهم عند تقاطع المجالات المختلفة."
+  },
+  {
+    "name": "Psitiros Naustolos (Psitiros · مرشد السفن)",
+    "description": "إدارة عواطفك في محيط التفاعلات الاجتماعية"
+  },
+  {
+    "name": "Psitiros Anemios (Psitiros · تحمله الريح)",
+    "description": "حرية انتشار نفوذ الفرد وسهولة إقامة علاقات جديدة."
+  },
+  {
+    "name": "Psitiros Aiton (Psitiros · لافح)",
+    "description": "شدة المعرفة والفضول الشديد، وكشف جوهر الأشياء."
+  },
+  {
+    "name": "Psitiros Psikhopompos (Psitiros · دليل الأرواح)",
+    "description": "الانتقال من الكلمات إلى المعاني العميقة وتحول الذكاء إلى حكمة."
+  },
+  {
+    "name": "Psitiros Geokhos (Psitiros · حمل الأرض)",
+    "description": "لتأكيد رسالته في العالم المادي وتوافقها مع الواقع."
+  },
+  {
+    "name": "Psitiros Polifloisvos (Psitiros · عالي الزئير)",
+    "description": "قوة الاعتراف العام وثمار كلماتك التي يتردد صداها في كل مكان."
+  },
+  {
+    "name": "Psitiros Aerios (Psitiros · الهواء)",
+    "description": "الوصول إلى قمم الفهم ووضوح مراجعة المسار الربيعي الذي تم اجتيازه."
+  },
+  {
+    "name": "Psitiros Lampas (Psitiros · حامل المشعل)",
+    "description": "نقل نور المعرفة بشكل أكبر والتوضيح النهائي لجميع الخطط."
+  },
+  {
+    "name": "Psitiros Panteos (Psitiros · الألوهة الكاملة)",
+    "description": "اندماج الصوت الفردي مع جوقة الكون قبل دخول الصيف."
+  },
+  {
+    "name": "Aigle Khtoniya (Aigle · أرضي)",
+    "description": "التأكيد على النظام الشمسي في العالم المادي وكثافة المادة التي تتخلل الضوء."
+  },
+  {
+    "name": "Aigle Pontiya (Aigle · للبحر)",
+    "description": "انعكاس الحقيقة الأسمى في مرآة العواطف ونقاء المشاعر تحت أشعة الشمس الحارقة."
+  },
+  {
+    "name": "Aigle Pnevmatika (Aigle · مُحيي الروح)",
+    "description": "شفافية الفكر ووضوح الحكم عندما يكون الهواء ساكنًا ومشرقًا."
+  },
+  {
+    "name": "Aigle Piriforos (Aigle · حمل النار)",
+    "description": "ذروة الطاقة الشمسية وحرارة إدراك طبيعتك الحقيقية عند الانقلاب."
+  },
+  {
+    "name": "Aigle Aiteriya (Aigle · سماوي)",
+    "description": "أثير العقل النقي، الذي لا يعيقه الشك، وانتصار الشعار الإلهي."
+  },
+  {
+    "name": "Aigle Sterea (Aigle · صلب)",
+    "description": "بلورة الخطط وإعطاء الأفكار شكلاً غير قابل للتدمير مثل جرانيت الدلف."
+  },
+  {
+    "name": "Aigle Katarsios (Aigle · مُطهّر)",
+    "description": "الخلاص من الظلمة الداخلية بنور الضمير المباشر وتنقية النفس."
+  },
+  {
+    "name": "Aigle Loksias (Aigle · للوحي)",
+    "description": "القدرة على رؤية الأنماط الخفية للمستقبل من خلال الحدس والمنطق."
+  },
+  {
+    "name": "Aigle Flogia (Aigle · ملتهب)",
+    "description": "حرق الأوهام والمفاهيم الخاطئة في نار الحقيقة التي لا ترحم."
+  },
+  {
+    "name": "Aigle Epoptes (Aigle · التأمّل)",
+    "description": "تحقيق الموضوعية والنظرة لحياتك من موقع مراقب محايد."
+  },
+  {
+    "name": "Aigle Nomiya (Aigle · ملتزم بالقانون)",
+    "description": "إنشاء مدونة شخصية من القواعد والانضباط التي تنظم الحياة اليومية."
+  },
+  {
+    "name": "Aigle Kalliroos (Aigle · الجريان الجميل)",
+    "description": "الانسجام بين الإرادة والظروف عندما تتدفق الحياة على طريق القدر."
+  },
+  {
+    "name": "Aigle Musagetis (Aigle · قائد ربّات الفنون)",
+    "description": "الإلهام ولد من النظام الصارم والمهارة، وليس من الفوضى."
+  },
+  {
+    "name": "Aigle Akamatos (Aigle · لا يكلّ)",
+    "description": "ثبات الاحتراق الداخلي وطاقة الخلق المتوازنة التي لا تعرف أي نكسات."
+  },
+  {
+    "name": "Aigle Bazileios (Aigle · ملكي)",
+    "description": "وعي المرء بأنه صاحب السيادة على حالته الداخلية وإرادة القوة."
+  },
+  {
+    "name": "Aigle Epikurios (Aigle · مُعين)",
+    "description": "تعزيز الصحة الجسدية والعناية بالجسد وعاء للروح."
+  },
+  {
+    "name": "Aigle Delios (Aigle · ظاهر للعيان)",
+    "description": "الخروج من الظل وإظهار مواهبك علانية واعتراف العالم بمزاياك."
+  },
+  {
+    "name": "Aigle Fevos (Aigle · مُشعّ)",
+    "description": "نقاء النوايا المطلق وإشعاع الكاريزما التي تجذب الأشخاص ذوي التفكير المماثل."
+  },
+  {
+    "name": "Aigle Pitios (Aigle · بيثي)",
+    "description": "ضربة دقيقة على الهدف، وهزيمة الوحوش الداخلية (Pyphon) بسهام العقل."
+  },
+  {
+    "name": "Aigle Giperioniya (Aigle · الأعلى)",
+    "description": "شعور بالارتباط بالدورات الكونية والسلام التجاوزي."
+  },
+  {
+    "name": "Aigle Pagia (Aigle · راسخ)",
+    "description": "تجسيد الاستراتيجيات طويلة المدى والوضع الواثق."
+  },
+  {
+    "name": "Aigle Gigieya (Aigle · شافٍ)",
+    "description": "التعافي من خلال الاتصال بالعناصر واكتساب النزاهة."
+  },
+  {
+    "name": "Aigle Profitis (Aigle · تنبّؤي)",
+    "description": "مهارة التنبؤ والقدرة على التصرف قبل الأحداث."
+  },
+  {
+    "name": "Aigle Aktis (Aigle · باعث الأشعة)",
+    "description": "ركز على الرئيسي واقطع كل الثانوي."
+  },
+  {
+    "name": "Aigle Pankratis (Aigle · القدرة المطلقة)",
+    "description": "الامتلاك الكامل لمواردهم وقوة الذكاء الواعي."
+  },
+  {
+    "name": "Aigle Geodaitis (Aigle · قياس الأرض)",
+    "description": "قم بتقييم ما تم تحقيقه خلال الشهر وقم بإجراء تغييرات على مقياس المسار الخاص بك."
+  },
+  {
+    "name": "Aigle Limenis (Aigle · للمرفأ)",
+    "description": "راحة الشعور بعد مرحلة نشطة والاستعداد لفترة من التحول العميق."
+  },
+  {
+    "name": "Aigle Aeriya (Aigle · سامٍ)",
+    "description": "الشعور بالتحليق فوق الموقف وسهولة اتخاذ القرارات الصعبة."
+  },
+  {
+    "name": "Aigle Geliu (Aigle · شمسي)",
+    "description": "تندمج تمامًا مع طاقة النجاح وتشعر بأنك مصدر ضوء للآخرين."
+  },
+  {
+    "name": "Aigle Monas (Aigle · موحّد)",
+    "description": "عد إلى نقطة التجمع الأصلية قبل أن تدخل صياغة هيفايستوس الحرارة."
+  },
+  {
+    "name": "Kauma Khtoniya (Kauma · أرضي)",
+    "description": "ترسيخ أسس الإرادة على أرض صلبة وإعداد المادة اللازمة للإنجازات المستقبلية."
+  },
+  {
+    "name": "Kauma Gidrelatos (Kauma · مصقول ومُقوّى)",
+    "description": "تبريد الاندفاعات الأولى واكتساب الحزم من خلال اصطدام نار الرغبة بماء الانضباط."
+  },
+  {
+    "name": "Kauma Fisates (Kauma · مُضرِم)",
+    "description": "طاقة التنفس التي يبعثها فراء الحداد، تملأ الفضاء بالقدرة على بدء مشروع تجاري كبير."
+  },
+  {
+    "name": "Kauma Piripnoos (Kauma · نفث النار)",
+    "description": "الدخول في إيقاع العمل والوصول إلى درجة الحرارة التي يمكن عندها إجراء تغييرات جذرية."
+  },
+  {
+    "name": "Kauma Aiteriya (Kauma · سماوي)",
+    "description": "رؤية للصورة المثالية للمنتج (الغرض) الذي يتم العمل من أجله."
+  },
+  {
+    "name": "Kauma Akmona (Kauma · السندان)",
+    "description": "إيجاد الصمود أمام ضربات القدر والمثابرة في الحرفة المختارة."
+  },
+  {
+    "name": "Kauma Katarsios (Kauma · مُطهّر)",
+    "description": "فصل الخبث عن المعدن النقي والتخلص من العادات غير الضرورية من خلال الإجهاد."
+  },
+  {
+    "name": "Kauma Pnevmatikos (Kauma · مُحيي الروح)",
+    "description": "سهولة التفكير التي تأتي أثناء العمل الرتيب ولكن الواعي."
+  },
+  {
+    "name": "Kauma Flogia (Kauma · التوهّج)",
+    "description": "احتراق شديد للعاطفة تجاه العمل، عندما يصبح العمل صلاة."
+  },
+  {
+    "name": "Kauma Epoptes (Kauma · التأمّل)",
+    "description": "القدرة على رؤية العيوب الخفية في تصرفاتهم وتصحيحها في الوقت المناسب."
+  },
+  {
+    "name": "Kauma Politekhnos (Kauma · متعدّد المهارات)",
+    "description": "يوم تطبيق جميع المهارات المتراكمة والتجسيد الجسدي للأفكار في المادة."
+  },
+  {
+    "name": "Kauma Potamios (Kauma · نهري)",
+    "description": "سيولة المعدن المنصهر والقدرة على توجيه الطاقة في الاتجاه الصحيح."
+  },
+  {
+    "name": "Kauma Ptinos (Kauma · مجنّح)",
+    "description": "إلهام السيد، عندما تصبح الأداة امتدادًا لليد وتطير نحو الهدف."
+  },
+  {
+    "name": "Kauma Akamatos (Kauma · لا يكلّ)",
+    "description": "ذروة القدرة على العمل وحرارة الإرادة، وعدم معرفة التعب حتى في أشد درجات الحرارة."
+  },
+  {
+    "name": "Kauma Bazileios (Kauma · ملكي)",
+    "description": "قوة الخالق على المادة وانتصار الخلق الواعي."
+  },
+  {
+    "name": "Kauma Stereos (Kauma · راسخ)",
+    "description": "اختبار النتائج من حيث القوة وتعزيز النجاحات على أرض الواقع."
+  },
+  {
+    "name": "Kauma Krenaios (Kauma · للنبع)",
+    "description": "إيجاد مصادر داخلية للطاقة لاستدامة الحريق في المشاريع طويلة المدى."
+  },
+  {
+    "name": "Kauma Aurios (Kauma · تحمله الريح)",
+    "description": "الانتشار الحر لتأثير السيد وإلقاء نظرة جديدة على العمليات المعتادة."
+  },
+  {
+    "name": "Kauma Gefaistios (Kauma · لـHephaestus)",
+    "description": "مناشدة مباشرة للشرارة الإلهية للخلق وتقديس العمل."
+  },
+  {
+    "name": "Kauma Olimpios (Kauma · أولمبي)",
+    "description": "الاعتراف بقيمة العمل المنجز من موقع المعاني العليا."
+  },
+  {
+    "name": "Kauma Ergates (Kauma · مجتهد)",
+    "description": "الانغماس في التفاصيل والطحن الدقيق يتم تحقيقه من خلال انضباط الأرض."
+  },
+  {
+    "name": "Kauma Limenaios (Kauma · للمرفأ)",
+    "description": "القدرة على إراحة العقل في الوقت المناسب، مع الحفاظ على السيطرة على العملية."
+  },
+  {
+    "name": "Kauma Psitiros (Kauma · حفيف)",
+    "description": "فهم بديهي لمتى يجب توجيه ضربة حاسمة ومتى يجب الانتظار."
+  },
+  {
+    "name": "Kauma Lampas (Kauma · حامل المشعل)",
+    "description": "نور الخبرة ينير طريق الآخرين ويشير إلى إتقان التنفيذ."
+  },
+  {
+    "name": "Kauma Pankrates (Kauma · القدرة المطلقة)",
+    "description": "الثقة الكاملة واستكمال المرحلة الرئيسية من التحول."
+  },
+  {
+    "name": "Kauma Ridzomatos (Kauma · التجذّر)",
+    "description": "إنهاء نتائج الشهر وزيادة الوزن في مجالك المهني."
+  },
+  {
+    "name": "Kauma Klidonios (Kauma · متموّج)",
+    "description": "التفريغ العاطفي بعد التوتر الطويل والخروج عن المعتاد."
+  },
+  {
+    "name": "Kauma Pnevma (Kauma · الروح)",
+    "description": "تنفس على أكمل وجه وأدرك الحرية التي يتم تحقيقها من خلال العمل الجاد والصادق."
+  },
+  {
+    "name": "Kauma Flegeton (Kauma · ملتهب)",
+    "description": "الشعلة الأبدية للحرفية التي تستمر في الاشتعال في الداخل حتى عند الانتهاء من العمل."
+  },
+  {
+    "name": "Kauma Telos (Kauma · الإتمام)",
+    "description": "تحقيق هدف الشهر والانتقال إلى قطف الثمار في الدورة القادمة."
+  },
+  {
+    "name": "Karpos Khtonios (Karpos · أرضي)",
+    "description": "إيجاد موطئ قدم حقيقي وملموس والنتيجة المادية الأولى للجهد الصيفي."
+  },
+  {
+    "name": "Karpos Gidrelatos (Karpos · ينال الغذاء)",
+    "description": "الإشباع العاطفي وفرحة رؤية الجهد يؤتي ثماره المغذية."
+  },
+  {
+    "name": "Karpos Pnevmatikos (Karpos · مُحيي الروح)",
+    "description": "فهم قيمة الفاكهة والاعتراف بالخبرة المكتسبة من خلال هذه العملية."
+  },
+  {
+    "name": "Karpos Pirivrontos (Karpos · رعد النار)",
+    "description": "إن طاقة النضج التي تبلغ ذروتها تحت أشعة الشمس الحارقة تحول الكمية إلى نوعية."
+  },
+  {
+    "name": "Karpos Aiterios (Karpos · سماوي)",
+    "description": "أعلى تقديس للثمار وامتنان للكون على الرحمة الظاهرة."
+  },
+  {
+    "name": "Karpos Gestiaios (Karpos · للموقد)",
+    "description": "تعزيز منزلك ومركزك الداخلي، وخلق مساحة من الأمن والنظام."
+  },
+  {
+    "name": "Karpos Kalliroos (Karpos · الجريان الجميل)",
+    "description": "الانسجام في الأسرة والعلاقات الوثيقة وطاقة الانتماء الناعمة."
+  },
+  {
+    "name": "Karpos Psikhikos (Karpos · للروح)",
+    "description": "السلام الفكري والمحادثة الهادئة في دائرة من الأشخاص ذوي التفكير المماثل تحت حماية الجدران."
+  },
+  {
+    "name": "Karpos Flogeros (Karpos · التوهّج)",
+    "description": "إن حرارة نار المنزل، التي تدفئ ولكنها لا تحترق، هي رمز للحيوية التي لا تنطفئ."
+  },
+  {
+    "name": "Karpos Epoptes (Karpos · التأمّل)",
+    "description": "نظرة حكيمة إلى ممتلكاتهم ووعيهم بالمسؤولية تجاه العالم المخلوق."
+  },
+  {
+    "name": "Karpos Polikarpos (Karpos · غزير الثمار)",
+    "description": "يوم من التجسيد الأقصى وتراكم الموارد للمستقبل."
+  },
+  {
+    "name": "Karpos Limenaios (Karpos · للمرفأ)",
+    "description": "حالة من الأمن والصمت، مثل سفينة تدخل ميناءً مملوءًا بالبضائع."
+  },
+  {
+    "name": "Karpos Pteroforos (Karpos · حامل الأجنحة)",
+    "description": "حرية الثروة وفرصة مشاركة ثمار عملك."
+  },
+  {
+    "name": "Karpos Akamatos (Karpos · لا يكلّ)",
+    "description": "قوة الحياة، الكامنة في الحبوب، التي تستعد لفصل الشتاء لترتفع مرة أخرى في الربيع."
+  },
+  {
+    "name": "Karpos Bazileios (Karpos · ملكي)",
+    "description": "اكتمال السلطة على أراضي الفرد وانتصار سيد مصيره."
+  },
+  {
+    "name": "Karpos Geokhos (Karpos · حمل الأرض)",
+    "description": "وضع الحدود والتوزيع العادل للمنافع."
+  },
+  {
+    "name": "Karpos Potamios (Karpos · نهري)",
+    "description": "الكرم الذي ينبع من الإسراف، يغذي كل شيء حوله ويقوي الروابط مع العالم."
+  },
+  {
+    "name": "Karpos Psitiros (Karpos · حفيف)",
+    "description": "نقل الخبرة والمعرفة إلى الأجيال الجديدة في ظل الحصاد."
+  },
+  {
+    "name": "Karpos Lampas (Karpos · حامل المشعل)",
+    "description": "نور العقل الهادف إلى الحفاظ على ما تم تحقيقه وحماية قيمه."
+  },
+  {
+    "name": "Karpos Olimpios (Karpos · أولمبي)",
+    "description": "حالة من النعمة والانتماء إلى قوانين الطبيعة والآلهة الأبدية."
+  },
+  {
+    "name": "Karpos Stenaros (Karpos · مقتدر)",
+    "description": "التحمل الجسدي وقوة الروح، يتم اكتسابهما من خلال الشبع والثقة."
+  },
+  {
+    "name": "Karpos Krenaios (Karpos · للنبع)",
+    "description": "اكتشف الاحتياطيات المخفية ومصادر الطاقة الداخلية داخل Basilee الخاص بك."
+  },
+  {
+    "name": "Karpos Aurios (Karpos · تحمله الريح)",
+    "description": "سهولة توديع ما تجاوز عمره وإخلاء المساحة قبل الخريف."
+  },
+  {
+    "name": "Karpos Aiton (Karpos · لافح)",
+    "description": "تركيز الطاقة الشمسية في نتائج العمل، تحويل حقول الذهب إلى حكمة ذهبية."
+  },
+  {
+    "name": "Karpos Episkopos (Karpos · يقظ)",
+    "description": "الفحص النهائي لاستعداد جميع الأنظمة لتغيير الموسم والمغادرة إلى العالم الداخلي."
+  },
+  {
+    "name": "Karpos Ridzomatos (Karpos · التجذّر)",
+    "description": "الدمج النهائي لجميع إنجازات الصيف في الذاكرة والمادة."
+  },
+  {
+    "name": "Karpos Klidonios (Karpos · متموّج)",
+    "description": "هاجس التغييرات والاستعداد العاطفي للنزول إلى أعماق الخريف."
+  },
+  {
+    "name": "Karpos Pneuma (Karpos · الروح)",
+    "description": "التنفس النقي من الاكتمال والوعي بنزاهة نصف العام المعاش."
+  },
+  {
+    "name": "Karpos Flegeton (Karpos · ملتهب)",
+    "description": "حرارة الوداع لشمس الصيف تضعف الثمار قبل تخزينها لفترة طويلة."
+  },
+  {
+    "name": "Karpos Telos (Karpos · الإتمام)",
+    "description": "نقطة الامتلاء المطلق والانتقال إلى طاقات الخريف وديونيسوس والذبول."
+  },
+  {
+    "name": "Trige Khtoniya (Trige · أرضي)",
+    "description": "ملامسة لحم الأرض وبدء قطف ما ينضج؛ يوم السلال الثقيلة والإغداق الجسدي."
+  },
+  {
+    "name": "Trige Gidrelatos (Trige · حامل الرطوبة)",
+    "description": "انطلاق عصير الحياة والفرحة الأولى من سيولة الوجود عندما تفرز الثمار رطوبتها."
+  },
+  {
+    "name": "Trige Pnevmatika (Trige · مُحيي الروح)",
+    "description": "رائحة التغيير المسكرة في الهواء وهاجس التحرر من هموم الصيف."
+  },
+  {
+    "name": "Trige Piripnoos (Trige · نفث النار)",
+    "description": "حرارة تخمر الفكرة والتحول الداخلي الذي يحول المادة إلى طاقة."
+  },
+  {
+    "name": "Trige Aiteriya (Trige · سماوي)",
+    "description": "اللمسة الأولى للجنون الإلهي والوضوح الإلهي من خلال التجرد من الأعباء الأرضية."
+  },
+  {
+    "name": "Trige Stenara (Trige · مقتدر)",
+    "description": "تقوية الروح في مواجهة ذبول الطبيعة الحتمي؛ قوة الكرمة المتمسكة بالتربة."
+  },
+  {
+    "name": "Trige Klidonios (Trige · متدفّق بقوّة)",
+    "description": "اندفاع العواطف والاستعداد للاستسلام لتدفق الحياة دون خوف من الغرق في المشاعر."
+  },
+  {
+    "name": "Trige Psitiros (Trige · حفيف)",
+    "description": "محادثات سرية مع الريح في الحدائق الفارغة وفهم بديهي لإيقاعات الطبيعة."
+  },
+  {
+    "name": "Trige Akamatos (Trige · لا يكلّ)",
+    "description": "رقصة الحياة المتواصلة رغم البرد؛ فرحة الحركة."
+  },
+  {
+    "name": "Trige Bakkheios (Trige · باخوسي)",
+    "description": "قمة اللذة المقدسة وتحقيق الوحدة مع كل شيء من خلال تدمير حدود الذات."
+  },
+  {
+    "name": "Trige Ridzomatos (Trige · التجذّر)",
+    "description": "الغوص العميق في أسس كيان الإنسان والبحث عن موطئ قدم في ما هو أبدي وليس مؤقت."
+  },
+  {
+    "name": "Trige Katarsios (Trige · مُطهّر)",
+    "description": "غسل الروح من ذنب التجربة وإسقاط الأقنعة التي أصبحت ضيقة جداً."
+  },
+  {
+    "name": "Trige Pteroforos (Trige · مجنّح)",
+    "description": "خفة الروح التي وصلت إلى تسمم الحرية، وهروب الفكر فوق عالم نائم."
+  },
+  {
+    "name": "Trige Flogeros (Trige · التوهّج)",
+    "description": "نار النشوة تحرق بقايا الأنا، وحرارة الشغف الحقيقي بالوجود."
+  },
+  {
+    "name": "Trige Bazileios (Trige · ملكي)",
+    "description": "انتصار ديونيسوس باعتباره سيد الحرية الداخلية وسيادة الروح على المادة."
+  },
+  {
+    "name": "Trige Erkeios (Trige · حارس الحدود)",
+    "description": "وضع حدود جديدة للحفاظ على الشرارة الداخلية في الشفق القادم من العام."
+  },
+  {
+    "name": "Trige Potamios (Trige · نهري)",
+    "description": "مرور الوقت، يحمل الأشكال القديمة؛ يوم القبول بحتمية التغيير."
+  },
+  {
+    "name": "Trige Aiola (Trige · كثير التغيّر)",
+    "description": "لعبة الظلال والضوء، وهشاشة الواقع، والقدرة على إيجاد الحقيقة بأشكال مختلفة."
+  },
+  {
+    "name": "Trige Akton (Trige · لافح)",
+    "description": "آخر توهج مشرق لنار المخيم في الخريف وتركيز الإرادة قبل الهبوط."
+  },
+  {
+    "name": "Trige Epoptes (Trige · التأمّل)",
+    "description": "نظرة عبر حجاب الاعتيادية وفهم المعاني الخفية في صمت الخريف."
+  },
+  {
+    "name": "Trige Terpsikhton (Trige · إبهاج الأرض)",
+    "description": "الامتنان للتربة على الثمار وطقوس عودة بعض القوى إلى العالم."
+  },
+  {
+    "name": "Trige Pelagios (Trige · للبحر)",
+    "description": "غوص عميق في محيط اللاوعي ولقاء مع وجوهكم المخفية."
+  },
+  {
+    "name": "Trige Pteroenta (Trige · مكسوّ بالريش)",
+    "description": "سرعة مرور الأيام والقدرة على التقاط اللحظة هنا والآن."
+  },
+  {
+    "name": "Trige Lampas (Trige · حامل المشعل)",
+    "description": "يضيء الضوء في الداخل لينير الطريق في الظلام القادم؛ الوضوح في التسمم."
+  },
+  {
+    "name": "Trige Ierofantis (Trige · كاشف المقدّس)",
+    "description": "الدخول في أسرار النفس والوعي بقدسية كل نفس."
+  },
+  {
+    "name": "Trige Pandoker (Trige · احتضان كل شيء)",
+    "description": "يوم القبول النهائي لنتائج الحصاد والتواضع قبل الدورة الطبيعية."
+  },
+  {
+    "name": "Trige Krenaios (Trige · للنبع)",
+    "description": "العودة إلى أصول القوة والبحث عن السيادة الخالصة في النفس في رحلة طويلة إلى الأسفل."
+  },
+  {
+    "name": "Trige Psitirismos (Trige · هامس)",
+    "description": "حفيف الأوراق الأخير ينقل حكمة الدورة المنتهية ولايتها."
+  },
+  {
+    "name": "Trige Flegenton (Trige · اضطرام النار)",
+    "description": "نار مطهرة تكمل فترة التجمع وتهيئ مكانا للصمت."
+  },
+  {
+    "name": "Trige Telontika (Trige · بادئ النهاية)",
+    "description": "نهاية شهر النسيان والانتقال إلى جذور الجحيم المخفية."
+  },
+  {
+    "name": "Katodos Khtonios (Katodos · أرضي)",
+    "description": "إن لمس العالم السفلي وإدراك المحدودية المادية للأشياء، يؤدي إلى ظهور حكمة جديدة."
+  },
+  {
+    "name": "Katodos Klidonios (Katodos · متدفّق بقوّة)",
+    "description": "القبول العاطفي لحتمية النسب وتدفق المشاعر نحو الداخل وليس الخارج."
+  },
+  {
+    "name": "Katodos Pnevmatikos (Katodos · مُحيي الروح)",
+    "description": "صوت الحدس الهادئ في الفضاء الفارغ، الذي يفصل المعاني الحقيقية عن الغرينية."
+  },
+  {
+    "name": "Katodos Piripnoos (Katodos · نفث النار)",
+    "description": "الحرارة الداخلية التي تمنع النفس من التجمد عند الغسق؛ النار التي تشتعل في أعماق المادة."
+  },
+  {
+    "name": "Katodos Aiterios (Katodos · سماوي)",
+    "description": "ضوء الوعي الخفي في الظلام، نقطة السكون في وسط المتاهة."
+  },
+  {
+    "name": "Katodos Stenaros (Katodos · مقتدر)",
+    "description": "مقاومة الضغوط الخارجية والقوة في العزلة."
+  },
+  {
+    "name": "Katodos Gidrelatos (Katodos · جارٍ)",
+    "description": "تذويب الاستياء القديم وتنقية الذاكرة العاطفية في مياه النسيان."
+  },
+  {
+    "name": "Katodos Psitiros (Katodos · هامس)",
+    "description": "المحادثة مع ظلال الأجداد والحصول على الإجابات من خلال الأحلام والهواجس."
+  },
+  {
+    "name": "Katodos Akamatos (Katodos · لا يكلّ)",
+    "description": "استمرارية العمل الداخلي غير المرئي للعالم، ولكنها تشكل قوة مستقبلية."
+  },
+  {
+    "name": "Katodos Epoptes (Katodos · التأمّل)",
+    "description": "أن تنظر إلى الهاوية دون خوف وتدرك أن الهاوية جزء منك."
+  },
+  {
+    "name": "Katodos Ridzomatos (Katodos · التجذّر)",
+    "description": "الاختراق في أسس الوجود والاتصال بالقوة الأصلية للأرض."
+  },
+  {
+    "name": "Katodos Katarsios (Katodos · مُطهّر)",
+    "description": "تسليط الميزان الأخير من الأنا الزائفة؛ النقاء يتحقق من خلال الشعور بالوحدة."
+  },
+  {
+    "name": "Katodos Pteroforos (Katodos · مجنّح)",
+    "description": "حرية الروح التي لم تعد مقيدة بالصفات الخارجية للنجاح."
+  },
+  {
+    "name": "Katodos Flegeton (Katodos · التوهّج)",
+    "description": "لهب تطهير نهر تحت الأرض، يذيب المخاوف ويحولها إلى عزيمة."
+  },
+  {
+    "name": "Katodos Bazileios (Katodos · ملكي)",
+    "description": "لقب سيد ظلاله؛ انتصار الإرادة في عالم اللامرئي."
+  },
+  {
+    "name": "Katodos Erkeios (Katodos · حارس الحدود)",
+    "description": "قم بحماية معبدك الداخلي من الفوضى والتأثيرات الخارجية في أحلك الليل."
+  },
+  {
+    "name": "Katodos Potamios (Katodos · نهري)",
+    "description": "قبول تيار من الزمن يغسل كل ما هو عابر، ويترك فقط الأبدي."
+  },
+  {
+    "name": "Katodos Psikhikos (Katodos · للروح)",
+    "description": "التوليف الفكري للخبرة المتراكمة وفهم الأساطير الشخصية."
+  },
+  {
+    "name": "Katodos Lampas (Katodos · حامل المشعل)",
+    "description": "نور القدوة والإرادة الشخصية، ينير طريق الآخرين في أوقات الظلام الجماعي."
+  },
+  {
+    "name": "Katodos Isoteos (Katodos · شبيه بالآلهة)",
+    "description": "حالة من الراحة يصبح فيها الإنسان مساوياً للخلود في أعماقه."
+  },
+  {
+    "name": "Katodos Politekhnos (Katodos · متعدّد المهارات)",
+    "description": "إتقان التحول الداخلي والقدرة على الإبداع في ظل القيود."
+  },
+  {
+    "name": "Katodos Krenaios (Katodos · للنبع)",
+    "description": "البحث عن مصادر سرية للطاقة داخل نفسك عند نفاد المصادر الخارجية."
+  },
+  {
+    "name": "Katodos Aurios (Katodos · تحمله الريح)",
+    "description": "نضارة الفكر تخترق كثافة الأرض؛ هاجس براعم المستقبل."
+  },
+  {
+    "name": "Katodos Pirivrontos (Katodos · رعد النار)",
+    "description": "قوة الإمكانات الخفية، الجاهزة للانفجار بالحياة في وقتها."
+  },
+  {
+    "name": "Katodos Pankrates (Katodos · القدرة المطلقة)",
+    "description": "التكامل الكامل لجميع أجزاء شخصيتك، بما في ذلك أحلكها."
+  },
+  {
+    "name": "Katodos Geokhos (Katodos · حمل الأرض)",
+    "description": "التوحيد النهائي في وضع الوصي على كنوزهم الداخلية."
+  },
+  {
+    "name": "Katodos Pelagios (Katodos · للبحر)",
+    "description": "الغوص العميق في محيط اللاوعي الجماعي قبل الذهاب للصيد."
+  },
+  {
+    "name": "Katodos Nomios (Katodos · يرعى القطيع)",
+    "description": "القدرة على توجيه غرائزك والتحكم في طبيعتك الداخلية."
+  },
+  {
+    "name": "Katodos Flegenton (Katodos · ملتهب)",
+    "description": "ومضة الوعي الأخيرة قبل الانتقال إلى المرحلة النشطة من فصل الشتاء."
+  },
+  {
+    "name": "Katodos Telos (Katodos · الإتمام)",
+    "description": "نهاية فترة من اكتشاف الذات في صمت والاستعداد للصيد البري الشهر المقبل."
+  },
+  {
+    "name": "Agrotera Khtoniya (Agrotera · أرضي)",
+    "description": "القدرة على قراءة علامات العالم المادي والوقوف بثبات على طريق مصيرك."
+  },
+  {
+    "name": "Agrotera Klidonios (Agrotera · متموّج)",
+    "description": "الحس البديهي، مثل جريان الماء، يخبرنا أين يختبئ الهدف الحقيقي."
+  },
+  {
+    "name": "Agrotera Pnevmatikos (Agrotera · مُحيي الروح)",
+    "description": "نقاء النفس ونضارة الفكر تحلق أمام الراكب في الهواء الحر."
+  },
+  {
+    "name": "Agrotera Piripnoos (Agrotera · نفث النار)",
+    "description": "حرارة الاضطهاد وإثارة المكتشف تدفئ القلب تحسبا للطقس البارد."
+  },
+  {
+    "name": "Agrotera Aiteriya (Agrotera · سماوي)",
+    "description": "نظرة محايدة للعالم من أعالي قمم الجبال، حيث تتحرر الروح من الضجة."
+  },
+  {
+    "name": "Agrotera Stenara (Agrotera · مقتدر)",
+    "description": "القوة الجسدية والإرادية اللازمة للحفاظ على السيطرة على الموقف الصعب."
+  },
+  {
+    "name": "Agrotera Gidrelatos (Agrotera · جارٍ)",
+    "description": "القدرة على تجاوز العوائق والحفاظ على الضغط وعدم إغفال الهدف المقصود."
+  },
+  {
+    "name": "Agrotera Psitiros (Agrotera · حفيف)",
+    "description": "فن الحركة الصامتة والحصول على المعلومات من أدنى اهتزازات البيئة."
+  },
+  {
+    "name": "Agrotera Akamatos (Agrotera · لا يكلّ)",
+    "description": "قدرة تحمل الشخص المنعزل القادر على مواصلة الطريق عندما يتراجع الآخرون أمام الصعوبات."
+  },
+  {
+    "name": "Agrotera Epoptes (Agrotera · التأمّل)",
+    "description": "لحظة التثبيت على الهدف، عندما يتجمد العالم كله عند نقطة الاهتمام المطلق."
+  },
+  {
+    "name": "Agrotera Ridzomatos (Agrotera · التجذّر)",
+    "description": "اتصال عميق مع قوى الطبيعة البدائية وإيجاد موطئ قدم في جوهرها البري غير المشوه."
+  },
+  {
+    "name": "Agrotera Katarsios (Agrotera · مُطهّر)",
+    "description": "غسل الروح في منابع الحقيقة الجليدية والتخلص من كل ما هو زائد عن الحاجة ومغري."
+  },
+  {
+    "name": "Agrotera Pteroforos (Agrotera · مجنّح)",
+    "description": "سرعة اتخاذ القرار والسهولة التي تتجاوز بها الإرادة الحقيقية الفضاء."
+  },
+  {
+    "name": "Agrotera Flegeton (Agrotera · التوهّج)",
+    "description": "نار الاستقلال الشرس والنور الذي يمر عبر غابة من الشك."
+  },
+  {
+    "name": "Agrotera Bazileios (Agrotera · ملكي)",
+    "description": "سيطر على غرائزك وثبت سيادتك في برية الحياة."
+  },
+  {
+    "name": "Agrotera Erkeios (Agrotera · حارس الحدود)",
+    "description": "حماية قيمك ووضع الحدود التي لا يجرؤ أحد على تجاوزها دون دعوة."
+  },
+  {
+    "name": "Agrotera Potamios (Agrotera · نهري)",
+    "description": "عدم المرونة في الانتقال إلى نهاية المهمة، على غرار تدفق جدول جبلي إلى البحر."
+  },
+  {
+    "name": "Agrotera Psikhikos (Agrotera · للروح)",
+    "description": "التحليل الفكري للمسار الذي سلكته وبلورة الخبرة في استراتيجية واضحة."
+  },
+  {
+    "name": "Agrotera Lampas (Agrotera · حامل المشعل)",
+    "description": "يطارد ضوء القمر الاحتمالات الخفية حيث لا يرى الآخرون سوى الظلام."
+  },
+  {
+    "name": "Agrotera Isoteos (Agrotera · شبيه بالآلهة)",
+    "description": "حالة من الإتقان التام عندما يصبح العمل خاليًا من العيوب ومقدسًا."
+  },
+  {
+    "name": "Agrotera Politekhnos (Agrotera · متعدّد المهارات)",
+    "description": "استخدام الأدوات المتراكمة للبقاء والازدهار في البيئات القاسية."
+  },
+  {
+    "name": "Agrotera Krenaios (Agrotera · للنبع)",
+    "description": "العثور على موارد لا تنضب داخل نفسك، مستقلة عن آراء ودعم الآخرين."
+  },
+  {
+    "name": "Agrotera Aurios (Agrotera · تحمله الريح)",
+    "description": "التحرر من الارتباطات والرغبة في الانفصال في أي وقت للقاء الجديد."
+  },
+  {
+    "name": "Agrotera Pirivrontos (Agrotera · رعد النار)",
+    "description": "قوة العمل الحاسم، تغير مشهد المصير في لفتة واحدة محددة."
+  },
+  {
+    "name": "Agrotera Pankrates (Agrotera · القدرة المطلقة)",
+    "description": "الشعور بالسيطرة الكاملة على حياتك والاعتراف بوحشيتك الداخلية."
+  },
+  {
+    "name": "Agrotera Geokharis (Agrotera · إبهاج الأرض)",
+    "description": "ترسيخ نتائج الصيد وشكر العالم على الجوائز والخبرة."
+  },
+  {
+    "name": "Agrotera Pelagios (Agrotera · للبحر)",
+    "description": "الانغماس في عمق فهم المرحلة الماضية قبل مواجهة العواصف الشتوية."
+  },
+  {
+    "name": "Agrotera Nomios (Agrotera · واضع الشرائع)",
+    "description": "ترتيب المعرفة المكتسبة وتحويل القوة الوحشية إلى أساس النظام المستقبلي."
+  },
+  {
+    "name": "Agrotera Flegon (Agrotera · التوهّج)",
+    "description": "آخر وميض مشرق في الخريف سوف يهدئ الروح قبل الحد العظيم."
+  },
+  {
+    "name": "Agrotera Telos (Agrotera · الإتمام)",
+    "description": "نقطة الانتقال من الصيد إلى الانضباط وبداية الدورة الشتوية."
+  },
+  {
+    "name": "Peras Khtonios (Peras · أرضي)",
+    "description": "العثور على مرونة لا تتزعزع وقبول ثقل التزاماتك كأساس للحياة."
+  },
+  {
+    "name": "Peras Klidonios (Peras · متموّج)",
+    "description": "ضبط النفس العاطفي والقدرة على تهدئة العواصف الداخلية من أجل الحفاظ على الشكل."
+  },
+  {
+    "name": "Peras Pnevmatikos (Peras · مُحيي الروح)",
+    "description": "وضوح الفكر البارد الذي يفصل بذور الحقيقة عن قشور الوهم في هواء الشتاء الجليدي."
+  },
+  {
+    "name": "Peras Piripnoos (Peras · نفث النار)",
+    "description": "حرارة الإرادة الخفية التي تدعم الحياة داخل هيكل جامد، مثل النار في مركز الأرض."
+  },
+  {
+    "name": "Peras Aiterios (Peras · سماوي)",
+    "description": "الوعي بالنظام الكوني ومكانته في الرسم العظيم للكون."
+  },
+  {
+    "name": "Peras Stenaros (Peras · مقتدر)",
+    "description": "قوة مقاومة الإنتروبيا وتقوية النواة الداخلية في مواجهة اختبارات الزمن."
+  },
+  {
+    "name": "Peras Gidrelatos (Peras · جارٍ)",
+    "description": "الحكمة في قبول دورات الحياة والقدرة على التدفق ضمن الحدود المقررة دون كسرها."
+  },
+  {
+    "name": "Peras Psitiros (Peras · حفيف)",
+    "description": "همسة التاريخ ونداء الأجداد، مذكّرين بحرمة قوانين الوجود."
+  },
+  {
+    "name": "Peras Akmatos (Peras · لا يكلّ)",
+    "description": "حركة الزمن الأبدية التي لا تعرف توقفًا، وانضباط الخطوات اليومية الصغيرة."
+  },
+  {
+    "name": "Peras Epoptes (Peras · التأمّل)",
+    "description": "رؤية سيد الزمان للطريق الذي سلكه وإدراك اكتمال المرحلة الحالية."
+  },
+  {
+    "name": "Peras Ridzomatos (Peras · التجذّر)",
+    "description": "التوحيد النهائي في موقف الفرد واكتساب الوزن في العالم الاجتماعي والروحي."
+  },
+  {
+    "name": "Peras Katarsios (Peras · مُطهّر)",
+    "description": "غسل الروح بصمت والتخلص من الارتباطات غير الضرورية التي تمنع التركيز على الشيء الرئيسي."
+  },
+  {
+    "name": "Peras Pteroforos (Peras · مجنّح)",
+    "description": "سرعة الفكر، مقيدة بالانضباط الذي يصبح دقيقًا وملفتًا للنظر."
+  },
+  {
+    "name": "Peras Flegeton (Peras · التوهّج)",
+    "description": "نار البلاء الشديد، تحرق الضعف ولا تترك إلا الجوهر الصافي."
+  },
+  {
+    "name": "Peras Bazileios (Peras · ملكي)",
+    "description": "انتصار الهيكل وإنشاء ميثاق الشرف الشخصي باعتباره القانون الأسمى."
+  },
+  {
+    "name": "Peras Erkeios (Peras · حارس الحدود)",
+    "description": "بناء حواجز وقائية حول عملك وعائلتك، وتعزيز روحك."
+  },
+  {
+    "name": "Peras Potamios (Peras · نهري)",
+    "description": "الانتقال عبر عتبة الزمن والحركة الواعية إلى دورة جديدة ضمن قناة موثوقة."
+  },
+  {
+    "name": "Peras Psikhikos (Peras · للروح)",
+    "description": "حصر المعاني وتلخيصها ورسم خريطة واضحة للمسار المستقبلي."
+  },
+  {
+    "name": "Peras Lampas (Peras · حامل المشعل)",
+    "description": "نور المسؤولية الشخصية، ينير حدود المسموح، وآفاق الممكن."
+  },
+  {
+    "name": "Peras Isoteos (Peras · شبيه بالآلهة)",
+    "description": "لتحقيق الانسجام الداخلي من خلال الالتزام الصارم بهدفك."
+  },
+  {
+    "name": "Peras Politekhnos (Peras · متعدّد المهارات)",
+    "description": "التمكن من تنظيم المكان والزمان لتحقيق أقصى قدر من الكفاءة."
+  },
+  {
+    "name": "Peras Krenaios (Peras · للنبع)",
+    "description": "العثور على موارد التحمل العميقة في أكثر القيود كثافة."
+  },
+  {
+    "name": "Peras Aurios (Peras · تحمله الريح)",
+    "description": "هبت رياح جديدة من التغيير، تخترق الجليد، وتجلب أفكارًا جديدة للأشكال القديمة."
+  },
+  {
+    "name": "Peras Pirivrontos (Peras · رعد النار)",
+    "description": "قوة الوعي المفاجئ الذي يكسر الحواجز غير الضرورية لتحقيق هدف أسمى."
+  },
+  {
+    "name": "Peras Pankrates (Peras · القدرة المطلقة)",
+    "description": "السيطرة المطلقة على حياتك من خلال القبول الطوعي للأطر والقواعد."
+  },
+  {
+    "name": "Peras Geokharis (Peras · إبهاج الأرض)",
+    "description": "الامتنان لقوة الوجود وترسيخ جميع النتائج التي تم تحقيقها خلال الشهر."
+  },
+  {
+    "name": "Peras Pelagios (Peras · للبحر)",
+    "description": "انغمس بعمق في محيط من الصمت قبل مواجهة فوضى العواصف الشتوية."
+  },
+  {
+    "name": "Peras Nomios (Peras · واضع الشرائع)",
+    "description": "إعلان مبادئ جديدة لإدارة مصير الفرد بناءً على الخبرة المكتسبة."
+  },
+  {
+    "name": "Peras Flegon (Peras · التوهّج)",
+    "description": "الشرارة الأخيرة للانضباط، وتلطيف الروح في مواجهة العناصر الوشيكة."
+  },
+  {
+    "name": "Peras Telos (Peras · الإتمام)",
+    "description": "إغلاق أبواب الشهر والاستعداد لمواجهة غضب بوسيدون."
+  },
+  {
+    "name": "Lailaps Khtonios (Lailaps · أرضي)",
+    "description": "صراع النظام المثالي مع قوة الواقع الغاشمة؛ يوم لاختبار أساس الاستقرار."
+  },
+  {
+    "name": "Lailaps Klidonios (Lailaps · متدفّق بقوّة)",
+    "description": "ضغط العواطف والظروف الخارجية، مثل أسوار بوسيدون، تضرب الشاطئ."
+  },
+  {
+    "name": "Lailaps Pnevmatikos (Lailaps · مُحيي الروح)",
+    "description": "أنفاس بوريوس الجليدية، تصفي العقل من خلال المنطق البارد والواقعي."
+  },
+  {
+    "name": "Lailaps Piripnoos (Lailaps · نفث النار)",
+    "description": "الاحتكاك والحرارة الناشئة في مركز النضال؛ طاقة البقاء في الظروف القاسية."
+  },
+  {
+    "name": "Lailaps Aiterios (Lailaps · سماوي)",
+    "description": "النظر إلى العاصفة من أعلى، يدرك أن أي فوضى هي جزء من إيقاع أعلى."
+  },
+  {
+    "name": "Lailaps Stereos (Lailaps · صلب)",
+    "description": "تبلور الإرادة تحت الضغط؛ اليوم الذي يكتسب فيه الخلق كثافة الماس."
+  },
+  {
+    "name": "Lailaps Pelagios (Lailaps · للبحر)",
+    "description": "الانغماس في هاوية المهام المعقدة والقدرة على الحفاظ على الوعي في ظروف عدم اليقين."
+  },
+  {
+    "name": "Lailaps Aiolos (Lailaps · كثير التغيّر)",
+    "description": "مرونة المناورة في زوبعة الأحداث والقدرة على استخدام قوة العدو ضد نفسه."
+  },
+  {
+    "name": "Lailaps Flegon (Lailaps · لافح)",
+    "description": "حرق الحقيقة المتجمد الذي يجرد كل الباطل، ولا يترك سوى الجوهر العاري."
+  },
+  {
+    "name": "Lailaps Epoptes (Lailaps · التأمّل)",
+    "description": "العثور على نقطة استراحة داخل الإعصار؛ إتقان الاتزان."
+  },
+  {
+    "name": "Lailaps Enosikhton (Lailaps · زلزلة الأرض)",
+    "description": "التطهير الكبير من خلال تدمير ما أصبح متهالكا وغير موثوق به."
+  },
+  {
+    "name": "Lailaps Katarsios (Lailaps · مُطهّر)",
+    "description": "غسل الروح في المياه العاصفة؛ إفساح المجال لربيع المستقبل من خلال الفوضى."
+  },
+  {
+    "name": "Lailaps Tiellon (Lailaps · يدور في دوّامة)",
+    "description": "التغير السريع في المشهد وسرعة التكيف مع الظروف الجديدة والصعبة."
+  },
+  {
+    "name": "Lailaps Akamatos (Lailaps · لا يكلّ)",
+    "description": "مورد لا ينضب من غضب الخليقة، الذي لا ينطفئ تحت ضربات العناصر."
+  },
+  {
+    "name": "Lailaps Bazileios (Lailaps · ملكي)",
+    "description": "تأكيد الهيمنة على عنصر الخوف واكتساب القوة في الفوضى."
+  },
+  {
+    "name": "Lailaps Erkeios (Lailaps · حارس الحدود)",
+    "description": "التحقق النهائي من الحدود الشخصية؛ حماية قلبك الداخلي من الذوبان تمامًا في العاصفة."
+  },
+  {
+    "name": "Lailaps Potamios (Lailaps · نهري)",
+    "description": "القدرة على توجيه الطاقة المدمرة للعاصفة إلى القناة الإبداعية لمشروعك."
+  },
+  {
+    "name": "Lailaps Psikhikos (Lailaps · للروح)",
+    "description": "تحليل متعمق لاستجابة الإجهاد لديك وبلورة استراتيجية سلوكية جديدة."
+  },
+  {
+    "name": "Lailaps Lampas (Lailaps · حامل المشعل)",
+    "description": "الضوء محتفظ به بالرغم من الريح؛ رمزا للأمل والنية التي لا تتزعزع."
+  },
+  {
+    "name": "Lailaps Isoteos (Lailaps · شبيه بالآلهة)",
+    "description": "حالة التحول عندما يصبح الشخص الذي مر بعاصفة غير معرض للخطر."
+  },
+  {
+    "name": "Lailaps Stenaros (Lailaps · مقتدر)",
+    "description": "التعافي الجسدي والروحي على أساس متجدد ومنقى."
+  },
+  {
+    "name": "Lailaps Limenaios (Lailaps · ساحلي)",
+    "description": "ابحث عن ميناء هادئ لتقييم الأضرار وإعادة تجميع القوات."
+  },
+  {
+    "name": "Lailaps Psitiros (Lailaps · هامس)",
+    "description": "سماع صوت الحق في همهمة الريح الهادئة؛ معرفة بديهية للنهاية."
+  },
+  {
+    "name": "Lailaps Pirivrontos (Lailaps · رعد النار)",
+    "description": "الضربة الأخيرة من الرعد تصفي السماء وتجلب الراحة."
+  },
+  {
+    "name": "Lailaps Episkopos (Lailaps · يقظ)",
+    "description": "تسجيل الدروس المستفادة من النضال والاستعداد للانغماس في الظلام."
+  },
+  {
+    "name": "Lailaps Ridzomatos (Lailaps · التجذّر)",
+    "description": "تجذير عميق في التربة المتجددة؛ الحصول على دعم جديد وأكثر قوة."
+  },
+  {
+    "name": "Lailaps Galenos (Lailaps · سَكِين)",
+    "description": "صدى متبقي للتجربة، يتحول إلى فهم عميق للحياة."
+  },
+  {
+    "name": "Lailaps Pneuma (Lailaps · الروح)",
+    "description": "يتم تحقيق الشفافية ونقاء الوعي من خلال التغلب على أكبر مقاومة."
+  },
+  {
+    "name": "Lailaps Flegenton (Lailaps · اضطرام النار)",
+    "description": "نار الانتصار على الظروف خففت من روح الشهر الأخير من العام."
+  },
+  {
+    "name": "Lailaps Telos (Lailaps · الإتمام)",
+    "description": "نهاية فترة النضال النشط والانتقال إلى صمت وظلام زوفوس."
+  },
+  {
+    "name": "Zofos Khtonios (Zofos · أرضي)",
+    "description": "الانغماس في جمود المادة؛ يوم الاعتراف بأن كل ما يولد يجب أن ينتقل إلى بقية الأرض."
+  },
+  {
+    "name": "Zofos Gidrelatos (Zofos · جارٍ)",
+    "description": "انحلال الهياكل العقلية الجامدة في مياه اللاوعي المظلمة، مثل نهر ليتي."
+  },
+  {
+    "name": "Zofos Pnevmatikos (Zofos · مُحيي الروح)",
+    "description": "نفس الفراغ. حالة تهدأ فيها الأفكار، ويترك مجالًا للحضور النقي."
+  },
+  {
+    "name": "Zofos Piripnoos (Zofos · نفث النار)",
+    "description": "شرارة الحياة الخفية، المشتعلة تحت رماد العام الماضي؛ نار التحول السوداء."
+  },
+  {
+    "name": "Zofos Aiterios (Zofos · سماوي)",
+    "description": "تأمل السماء المرصعة بالنجوم اللانهائية كرمز لأعلى رتبة مخبأة خلف الظلام."
+  },
+  {
+    "name": "Zofos Stereos (Zofos · صلب)",
+    "description": "العثور على موطئ قدم في الفراغ؛ فهم أن الذات الحقيقية لا تعتمد على أشكال خارجية."
+  },
+  {
+    "name": "Zofos Klidonios (Zofos · متموّج)",
+    "description": "اهتزازات الحدس الدقيقة، تخترق الظلام؛ هاجس من التغييرات القادمة."
+  },
+  {
+    "name": "Zofos Psitiros (Zofos · حفيف)",
+    "description": "همسات هيرميس سيكوبوبس، تقود الروح عبر الشفق إلى معاني جديدة."
+  },
+  {
+    "name": "Zofos Akamatos (Zofos · لا يكلّ)",
+    "description": "العمل الأبدي للروح لإذابة التجربة، والذي يستمر حتى في حالة الراحة الكاملة."
+  },
+  {
+    "name": "Zofos Epoptes (Zofos · التأمّل)",
+    "description": "نظرة من الأبدية إلى الزماني؛ الوعي بالطبيعة الوهمية للمخاوف والارتباطات."
+  },
+  {
+    "name": "Zofos Ridzomatos (Zofos · التجذّر)",
+    "description": "متجذرة في العدم، حيث تبدأ كل حياة جديدة."
+  },
+  {
+    "name": "Zofos Katarsios (Zofos · مُطهّر)",
+    "description": "التطهير النهائي للوعي من بقايا الضجيج والضجة السنوية."
+  },
+  {
+    "name": "Zofos Ptinos (Zofos · مجنّح)",
+    "description": "خفة الروح تتحرر من ثقل الماضي المتراكم."
+  },
+  {
+    "name": "Zofos Flegeton (Zofos · التوهّج)",
+    "description": "نار الوعي الداخلي تنير زوايا الروح المظلمة."
+  },
+  {
+    "name": "Zofos Bazileios (Zofos · ملكي)",
+    "description": "القوة على الصمت؛ تأكيد السيادة في فضاء الصمت."
+  },
+  {
+    "name": "Zofos Erkeios (Zofos · حارس الحدود)",
+    "description": "الحفاظ على سرك الداخلي وحماية سلامك قبل أن يستيقظ العالم."
+  },
+  {
+    "name": "Zofos Potamios (Zofos · نهري)",
+    "description": "التدفق البطيء للوقت يمهد الأرض لتسرب القوات في الربيع."
+  },
+  {
+    "name": "Zofos Psikhikos (Zofos · للروح)",
+    "description": "التواضع الفكري والرغبة في قبول المعلومات الجديدة بعقل نقي."
+  },
+  {
+    "name": "Zofos Lampas (Zofos · حامل المشعل)",
+    "description": "الشرارة الأولى للضوء تنذر بنهاية الظلام وعودة الشمس."
+  },
+  {
+    "name": "Zofos Isoteos (Zofos · شبيه بالآلهة)",
+    "description": "حالة من الوجود المسبق حيث تكون إمكانات الإنسان مساوية لقدرات الآلهة."
+  },
+  {
+    "name": "Zofos Politekhnos (Zofos · متعدّد المهارات)",
+    "description": "إتقان إدارة الفراغ و خلق صور المستقبل في فضاء الخيال."
+  },
+  {
+    "name": "Zofos Krenaios (Zofos · للنبع)",
+    "description": "العثور على المصدر الأساسي للحياة في أعماق بئر الروح المظلمة."
+  },
+  {
+    "name": "Zofos Aurios (Zofos · تحمله الريح)",
+    "description": "أول نفس من هواء ما قبل الربيع يجلب رائحة التجديد."
+  },
+  {
+    "name": "Zofos Pirivrontos (Zofos · رعد النار)",
+    "description": "قوة الصمت المتراكم، جاهزة للتحول إلى انفجار إبداعي."
+  },
+  {
+    "name": "Zofos Pankrates (Zofos · القدرة المطلقة)",
+    "description": "ضبط النفس المطلق والاستعداد للانتقال النهائي."
+  },
+  {
+    "name": "Zofos Geokharis (Zofos · إبهاج الأرض)",
+    "description": "امتنان للظلام لأنه استراح وثبت كل الوعي الموجود في الصمت."
+  },
+  {
+    "name": "Zofos Pelagios (Zofos · للبحر)",
+    "description": "الذوبان الكامل في محيط الوجود قبل استعادة الشكل."
+  },
+  {
+    "name": "Zofos Nomios (Zofos · يرعى القطيع)",
+    "description": "التوجيه الداخلي؛ صوت الضمير يرسم خطاً تحت القانون القديم."
+  },
+  {
+    "name": "Zofos Flegon (Zofos · التوهّج)",
+    "description": "نار التطهير لهذا العام، حيث يتم حرق كل ما لا ينبغي أن يدخل في دورة جديدة."
+  },
+  {
+    "name": "Zofos Telos (Zofos · الإتمام)",
+    "description": "الخاتمة الكبرى لرحلة الـ 360 يومًا؛ نقطة الصفر المطلق ."
+  },
+  {
+    "name": "Apeiron Khaos (Apeiron · الفوضى)",
+    "description": "وليمة من الإمكانات الأولية؛ اليوم الذي يكون فيه كل شيء ممكنًا ولا شيء محدد مسبقًا."
+  },
+  {
+    "name": "Apeiron Nyuks (Apeiron · الليل)",
+    "description": "إجلال الظلام المقدس، أم كل شيء، الذي يحمل في داخله بذور المستقبل."
+  },
+  {
+    "name": "Apeiron Erebos (Apeiron · الظلام)",
+    "description": "الانغماس في فراغ كثيف حيث يتشكل جوهر الكون الجديد."
+  },
+  {
+    "name": "Apeiron Tartaros (Apeiron · الهاوية)",
+    "description": "الوعي بالأعماق الأساسية للوجود الذي يرتكز عليه العالم."
+  },
+  {
+    "name": "Apeiron Eros (Apeiron · الانجذاب)",
+    "description": "إيقاظ قوة الجذب العظيمة التي تسبب الفوضى في النظام."
+  },
+  {
+    "name": "Apeiron Fanes (Apeiron · الإشراق)",
+    "description": "ظهور النور البكر؛ قبل لحظة من بداية الربيع الجديد."
+  }
+]
