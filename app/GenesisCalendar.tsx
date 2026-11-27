@@ -7270,7 +7270,7 @@ export function GenesisCalendar() {
             {authError ? <p className="oauth-callback-error" role="alert">{authError}</p> : null}
             {cloudUser && cloudUser.authProvider !== "yandex" && (!cloudUser.calendarConnected || !cloudUser.googleTasksImportReady) ? (
 
-                <Suspense fallback={null}><GoogleConnectNotice key={cloudUser.uid} compact={view === "projects"} busy={syncStatus === "syncing"} onConnect={() => void handleGoogleConnect()} /></Suspense>
+                <Suspense fallback={null}><GoogleConnectNotice language={language} key={cloudUser.uid} compact={view === "projects"} busy={syncStatus === "syncing"} onConnect={() => void handleGoogleConnect()} /></Suspense>
             ) : null}
             <ViewErrorBoundary resetKey={view}>
               {view === "today" ? renderToday() : null}

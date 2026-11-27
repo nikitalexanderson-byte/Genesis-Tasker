@@ -32,6 +32,9 @@ import org.json.JSONObject
 import ru.genesis.calendar.GenesisApplication
 import ru.genesis.calendar.auth.AuthController
 import ru.genesis.calendar.auth.AuthApiError
+import ru.genesis.calendar.data.PublicPage
+import ru.genesis.calendar.data.publicDocumentUrl
+import ru.genesis.calendar.data.publicLanguages
 import ru.genesis.calendar.data.BackupGateway
 import ru.genesis.calendar.data.BackupNativeStore
 import ru.genesis.calendar.data.GenesisBackupContainer
@@ -44,11 +47,14 @@ import java.util.Base64
 internal object BackupWebOrigin {
     const val ENTRY="https://appassets.androidplatform.net/aurora/backup.html"
     fun assetPath(url:String):String?=if(url==ENTRY)"aurora/backup.html" else AuroraWebOrigin.assetPath(url)?.takeUnless { it.endsWith("index.html") }
-    fun legalUrl(url: String): String? {
-        val uri=Uri.parse(url)
-        return if(uri.scheme=="https"&&uri.host in setOf("appassets.androidplatform.net","genesiscalendar.com")&&
-            uri.path in setOf("/privacy","/terms")&&uri.query==null&&uri.fragment==null)
-            "https://genesiscalendar.com${uri.path}" else null
+    fun legalUrl(url: String, language: String): String? {
+        val origin = listOf("https://appassets.androidplatform.net", "https://genesiscalendar.com")
+            .firstOrNull { url.startsWith("$it/") } ?: return null
+        val path = url.removePrefix(origin)
+        val page = listOf(PublicPage.PRIVACY, PublicPage.TERMS).firstOrNull {
+            path == it.path || (language in publicLanguages && path == "${it.path}?lang=$language")
+        } ?: return null
+        return publicDocumentUrl(language, page)
     }
 }
 
@@ -321,7 +327,7 @@ internal class BackupJavascriptBridge(private val store:BackupNativeStore,privat
                     tag=bridge;addJavascriptInterface(bridge,"GenesisBackupBridge")
                     webViewClient=object:WebViewClient(){
                         override fun shouldOverrideUrlLoading(view:WebView,request:WebResourceRequest): Boolean {
-                            if(request.isForMainFrame)BackupWebOrigin.legalUrl(request.url.toString())?.let { link ->
+                            if(request.isForMainFrame)BackupWebOrigin.legalUrl(request.url.toString(), language)?.let { link ->
                                 runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW,Uri.parse(link))) }
                             }
                             return true

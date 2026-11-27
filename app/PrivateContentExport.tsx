@@ -1,4 +1,5 @@
 'use client';
+import {publicPagePath} from './public-route';
 import {useEffect,useRef,useState} from 'react';
 import {newBackupRecoveryKey,sealBackup,type BackupPayload} from './backup-format';
 import contentCopy from '../contracts/e2ee/content-archive-copy-v1.json';
@@ -28,7 +29,7 @@ export function PrivateContentExport({owner,language,capture,label,deliver,deliv
    <label>{c('Храните ключ отдельно от файла и Google','Keep this key separate from the file and Google')}<textarea rows={2} autoComplete="off" spellCheck={false} value={key} onChange={event=>{setKey(event.target.value);setSaved(false);}}/></label>
    <button type="button" onClick={()=>{setKey(newBackupRecoveryKey());setSaved(false);}}>{c('Создать ключ','Generate key')}</button>
    <label className="backup-check"><input type="checkbox" checked={saved} onChange={event=>setSaved(event.target.checked)}/>{c('Я сохранил ключ отдельно. Он расшифровывает данные и не восстанавливает вход.','I saved the key separately. It decrypts data and does not restore sign-in access.')}</label>
-   <label className="backup-check"><input type="checkbox" checked={consent} onChange={event=>setConsent(event.target.checked)}/><span>{c('Я ознакомился с составом копии, шифрованием и условиями восстановления в','I have read about backup contents, encryption and restore in the')} <a href="/privacy" target="_blank" rel="noreferrer">{c('политике','privacy policy')}</a> {c('и','and')} <a href="/terms" target="_blank" rel="noreferrer">{c('соглашении','terms')}</a>. {deliveryNotice??c('Новые разрешения Google не запрашиваются.','No new Google permissions are requested.')}</span></label>
+   <label className="backup-check"><input type="checkbox" checked={consent} onChange={event=>setConsent(event.target.checked)}/><span>{c('Я ознакомился с составом копии, шифрованием и условиями восстановления в','I have read about backup contents, encryption and restore in the')} <a href={publicPagePath(normalizeLanguage(language),'privacy')} target="_blank" rel="noreferrer">{c('политике','privacy policy')}</a> {c('и','and')} <a href={publicPagePath(normalizeLanguage(language),'terms')} target="_blank" rel="noreferrer">{c('соглашении','terms')}</a>. {deliveryNotice??c('Новые разрешения Google не запрашиваются.','No new Google permissions are requested.')}</span></label>
    <button type="button" disabled={!saved||!consent||!key.trim()} onClick={()=>void save()}>{label??contentText.deviceSnapshot}</button>
   </fieldset>{busy?<p role="status">{c('Подготовка и проверка…','Preparing and checking…')}</p>:null}{error?<p role="alert" data-backup-failure={error}>{error==='changed'?contentText.captureChanged:contentText.error}</p>:null}
  </section>;

@@ -2,8 +2,18 @@ package ru.genesis.calendar.data
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import ru.genesis.calendar.ui.BackupWebOrigin
 
 class PublicLanguageTest {
+    @Test fun `backup documents open in the language selected in the app`() {
+        for (language in publicLanguages) for (page in listOf(PublicPage.PRIVACY, PublicPage.TERMS)) {
+            val expected = "https://genesiscalendar.com" + publicPagePath(language, page)
+            val assetLink = "https://appassets.androidplatform.net${page.path}"
+            assertEquals(expected, BackupWebOrigin.legalUrl(assetLink, language))
+            assertEquals(expected, BackupWebOrigin.legalUrl("$assetLink?lang=$language", language))
+        }
+    }
+
     @Test fun `explicit choice survives changed device region and language`() {
         for (language in publicLanguages) assertEquals(language,
             welcomeLanguage(language, "en", "America/Los_Angeles", "US"))
