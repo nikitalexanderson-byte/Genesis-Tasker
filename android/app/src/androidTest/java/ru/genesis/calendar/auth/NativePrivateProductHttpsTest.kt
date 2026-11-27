@@ -66,6 +66,7 @@ class NativePrivateProductHttpsTest {
     }
     private val app get()=InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as GenesisApplication
     private var cookie=""
+    private var cookieExpiresAt = 0L
     private var csrf=""
     private fun request(path:String,method:String="GET",body:JSONObject?=null,expected:Int=200):JSONObject {
         check(path.startsWith("/api/")&&!path.contains(".."))
@@ -77,8 +78,11 @@ class NativePrivateProductHttpsTest {
             if(body!=null){connection.setRequestProperty("X-CSRF-Token",csrf);connection.setRequestProperty("Content-Type","application/json; charset=utf-8")
                 connection.doOutput=true;connection.outputStream.use{it.write(body.toString().toByteArray(Charsets.UTF_8))}}
             assertEquals("Owned fixture HTTP $path",expected,connection.responseCode)
-            connection.getHeaderField("Set-Cookie")?.substringBefore(';')?.let{header->
-                check(header.startsWith("$SESSION_COOKIE="));cookie=header.substringAfter('=');check(cookie.matches(Regex("[A-Za-z0-9,-]{16,256}")))
+            val cookieHeaders = connection.headerFields.filterKeys { it?.equals("Set-Cookie", true) == true }.values.flatten()
+            val update = AuthProtocol.cookie(cookieHeaders, System.currentTimeMillis())
+            if (update.present) {
+                cookie = update.value
+                cookieExpiresAt = update.expiresAt
             }
             return JSONObject((if(expected in 200..299)connection.inputStream else connection.errorStream).bufferedReader().use{it.readText()})
         }finally{connection.disconnect()}
@@ -97,7 +101,8 @@ class NativePrivateProductHttpsTest {
             assertTrue(request("/api/qa/login?tier=business").getBoolean("synthetic"))
             val session=request("/api/session");val user=session.getJSONObject("user");val owner=user.getString("uid")
             assertTrue(user.getString("email").endsWith("@example.invalid"));assertFalse(user.optBoolean("isAdmin"));csrf=AuthProtocol.csrf(session.getString("csrf"))
-            val saved=JSONObject().put("cookie",cookie).put("csrf",csrf).put("expiresAt",System.currentTimeMillis()+3600000)
+            check(cookie.isNotBlank() && cookieExpiresAt > System.currentTimeMillis())
+            val saved=JSONObject().put("cookie",cookie).put("csrf",csrf).put("expiresAt",cookieExpiresAt)
             check(app.getSharedPreferences("genesis.native.auth.v1",Context.MODE_PRIVATE).edit().putString("session",LocalCipher().encrypt(saved.toString(),"genesis.native.auth.v2")).commit())
             val canary="NATIVE PRIVATE ${UUID.randomUUID()}"
             val verifySharedRecords = args.getString("genesisVerifyRetainedSharedRecords") == "true"
