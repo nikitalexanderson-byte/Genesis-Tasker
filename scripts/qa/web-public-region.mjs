@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { REGION_LANGUAGES } from '../../app/region-language.ts';
 import {writeFileSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';
 
@@ -39,13 +40,13 @@ export async function verifyPublicRegions({browser,baseURL,output}) {
         assert.equal(await page.url(),baseURL+scenario.destination);
         const languages=page.getByRole('radio');
         await languages.first().waitFor({state:'attached'});
-        assert.equal(await languages.count(),14);
+        assert.equal(await languages.count(),REGION_LANGUAGES.length);
         await page.getByRole('radio',{name:'Deutsch',exact:true}).click();
         await page.locator('html[lang="de"]').waitFor({state:'attached'});
         await page.goto('/');
         await page.locator('html[lang="de"]').waitFor({state:'attached'});
         await languages.first().waitFor({state:'attached'});
-        assert.equal(await languages.count(),14);
+        assert.equal(await languages.count(),REGION_LANGUAGES.length);
       }
       const merchant=page.locator('.public-merchant').first();await merchant.waitFor();
       assert.match(await merchant.innerText(),/Nikita|Никита/);
@@ -54,7 +55,7 @@ export async function verifyPublicRegions({browser,baseURL,output}) {
       if(scenario.path.includes('lang=')){
         const currency=scenario.currency??(scenario.path.includes('lang=ru')?'RUB':'USD');
         await page.locator(`.public-plans[data-currency="${currency}"]`).waitFor();
-        assert.equal(await page.getByRole('radio').count(),14);
+        assert.equal(await page.getByRole('radio').count(),REGION_LANGUAGES.length);
       }
       if(scenario.id==='gps-ru-vpn'){
         for(const language of ['en','ru'])for(const scheme of ['light','dark'])for(const width of [360,390,768,1440]){
