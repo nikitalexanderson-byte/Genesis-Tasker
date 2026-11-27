@@ -30,11 +30,14 @@ import ru.genesis.calendar.PagerTestActivity
 import ru.genesis.calendar.data.GenesisBackupContainer
 import ru.genesis.calendar.data.GenesisProject
 import ru.genesis.calendar.data.LocalCipher
+import ru.genesis.calendar.data.LocalTask
 import ru.genesis.calendar.data.MindmapDocument
 import ru.genesis.calendar.data.MindmapRepository
 import ru.genesis.calendar.data.PrivateSharedMapBinding
 import ru.genesis.calendar.data.SharedMindmapTransport
+import ru.genesis.calendar.data.TaskOccurrences
 import ru.genesis.calendar.data.WorkspaceStructureRepository
+import ru.genesis.calendar.domain.RecurrenceConfig
 import ru.genesis.calendar.security.*
 import ru.genesis.calendar.ui.LocalGenesisLanguage
 import ru.genesis.calendar.ui.RecoveryCredentialActivity
@@ -237,6 +240,7 @@ class NativePrivateProductHttpsTest {
             assertFalse("The locked private identity must not expose ready content",auth.state.value.ready)
             coldUnlock()
             withTimeout(120000){repository.workspace.first{row->row.projects.any{it.id==localProject.id&&it.title==localProject.title}}}
+            val privateTask = verifyPrivateTaskEdits(accountScope)
             val uiPreferences=ru.genesis.calendar.data.LocalPreferences(app,accountScope)
             val retainedUiOriginal=uiPreferences.backupRaw().toString()
             uiPreferences.set("weatherTemperatureUnit","fahrenheit")
@@ -257,6 +261,7 @@ class NativePrivateProductHttpsTest {
             repository.saveProject(localProject.copy(title="EDITED $canary"));NativePrivateProducts.flush(accountScope)
             auth.onTrialBackground();assertFalse(NativePrivateProducts.isOpen(accountScope));auth.onTrialForeground()
             coldUnlock()
+            assertEquals(privateTask.title, app.repository.get(privateTask.id)?.title)
             assertEquals("fahrenheit",uiPreferences.values.first().weatherTemperatureUnit)
             assertFalse("The acknowledged public preference survives a real cold PIN entry",uiPreferences.values.first().use24)
             assertTrue(uiPreferences.pending.first().isEmpty())
@@ -331,6 +336,38 @@ class NativePrivateProductHttpsTest {
             }
             first to second
         }
+
+    private suspend fun verifyPrivateTaskEdits(scope: String): LocalTask {
+        val tasks = app.repository
+        assertEquals(scope, tasks.scope)
+        assertEquals("active", app.database.dao().legacyScopeFence(scope)?.phase)
+        val webId = "web:${UUID.randomUUID()}"
+        NativePrivateProducts.mutate(scope) { snapshot ->
+            snapshot.getJSONArray("tasks").put(JSONObject().put("id", webId).put("title", "Undated web task")
+                .put("customLabel", "preserved"))
+            snapshot to Unit
+        }
+        val webTask = requireNotNull(tasks.get(webId))
+        assertEquals("", webTask.date)
+        assertEquals(5, webTask.priority)
+        val updatedWebTask = tasks.save(webTask.copy(description = "Edited on Android"))
+        assertEquals("preserved", JSONObject(updatedWebTask.sourceFieldsJson).getString("customLabel"))
+        tasks.delete(webId, updatedWebTask.revision)
+        val series = tasks.save(LocalTask(title = "Private task series", date = "2026-11-26",
+            recurrence = RecurrenceConfig(enabled = true, mode = "classic", pattern = "daily", rangeEnd = "2026-11-27")))
+        val occurrence = tasks.saveOccurrence(TaskOccurrences.standaloneDraft(series, "2026-11-27"))
+        assertTrue("Detached date is removed from the parent series",
+            "2026-11-27" in requireNotNull(tasks.get(series.id)).recurrenceExcludedDates)
+        val edited = tasks.save(occurrence.copy(title = "Updated private task"))
+        tasks.complete(edited.id)
+        assertTrue(requireNotNull(tasks.get(edited.id)).done)
+        val currentSeries = requireNotNull(tasks.get(series.id))
+        tasks.delete(currentSeries.id, currentSeries.revision)
+        assertNull(tasks.get(series.id))
+        assertNull("Private edits never write to the retired task table", app.database.dao().task(scope, edited.id))
+        assertNull(app.database.dao().task(scope, series.id))
+        return edited
+    }
 
     private suspend fun verifySharedMaps(
         auth: AuthController,
