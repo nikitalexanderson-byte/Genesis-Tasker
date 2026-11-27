@@ -159,6 +159,16 @@ for (const language of languages) {
   const affairs = JSON.parse(await readFile(new URL("../app/native-affairs-translations.json", import.meta.url), "utf8"))[language];
   const englishUi = { ...JSON.parse(await readFile(new URL("../app/ui-translations/en.json", import.meta.url), "utf8")), ...refinementCopy.en };
   for (const [source, translated] of Object.entries(affairs)) if (source in englishUi && !(source in catalog)) catalog[source] = translated;
+  const aurora = await Promise.all(["a", "b"].map(async part =>
+    JSON.parse(await readFile(new URL(`../app/aurora/locales/${language}.${part}.json`, import.meta.url), "utf8"))));
+  for (const entries of [catalog, ...aurora]) {
+    for (const [key, value] of Object.entries(entries)) {
+      if (typeof value === "string" && /@\s+(?:info|action)\b|@(?:info|action)\s*:|\bwhatsthis\b/iu.test(value))
+        missing.push(`${language}: translator note in ${key}`);
+    }
+  }
+  if (catalog["Включить фоновые напоминания"] === catalog["Отключить фоновые напоминания"])
+    missing.push(`${language}: background reminder controls need distinct labels`);
   for (const key of Object.keys(english)) {
     if (typeof catalog[key] !== "string" || !catalog[key].trim()) missing.push(`${language}: missing ${key}`);
   }
