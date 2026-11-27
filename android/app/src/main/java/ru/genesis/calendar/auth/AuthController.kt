@@ -39,6 +39,12 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import java.util.UUID
 
+private val syncDiagnosticCodes = setOf(
+    "E2EE_ACCOUNT_BINDING_REQUIRED", "E2EE_UPGRADE_REQUIRED", "E2EE_LOCAL_STORAGE_UNAVAILABLE",
+    "E2EE_LOCAL_LEGACY_TRANSPORT_FORBIDDEN", "E2EE_LEGACY_TRANSACTION_IO_FORBIDDEN",
+    "E2EE_INVALID_LEGACY_OPERATION", "E2EE_NESTED_LEGACY_OPERATION", "E2EE_INVALID_RESPONSE",
+)
+
 data class AuthPanelState(
     val busy: Boolean = false,
     val ready: Boolean = false,
@@ -2518,7 +2524,12 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         if (identity == null) {
             requireSignIn(generation)
         }
-        else completeSignedIn(generation, payload, "Сессия подтверждена; зашифрованное пространство прочитано.")
+        else {
+            completeSignedIn(generation, payload, "Сессия подтверждена; зашифрованное пространство прочитано.")
+            if (!inBackground && !identity.privateVault && mutableState.value.ready && client.isCurrent(generation)) {
+                syncPending()
+            }
+        }
     }
 
     fun signIn(activity: Activity, preferredLanguage: String? = null) = start("Готовим защищённый вход…") { generation ->
@@ -2895,7 +2906,18 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
 
     /** Pull on resume and periodically while visible, so another device's changes arrive automatically. */
     fun refreshIfReady() {
-        if (operation?.isActive == true || !mutableState.value.ready || mutableState.value.requiresSignIn) return
+        val state = mutableState.value
+        val user = state.user ?: return
+        if (operation?.isActive == true || !state.ready || state.requiresSignIn) return
+        val network = app.getSystemService(android.net.ConnectivityManager::class.java)
+        if (network.getNetworkCapabilities(network.activeNetwork)
+                ?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) != true) return
+        // A cold offline launch can open the local copy before /session confirms the account.
+        // Re-enter the normal session flow before sending this installation's queued edits.
+        if (!user.privateVault && !client.hasConfirmedOwner(user.uid)) {
+            checkSession()
+            return
+        }
         syncPending()
         refreshAccountData()
         scope.launch(NativeActivityVisit.requestContext()) { runCatching { flushSharedOfflineTasks() } }
@@ -2903,6 +2925,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
 
     private fun refreshAccountData() {
         val identity = mutableState.value.user ?: return
+        if (identity.privateVault || !client.hasConfirmedOwner(identity.uid)) return
         if (!mutableState.value.ready || mutableState.value.requiresSignIn || pullJob?.isActive == true) return
         val generation = client.currentGeneration()
         val accountScope = CloudAccountSnapshot.scopeFor(identity.uid)
@@ -3126,6 +3149,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         }
         val accountScope = CloudAccountSnapshot.scopeFor(identity.uid)
         if (app.workspaceScope != accountScope || mutableState.value.requiresSignIn || syncJob?.isActive == true) return
+        if (!client.hasConfirmedOwner(identity.uid)) return
         val generation = client.currentGeneration();val workspaceEpoch=app.workspaceEpoch
         fun currentSyncOwner() {
             ru.genesis.calendar.security.UpdateGate.requireOpen()
@@ -3334,7 +3358,12 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         // Exception messages can contain cloud record values. Keep only the stage,
         // type and application source location for device diagnostics.
         val location = error.stackTrace.firstOrNull { it.className.startsWith("ru.genesis.calendar.") }
-        val kind = (error as? AuthFailure)?.kind?.name?.let { "/$it" }.orEmpty()
+        val reason = when (error) {
+            is AuthFailure -> error.kind.name
+            is AuthApiError -> error.code.takeIf { it in syncDiagnosticCodes }
+            else -> null
+        }
+        val kind = reason?.let { "/$it" }.orEmpty()
         Log.e("GenesisAuth", "$stage: ${error.javaClass.simpleName}$kind at ${location?.fileName}:${location?.lineNumber}")
     }
 

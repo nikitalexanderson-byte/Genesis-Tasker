@@ -2,21 +2,30 @@ package ru.genesis.calendar
 
 import android.os.Bundle
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import ru.genesis.calendar.auth.AuthController
 import ru.genesis.calendar.auth.NativeActivityVisit
+import ru.genesis.calendar.ui.AppLockHost
+import ru.genesis.calendar.ui.LocalAppLockHost
 import ru.genesis.calendar.ui.GenesisApp
+import ru.genesis.calendar.ui.SecurityUpdateBoundary
 
 class MainActivity : ComponentActivity() {
+    private lateinit var appLock: AppLockHost
     private val openedTask = mutableStateOf<String?>(null)
     private val openedSection = mutableStateOf<String?>(null)
     private val openedHabit = mutableStateOf<ru.genesis.calendar.reminders.HabitReminderOpenRequest?>(null)
@@ -25,13 +34,44 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         acceptIntent(intent)
-        setContent { ru.genesis.calendar.ui.SecurityUpdateBoundary(application as GenesisApplication) { GenesisApp(application as GenesisApplication, openedTask.value, openedSection.value,
-            openedHabit = openedHabit.value, openedAdvice = openedAdvice.value) } }
+        appLock = AppLockHost(this, savedInstanceState)
+        val app = application as GenesisApplication
+        setContent {
+            if (appLock.canMountWorkspace) CompositionLocalProvider(LocalAppLockHost provides appLock) {
+                SecurityUpdateBoundary(app) {
+                    GenesisApp(app, openedTask.value, openedSection.value,
+                        openedHabit = openedHabit.value, openedAdvice = openedAdvice.value)
+                }
+            }
+        }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                while (isActive) {
-                    if (!ru.genesis.calendar.security.UpdateGate.blocked.value) AuthController.get(applicationContext).refreshIfReady()
-                    delay(30_000)
+                val connectivity = getSystemService(ConnectivityManager::class.java)
+                val online = Channel<Unit>(Channel.CONFLATED)
+                val callback = object : ConnectivityManager.NetworkCallback() {
+                    private var availableNetwork: Network? = null
+                    override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
+                        if (capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
+                            if (availableNetwork != network) online.trySend(Unit)
+                            availableNetwork = network
+                        } else if (availableNetwork == network) availableNetwork = null
+                    }
+                    override fun onLost(network: Network) {
+                        if (availableNetwork == network) availableNetwork = null
+                    }
+                }
+                val registered = runCatching { connectivity.registerDefaultNetworkCallback(callback) }.isSuccess
+                try {
+                    if (!registered) online.trySend(Unit)
+                    while (isActive) {
+                        withTimeoutOrNull(30_000) { online.receive() }
+                        if (!ru.genesis.calendar.security.UpdateGate.blocked.value) {
+                            AuthController.get(applicationContext).refreshIfReady()
+                        }
+                    }
+                } finally {
+                    if (registered) connectivity.unregisterNetworkCallback(callback)
+                    online.close()
                 }
             }
         }
@@ -42,6 +82,16 @@ class MainActivity : ComponentActivity() {
         super.onPause()
     }
 
+    override fun onStop() {
+        appLock.onStop()
+        super.onStop()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        appLock.saveState(outState)
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
@@ -49,6 +99,7 @@ class MainActivity : ComponentActivity() {
     }
     override fun onResume() {
         super.onResume()
+        appLock.onResume()
         restoreRecentsCard()
         if (ru.genesis.calendar.security.UpdateGate.blocked.value) return
         NativeActivityVisit.onResume()

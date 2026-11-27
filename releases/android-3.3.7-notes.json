@@ -2,91 +2,109 @@
   "ru": [
     "Теперь сайт и приложение можно использовать на иврите, арабском, корейском и нидерландском. Ищите флажки на экране входа и в настройках языка.",
     "Индикатор синхронизации показывает, когда изменения сохранены на устройстве и ждут отправки, а когда сервер уже их подтвердил.",
-    "Приложение остаётся в недавних. Исправлены вылет при закрытии задачи и зависание при одновременной отправке и загрузке. Повторная загрузка неизменившихся задач сохраняет состояние напоминаний."
+    "Приложение остаётся в недавних. Исправлены вылет при закрытии задачи и зависание при одновременной отправке и загрузке. Повторная загрузка неизменившихся задач сохраняет состояние напоминаний.",
+    "В разделе «Настройки → Безопасность» можно включить блокировку GENESIS и открывать приложение отпечатком пальца или способом блокировки экрана Android, например PIN-кодом."
   ],
   "en": [
     "The website and app are now available in Hebrew, Arabic, Korean and Dutch. Look for the flags on the sign-in screen and in language settings.",
     "The sync indicator shows when changes are saved on your device and waiting to be sent, and when the server has confirmed them.",
-    "The app stays in Recents. Fixed a crash when closing a task and a sync hang during simultaneous uploads and downloads. Unchanged tasks keep their reminder status when synced again."
+    "The app stays in Recents. Fixed a crash when closing a task and a sync hang during simultaneous uploads and downloads. Unchanged tasks keep their reminder status when synced again.",
+    "In Settings → Security, you can lock GENESIS and unlock it with your fingerprint or your Android screen lock, such as a PIN."
   ],
   "el": [
     "Ο ιστότοπος και η εφαρμογή υποστηρίζουν πλέον εβραϊκά, αραβικά, κορεατικά και ολλανδικά. Αλλάξτε γλώσσα από τις σημαίες στην οθόνη σύνδεσης ή στις ρυθμίσεις.",
     "Η ένδειξη συγχρονισμού ξεχωρίζει τις τοπικές αλλαγές που περιμένουν αποστολή από όσες έχει επιβεβαιώσει ο διακομιστής.",
-    "Η εφαρμογή παραμένει στις πρόσφατες εφαρμογές. Διορθώθηκαν η κατάρρευση κατά το κλείσιμο εργασίας και το πάγωμα στην ταυτόχρονη αποστολή και λήψη. Οι αμετάβλητες εργασίες διατηρούν την κατάσταση των υπενθυμίσεων."
+    "Η εφαρμογή παραμένει στις πρόσφατες εφαρμογές. Διορθώθηκαν η κατάρρευση κατά το κλείσιμο εργασίας και το πάγωμα στην ταυτόχρονη αποστολή και λήψη. Οι αμετάβλητες εργασίες διατηρούν την κατάσταση των υπενθυμίσεων.",
+    "Στις Ρυθμίσεις → Ασφάλεια μπορείτε να κλειδώσετε το GENESIS και να το ξεκλειδώνετε με το δακτυλικό σας αποτύπωμα ή με τη μέθοδο κλειδώματος οθόνης του Android, όπως το PIN."
   ],
   "de": [
     "Website und App gibt es jetzt auf Hebräisch, Arabisch, Koreanisch und Niederländisch. Die Flaggen zur Sprachwahl stehen bei der Anmeldung und in den Einstellungen.",
     "Die Sync-Anzeige zeigt, ob lokale Änderungen noch auf den Versand warten oder bereits vom Server bestätigt wurden.",
-    "Die App bleibt in der Übersicht. Ein Absturz beim Schließen von Aufgaben und ein Hänger beim gleichzeitigen Senden und Empfangen wurden behoben. Unveränderte Aufgaben behalten ihren Erinnerungsstatus."
+    "Die App bleibt in der Übersicht. Ein Absturz beim Schließen von Aufgaben und ein Hänger beim gleichzeitigen Senden und Empfangen wurden behoben. Unveränderte Aufgaben behalten ihren Erinnerungsstatus.",
+    "Unter Einstellungen → Sicherheit kannst du GENESIS sperren und mit deinem Fingerabdruck oder deiner Android-Displaysperre, etwa einer PIN, entsperren."
   ],
   "fr": [
     "Le site et l’appli existent aussi en hébreu, arabe, coréen et néerlandais. Choisissez un drapeau à la connexion ou dans les réglages.",
     "L’indicateur distingue les changements locaux en attente d’envoi de ceux que le serveur a confirmés.",
-    "L’appli reste dans les applications récentes. Correction d’un plantage à la fermeture d’une tâche et d’un blocage lors d’envois et de réceptions simultanés. Les tâches inchangées conservent l’état de leurs rappels."
+    "L’appli reste dans les applications récentes. Correction d’un plantage à la fermeture d’une tâche et d’un blocage lors d’envois et de réceptions simultanés. Les tâches inchangées conservent l’état de leurs rappels.",
+    "Dans Paramètres → Sécurité, vous pouvez verrouiller GENESIS et le déverrouiller avec votre empreinte digitale ou le mode de verrouillage de votre écran Android, par exemple un code PIN."
   ],
   "es": [
     "El sitio y la aplicación ya están en hebreo, árabe, coreano y neerlandés. Elige una bandera al iniciar sesión o en los ajustes.",
     "El indicador distingue los cambios locales pendientes de envío de los confirmados por el servidor.",
-    "La aplicación sigue en Recientes. Se corrigieron el cierre inesperado al salir de una tarea y el bloqueo al enviar y recibir datos a la vez. Las tareas sin cambios conservan el estado de sus recordatorios."
+    "La aplicación sigue en Recientes. Se corrigieron el cierre inesperado al salir de una tarea y el bloqueo al enviar y recibir datos a la vez. Las tareas sin cambios conservan el estado de sus recordatorios.",
+    "En Ajustes → Seguridad puedes bloquear GENESIS y desbloquearlo con tu huella digital o con el método de bloqueo de pantalla de Android, como el PIN."
   ],
   "it": [
     "Sito e app sono disponibili anche in ebraico, arabo, coreano e neerlandese. Scegli la lingua con le bandiere all’accesso o nelle impostazioni.",
     "L’indicatore distingue le modifiche locali in attesa di invio da quelle confermate dal server.",
-    "L’app resta tra quelle recenti. Risolti un arresto anomalo alla chiusura di un’attività e un blocco durante l’invio e la ricezione simultanei. Le attività invariate mantengono lo stato dei promemoria."
+    "L’app resta tra quelle recenti. Risolti un arresto anomalo alla chiusura di un’attività e un blocco durante l’invio e la ricezione simultanei. Le attività invariate mantengono lo stato dei promemoria.",
+    "In Impostazioni → Sicurezza puoi bloccare GENESIS e sbloccarlo con l’impronta digitale o con il metodo di blocco schermo di Android, ad esempio il PIN."
   ],
   "pt": [
     "O site e a aplicação já estão disponíveis em hebraico, árabe, coreano e neerlandês. Escolha a bandeira ao iniciar sessão ou nas definições.",
     "O indicador distingue as alterações locais por enviar das já confirmadas pelo servidor.",
-    "A aplicação permanece nas aplicações recentes. Corrigidas uma falha ao fechar uma tarefa e uma paragem da sincronização ao enviar e receber dados em simultâneo. As tarefas inalteradas mantêm o estado dos lembretes."
+    "A aplicação permanece nas aplicações recentes. Corrigidas uma falha ao fechar uma tarefa e uma paragem da sincronização ao enviar e receber dados em simultâneo. As tarefas inalteradas mantêm o estado dos lembretes.",
+    "Em Configurações → Segurança, você pode bloquear o GENESIS e desbloqueá-lo com a impressão digital ou com o método de bloqueio de tela do Android, como o PIN."
   ],
   "pl": [
     "Serwis i aplikacja są teraz dostępne po hebrajsku, arabsku, koreańsku i niderlandzku. Wybierz flagę na ekranie logowania lub w ustawieniach.",
     "Wskaźnik odróżnia zmiany lokalne czekające na wysłanie od potwierdzonych przez serwer.",
-    "Aplikacja pozostaje na liście ostatnich aplikacji. Usunięto awarię przy zamykaniu zadania i zawieszanie synchronizacji przy jednoczesnym wysyłaniu i pobieraniu. Stan przypomnień niezmienionych zadań jest zachowywany."
+    "Aplikacja pozostaje na liście ostatnich aplikacji. Usunięto awarię przy zamykaniu zadania i zawieszanie synchronizacji przy jednoczesnym wysyłaniu i pobieraniu. Stan przypomnień niezmienionych zadań jest zachowywany.",
+    "W sekcji Ustawienia → Bezpieczeństwo możesz włączyć blokadę GENESIS i odblokowywać aplikację odciskiem palca lub metodą blokady ekranu Androida, na przykład kodem PIN."
   ],
   "sr": [
     "Сајт и апликација су сада доступни и на хебрејском, арапском, корејском и холандском. Заставице се налазе на екрану за пријаву и у подешавањима језика.",
     "Показатељ синхронизације приказује да ли су измене сачуване на уређају и чекају на слање или их је сервер већ потврдио.",
-    "Апликација остаје међу недавним апликацијама. Исправљени су пад при затварању задатка и застој када се подаци истовремено шаљу и преузимају. Непромењени задаци задржавају стање подсетника."
+    "Апликација остаје међу недавним апликацијама. Исправљени су пад при затварању задатка и застој када се подаци истовремено шаљу и преузимају. Непромењени задаци задржавају стање подсетника.",
+    "У одељку Подешавања → Безбедност можете да закључате GENESIS и откључате га отиском прста или начином откључавања екрана који користите на Android-у, на пример PIN кодом."
   ],
   "uk": [
     "Сайт і застосунок тепер доступні івритом, арабською, корейською та нідерландською. Прапорці є на екрані входу й у налаштуваннях мови.",
     "Індикатор синхронізації показує, коли зміни збережено на пристрої й вони очікують на надсилання, а коли сервер уже їх підтвердив.",
-    "Застосунок залишається в списку нещодавніх. Усунено аварійне завершення при закритті завдання та зависання під час одночасного надсилання й отримання даних. Незмінені завдання зберігають стан нагадувань."
+    "Застосунок залишається в списку нещодавніх. Усунено аварійне завершення при закритті завдання та зависання під час одночасного надсилання й отримання даних. Незмінені завдання зберігають стан нагадувань.",
+    "У розділі «Налаштування → Безпека» можна ввімкнути блокування GENESIS і відкривати застосунок за відбитком пальця або способом блокування екрана Android, наприклад PIN-кодом."
   ],
   "zh": [
     "网站和应用现已支持希伯来语、阿拉伯语、韩语和荷兰语。您可以在登录界面和语言设置中通过旗帜切换语言。",
     "同步状态会显示更改是已保存在设备上、正在等待发送，还是已经得到服务器确认。",
-    "返回主屏幕后，应用会保留在最近使用的应用列表中。修复了关闭任务时闪退以及同时上传和下载时同步卡住的问题。再次同步时，未更改任务的提醒状态会保留。"
+    "返回主屏幕后，应用会保留在最近使用的应用列表中。修复了关闭任务时闪退以及同时上传和下载时同步卡住的问题。再次同步时，未更改任务的提醒状态会保留。",
+    "在“设置 → 安全”中，你可以开启 GENESIS 应用锁，并使用指纹或 Android 屏幕解锁方式（例如 PIN 码）解锁应用。"
   ],
   "tr": [
     "Site ve uygulama artık İbranice, Arapça, Korece ve Felemenkçe de kullanılabilir. Giriş ekranındaki veya ayarlardaki bayraklardan dil seçebilirsiniz.",
     "Eşitleme göstergesi, gönderilmeyi bekleyen yerel değişiklikleri ve sunucunun onayladığı değişiklikleri gösterir.",
-    "Uygulama son kullanılanlar listesinde kalır. Görev kapatılırken uygulamanın çökmesi ve aynı anda veri gönderip alırken eşitlemenin takılması düzeltildi. Değişmeyen görevlerin hatırlatıcı durumu korunur."
+    "Uygulama son kullanılanlar listesinde kalır. Görev kapatılırken uygulamanın çökmesi ve aynı anda veri gönderip alırken eşitlemenin takılması düzeltildi. Değişmeyen görevlerin hatırlatıcı durumu korunur.",
+    "Ayarlar → Güvenlik bölümünde GENESIS’i kilitleyebilir ve parmak izinizle veya PIN gibi bir Android ekran kilidi yöntemiyle açabilirsiniz."
   ],
   "ja": [
     "ウェブサイトとアプリがヘブライ語、アラビア語、韓国語、オランダ語に対応しました。ログイン画面と設定画面で、国旗を目印に言語を選べます。",
     "同期インジケーターで、変更が端末に保存されて送信を待っているのか、サーバーで確認済みなのかが分かります。",
-    "ホームに戻っても最近使ったアプリの一覧に残ります。タスクを閉じるとアプリが終了する不具合と、送受信が重なると同期が止まる不具合を修正しました。変更のないタスクを再同期してもリマインダーの状態は維持されます。"
+    "ホームに戻っても最近使ったアプリの一覧に残ります。タスクを閉じるとアプリが終了する不具合と、送受信が重なると同期が止まる不具合を修正しました。変更のないタスクを再同期してもリマインダーの状態は維持されます。",
+    "「設定」→「セキュリティ」で GENESIS のアプリロックを有効にできます。解除には指紋認証、または PIN など Android の画面ロック解除方法を使えます。"
   ],
   "he": [
     "האתר והאפליקציה זמינים כעת גם בעברית, בערבית, בקוריאנית ובהולנדית. אפשר לבחור שפה בעזרת הדגלים במסך הכניסה ובהגדרות השפה.",
     "מחוון הסנכרון מציג מתי השינויים נשמרו במכשיר וממתינים לשליחה, ומתי השרת כבר אישר את קבלתם.",
-    "האפליקציה נשארת ברשימת האפליקציות האחרונות. תוקנו קריסה בעת סגירת משימה ותקיעה בסנכרון בעת שליחה וקבלה בו־זמנית. בסנכרון חוזר של משימות שלא השתנו נשמר מצב התזכורות שלהן."
+    "האפליקציה נשארת ברשימת האפליקציות האחרונות. תוקנו קריסה בעת סגירת משימה ותקיעה בסנכרון בעת שליחה וקבלה בו־זמנית. בסנכרון חוזר של משימות שלא השתנו נשמר מצב התזכורות שלהן.",
+    "בהגדרות, בסעיף «אבטחה», אפשר להפעיל נעילה של GENESIS. לפתיחת האפליקציה אפשר להשתמש בטביעת אצבע או בשיטת פתיחת המסך של Android, למשל בקוד PIN."
   ],
   "ar": [
     "يتوفر الموقع والتطبيق الآن بالعبرية والعربية والكورية والهولندية. يمكنك اختيار اللغة من خلال الأعلام في شاشة تسجيل الدخول أو في إعدادات اللغة.",
     "يوضّح مؤشّر المزامنة ما إذا كانت التغييرات محفوظة على جهازك وبانتظار الإرسال، أو أنّ الخادم أكّد استلامها بالفعل.",
-    "يبقى التطبيق في قائمة التطبيقات الأخيرة. أُصلح تعطل التطبيق عند إغلاق مهمة وتوقّف المزامنة عند الإرسال والاستقبال معًا. تحتفظ المهام التي لم تتغيّر بحالة تذكيراتها عند مزامنتها مجددًا."
+    "يبقى التطبيق في قائمة التطبيقات الأخيرة. أُصلح تعطل التطبيق عند إغلاق مهمة وتوقّف المزامنة عند الإرسال والاستقبال معًا. تحتفظ المهام التي لم تتغيّر بحالة تذكيراتها عند مزامنتها مجددًا.",
+    "يمكنك تفعيل قفل GENESIS من قسم «الأمان» في الإعدادات، ثم فتح التطبيق ببصمة إصبعك أو بطريقة فتح قفل شاشة Android، مثل رمز PIN."
   ],
   "ko": [
     "이제 웹사이트와 앱에서 히브리어, 아랍어, 한국어, 네덜란드어를 사용할 수 있습니다. 로그인 화면이나 언어 설정에서 국기를 보고 언어를 선택하세요.",
     "동기화 표시를 보면 변경 사항이 기기에 저장되어 전송을 기다리는 중인지, 서버에서 이미 수신을 확인했는지 알 수 있습니다.",
-    "홈 화면으로 돌아가도 앱이 최근 앱 목록에 남습니다. 작업을 닫을 때 앱이 종료되거나 데이터를 동시에 보내고 받을 때 동기화가 멈추던 문제를 수정했습니다. 변경되지 않은 작업은 다시 동기화해도 알림 상태가 유지됩니다."
+    "홈 화면으로 돌아가도 앱이 최근 앱 목록에 남습니다. 작업을 닫을 때 앱이 종료되거나 데이터를 동시에 보내고 받을 때 동기화가 멈추던 문제를 수정했습니다. 변경되지 않은 작업은 다시 동기화해도 알림 상태가 유지됩니다.",
+    "설정의 ‘보안’에서 GENESIS 앱 잠금을 켤 수 있습니다. 지문이나 PIN 등 Android 화면 잠금 해제 방식으로 앱을 열 수 있습니다."
   ],
   "nl": [
     "Site en app zijn nu ook beschikbaar in het Hebreeuws, Arabisch, Koreaans en Nederlands. Kies een vlag bij het inloggen of in de taalinstellingen.",
     "De syncstatus laat zien welke lokale wijzigingen nog moeten worden verstuurd en welke door de server zijn bevestigd.",
-    "De app blijft in de lijst met recente apps. Een crash bij het sluiten van een taak en vastlopen bij gelijktijdig verzenden en ontvangen zijn verholpen. Ongewijzigde taken behouden de status van hun herinneringen."
+    "De app blijft in de lijst met recente apps. Een crash bij het sluiten van een taak en vastlopen bij gelijktijdig verzenden en ontvangen zijn verholpen. Ongewijzigde taken behouden de status van hun herinneringen.",
+    "Bij Instellingen → Beveiliging kun je GENESIS vergrendelen en de app ontgrendelen met je vingerafdruk of de schermvergrendeling van Android, bijvoorbeeld met een pincode."
   ]
 }

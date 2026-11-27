@@ -206,6 +206,9 @@ internal class AuthSessionClient(context: Context,
         return next
     }
     fun currentGeneration(): Long = synchronized(guard) { generation }
+    fun hasConfirmedOwner(uid: String): Boolean = synchronized(guard) {
+        confirmedPersonalOwnerId == uid && transportEpoch == NativeBackupEpoch.current()
+    }
     fun isCurrent(expected: Long): Boolean = synchronized(guard) { generation == expected && transportEpoch==NativeBackupEpoch.current() }
     /** An independently unlocked, owner-bound local capability may establish
      * offline content routing. This grants neither an HTTP session nor keys. */

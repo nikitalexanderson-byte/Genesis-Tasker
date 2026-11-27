@@ -540,6 +540,8 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
         onContext = { nativeGuidance?.contextual(it) }, onVisibility = { nativeGuidance?.comparisonVisible = it })
     MaterialTheme(colorScheme=if (eveningTheme) darkScheme else lightScheme, typography = GenesisTypography,
         shapes = GenesisShapes) {
+      val deviceAppLock = LocalAppLockHost.current
+      LaunchedEffect(deviceAppLock, language, eveningTheme) { deviceAppLock?.updateAppearance(language, eveningTheme) }
       CompositionLocalProvider(LocalEveningTheme provides eveningTheme, LocalDarkPalette provides darkPalette) {
       CompositionLocalProvider(LocalGenesisLanguage provides language,
           LocalWeatherDisplayUnits provides WeatherDisplayUnits(WeatherTemperatureUnit.fromWire(prefs.weatherTemperatureUnit),
@@ -1840,6 +1842,7 @@ private fun SettingsScreen(app:GenesisApplication,prefs:UiPreferences,sectionId:
             NativeAccountPlanHeader()
         } else sectionHeader()
         when (section.id) {
+        "security" -> AppLockSettings(prefs.language)
         "appearance" -> {
         AppearancePanel(app, workspace, prefs.use24, prefs.theme, { onSet("theme", it) },
             darkPalette = prefs.darkPalette, onPalette = { onSet("darkPalette", it) })
