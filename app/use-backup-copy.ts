@@ -13,6 +13,11 @@ export function useBackupCopy(requested:string) {
   void loadBackupCopy(language).then(copy=>{if(live)setPack({language,copy});}).catch(()=>{if(live)setFailure({language,attempt});});return()=>{live=false;};
  },[language,attempt]);
  const ready=language==='ru'||pack?.language===language;
- return {ready,failed:failure?.language===language&&failure.attempt===attempt,retry:()=>setAttempt(value=>value+1),
-  c:(ru:string,english:string)=>language==='ru'?ru:pack?.language===language?pack.copy[ru]??translateText(ru,language,true):english};
+ const copy = (source: string, english: string) => {
+  if (language === 'ru') return source;
+  if (pack?.language === language) return pack.copy[source] ?? translateText(source, language, true);
+  const initial = translateText(source, language);
+  return initial === source ? english : initial;
+ };
+ return {ready,failed:failure?.language===language&&failure.attempt===attempt,retry:()=>setAttempt(value=>value+1),c:copy};
 }
