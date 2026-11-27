@@ -18,6 +18,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import ru.genesis.calendar.auth.AuthController
+import ru.genesis.calendar.auth.AccountSyncRetry
 import ru.genesis.calendar.auth.NativeActivityVisit
 import ru.genesis.calendar.ui.AppLockHost
 import ru.genesis.calendar.ui.LocalAppLockHost
@@ -50,10 +51,13 @@ class MainActivity : ComponentActivity() {
                 val online = Channel<Unit>(Channel.CONFLATED)
                 val callback = object : ConnectivityManager.NetworkCallback() {
                     private var availableNetwork: Network? = null
+                    private var validated = false
                     override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
                         if (capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
-                            if (availableNetwork != network) online.trySend(Unit)
+                            val nowValidated = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                            if (availableNetwork != network || (nowValidated && !validated)) online.trySend(Unit)
                             availableNetwork = network
+                            validated = nowValidated
                         } else if (availableNetwork == network) availableNetwork = null
                     }
                     override fun onLost(network: Network) {
@@ -64,9 +68,9 @@ class MainActivity : ComponentActivity() {
                 try {
                     if (!registered) online.trySend(Unit)
                     while (isActive) {
-                        withTimeoutOrNull(30_000) { online.receive() }
+                        val connectionAvailable = withTimeoutOrNull(AccountSyncRetry.POLL_MILLIS) { online.receive() } != null
                         if (!ru.genesis.calendar.security.UpdateGate.blocked.value) {
-                            AuthController.get(applicationContext).refreshIfReady()
+                            AuthController.get(applicationContext).refreshIfReady(immediate = connectionAvailable)
                         }
                     }
                 } finally {

@@ -1958,20 +1958,20 @@ async function loadGenesisWorkspaceSnapshot(): Promise<GenesisWorkspace> {
 }
 
 export function observeGenesisUser(
-  listener: (user: GenesisUser | null) => void,
+  listener: (user: GenesisUser | null, readStartedAt: number) => void,
   onError?: (error: Error) => void,
 ) {
   if (!API_BASE) {
-    listener(null);
+    listener(null, performance.now());
     return () => undefined;
   }
   let active = true;
   const controller = new AbortController();
   const poll = async () => {
     try {
-      const user = await loadGenesisSession(controller.signal);
+      const {user, startedAt} = await loadGenesisSessionSnapshot(controller.signal);
       if(user&&serverProtectedTransportOwners.has(user.uid))await waitForPrivateAccount(user.uid,user.language,controller.signal);
-      if (active) listener(user);
+      if (active) listener(user, startedAt);
     } catch (error) {
       if (controller.signal.aborted || error instanceof DOMException && error.name === "AbortError") return;
       if (active) onError?.(error instanceof Error ? error : new Error("Сервер недоступен"));
@@ -1992,6 +1992,7 @@ export function observeGenesisUser(
 }
 
 const readGenesisSession = sessionReader(async () => {
+  const startedAt = performance.now();
   const generation=sessionGeneration;
   try {
     const result=sessionEnvelope<GenesisUser>(await api<unknown>("/session", { cache: "no-store" }));
@@ -2019,7 +2020,7 @@ const readGenesisSession = sessionReader(async () => {
     activeAuthProvider=user?.authProvider==='yandex'?'yandex':'google';
     // Coalesced observers share the post-transition receipt. They must not
     // mistake this reader's own deliberate retirement for a stale response.
-    return {user,generation:sessionGeneration};
+    return {user,generation:sessionGeneration,startedAt};
   }
   catch(error) {
     if(error instanceof GenesisApiError || error instanceof DOMException && error.name==="AbortError" ||
@@ -2028,13 +2029,19 @@ const readGenesisSession = sessionReader(async () => {
   }
 });
 
-export async function loadGenesisSession(signal?: AbortSignal) {
+async function loadGenesisSessionSnapshot(signal?: AbortSignal) {
   const result = await readGenesisSession(signal);
   if(result.generation!==sessionGeneration)throw new DOMException("Session check superseded", "AbortError");
   if(result.user&&Object.hasOwn(result.user,'privatePreferencesMode')&&privateAccountView().phase==='ready'&&privateAccountView().ownerId===result.user.uid){
     const {privatePreferences}=await import('./e2ee/preferences-product');const user=await privatePreferences(result.user.uid).apply(result.user);
-    if(result.generation!==sessionGeneration)throw new DOMException('Session check superseded','AbortError');return user;
-  }return result.user;
+    if(result.generation!==sessionGeneration)throw new DOMException('Session check superseded','AbortError');
+    return {...result, user};
+  }
+  return result;
+}
+
+export async function loadGenesisSession(signal?: AbortSignal) {
+  return (await loadGenesisSessionSnapshot(signal)).user;
 }
 
 export async function signInWithGoogle() {

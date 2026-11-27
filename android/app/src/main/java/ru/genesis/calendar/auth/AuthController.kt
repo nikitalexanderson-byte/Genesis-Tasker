@@ -224,6 +224,13 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     private var operation: Job? = null
     private var syncJob: Job? = null
     private var pullJob: Job? = null
+    private val connectionRetry = AccountSyncRetry(android.os.SystemClock::elapsedRealtime)
+
+    private fun recordConnectionFailure(uid: String?, error: Exception) {
+        if (uid != null && error is AuthFailure && error.kind == AuthFailure.Kind.NETWORK) {
+            connectionRetry.connectionFailed(uid)
+        }
+    }
     private val dataSyncMutex = Mutex()
     private val accountImporter by lazy { CloudAccountImporter(app.database, app.scheduler) }
 
@@ -2736,6 +2743,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         } catch (error: AuthFailure) {
             AuthDiagnostics.event("SYNC_FAILED")
             if (error.kind in setOf(AuthFailure.Kind.UNAUTHORIZED, AuthFailure.Kind.PROTOCOL)) throw error
+            recordConnectionFailure(identity.uid, error)
             publish(generation, AuthPanelState(ready = cachedState != null, preview = cachedState?.preview,
                 user = identity, accountSettings = settings,
                 checkedAt = System.currentTimeMillis(), message = "Вход выполнен, но загрузка облачных данных пока не завершилась. Локальные записи сохранены."))
@@ -2901,13 +2909,15 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
 
     /** A manual sync includes downloading tasks, and never cancels a pull already in progress. */
     fun refresh() {
-        if (mutableState.value.ready && !mutableState.value.requiresSignIn) refreshIfReady() else checkSession()
+        if (mutableState.value.ready && !mutableState.value.requiresSignIn) refreshIfReady(immediate = true) else checkSession()
     }
 
     /** Pull on resume and periodically while visible, so another device's changes arrive automatically. */
-    fun refreshIfReady() {
+    fun refreshIfReady(immediate: Boolean = false) {
         val state = mutableState.value
         val user = state.user ?: return
+        if (immediate) connectionRetry.retryNow(user.uid)
+        if (connectionRetry.waiting(user.uid)) return
         if (operation?.isActive == true || !state.ready || state.requiresSignIn) return
         val network = app.getSystemService(android.net.ConnectivityManager::class.java)
         if (network.getNetworkCapabilities(network.activeNetwork)
@@ -2926,6 +2936,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     private fun refreshAccountData() {
         val identity = mutableState.value.user ?: return
         if (identity.privateVault || !client.hasConfirmedOwner(identity.uid)) return
+        if (connectionRetry.waiting(identity.uid)) return
         if (!mutableState.value.ready || mutableState.value.requiresSignIn || pullJob?.isActive == true) return
         val generation = client.currentGeneration()
         val accountScope = CloudAccountSnapshot.scopeFor(identity.uid)
@@ -2934,6 +2945,8 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         pullJob = scope.launch(NativeActivityVisit.requestContext()) {
             try {
                 syncJob?.join()
+                // A failed upload already established that the connection is unavailable.
+                if (connectionRetry.waiting(identity.uid)) return@launch
                 withAccountDataSync(generation, identity.uid) {
                     val payload = withContext(Dispatchers.IO) {
                         AuthDiagnostics.measure(AuthDiagnostics.SyncPhase.DOWNLOAD) { client.bootstrap(generation) }
@@ -2984,6 +2997,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             } catch (error: CancellationException) { throw error }
             catch (error: Exception) {
                 logCloudFailure("BACKGROUND_PULL", error)
+                recordConnectionFailure(identity.uid, error)
                 if (error is AuthFailure && error.kind == AuthFailure.Kind.UNAUTHORIZED) requireSignIn(generation)
                 if (client.isCurrent(generation)) {
                     mutableTaskSync.value = previous.copy(loading = false,
@@ -3170,6 +3184,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             catch (e: CancellationException) { throw e }
             catch (error: Exception) {
                 logCloudFailure("PREFERENCE_PUSH", error)
+                recordConnectionFailure(identity.uid, error)
                 if (error is AuthFailure && error.kind == AuthFailure.Kind.UNAUTHORIZED) requireSignIn(generation)
                 failure = if (error is AuthFailure && error.kind == AuthFailure.Kind.CONFLICT)
                     "Настройка изменилась на другом устройстве. Обновите данные и выберите тему повторно; ваш выбор сохранён на устройстве."
@@ -3193,6 +3208,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             catch (_: CloudWorkspacePreview.RecoveryRequired) { failure = "Для синхронизации нужен код восстановления пространства." }
             catch (error: Exception) {
                 logCloudFailure("WORKSPACE_PUSH", error)
+                recordConnectionFailure(identity.uid, error)
                 if (error is AuthFailure && error.kind == AuthFailure.Kind.UNAUTHORIZED) requireSignIn(generation)
                 failure = "Изменения проектов или привычек пока не подтверждены сервером и сохранены на устройстве."
             }
@@ -3208,6 +3224,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                 } catch (error: CancellationException) { throw error }
                 catch (error: Exception) {
                     logCloudFailure("TASK_PUSH", error)
+                    recordConnectionFailure(identity.uid, error)
                     if (error is AuthFailure && error.kind == AuthFailure.Kind.UNAUTHORIZED) requireSignIn(generation)
                     failure = listOfNotNull(failure,
                         "Изменения задач пока не подтверждены сервером и сохранены на устройстве.").joinToString(" ")
@@ -3320,6 +3337,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                 failed("Google не завершил выдачу разрешений Calendar/Tasks. Повторите подключение и выберите тот же аккаунт.")
             } catch (error: AuthFailure) {
                 if(ru.genesis.calendar.BuildConfig.DEBUG)logCloudFailure("AUTH_OPERATION",error)
+                recordConnectionFailure(mutableState.value.user?.uid, error)
                 if (error.kind == AuthFailure.Kind.UNAUTHORIZED) requireSignIn(generation)
                 failed(when (error.kind) {
                     AuthFailure.Kind.NOT_DEPLOYED -> "Нативный вход ещё не опубликован на сервере. Локальные функции доступны."

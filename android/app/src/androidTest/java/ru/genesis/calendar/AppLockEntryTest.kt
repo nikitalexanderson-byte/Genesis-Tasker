@@ -63,11 +63,15 @@ class AppLockEntryTest {
     }
 
     private fun returnFromRecents() {
-        device.pressHome()
-        assertTrue("Returned to launcher", device.wait(Until.hasObject(By.pkg(device.launcherPackageName)), timeout))
-        device.pressRecentApps()
+        val home = device.executeShellCommand(
+            "cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME"
+        ).trim().lineSequence().last().substringBefore('/')
+        check(home.isNotBlank() && home != app.packageName)
+        assertTrue("Home key", device.pressHome())
+        device.waitForIdle()
+        assertTrue("Overview key", device.pressRecentApps())
         val thumbnail = listOf("snapshot", "thumbnail", "task_view").firstNotNullOfOrNull { id ->
-            device.wait(Until.findObject(By.res(device.launcherPackageName, id)), 4_000)
+            device.wait(Until.findObject(By.res(home, id)), 4_000)
         }
         requireNotNull(thumbnail) { "GENESIS task card unavailable in overview" }.click()
     }
