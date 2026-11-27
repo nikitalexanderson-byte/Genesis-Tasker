@@ -1,7 +1,10 @@
 package ru.genesis.calendar.auth
 
-/** Leave one polling interval after a failed connection before contacting the same server again. */
-internal class AccountSyncRetry(private val elapsedMillis: () -> Long) {
+/** An offline edit stays queued. A failed connection or a server limit also defers the next request. */
+internal class AccountSyncRetry(
+    private val elapsedMillis: () -> Long,
+    private val networkAvailable: () -> Boolean,
+) {
     private var owner: String? = null
     private var retryAt = 0L
     private val serverLimits = mutableMapOf<String, Long>()
@@ -18,7 +21,9 @@ internal class AccountSyncRetry(private val elapsedMillis: () -> Long) {
         serverLimits[uid] = maxOf(serverLimits[uid] ?: 0L, now + wait)
     }
 
-    fun waiting(uid: String): Boolean {
+    fun waiting(uid: String?): Boolean {
+        if (!networkAvailable()) return true
+        if (uid == null) return false
         val now = elapsedMillis()
         return (owner == uid && now < retryAt) || now < (serverLimits[uid] ?: 0L)
     }

@@ -224,7 +224,11 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     private var operation: Job? = null
     private var syncJob: Job? = null
     private var pullJob: Job? = null
-    private val connectionRetry = AccountSyncRetry(android.os.SystemClock::elapsedRealtime)
+    private val connectionRetry = AccountSyncRetry(android.os.SystemClock::elapsedRealtime) {
+        val network = app.getSystemService(android.net.ConnectivityManager::class.java)
+        network.getNetworkCapabilities(network.activeNetwork)
+            ?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+    }
 
     private fun recordConnectionFailure(uid: String?, error: Exception) {
         if (uid == null || error !is AuthFailure) return
@@ -2924,9 +2928,6 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         if (immediate) connectionRetry.retryNow(user.uid)
         if (connectionRetry.waiting(user.uid)) return
         if (operation?.isActive == true || !state.ready || state.requiresSignIn) return
-        val network = app.getSystemService(android.net.ConnectivityManager::class.java)
-        if (network.getNetworkCapabilities(network.activeNetwork)
-                ?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) != true) return
         // A cold offline launch can open the local copy before /session confirms the account.
         // Re-enter the normal session flow before sending this installation's queued edits.
         if (!user.privateVault && !client.hasConfirmedOwner(user.uid)) {
@@ -3231,12 +3232,14 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                     else "Настройки сохранены на устройстве и ожидают синхронизации."
             }
             try {
-                sentWorkspace = withContext(Dispatchers.IO) {
-                    CloudWorkspaceSync(app.database, object : CloudWorkspaceTransport {
-                        override fun get() = client.workspace(generation)
-                        override fun put(body: JSONObject) = client.putWorkspace(generation, body)
-                        override fun habitReminderConsent() = client.habitReminderStatus(generation).optBoolean("hasDevices",false)
-                    }).flush(accountScope, conflictPolicy, expectedConflictFingerprint)
+                if (!connectionRetry.waiting(identity.uid)) {
+                    sentWorkspace = withContext(Dispatchers.IO) {
+                        CloudWorkspaceSync(app.database, object : CloudWorkspaceTransport {
+                            override fun get() = client.workspace(generation)
+                            override fun put(body: JSONObject) = client.putWorkspace(generation, body)
+                            override fun habitReminderConsent() = client.habitReminderStatus(generation).optBoolean("hasDevices",false)
+                        }).flush(accountScope, conflictPolicy, expectedConflictFingerprint)
+                    }
                 }
             } catch (error: CancellationException) { throw error }
             catch (error: WorkspacePatch.Conflict) {
@@ -3252,7 +3255,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                 if (error is AuthFailure && error.kind == AuthFailure.Kind.UNAUTHORIZED) requireSignIn(generation)
                 failure = "Изменения проектов или привычек пока не подтверждены сервером и сохранены на устройстве."
             }
-            if (mutableState.value.accountSettings?.let { it.authProvider == "google" ||
+            if (!connectionRetry.waiting(identity.uid) && mutableState.value.accountSettings?.let { it.authProvider == "google" ||
                 it.authProvider == "yandex" && it.calendarConnected } == true) {
                 try {
                     sentTasks = withContext(Dispatchers.IO) {
@@ -3271,6 +3274,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                 }
             }
             currentSyncOwner()
+            if (failure == null && connectionRetry.waiting(identity.uid)) return@measure
             if (client.isCurrent(generation)) mutableState.value = mutableState.value.copy(
                 workspaceConflictPath = conflictPath, workspaceConflictPreview = conflictPreview, outgoingSyncIssue = failure, message = failure ?:
                 if (sentTasks + sentWorkspace > 0) "Синхронизировано: $sentTasks задач, $sentWorkspace изменений пространства."
@@ -3309,6 +3313,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         // Workers never borrow an open foreground vault or initialize a new
         // identity. Private queues resume with their original bytes on unlock.
         if(ru.genesis.calendar.security.NativePrivateProducts.isProtected(app.workspaceScope)||mutableState.value.user?.privateVault==true)return@withContext true
+        if (connectionRetry.waiting(mutableState.value.user?.uid)) return@withContext false
         if (operation?.isActive != true) checkSession(inBackground = true)
         operation?.join()
         if (mutableState.value.requiresSignIn) return@withContext true
