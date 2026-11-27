@@ -43,7 +43,14 @@ internal class NativePrivateSharedMindmaps(private val storageScope:String,priva
     override suspend fun adoptServer(id:String,access:FeatureAccess){check();check(drafts().none{!it.value.getBoolean("complete")&&it.value.getJSONObject("document").getString("id")==id}){"E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED"};load(true)}
     override suspend fun fork(input:MindmapDocument,access:FeatureAccess):MindmapDocument{val copy=MindmapDocument.parse(input.json()).copy(id=UUID.randomUUID().toString());save(copy,0,access);return copy}
     private fun local(name:String)=E2eeDeviceDocument(account.device,"shared-map-local:$space:$name",{value->E2eeKeys.exact(value,setOf("ownerId","spaceId","value"));check(value.getString("ownerId")==owner&&value.getString("spaceId")==space){"E2EE_SCOPE_BINDING_MISMATCH"};value},::check)
-    override suspend fun saveLocal(name:String,value:JSONObject?){check();val store=local(name);val old=store.load();store.save(JSONObject().put("ownerId",owner).put("spaceId",space).put("value",value?:JSONObject.NULL),old?.serial);check()}
+    override suspend fun saveLocal(name: String, value: JSONObject?, replacingTaskId: String?) {
+        check()
+        val store = local(name)
+        val old = store.load()
+        if (replacingTaskId != null && old?.value?.optJSONObject("value")?.optString("id") != replacingTaskId) return
+        store.save(JSONObject().put("ownerId", owner).put("spaceId", space).put("value", value ?: JSONObject.NULL), old?.serial)
+        check()
+    }
     override suspend fun readLocal(name:String):JSONObject?{check();return local(name).load()?.value?.optJSONObject("value")}
     override suspend fun readView(id:String)=readLocal("view:$id")
     override fun toString()="NativePrivateSharedMindmaps([redacted])"

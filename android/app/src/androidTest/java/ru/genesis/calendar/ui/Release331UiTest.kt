@@ -9,7 +9,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -379,39 +378,40 @@ class Release331UiTest {
         }
     }
 
-    @Test fun headerButtonsOnlyFadeTheirBackgroundAndLoseTheirOutline() {
-        var palette by mutableStateOf("blue"); var dark by mutableStateOf(false)
-        var container = Color.White; var surface = Color.White; var ink = Color.Black; var calendarInk = Color.Black
+    @Test fun calendarAndHeaderIconsShowTheParentSurfaceInEveryModeAndPalette() {
+        var palette by mutableStateOf("blue")
+        var dark by mutableStateOf(false)
+        var surface = Color.White
+        var ink = Color.Black
         compose.setContent { Frame(palette = palette, dark = dark) {
-            container = MaterialTheme.colorScheme.primaryContainer
             surface = MaterialTheme.colorScheme.surface
-            ink = MaterialTheme.colorScheme.onPrimaryContainer
-            calendarInk = if (dark) MaterialTheme.colorScheme.primary else ink
+            ink = MaterialTheme.colorScheme.onSurface
             Row(Modifier.fillMaxWidth().background(surface)) {
-                Text("Сегодня", Modifier.weight(1f))
-                WorkspaceHeaderButton("Порядок блоков", "header-background-test", onClick = {}) { GenesisLucideIcon("arrow-up-down") }
-                CalendarModeSwitcher(CalendarMode.PROFANE, {}, size = 48.dp, headerControl = true)
+                WorkspaceHeaderButton("Порядок блоков", "header-background-test", onClick = {}) {
+                    GenesisLucideIcon("arrow-up-down")
+                }
+                CalendarMode.entries.forEach { mode -> CalendarModeSwitcher(mode, {}, size = 48.dp) }
             }
         } }
         for (p in palettes) for (night in listOf(false, true)) {
             compose.runOnIdle { palette = p; dark = night }
-            compose.mainClock.advanceTimeBy(1000); compose.waitForIdle()
-            val expected = container.copy(alpha = container.alpha * .5f).compositeOver(surface)
-            for (tag in listOf("header-background-test", "calendar-mode-icon-profane")) {
-                val pixels = compose.onNodeWithTag(tag).captureToImage().toPixelMap()
-                // A one-pixel sample in the middle of the former outline must be the fill.
-                val edge = pixels[1, pixels.height / 2]
-                assertEquals("$p/$night/$tag red", expected.red, edge.red, .015f)
-                assertEquals("$p/$night/$tag green", expected.green, edge.green, .015f)
-                assertEquals("$p/$night/$tag blue", expected.blue, edge.blue, .015f)
-                val icon = if (tag == "header-background-test") ink else calendarInk
-                var foundOpaqueInk = false
-                for (x in pixels.width / 4 until pixels.width * 3 / 4) for (y in pixels.height / 4 until pixels.height * 3 / 4) {
-                    val pixel = pixels[x, y]
-                    if (kotlin.math.abs(pixel.red - icon.red) < .015f && kotlin.math.abs(pixel.green - icon.green) < .015f &&
-                        kotlin.math.abs(pixel.blue - icon.blue) < .015f) foundOpaqueInk = true
+            compose.waitForIdle()
+            val tags = listOf("header-background-test") + CalendarMode.entries.map { "calendar-mode-icon-${it.wireValue}" }
+            for (tag in tags) {
+                val target = compose.onNodeWithTag(tag)
+                target.assertHasClickAction().assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp)
+                val pixels = target.captureToImage().toPixelMap()
+                fun matches(pixel: Color, color: Color) = kotlin.math.abs(pixel.red - color.red) < .02f &&
+                    kotlin.math.abs(pixel.green - color.green) < .02f && kotlin.math.abs(pixel.blue - color.blue) < .02f
+                assertTrue("Transparent edge $p/$night/$tag", matches(pixels[1, pixels.height / 2], surface))
+                val midX = pixels.width / 2
+                val midY = pixels.height / 2
+                assertTrue("Transparent inner space $p/$night/$tag", matches(pixels[midX + pixels.width / 5, midY + pixels.height / 5], surface))
+                if (tag.endsWith("sacred") || tag.endsWith("lunar")) {
+                    assertTrue("Hollow glyph $p/$night/$tag", matches(pixels[midX, midY], surface))
                 }
-                assertTrue("Icons must keep their original ink: $p/$night/$tag", foundOpaqueInk)
+                val visibleInk = (0 until pixels.width).any { x -> (0 until pixels.height).any { y -> matches(pixels[x, y], ink) } }
+                assertTrue("Visible outlines $p/$night/$tag", visibleInk)
             }
             shot("header-$p-$night")
         }

@@ -231,7 +231,7 @@ class Release336DesignQaTest {
             shot("actions-$p-$night-idle")
             compose.onNodeWithTag("qa336-header").performTouchInput { down(center) }
             val pressed = sample("qa336-header")
-            assertTrue("Press reveals the header surface: $p/$night", difference(idle, pressed) > .02)
+            assertTrue("Press keeps the header transparent: $p/$night", difference(idle, pressed) < .02)
             shot("actions-$p-$night-pressed")
             compose.onNodeWithTag("qa336-header").performTouchInput { up() }
             compose.mainClock.advanceTimeBy(700)

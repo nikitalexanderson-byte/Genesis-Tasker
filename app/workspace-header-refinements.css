@@ -175,3 +175,18 @@ html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .d
 }
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .day-details-create-task-button small { color:#d5e5f6; }
 html[data-genesis-theme="standart"][data-genesis-palette="blue"] .genesis-app .day-details-create-task-button:is(:hover,:focus-visible) { border-color:#dfc47f; box-shadow:0 14px 30px rgb(22 57 95 / .25); }
+
+/* Icon-only controls retain their hit area on every surface. */
+html[data-genesis-theme] .genesis-app :is(.app-brand-header, .topbar) .topbar-actions button.ux-action-button:where(:not(.icon-label-choice)),
+html[data-genesis-theme] .genesis-app .shared-projects .shared-context-actions > button.icon-action-button,
+html[data-genesis-theme] .genesis-app .shared-workspace-toolbar .shared-project-toolbar-actions > button:where(:not(.shared-create-first-project)) {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--ink);
+}
+html[data-genesis-theme] .genesis-app :is(.app-brand-header, .topbar) .topbar-actions button.ux-action-button:focus-visible,
+html[data-genesis-theme] .genesis-app .shared-projects :is(.shared-context-actions, .shared-project-toolbar-actions) > button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}

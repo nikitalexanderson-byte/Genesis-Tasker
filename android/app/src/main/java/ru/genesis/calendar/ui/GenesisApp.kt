@@ -299,15 +299,24 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
     var newTaskListId by rememberSaveable { mutableStateOf<String?>(null) }
     val mindmapUid=mindmapAccountUid(authState.user?.uid,authState.ready,activeScope)
     val mapsAccess=rememberUpdatedState(authState.accountSettings?.featureAccess ?: ru.genesis.calendar.auth.FeatureAccess())
-    val mapsRepo=remember(mindmapUid,activeScope) {mindmapUid?.let {uid->ru.genesis.calendar.data.MindmapRepository(app.database,activeScope,uid,authController.mindmapTransport(uid),{ mapsAccess.value })}}
+    val workspaceLifetime = authController.workspaceLifetime()
+    val mapsRepo = remember(mindmapUid, activeScope, workspaceLifetime) {
+        mindmapUid?.let { uid -> ru.genesis.calendar.data.MindmapRepository(
+            app.database, activeScope, uid, authController.mindmapTransport(uid), { mapsAccess.value }) }
+    }
+    var checkedConversionDraft by remember(activeScope, mindmapUid) { mutableStateOf(false) }
     LaunchedEffect(mapsRepo) {
+        if (checkedConversionDraft) return@LaunchedEffect
         val repository=mapsRepo ?: return@LaunchedEffect
         try {
             repository.conversionDraft()?.let { draft ->
-                if(app.repository.get(draft.id)==null) {
+                if (app.repository.get(draft.id) != null) {
+                    repository.clearConversionDraft(draft.id)
+                } else if (editId == null) {
                     mindmapTaskDraft=draft;newTaskProjectId=draft.projectId;newTaskListId=null;editId=null;creating=true;mindmapsOpen=true
-                } else repository.clearConversionDraft()
+                }
             }
+            checkedConversionDraft = true
         } catch(error:kotlinx.coroutines.CancellationException) { throw error }
         catch(error:Exception) {
             // Startup/session transitions must preserve a failed draft without crashing sign-in.
@@ -613,7 +622,7 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                         CalendarModeSwitcher(prefs.display, {
                             changeDisplayCalendar(nextAvailableCalendarMode(prefs.display,
                                 CalendarMode.entries.filter { it.wireValue in uiVisibility.visibleCalendars }.toSet()))
-                        }, size = 48.dp, interactive = uiVisibility.visibleCalendars.size > 1, headerControl = true)
+                        }, size = 48.dp, interactive = uiVisibility.visibleCalendars.size > 1)
                     }
                 }, footerActions = {
                     TodayThemeButton(eveningTheme, !themeSwitchBusy, plainIcon = true) {
@@ -774,11 +783,10 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                         DiaryScreen(diary, onClose = ::navigateBack)
                     }
                     "Сообщения" -> authState.user?.uid?.let { uid ->
-                        val messagingLifetime=authController.messagingLifetime()
-                        val repository = remember(app, activeScope, uid,privateCustodyRevision,messagingLifetime) {
+                        val repository = remember(app, activeScope, uid,privateCustodyRevision,workspaceLifetime) {
                             ru.genesis.calendar.data.MessagingRepository.room(app.database, activeScope, uid, authController.messagingGateway(uid))
                         }
-                        val messenger = remember(app, activeScope, uid,privateCustodyRevision,messagingLifetime) {
+                        val messenger = remember(app, activeScope, uid,privateCustodyRevision,workspaceLifetime) {
                             ru.genesis.calendar.data.MessengerRepository.room(app.database, activeScope, uid, authController.messagingGateway(uid))
                         }
                         MessengerScreen(messenger, prefs.language, initialProjectId=messagingProjectId,
@@ -967,12 +975,29 @@ private fun GenesisWorkspaceContent(app: GenesisApplication, openedTask: String?
                 }
             }
             val existing=tasks.find { it.id==editId }
+            val conversionId = mindmapTaskDraft?.id?.takeIf { creating && existing == null }
+            fun closeTaskEditor() {
+                creating = false
+                editId = null
+                newTaskEntryType = "task"
+                mindmapTaskDraft = null
+                auroraTaskDraft = null
+                if (conversionId != null && mapsRepo != null) scope.launch {
+                    try {
+                        mapsRepo.clearConversionDraft(conversionId)
+                    } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                        throw cancelled
+                    } catch (error: Exception) {
+                        android.util.Log.w("GenesisMaps", "DRAFT_CLEANUP: ${error.javaClass.simpleName}")
+                    }
+                }
+            }
             if(creating || existing!=null) TaskEditor(existing ?: mindmapTaskDraft ?: auroraTaskDraft,selected,prefs,structure,newTaskProjectId,
                 authState.accountSettings,taskLists,newTaskListId,
-                onDismiss={creating=false;editId=null;newTaskEntryType="task";mindmapTaskDraft=null;auroraTaskDraft=null;scope.launch {mapsRepo?.clearConversionDraft()}},
-                onSave={draft -> model.saveEditor(draft){creating=false;editId=null;newTaskEntryType="task";mindmapTaskDraft=null;auroraTaskDraft=null;scope.launch {mapsRepo?.clearConversionDraft()}}},
+                onDismiss = ::closeTaskEditor,
+                onSave = { draft -> model.saveEditor(draft, ::closeTaskEditor) },
                 onSwitchToShared=if(existing==null && tab=="Проекты" && sharedProjectsEnabled) ({
-                    creating=false; creatingSharedTask=true
+                    creating=false; mindmapTaskDraft=null; auroraTaskDraft=null; creatingSharedTask=true
                 }) else null,
                 onTransfer=existing?.takeIf { sharedProjectsEnabled }?.let { selectedTask ->
                     { transferTask=selectedTask;creating=false;editId=null }

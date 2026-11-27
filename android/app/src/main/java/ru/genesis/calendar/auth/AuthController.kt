@@ -1064,8 +1064,13 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     internal fun mindmapTransport(uid:String):ru.genesis.calendar.data.MindmapTransport {
       val capturedGeneration=client.currentGeneration();val capturedEpoch=app.workspaceEpoch;val accountScope=CloudAccountSnapshot.scopeFor(uid)
       return object : ru.genesis.calendar.data.MindmapTransport {
-        override fun check() {ru.genesis.calendar.security.UpdateGate.requireOpen();check(client.isCurrent(capturedGeneration)&&app.workspaceEpoch==capturedEpoch
-            &&mutableState.value.user?.uid==uid && app.workspaceScope==accountScope) { "Сессия карт завершена. Повторите вход; черновик сохранён." } }
+        override fun check() {
+            ru.genesis.calendar.security.UpdateGate.requireOpen()
+            if (!client.isCurrent(capturedGeneration) || app.workspaceEpoch != capturedEpoch ||
+                mutableState.value.user?.uid != uid || app.workspaceScope != accountScope) {
+                throw CancellationException("Сессия карт завершена. Повторите вход; черновик сохранён.")
+            }
+        }
         override suspend fun <T> withLegacyOperation(operation:suspend ()->T):T =
             ru.genesis.calendar.data.NativeLegacyOperationPermit.run(app.database,accountScope,::check,operation)
         private suspend fun call(read: Boolean, action: (Long) -> JSONObject): JSONObject {
@@ -1114,7 +1119,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     override suspend fun sharedMindmapDocument(space: String, path: String, body: JSONObject?, method: String): JSONObject =
         sharedOnlineCall { api, generation -> api.sharedMindmapDocument(generation, space, path, body, method) }
 
-    internal fun messagingLifetime()=client.currentGeneration() to app.workspaceEpoch
+    internal fun workspaceLifetime() = client.currentGeneration() to app.workspaceEpoch
     internal fun messagingGateway(uid: String): MessagingGateway {
       val epoch=ru.genesis.calendar.security.NativePrivateProducts.custodyRevision.value
       val generation=client.currentGeneration();val restore=app.workspaceEpoch;val scope=CloudAccountSnapshot.scopeFor(uid)

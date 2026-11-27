@@ -99,7 +99,13 @@ internal class NativePrivateMindmaps(private val scope:String,private val owner:
         val copy=MindmapDocument.parse(input.json()).let{it.copy(id=UUID.randomUUID().toString(),title=it.title.take(1985)+" · копия")};save(copy,0,access);return copy
     }
     private fun localDocument(name:String)=E2eeDeviceDocument(account.device,name,{value->E2eeKeys.exact(value,setOf("protocol","ownerId","value"));check(value.get("protocol")==1&&value.get("ownerId")==owner){"E2EE_SCOPE_BINDING_MISMATCH"};JSONObject(value.toString())},::check)
-    @Synchronized fun saveLocal(name:String,value:JSONObject?){check();val target=localDocument(name);val old=target.load();target.save(JSONObject().put("protocol",1).put("ownerId",owner).put("value",value?:JSONObject.NULL),old?.serial)}
+    @Synchronized fun saveLocal(name: String, value: JSONObject?, replacingTaskId: String? = null) {
+        check()
+        val target = localDocument(name)
+        val old = target.load()
+        if (replacingTaskId != null && old?.value?.optJSONObject("value")?.optString("id") != replacingTaskId) return
+        target.save(JSONObject().put("protocol", 1).put("ownerId", owner).put("value", value ?: JSONObject.NULL), old?.serial)
+    }
     @Synchronized fun readLocal(name:String):JSONObject?{check();return localDocument(name).load()?.value?.optJSONObject("value")}
     @Synchronized fun readView(id:String):JSONObject?{
         readLocal("mindmap-view:$id")?.let{return it};val history=NativePrivateProducts.history(scope,owner,"mindmap","personal-mindmap-local-work-v1")

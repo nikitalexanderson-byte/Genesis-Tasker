@@ -37,6 +37,29 @@ class MindmapRead333Test {
             return JSONObject().put("revision",writes)
         }
     }
+    @Test fun closingAnOlderTaskEditorKeepsTheNewConversionDraft() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val db = Room.inMemoryDatabaseBuilder(context, GenesisDatabase::class.java).build()
+        try {
+            val repo = MindmapRepository(db, "conversion337-isolated", "conversion-owner", Gateway())
+            val first = LocalTask(id = "first-task", title = "First idea")
+            val next = LocalTask(id = "next-task", title = "Second idea")
+            repo.saveConversionDraft(first)
+            repo.saveConversionDraft(next)
+            repo.clearConversionDraft(first.id)
+            assertEquals(next.id, repo.conversionDraft()?.id)
+            repo.clearConversionDraft(next.id)
+            assertNull(repo.conversionDraft())
+        } finally { db.close() }
+    }
+
+    @Test fun expiredMapSessionCancelsItsWork() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val transport = ru.genesis.calendar.auth.AuthController.get(context)
+            .mindmapTransport("expired-map-session-337")
+        assertThrows(kotlinx.coroutines.CancellationException::class.java) { transport.check() }
+    }
+
     @Test fun failedReadKeepsCachedMapAndRetryLoadsWithoutSendingASave() {
         val context=InstrumentationRegistry.getInstrumentation().targetContext
         val db=Room.inMemoryDatabaseBuilder(context,GenesisDatabase::class.java).build()
