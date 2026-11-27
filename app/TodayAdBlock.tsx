@@ -7,6 +7,10 @@ import { loadTodayAds, type TodayAd } from "./cloud-sync";
 const labels: Record<string, { ad: string; open: string; close: string; wait: string; unit: string }> = {
   ru: { ad: "Реклама", open: "Подробнее", close: "Закрыть", wait: "Закрыть через", unit: "с" },
   en: { ad: "Advertisement", open: "Learn more", close: "Close", wait: "Close in", unit: "s" },
+  he: { ad: "פרסומת", open: "מידע נוסף", close: "סגירה", wait: "אפשר לסגור בעוד", unit: "שנ׳" },
+  ar: { ad: "إعلان", open: "معرفة المزيد", close: "إغلاق", wait: "يتاح الإغلاق بعد", unit: "ث" },
+  ko: { ad: "광고", open: "자세히 보기", close: "닫기", wait: "닫기까지", unit: "초" },
+  nl: { ad: "Advertentie", open: "Meer informatie", close: "Sluiten", wait: "Sluiten over", unit: "s" },
   el: { ad: "Διαφήμιση", open: "Περισσότερα", close: "Κλείσιμο", wait: "Κλείσιμο σε", unit: "δ." },
   de: { ad: "Anzeige", open: "Mehr erfahren", close: "Schließen", wait: "Schließen in", unit: "s" },
   fr: { ad: "Publicité", open: "En savoir plus", close: "Fermer", wait: "Fermer dans", unit: "s" },

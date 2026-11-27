@@ -54,5 +54,21 @@
   "ja": {
     "thisMonth": "今月に戻る",
     "returnMonth": "現在の月に戻る"
+  },
+  "he": {
+    "thisMonth": "לחודש הנוכחי",
+    "returnMonth": "חזור לחודש הנוכחי"
+  },
+  "ar": {
+    "thisMonth": "إلى الشهر الحالي",
+    "returnMonth": "العودة إلى الشهر الحالي"
+  },
+  "ko": {
+    "thisMonth": "현재 달로",
+    "returnMonth": "현재 달로 돌아가기"
+  },
+  "nl": {
+    "thisMonth": "Naar huidige maand",
+    "returnMonth": "Terug naar de huidige maand"
   }
 }

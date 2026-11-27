@@ -19,10 +19,12 @@ function genesisEmailConfiguration(): array
     return ['available'=>(bool)$valid,'settings'=>is_array($mail)?$mail:[]];
 }
 
-function genesisEmailHtml(string $title,string $text,string $url,string $action,string $footer): string
+function genesisEmailHtml(string $title,string $text,string $url,string $action,string $footer,?string $language=null): string
 {
     $escape=static fn(string $value):string=>htmlspecialchars($value,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
-    return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>'
+    $attributes=($language!==null && preg_match('/\A[a-z]{2}\z/D',$language))
+        ? ' lang="'.$language.'" dir="'.(in_array($language,['he','ar'],true)?'rtl':'ltr').'"' : '';
+    return '<!doctype html><html'.$attributes.'><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>'
         .'<body style="margin:0;background:#eee9dc;color:#132426;font:16px/1.6 Arial,sans-serif"><main style="max-width:560px;margin:32px auto;padding:32px;background:#fffdf8;border-radius:12px">'
         .'<p style="color:#255b59;font:28px Georgia,serif;margin:0 0 24px">GENESIS</p><h1 style="font:28px/1.3 Georgia,serif">'.$escape($title).'</h1><p>'.nl2br($escape($text)).'</p>'
         .'<p style="margin:28px 0"><a style="display:inline-block;padding:12px 20px;background:#255b59;color:#fffdf8;text-decoration:none;border-radius:8px" href="'.$escape($url).'">'.$escape($action).'</a></p>'

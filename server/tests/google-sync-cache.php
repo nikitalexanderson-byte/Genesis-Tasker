@@ -22,9 +22,11 @@ $directory = genesisGoogleCacheDirectory(); $quotaPath = $directory . '/quota-ta
 try {
     if (is_file($quotaPath)) unlink($quotaPath);
     genesisGoogleReadSnapshot($user, $calendar, $tasks, $now);
+    $savedCipher = file_get_contents($directory . '/' . genesisGoogleCacheKey($user) . '.enc');
     for ($i = 1; $i <= 20; $i++) genesisGoogleReadSnapshot($user, $calendar, $tasks, $now + $i);
     cacheExpect($calls === 1, 'Client polls repeated Google requests.');
     $cipher = file_get_contents($directory . '/' . genesisGoogleCacheKey($user) . '.enc');
+    cacheExpect($cipher === $savedCipher, 'Fresh client polls rewrote the encrypted snapshot.');
     cacheExpect(!str_contains($cipher, 'Private') && !str_contains($cipher, 'synthetic-grant'), 'Plaintext private snapshot.');
     cacheExpect(is_array(json_decode((string)genesisDecrypt($cipher), true)), 'Snapshot cannot be decrypted.');
     foreach ([['id' => 'cache-test-b'], ['_linked_account' => true]] as $different) {

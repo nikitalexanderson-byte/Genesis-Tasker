@@ -46,6 +46,10 @@ const loaders = {
   zh: () => import("./olympian-knowledge-copy/zh.json"),
   tr: () => import("./olympian-knowledge-copy/tr.json"),
   ja: () => import("./olympian-knowledge-copy/ja.json"),
+  he: () => import("./olympian-knowledge-copy/he.json"),
+  ar: () => import("./olympian-knowledge-copy/ar.json"),
+  ko: () => import("./olympian-knowledge-copy/ko.json"),
+  nl: () => import("./olympian-knowledge-copy/nl.json"),
 };
 export function loadOlympianCopy(language: Language): Promise<KnowledgeCopy> {
   const cached = copies.get(language);

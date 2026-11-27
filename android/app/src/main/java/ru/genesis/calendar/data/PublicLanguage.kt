@@ -2,7 +2,7 @@ package ru.genesis.calendar.data
 
 import java.util.Locale
 
-internal val publicLanguages = setOf("ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja")
+internal val publicLanguages = setOf("ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja", "he", "ar", "ko", "nl")
 
 /** Presentation only: this never establishes residence or payment eligibility. */
 internal fun welcomeLanguage(selected: String?, deviceLanguage: String, zoneId: String, country: String,
@@ -10,6 +10,7 @@ internal fun welcomeLanguage(selected: String?, deviceLanguage: String, zoneId: 
     selected?.takeIf { it in publicLanguages }
         ?: "ru".takeIf { suggestRussianByIp }
         ?: deviceLanguage.substringBefore('-').substringBefore('_').lowercase(Locale.ROOT)
+            .let { if (it == "iw") "he" else it }
             .takeIf { it in publicLanguages }
         ?: regionalLanguage(zoneId, country)
 

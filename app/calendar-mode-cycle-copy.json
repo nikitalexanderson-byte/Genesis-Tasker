@@ -12,5 +12,9 @@
   "uk":"Змінити календар: {current} → {next}",
   "zh":"切换日历：{current} → {next}",
   "tr":"Takvimi değiştir: {current} → {next}",
-  "ja":"カレンダーを切り替える：{current} → {next}"
+  "ja":"カレンダーを切り替える：{current} → {next}",
+  "he": "העבר לוח שנה: {current} → {next}",
+  "ar": "تغيير التقويم: {current} → {next}",
+  "ko": "달력 전환: {current} → {next}",
+  "nl": "Schakel tussen kalenders: {current} → {next}"
 }

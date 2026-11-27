@@ -1,3 +1,4 @@
+import {REGION_LANGUAGES} from "../app/region-language.ts";
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
@@ -53,7 +54,7 @@ test('native attribution and disclosure are bundled in every existing language',
   ]);
   assert.match(gradle, /app\/dictation-copy\.json/);
   const copy = JSON.parse(raw);
-  assert.equal(Object.keys(copy).length, 14);
+  assert.equal(Object.keys(copy).length, REGION_LANGUAGES.length);
   for (const locale of Object.values(copy)) for (const key of ['spellcheck', 'privacy', 'credit', 'unavailable']) {
     assert.equal(typeof locale[key], 'string');
     assert.ok(locale[key].trim());

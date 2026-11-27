@@ -14,7 +14,7 @@ import ru.genesis.calendar.ui.NativeAdviceProductRuntime
  * arbitrary path, external origin, root, token, ACL or entitlement import port. */
 internal class E2eeNativeAdviceProduct(context:Context,private val account:E2eeProductAccount){
     private val runtime=NativeAdviceProductRuntime(context);private val mutex=Mutex()
-    private val catalogues=NativeAdvicePublicCatalogues({context.assets.open("originals/catalogs/public-advice-editions-v1.json").use{it.readBytes()}},metadataPinBytes={context.assets.open("originals/catalogs/public-advice-metadata-v1.json").use{it.readBytes()}})
+    private val catalogues=NativeAdvicePublicCatalogues({context.assets.open("originals/catalogs/public-advice-editions-v2.json").use{it.readBytes()}},metadataPinBytes={context.assets.open("originals/catalogs/public-advice-metadata-v1.json").use{it.readBytes()}})
     private val documents=mutableMapOf<String,E2eeFeatureDocument>();private val seeds=mutableMapOf<String,JSONObject>()
     private fun current(){account.requireOpen()}
     private fun validate(value:JSONObject):JSONObject{check(value.getInt("protocol")==1&&value.getString("ownerId")==account.ownerId){"E2EE_SCOPE_BINDING_MISMATCH"};return JSONObject(value.toString())}

@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -32,7 +33,7 @@ test('service terms, Elite+ administration and dictation errors have complete co
   for(const file of ['modeling-service-copy','release-319-copy']){
     const data=JSON.parse(readFileSync(new URL(`../app/${file}.json`,import.meta.url),'utf8'));
     const keys=Object.keys(data.ru).sort();
-    for(const language of ['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja']){
+    for(const language of [...REGION_LANGUAGES]){
       assert.deepEqual(Object.keys(data[language]).sort(),keys);
       for(const value of Object.values(data[language])){
         assert.equal(typeof value,'string');assert(value.trim());assert(!/undefined|\[object Object\]|�/.test(value));

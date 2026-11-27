@@ -101,7 +101,7 @@ function genesisNotificationSend(string $channel,mixed $target,array $message): 
     $text=genesisNotificationCopy('Откройте GENESIS, чтобы посмотреть обновления.',$message['lang']);
     $footer=genesisNotificationCopy('Настройки писем доступны в личном кабинете GENESIS.',$message['lang']);
     return genesisEmailSend($target,'GENESIS — '.$message['body'],$text."\n\n".$message['url']."\n\n".$footer,$message['deliveryId'],
-        genesisEmailHtml($message['body'],$text,$message['url'],genesisNotificationCopy('Открыть GENESIS',$message['lang']),$footer));
+        genesisEmailHtml($message['body'],$text,$message['url'],genesisNotificationCopy('Открыть GENESIS',$message['lang']),$footer,$message['lang']));
 }
 
 /** Network waits never hold SQLite's writer. A fresh lease gates the result/ack transaction. */

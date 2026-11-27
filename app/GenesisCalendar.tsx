@@ -169,7 +169,7 @@ import {
   type WorkspaceRecoveryRequest,
 } from "./cloud-sync";
 import { currentLegalPage } from "./legal-route";
-import {publicRouteForPath,publicPagePath} from "./public-route";
+import {publicLanguagePath,publicRouteForPath,publicPagePath} from "./public-route";
 const LegalPage = lazy(() => import('./LegalPage').then(module => ({default: module.LegalPage})));
 import { TimeClockPicker, TimeClockFormatContext } from "./TimeClockPicker";
 import { CalendarDatePicker } from "./CalendarDatePicker";
@@ -262,6 +262,7 @@ import { AndroidDownload } from "./AndroidDownload";
 import {
   LANGUAGE_LOGIN_PENDING_KEY,
   browserLanguage,
+  formatTranslatedText,
   getRuntimeLanguage,
   isLanguage,
   lunarYearStartText,
@@ -2666,11 +2667,7 @@ export function GenesisCalendar() {
     if (!cloudUser) {
       const route = publicRouteForPath(window.location.pathname,APP_BASE,window.location.search);
       if (route) {
-        const url = new URL(window.location.href);
-        const destination = new URL(publicPagePath(nextLanguage,route.page,APP_BASE,route.edition), url.origin);
-        url.pathname = destination.pathname;
-        url.searchParams.set('lang',nextLanguage);
-        window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+        window.history.replaceState(window.history.state, '', publicLanguagePath(nextLanguage, route.page, APP_BASE, route.edition, window.location));
       }
     }
   };
@@ -3467,7 +3464,9 @@ export function GenesisCalendar() {
       updatedAt: timestamp(),
     };
     persistTaskChange(task, nextTask);
-    setProjectMoveAnnouncement(`Задача «${task.title}» перемещена в список «${taskList.title}».`);
+    setProjectMoveAnnouncement(formatTranslatedText("Задача «{item}» перемещена в список «{list}».", language, {
+      item: task.title, list: taskList.title,
+    }));
   };
 
   const toggleTask = (id: string) => {
@@ -4181,18 +4180,18 @@ export function GenesisCalendar() {
       };
       setTasks((current) => current.map((candidate) => candidate.id === nextTask.id ? nextTask : candidate));
       saveTask(nextTask);
-      setProjectMoveAnnouncement(moveToInbox
-        ? `Задача «${item.title}» возвращена в хаос-бокс.`
-        : `Задача «${item.title}» перемещена в проект «${project?.title}».`);
+      setProjectMoveAnnouncement(formatTranslatedText(moveToInbox
+        ? "Задача «{item}» возвращена в хаос-бокс."
+        : "Задача «{item}» перемещена в проект «{project}».", language, { item: item.title, project: project?.title ?? "" }));
       return;
     }
 
     const currentProjectId = taskListLinks.find((link) => link.taskListId === item.id)?.projectId ?? null;
     if (currentProjectId === (project?.id ?? null)) return;
     linkTaskListToProject(item.id, project?.id ?? "");
-    setProjectMoveAnnouncement(moveToInbox
-      ? `Список «${item.title}» возвращён в хаос-бокс.`
-      : `Список «${item.title}» перемещён в проект «${project?.title}».`);
+    setProjectMoveAnnouncement(formatTranslatedText(moveToInbox
+      ? "Список «{item}» возвращён в хаос-бокс."
+      : "Список «{item}» перемещён в проект «{project}».", language, { item: item.title, project: project?.title ?? "" }));
   };
 
   const beginProjectPointerDrag = (event: PointerEvent<HTMLElement>, item: ProjectDragItem) => {
@@ -6458,7 +6457,7 @@ export function GenesisCalendar() {
           onEditColor={setEditingCategoryColor} onEditTitle={setEditingCategoryTitle} onEdit={beginCategoryEdit} onCancel={() => setEditingCategoryId("")}
           onSave={saveCategoryEdit} onDelete={deleteCategory} newTitle={newCategoryTitle} onNewTitle={setNewCategoryTitle} onCreate={addCategory}
           onOpen={id => { setExpandedExperimentalProjects(ids => [...new Set([...ids, id])]); document.querySelector(`[data-project-drop-id="${CSS.escape(id)}"]`)?.scrollIntoView({block:"center",behavior:"smooth"}); }}/>
-        <p className="sr-only" aria-live="polite">{projectMoveAnnouncement}</p>
+        <p className="sr-only" aria-live="polite" data-no-translate>{projectMoveAnnouncement}</p>
         {projectTouchPoint && projectDragItem ? (
           <div className="project-drag-preview" style={{ left: projectTouchPoint.x, top: projectTouchPoint.y }}>
             <span>{projectDragItem.kind === "task" ? "Задача" : "Список"}</span>

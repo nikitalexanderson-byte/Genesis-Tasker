@@ -12,5 +12,41 @@
  "uk":{"pending":"Незавершений вибір файлів","resume":"Знову вибрати ті самі файли","import":"Додати вибрані файли","retain":"Залишити на потім","retained":"Файли залишено на потім","notice":"Для продовження виберіть ті самі файли в тому самому порядку. Початкові дані зберігаються.","error":"Не вдалося завершити операцію з файлом. Чернетка та збережені частини файлу залишаються на місці."},
  "zh":{"pending":"未完成的文件选择","resume":"重新选择相同文件","import":"添加所选文件","retain":"保留至稍后","retained":"已保留供稍后使用的文件","notice":"要继续，请按相同顺序选择相同文件。原始数据将予以保留。","error":"无法完成文件操作。草稿和已保存的文件部分均已保留。"},
  "tr":{"pending":"Tamamlanmamış dosya seçimi","resume":"Aynı dosyaları yeniden seç","import":"Seçilen dosyaları ekle","retain":"Sonrası için sakla","retained":"Sonrası için saklanan dosyalar","notice":"Devam etmek için aynı dosyaları aynı sırayla seçin. Özgün veriler korunur.","error":"Dosya işlemi tamamlanamadı. Taslak ve kaydedilen dosya parçaları korundu."},
- "ja":{"pending":"未完了のファイル選択","resume":"同じファイルを再選択","import":"選択したファイルを追加","retain":"後で使うために保持","retained":"後で使うために保持したファイル","notice":"再開するには、同じファイルを同じ順序で選択してください。元のデータは保持されます。","error":"ファイル操作を完了できませんでした。下書きと保存済みのファイル部分は保持されています。"}
+ "ja":{"pending":"未完了のファイル選択","resume":"同じファイルを再選択","import":"選択したファイルを追加","retain":"後で使うために保持","retained":"後で使うために保持したファイル","notice":"再開するには、同じファイルを同じ順序で選択してください。元のデータは保持されます。","error":"ファイル操作を完了できませんでした。下書きと保存済みのファイル部分は保持されています。"},
+  "he": {
+    "pending": "בחירת קובץ לא גמורה",
+    "resume": "בחר שוב את אותם הקבצים",
+    "import": "הוסף את הקבצים הנבחרים",
+    "retain": "שמור למאוחר יותר.",
+    "retained": "קבצים שנשמרו למאוחר יותר",
+    "notice": "כדי להמשיך, בחר את אותם הקבצים באותו סדר. המידע המקורי נשמר.",
+    "error": "לא ניתן לסיים את פעולת הקובץ. חלקי הקובץ הראשוני והשמור נשמרים."
+  },
+  "ar": {
+    "pending": "اختيار الملف غير المكتمل",
+    "resume": "اختار نفس الملفات مرة أخرى",
+    "import": "أضف الملفات المختارة",
+    "retain": "احتفظ بها لأخرى",
+    "retained": "الملفات المحتفظ بها ﻻحقا",
+    "notice": "للاستئناف، اختار نفس الملفات بنفس الترتيب. البيانات الأصلية محفوظة.",
+    "error": "لم يكن بالإمكان إكمال عملية الملف هذه. تم الحفاظ على المسودة والأجزاء المحفوظة من الملف."
+  },
+  "ko": {
+    "pending": "미완성 파일 선택",
+    "resume": "동일한 파일을 다시 선택",
+    "import": "선택한 파일 추가",
+    "retain": "나중에 보관하기",
+    "retained": "나중에 사용할 파일",
+    "notice": "다시 시작하려면 동일한 순서로 동일한 파일을 선택합니다. 원본 데이터는 보존됩니다.",
+    "error": "파일 작업을 완료할 수 없습니다. 초안과 저장된 파일 부분은 보존됩니다."
+  },
+  "nl": {
+    "pending": "Onvoltooide bestandsselectie",
+    "resume": "Dezelfde bestanden opnieuw selecteren",
+    "import": "Geselecteerde bestanden toevoegen",
+    "retain": "Bewaar voor later",
+    "retained": "Bestanden bewaard voor later",
+    "notice": "Als u wilt hervatten, selecteert u dezelfde bestanden in dezelfde volgorde. Oorspronkelijke gegevens blijven behouden.",
+    "error": "Deze bestandsbewerking kon niet worden voltooid. De concept- en opgeslagen delen van het bestand blijven behouden."
+  }
 }

@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from "node:assert/strict";
 import test from "node:test";
 import {readFileSync} from "node:fs";
@@ -337,7 +338,7 @@ test("stale trial import/export checks retain a valid paid baseline and still ho
 
 test("trial copy covers all supported languages with the same parameter names", () => {
   const copy = JSON.parse(readFileSync(new URL("../app/billing-trial-copy.json",import.meta.url),"utf8"));
-  assert.deepEqual(Object.keys(copy).sort(), ["ru","en","el","de","fr","es","it","pt","pl","sr","uk","zh","tr","ja"].sort());
+  assert.deepEqual(Object.keys(copy).sort(), [...REGION_LANGUAGES].sort());
   const keys = Object.keys(copy.ru).sort();
   assert.equal(keys.length,29);
   const placeholders = value => [...value.matchAll(/\{(\w+)\}/g)].map(match=>match[1]).sort();

@@ -8,7 +8,7 @@ import feedbackAudioManifest from "./public/feedback-audio/manifest.json";
 import mindmapIconCatalog from "./app/mindmap-icon-catalog.json";
 import moodFaces from "./app/mood-faces.json";
 import {translateText} from './app/i18n';
-import {REGION_LANGUAGES} from './app/region-language';
+import {languageDirection, languageManifest, LANGUAGE_CHOICES, REGION_LANGUAGES} from './app/region-language';
 import {PUBLIC_PAGES,publicPagePath,publicPageAlternates} from './app/public-route';
 import {publicHomeHtml,publicLegalHtml,PUBLIC_ORIGIN} from './app/public-document-html';
 import publicPageCopy from './app/public-page-copy.json';
@@ -20,28 +20,70 @@ const base = configuredBase.endsWith("/") ? configuredBase : `${configuredBase}/
 const apiUrl = process.env.GENESIS_API_URL?.trim() || `${base.replace(/\/$/, "")}/api`;
 const PRECACHE_STATIC_REVISION = "lunar-cool-calendar-art-v8";
 
-/** Source phrases are identical across locales; ship them once instead of in every UI dictionary. */
-function compactUiLocaleTransport(): Plugin {
-  const languages = ["en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja"];
-  const catalogs = new Map(languages.map(language => [language, JSON.parse(readFileSync(path.join(projectRoot, "app/ui-translations", `${language}.json`), "utf8")) as Record<string, string>]));
-  const keys = [...new Set([...catalogs.values()].flatMap(Object.keys))];
-  const prefix = "\0genesis-ui-translations/";
-  return {
-    name: "genesis-compact-ui-locale-transport", apply: "build", enforce: "pre",
-    resolveId(source) {
-      if (source === "genesis-ui-source-phrases") return "\0genesis-ui-source-phrases";
-      const language = source.match(/(?:^|[\\/])ui-translations[\\/]([a-z]{2})\.json$/)?.[1];
-      if (language && catalogs.has(language)) return `${prefix}${language}.json.js`;
-    },
-    load(id) {
-      if (id === "\0genesis-ui-source-phrases") return `const keys=${JSON.stringify(keys)};export function restore(values){return Object.fromEntries(keys.flatMap((key,i)=>values[i]===null?[]:[[key,values[i]]]))}`;
-      if (id.startsWith(prefix)) {
-        const catalog = catalogs.get(id.slice(prefix.length, -8));
-        if (catalog) return `import {restore} from 'genesis-ui-source-phrases';export default restore(${JSON.stringify(keys.map(key => catalog[key] ?? null))});`;
+/** Keep common source phrases in shared chunks and bound each UTF-8 payload. */
+function compactLocaleTransport() {
+  const modules = new Map<string, string>();
+  const entries = new Map<string, string>();
+  const groups: { name: string; test: (id: string) => boolean; priority: number }[] = [];
+
+  function addModule(name: string, source: string) {
+    const id = `genesis-locale/${name}`;
+    modules.set(id, source);
+    groups.push({ name, test: resolved => resolved === `\0${id}`, priority: 48 });
+    return id;
+  }
+
+  function register(family: string, languages: readonly string[], filename: (code: string) => string) {
+    const catalogs = languages.map(code =>
+      JSON.parse(readFileSync(path.join(projectRoot, "app", filename(code)), "utf8")) as Record<string, string>);
+    const keys = [...new Set(catalogs.flatMap(Object.keys))];
+    const blocks: string[][] = [[]];
+    let bytes = 0;
+    for (const key of keys) {
+      const weight = Math.max(...[key, ...catalogs.map(catalog => catalog[key] ?? null)]
+        .map(value => Buffer.byteLength(JSON.stringify(value)) + 1));
+      if (bytes && bytes + weight > 220_000) {
+        blocks.push([]);
+        bytes = 0;
+      }
+      blocks[blocks.length - 1].push(key);
+      bytes += weight;
+    }
+
+    const readers = blocks.map((block, i) => addModule(`locale-${family}-source-phrases-${i}`,
+      `const keys = ${JSON.stringify(block)}; export function restore(values) {
+        return Object.fromEntries(keys.flatMap((key, i) => values[i] === null ? [] : [[key, values[i]]]));
+      }`));
+    languages.forEach((language, index) => {
+      const imports = blocks.map((block, i) => {
+        const values = block.map(key => catalogs[index][key] ?? null);
+        const part = addModule(`locale-parts-${family}-${language}-${i}`,
+          `import { restore } from ${JSON.stringify(readers[i])}; export default restore(${JSON.stringify(values)});`);
+        return `import part${i} from ${JSON.stringify(part)};`;
+      });
+      const name = family === "ui" ? `locale-ui-${language}` : `locale-${language}`;
+      const entry = addModule(name, `${imports.join("\n")}\nexport default Object.assign({}, ${blocks.map((_, i) => `part${i}`).join(", ")});`);
+      entries.set(path.resolve(projectRoot, "app", filename(language)), entry);
+    });
+  }
+
+  register("ui", REGION_LANGUAGES.filter(code => code !== "ru"), code => `ui-translations/${code}.json`);
+  register("base", ["he", "ar", "ko", "nl"], code => `translations.${code}.json`);
+  const plugin: Plugin = {
+    name: "genesis-compact-locale-transport", apply: "build", enforce: "pre",
+    resolveId(source, importer) {
+      if (modules.has(source)) return `\0${source}`;
+      if (importer && source.endsWith(".json")) {
+        const entry = entries.get(path.resolve(path.dirname(importer), source));
+        if (entry) return `\0${entry}`;
       }
     },
+    load(id) { if (id.startsWith("\0genesis-locale/")) return modules.get(id.slice(1)); },
   };
+  return { plugin, groups };
 }
+
+const localeTransport = compactLocaleTransport();
 
 function publicLegalDocuments(): Plugin {
   const escape = (text: string) => text.replace(/[&<>"']/g, (character) => ({
@@ -67,12 +109,13 @@ function publicLegalDocuments(): Plugin {
         for(const page of PUBLIC_PAGES) {
           const canonical=publicPagePath(language,page,base,edition);
           const legal=page!=='home'&&page!=='login'?publicLegalHtml(page,language,translate,text=>backup[text]??translate(text),base,edition):null;
-          const markup=legal?.markup??publicHomeHtml(language,translate,base,edition);
+          const markup=legal?.markup??publicHomeHtml(language,translate,base,edition,page === "login" ? "login" : "home");
           const title=legal?.title??publicPageCopy[language].title;
           const description=legal?.description??translate('GENESIS — календарь задач и менеджер проектов с планом дня, напоминаниями и необязательной синхронизацией Google Calendar и Google Tasks.');
           const alternates=publicPageAlternates(page,base,edition).map(row=>`<link rel="alternate" hreflang="${row.language}" href="${PUBLIC_ORIGIN}${row.path}" />`).join('\n');
           const source=template.replace(root,`<div id="root">${markup}</div>`)
-            .replace(/<html lang="[^"]+"/,`<html lang="${language}"`)
+            .replace(/(<link rel="manifest" href=")[^"]*(")/, (_match, start, end) => `${start}${base}${languageManifest(language)}${end}`)
+            .replace(/<html lang="[^"]+"/,`<html lang="${language}" dir="${languageDirection(language)}"`)
             .replace(/<title>[^<]*<\/title>/,`<title>${escape(title)} · Genesis Tasker</title>`)
             .replace(/(<meta name="description" content=")[^"]*("\s*\/?\s*>)/,(_match,start,end)=>`${start}${escape(description)}${end}`)
             .replace(/<link rel="canonical"[^>]*>/,`<link rel="canonical" href="${PUBLIC_ORIGIN}${canonical}" />\n${alternates}`);
@@ -113,7 +156,9 @@ function offlinePrecacheManifest(basePath: string): Plugin {
         "fonts/experimental/SourceSerif4-latin.woff2"];
       const iconFiles = mindmapIconCatalog.map(icon => `mindmap-icons/${icon.id}.png`);
       const moodFiles = moodFaces.faces.map(face => `tracker-art/moods/mood-${face.value + 5}.svg`);
-      const staticFiles = [...feedbackAudioManifest.files.map(cue => `feedback-audio/${cue.file}`), ...fonts, ...iconFiles, ...moodFiles, "habit-reminder-worker.js", "e2ee-legacy-transport-worker.js", "icons/icon-round-v2.png", "mindmap-icons/LICENSE.txt", "mindmap-icons/SOURCE.txt", "mindmap-icons/GENESIS-100-PNG.zip", "sounds/task.wav", "sounds/habit.wav"];
+      const flagFiles = REGION_LANGUAGES.map(language => `language-flags/${LANGUAGE_CHOICES[language].country}.svg`);
+      const manifestFiles = [...new Set(REGION_LANGUAGES.map(languageManifest))];
+      const staticFiles = [...flagFiles, ...manifestFiles, ...feedbackAudioManifest.files.map(cue => `feedback-audio/${cue.file}`), ...fonts, ...iconFiles, ...moodFiles, "habit-reminder-worker.js", "e2ee-legacy-transport-worker.js", "icons/icon-round-v2.png", "mindmap-icons/LICENSE.txt", "mindmap-icons/SOURCE.txt", "mindmap-icons/GENESIS-100-PNG.zip", "sounds/task.wav", "sounds/habit.wav"];
       const fingerprint = createHash("sha256").update(`${PRECACHE_STATIC_REVISION}\n${requiredFiles.join("\n")}`);
       staticFiles.forEach((file) => fingerprint.update(readFileSync(path.join(projectRoot, "public", file))));
       const version = fingerprint.digest("hex").slice(0, 16);
@@ -139,7 +184,7 @@ export default defineConfig({
   root: path.join(projectRoot, "web"),
   base,
   publicDir: path.join(projectRoot, "public"),
-  plugins: [compactUiLocaleTransport(), react(), offlinePrecacheManifest(base), publicLegalDocuments(), advicePublicAssets(projectRoot)],
+  plugins: [localeTransport.plugin, react(), offlinePrecacheManifest(base), publicLegalDocuments(), advicePublicAssets(projectRoot)],
   define: {
     "process.env.NEXT_PUBLIC_GENESIS_MINDMAPS": JSON.stringify(process.env.GENESIS_MINDMAPS === "true" ? "true" : "false"),
     "process.env.NEXT_PUBLIC_GENESIS_API_URL": JSON.stringify(apiUrl),
@@ -200,7 +245,7 @@ export default defineConfig({
             { name: "locale-refinements", test: /app[\\/]ui-refinement-copy\.json$/, priority: 46 },
             { name: "locale-trial", test: /app[\\/]billing-trial-copy\.json$/, priority: 46 },
             { name: "public-documents", test: /app[\\/](?:LegalPage\.tsx|legal-content\.ts)$/, priority: 14 },
-            ...["el","de","fr","es","it","pt","pl","sr","uk","zh","tr","ja"].map(locale => ({
+            ...REGION_LANGUAGES.filter(code => code !== "en" && code !== "ru").map(locale => ({
               name: `locale-restoration-${locale}`,
               test: new RegExp(`stoicheion-restoration-locales[\\\\/]${locale}\\.json$`),
               priority: 46,
@@ -210,17 +255,14 @@ export default defineConfig({
               test: /app[\\/](?:SharedTaskPageControls|SharedDependencyPicker|SharedArchivedTasks|SharedTaskDetailsEditor|SharedEntityPreview|SharedEntityComments)\.tsx$/,
               priority: 14,
             },
-            ...["en","el","de","fr","es","it","pt","pl","sr","uk","zh","tr","ja"].map((locale) => ({
+            ...REGION_LANGUAGES.filter(code => code !== "ru").map((locale) => ({
               name: `locale-work-${locale}`,
               test: new RegExp(`shared-work-translations[\\\\/]${locale}\\.json$`),
               priority: 46,
             })),
-            ...["en","el","de","fr","es","it","pt","pl","sr","uk","zh","tr","ja"].map((locale) => ({
-              name: `locale-ui-${locale}`,
-              test: new RegExp(`ui-translations[\\\\/]${locale}\\.json(?:\\.js)?$`),
-              priority: 46,
-            })),
-            { name: "locale-ui-source-phrases", test: /genesis-ui-source-phrases$/, priority: 47 },
+            ...localeTransport.groups,
+            { name: "locale-habit-reports", test: /app[\\/]habit-report-translations\.json$/, priority: 46 },
+            { name: "locale-daily-advice", test: /app[\\/]daily-advice-copy\.json$/, priority: 46 },
             ...["el.a", "el.b", "de", "de.b", "fr", "fr.b", "es", "es.b", "it", "it.b", "pt", "pl", "pl.b", "sr.a", "sr.b", "uk.a", "uk.b", "zh", "tr", "ja", "ja.b"].map((locale) => ({
               name: `locale-${locale}`,
               test: new RegExp(`translations\\.${locale}\\.json$`),

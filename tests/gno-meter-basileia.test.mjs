@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -17,10 +18,10 @@ const draft=(overrides={})=>({...g.newGnoDraft(),modelVersion:undefined,guided:u
 const known=()=>Object.fromEntries(g.CORE_QUESTIONS.map(key=>[key,answer(key==='repeat'?'no':'yes')]));
 const doc=(d=draft(),seed=123)=>({version:1,ownerId:'owner',sessions:[{...sessions.newSession({id:'gno-session',ownerId:'owner',now:NOW,primary:snapshot(seed),timezone:'Europe/Moscow'}),gno:d}],removed:[],activeSessionId:'gno-session'});
 
-test('Thirteen life areas have precise prompts and ten distinct action mechanisms in all fourteen locales',()=>{
+test('Thirteen life areas have precise prompts and ten distinct action mechanisms in all supported locales',()=>{
  const base=JSON.parse(readFileSync(new URL('../app/aurora/gno-copy.en.json',import.meta.url),'utf8'));
  const flatten=obj=>Object.entries(obj).flatMap(([k,v])=>Array.isArray(v)?v.map((s,i)=>[`${k}.${i}`,s]):[[k,v]]);
- for(const lang of ['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja']){
+ for(const lang of [...REGION_LANGUAGES]){
   const copy=JSON.parse(readFileSync(new URL(`../app/aurora/${['ru','en'].includes(lang)?`gno-copy.${lang}.json`:`gno-locales/${lang}.json`}`,import.meta.url),'utf8'));
   assert.deepEqual(Object.keys(copy).sort(),Object.keys(base).sort(),lang);
   assert.equal(copy.domains.length,g.DOMAINS.length);assert.equal(new Set(copy.domainPrompts).size,13);assert.equal(copy.actionBodies.length,g.MECHANISMS.length);

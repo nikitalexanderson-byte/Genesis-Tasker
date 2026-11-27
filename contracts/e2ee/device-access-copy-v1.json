@@ -1,16 +1,362 @@
 {
- "en":{"title":"Device access","notice":"Send the request to the scope owner. Compare its fingerprint through another trusted channel before approval. Return the signed approval to the requesting device; only that device submits it. Each new request keeps the previous one.","scope":"Data scope","create":"Create a request for this device","request":"Device request","incoming":"Request received from another device","compare":"Fingerprint confirmed through another channel","approve":"Approve the compared device","approval":"Signed approval","submit":"Apply approval on this device","saved":"Device access is confirmed.","expired":"This request has expired. Create a new request; the previous one remains saved.","roles":{"owner":"Owner","writer":"Writer","commenter":"Commenter","reader":"Reader"}},
- "ru":{"title":"Доступ устройств","notice":"Передайте запрос владельцу области данных. Перед одобрением сверьте отпечаток по другому доверенному каналу. Верните подписанное подтверждение запрашивающему устройству — отправить его может только оно. Новый запрос сохраняет предыдущий.","scope":"Область данных","create":"Создать запрос для этого устройства","request":"Запрос устройства","incoming":"Запрос с другого устройства","compare":"Отпечаток, сверенный по другому каналу","approve":"Одобрить проверенное устройство","approval":"Подписанное подтверждение","submit":"Применить подтверждение на этом устройстве","saved":"Доступ устройства подтверждён.","expired":"Срок запроса истёк. Создайте новый запрос; предыдущий остаётся сохранённым.","roles":{"owner":"Владелец","writer":"Редактор","commenter":"Комментатор","reader":"Читатель"}},
- "el":{"title":"Πρόσβαση συσκευών","notice":"Στείλτε το αίτημα στον ιδιοκτήτη του χώρου δεδομένων. Συγκρίνετε το αποτύπωμα μέσω άλλου έμπιστου καναλιού πριν την έγκριση. Επιστρέψτε την υπογεγραμμένη έγκριση στη συσκευή που έκανε το αίτημα· μόνο αυτή την υποβάλλει. Κάθε νέο αίτημα διατηρεί το προηγούμενο.","scope":"Χώρος δεδομένων","create":"Δημιουργία αιτήματος για αυτή τη συσκευή","request":"Αίτημα συσκευής","incoming":"Αίτημα από άλλη συσκευή","compare":"Αποτύπωμα επιβεβαιωμένο μέσω άλλου καναλιού","approve":"Έγκριση της ελεγμένης συσκευής","approval":"Υπογεγραμμένη έγκριση","submit":"Εφαρμογή έγκρισης σε αυτή τη συσκευή","saved":"Η πρόσβαση της συσκευής επιβεβαιώθηκε.","expired":"Το αίτημα έληξε. Δημιουργήστε νέο· το προηγούμενο παραμένει αποθηκευμένο.","roles":{"owner":"Ιδιοκτήτης","writer":"Συντάκτης","commenter":"Σχολιαστής","reader":"Αναγνώστης"}},
- "de":{"title":"Gerätezugriff","notice":"Senden Sie die Anfrage an den Eigentümer des Datenbereichs. Vergleichen Sie den Fingerabdruck vor der Genehmigung über einen anderen vertrauenswürdigen Kanal. Senden Sie die signierte Genehmigung an das anfragende Gerät zurück; nur dieses reicht sie ein. Neue Anfragen bewahren die vorherigen.","scope":"Datenbereich","create":"Anfrage für dieses Gerät erstellen","request":"Geräteanfrage","incoming":"Anfrage von einem anderen Gerät","compare":"Über einen anderen Kanal bestätigter Fingerabdruck","approve":"Verglichenes Gerät genehmigen","approval":"Signierte Genehmigung","submit":"Genehmigung auf diesem Gerät anwenden","saved":"Gerätezugriff bestätigt.","expired":"Diese Anfrage ist abgelaufen. Erstellen Sie eine neue; die vorherige bleibt gespeichert.","roles":{"owner":"Eigentümer","writer":"Bearbeiter","commenter":"Kommentator","reader":"Leser"}},
- "fr":{"title":"Accès des appareils","notice":"Envoyez la demande au propriétaire de l’espace de données. Comparez son empreinte par un autre canal de confiance avant approbation. Renvoyez l’approbation signée à l’appareil demandeur ; lui seul la soumet. Chaque nouvelle demande conserve la précédente.","scope":"Espace de données","create":"Créer une demande pour cet appareil","request":"Demande de l’appareil","incoming":"Demande reçue d’un autre appareil","compare":"Empreinte confirmée par un autre canal","approve":"Approuver l’appareil vérifié","approval":"Approbation signée","submit":"Appliquer l’approbation sur cet appareil","saved":"L’accès de l’appareil est confirmé.","expired":"Cette demande a expiré. Créez une nouvelle demande ; la précédente reste enregistrée.","roles":{"owner":"Propriétaire","writer":"Éditeur","commenter":"Commentateur","reader":"Lecteur"}},
- "es":{"title":"Acceso de dispositivos","notice":"Envía la solicitud al propietario del ámbito de datos. Compara su huella por otro canal de confianza antes de aprobarla. Devuelve la aprobación firmada al dispositivo solicitante; solo ese dispositivo puede enviarla. Cada solicitud nueva conserva la anterior.","scope":"Ámbito de datos","create":"Crear una solicitud para este dispositivo","request":"Solicitud del dispositivo","incoming":"Solicitud recibida de otro dispositivo","compare":"Huella confirmada por otro canal","approve":"Aprobar el dispositivo verificado","approval":"Aprobación firmada","submit":"Aplicar aprobación en este dispositivo","saved":"Se ha confirmado el acceso del dispositivo.","expired":"Esta solicitud ha caducado. Crea una nueva; la anterior sigue guardada.","roles":{"owner":"Propietario","writer":"Editor","commenter":"Comentarista","reader":"Lector"}},
- "it":{"title":"Accesso dei dispositivi","notice":"Invia la richiesta al proprietario dell’ambito dati. Confronta l’impronta tramite un altro canale fidato prima di approvare. Restituisci l’approvazione firmata al dispositivo richiedente: solo quel dispositivo può inviarla. Ogni nuova richiesta conserva la precedente.","scope":"Ambito dati","create":"Crea una richiesta per questo dispositivo","request":"Richiesta del dispositivo","incoming":"Richiesta ricevuta da un altro dispositivo","compare":"Impronta confermata tramite un altro canale","approve":"Approva il dispositivo verificato","approval":"Approvazione firmata","submit":"Applica approvazione su questo dispositivo","saved":"L’accesso del dispositivo è confermato.","expired":"Questa richiesta è scaduta. Creane una nuova; la precedente rimane salvata.","roles":{"owner":"Proprietario","writer":"Editor","commenter":"Commentatore","reader":"Lettore"}},
- "pt":{"title":"Acesso de dispositivos","notice":"Envie o pedido ao proprietário do âmbito de dados. Compare a impressão digital através de outro canal de confiança antes de aprovar. Devolva a aprovação assinada ao dispositivo requerente; só esse dispositivo a submete. Cada novo pedido conserva o anterior.","scope":"Âmbito de dados","create":"Criar um pedido para este dispositivo","request":"Pedido do dispositivo","incoming":"Pedido recebido de outro dispositivo","compare":"Impressão digital confirmada por outro canal","approve":"Aprovar o dispositivo verificado","approval":"Aprovação assinada","submit":"Aplicar aprovação neste dispositivo","saved":"O acesso do dispositivo está confirmado.","expired":"Este pedido expirou. Crie um novo; o anterior permanece guardado.","roles":{"owner":"Proprietário","writer":"Editor","commenter":"Comentador","reader":"Leitor"}},
- "pl":{"title":"Dostęp urządzeń","notice":"Wyślij prośbę do właściciela obszaru danych. Przed zatwierdzeniem porównaj odcisk przez inny zaufany kanał. Odeślij podpisane zatwierdzenie do urządzenia wnioskującego; tylko ono może je przesłać. Każda nowa prośba zachowuje poprzednią.","scope":"Obszar danych","create":"Utwórz prośbę dla tego urządzenia","request":"Prośba urządzenia","incoming":"Prośba z innego urządzenia","compare":"Odcisk potwierdzony przez inny kanał","approve":"Zatwierdź sprawdzone urządzenie","approval":"Podpisane zatwierdzenie","submit":"Zastosuj zatwierdzenie na tym urządzeniu","saved":"Dostęp urządzenia został potwierdzony.","expired":"Ta prośba wygasła. Utwórz nową; poprzednia pozostaje zapisana.","roles":{"owner":"Właściciel","writer":"Edytor","commenter":"Komentator","reader":"Czytelnik"}},
- "sr":{"title":"Приступ уређаја","notice":"Пошаљите захтев власнику области података. Пре одобрења упоредите отисак преко другог поузданог канала. Вратите потписано одобрење уређају који је затражио приступ; само га он може послати. Сваки нови захтев чува претходни.","scope":"Област података","create":"Направи захтев за овај уређај","request":"Захтев уређаја","incoming":"Захтев са другог уређаја","compare":"Отисак потврђен преко другог канала","approve":"Одобри проверени уређај","approval":"Потписано одобрење","submit":"Примени одобрење на овом уређају","saved":"Приступ уређаја је потврђен.","expired":"Захтев је истекао. Направите нови; претходни остаје сачуван.","roles":{"owner":"Власник","writer":"Уредник","commenter":"Коментатор","reader":"Читалац"}},
- "uk":{"title":"Доступ пристроїв","notice":"Передайте запит власнику області даних. Перед схваленням звірте відбиток через інший довірений канал. Поверніть підписане підтвердження пристрою, що надіслав запит — лише він може його подати. Новий запит зберігає попередній.","scope":"Область даних","create":"Створити запит для цього пристрою","request":"Запит пристрою","incoming":"Запит з іншого пристрою","compare":"Відбиток, звірений через інший канал","approve":"Схвалити перевірений пристрій","approval":"Підписане підтвердження","submit":"Застосувати підтвердження на цьому пристрої","saved":"Доступ пристрою підтверджено.","expired":"Строк запиту минув. Створіть новий запит; попередній залишається збереженим.","roles":{"owner":"Власник","writer":"Редактор","commenter":"Коментатор","reader":"Читач"}},
- "zh":{"title":"设备访问权限","notice":"将请求发送给数据范围的所有者。批准前，通过另一个可信渠道核对指纹。将签名批准返回给发起请求的设备，只有该设备可以提交。每个新请求都会保留之前的请求。","scope":"数据范围","create":"为此设备创建请求","request":"设备请求","incoming":"从另一台设备收到的请求","compare":"通过其他渠道核对的指纹","approve":"批准已核对的设备","approval":"签名批准","submit":"在此设备上应用批准","saved":"已确认设备访问权限。","expired":"此请求已过期。请创建新请求，之前的请求将保留。","roles":{"owner":"所有者","writer":"编辑者","commenter":"评论者","reader":"阅读者"}},
- "tr":{"title":"Cihaz erişimi","notice":"İsteği veri kapsamının sahibine gönderin. Onaylamadan önce parmak izini başka bir güvenilir kanaldan karşılaştırın. İmzalı onayı istekte bulunan cihaza geri gönderin; yalnızca o cihaz gönderebilir. Her yeni istek öncekini korur.","scope":"Veri kapsamı","create":"Bu cihaz için istek oluştur","request":"Cihaz isteği","incoming":"Başka cihazdan gelen istek","compare":"Başka kanaldan doğrulanan parmak izi","approve":"Doğrulanan cihazı onayla","approval":"İmzalı onay","submit":"Onayı bu cihazda uygula","saved":"Cihaz erişimi doğrulandı.","expired":"Bu isteğin süresi doldu. Yeni bir istek oluşturun; önceki istek kayıtlı kalır.","roles":{"owner":"Sahip","writer":"Düzenleyici","commenter":"Yorumcu","reader":"Okuyucu"}},
- "ja":{"title":"デバイスのアクセス","notice":"データ範囲の所有者にリクエストを送信してください。承認前に、別の信頼できる経路で指紋を照合してください。署名済みの承認を要求元のデバイスに返してください。提出できるのはそのデバイスだけです。新しいリクエストを作成しても以前のものは保持されます。","scope":"データ範囲","create":"このデバイスのリクエストを作成する","request":"デバイスのリクエスト","incoming":"別のデバイスから受け取ったリクエスト","compare":"別の経路で照合した指紋","approve":"照合したデバイスを承認する","approval":"署名済みの承認","submit":"このデバイスで承認を適用する","saved":"デバイスのアクセスが確認されました。","expired":"このリクエストは期限切れです。新しく作成してください。以前のリクエストは保持されます。","roles":{"owner":"所有者","writer":"編集者","commenter":"コメント権限","reader":"閲覧者"}}
+  "en": {
+    "title": "Device access",
+    "notice": "Send the request to the scope owner. Compare its fingerprint through another trusted channel before approval. Return the signed approval to the requesting device; only that device submits it. Each new request keeps the previous one.",
+    "scope": "Data scope",
+    "create": "Create a request for this device",
+    "request": "Device request",
+    "incoming": "Request received from another device",
+    "compare": "Fingerprint confirmed through another channel",
+    "approve": "Approve the compared device",
+    "approval": "Signed approval",
+    "submit": "Apply approval on this device",
+    "saved": "Device access is confirmed.",
+    "expired": "This request has expired. Create a new request; the previous one remains saved.",
+    "roles": {
+      "owner": "Owner",
+      "writer": "Writer",
+      "commenter": "Commenter",
+      "reader": "Reader"
+    }
+  },
+  "ru": {
+    "title": "Доступ устройств",
+    "notice": "Передайте запрос владельцу области данных. Перед одобрением сверьте отпечаток по другому доверенному каналу. Верните подписанное подтверждение запрашивающему устройству — отправить его может только оно. Новый запрос сохраняет предыдущий.",
+    "scope": "Область данных",
+    "create": "Создать запрос для этого устройства",
+    "request": "Запрос устройства",
+    "incoming": "Запрос с другого устройства",
+    "compare": "Отпечаток, сверенный по другому каналу",
+    "approve": "Одобрить проверенное устройство",
+    "approval": "Подписанное подтверждение",
+    "submit": "Применить подтверждение на этом устройстве",
+    "saved": "Доступ устройства подтверждён.",
+    "expired": "Срок запроса истёк. Создайте новый запрос; предыдущий остаётся сохранённым.",
+    "roles": {
+      "owner": "Владелец",
+      "writer": "Редактор",
+      "commenter": "Комментатор",
+      "reader": "Читатель"
+    }
+  },
+  "el": {
+    "title": "Πρόσβαση συσκευών",
+    "notice": "Στείλτε το αίτημα στον ιδιοκτήτη του χώρου δεδομένων. Συγκρίνετε το αποτύπωμα μέσω άλλου έμπιστου καναλιού πριν την έγκριση. Επιστρέψτε την υπογεγραμμένη έγκριση στη συσκευή που έκανε το αίτημα· μόνο αυτή την υποβάλλει. Κάθε νέο αίτημα διατηρεί το προηγούμενο.",
+    "scope": "Χώρος δεδομένων",
+    "create": "Δημιουργία αιτήματος για αυτή τη συσκευή",
+    "request": "Αίτημα συσκευής",
+    "incoming": "Αίτημα από άλλη συσκευή",
+    "compare": "Αποτύπωμα επιβεβαιωμένο μέσω άλλου καναλιού",
+    "approve": "Έγκριση της ελεγμένης συσκευής",
+    "approval": "Υπογεγραμμένη έγκριση",
+    "submit": "Εφαρμογή έγκρισης σε αυτή τη συσκευή",
+    "saved": "Η πρόσβαση της συσκευής επιβεβαιώθηκε.",
+    "expired": "Το αίτημα έληξε. Δημιουργήστε νέο· το προηγούμενο παραμένει αποθηκευμένο.",
+    "roles": {
+      "owner": "Ιδιοκτήτης",
+      "writer": "Συντάκτης",
+      "commenter": "Σχολιαστής",
+      "reader": "Αναγνώστης"
+    }
+  },
+  "de": {
+    "title": "Gerätezugriff",
+    "notice": "Senden Sie die Anfrage an den Eigentümer des Datenbereichs. Vergleichen Sie den Fingerabdruck vor der Genehmigung über einen anderen vertrauenswürdigen Kanal. Senden Sie die signierte Genehmigung an das anfragende Gerät zurück; nur dieses reicht sie ein. Neue Anfragen bewahren die vorherigen.",
+    "scope": "Datenbereich",
+    "create": "Anfrage für dieses Gerät erstellen",
+    "request": "Geräteanfrage",
+    "incoming": "Anfrage von einem anderen Gerät",
+    "compare": "Über einen anderen Kanal bestätigter Fingerabdruck",
+    "approve": "Verglichenes Gerät genehmigen",
+    "approval": "Signierte Genehmigung",
+    "submit": "Genehmigung auf diesem Gerät anwenden",
+    "saved": "Gerätezugriff bestätigt.",
+    "expired": "Diese Anfrage ist abgelaufen. Erstellen Sie eine neue; die vorherige bleibt gespeichert.",
+    "roles": {
+      "owner": "Eigentümer",
+      "writer": "Bearbeiter",
+      "commenter": "Kommentator",
+      "reader": "Leser"
+    }
+  },
+  "fr": {
+    "title": "Accès des appareils",
+    "notice": "Envoyez la demande au propriétaire de l’espace de données. Comparez son empreinte par un autre canal de confiance avant approbation. Renvoyez l’approbation signée à l’appareil demandeur ; lui seul la soumet. Chaque nouvelle demande conserve la précédente.",
+    "scope": "Espace de données",
+    "create": "Créer une demande pour cet appareil",
+    "request": "Demande de l’appareil",
+    "incoming": "Demande reçue d’un autre appareil",
+    "compare": "Empreinte confirmée par un autre canal",
+    "approve": "Approuver l’appareil vérifié",
+    "approval": "Approbation signée",
+    "submit": "Appliquer l’approbation sur cet appareil",
+    "saved": "L’accès de l’appareil est confirmé.",
+    "expired": "Cette demande a expiré. Créez une nouvelle demande ; la précédente reste enregistrée.",
+    "roles": {
+      "owner": "Propriétaire",
+      "writer": "Éditeur",
+      "commenter": "Commentateur",
+      "reader": "Lecteur"
+    }
+  },
+  "es": {
+    "title": "Acceso de dispositivos",
+    "notice": "Envía la solicitud al propietario del ámbito de datos. Compara su huella por otro canal de confianza antes de aprobarla. Devuelve la aprobación firmada al dispositivo solicitante; solo ese dispositivo puede enviarla. Cada solicitud nueva conserva la anterior.",
+    "scope": "Ámbito de datos",
+    "create": "Crear una solicitud para este dispositivo",
+    "request": "Solicitud del dispositivo",
+    "incoming": "Solicitud recibida de otro dispositivo",
+    "compare": "Huella confirmada por otro canal",
+    "approve": "Aprobar el dispositivo verificado",
+    "approval": "Aprobación firmada",
+    "submit": "Aplicar aprobación en este dispositivo",
+    "saved": "Se ha confirmado el acceso del dispositivo.",
+    "expired": "Esta solicitud ha caducado. Crea una nueva; la anterior sigue guardada.",
+    "roles": {
+      "owner": "Propietario",
+      "writer": "Editor",
+      "commenter": "Comentarista",
+      "reader": "Lector"
+    }
+  },
+  "it": {
+    "title": "Accesso dei dispositivi",
+    "notice": "Invia la richiesta al proprietario dell’ambito dati. Confronta l’impronta tramite un altro canale fidato prima di approvare. Restituisci l’approvazione firmata al dispositivo richiedente: solo quel dispositivo può inviarla. Ogni nuova richiesta conserva la precedente.",
+    "scope": "Ambito dati",
+    "create": "Crea una richiesta per questo dispositivo",
+    "request": "Richiesta del dispositivo",
+    "incoming": "Richiesta ricevuta da un altro dispositivo",
+    "compare": "Impronta confermata tramite un altro canale",
+    "approve": "Approva il dispositivo verificato",
+    "approval": "Approvazione firmata",
+    "submit": "Applica approvazione su questo dispositivo",
+    "saved": "L’accesso del dispositivo è confermato.",
+    "expired": "Questa richiesta è scaduta. Creane una nuova; la precedente rimane salvata.",
+    "roles": {
+      "owner": "Proprietario",
+      "writer": "Editor",
+      "commenter": "Commentatore",
+      "reader": "Lettore"
+    }
+  },
+  "pt": {
+    "title": "Acesso de dispositivos",
+    "notice": "Envie o pedido ao proprietário do âmbito de dados. Compare a impressão digital através de outro canal de confiança antes de aprovar. Devolva a aprovação assinada ao dispositivo requerente; só esse dispositivo a submete. Cada novo pedido conserva o anterior.",
+    "scope": "Âmbito de dados",
+    "create": "Criar um pedido para este dispositivo",
+    "request": "Pedido do dispositivo",
+    "incoming": "Pedido recebido de outro dispositivo",
+    "compare": "Impressão digital confirmada por outro canal",
+    "approve": "Aprovar o dispositivo verificado",
+    "approval": "Aprovação assinada",
+    "submit": "Aplicar aprovação neste dispositivo",
+    "saved": "O acesso do dispositivo está confirmado.",
+    "expired": "Este pedido expirou. Crie um novo; o anterior permanece guardado.",
+    "roles": {
+      "owner": "Proprietário",
+      "writer": "Editor",
+      "commenter": "Comentador",
+      "reader": "Leitor"
+    }
+  },
+  "pl": {
+    "title": "Dostęp urządzeń",
+    "notice": "Wyślij prośbę do właściciela obszaru danych. Przed zatwierdzeniem porównaj odcisk przez inny zaufany kanał. Odeślij podpisane zatwierdzenie do urządzenia wnioskującego; tylko ono może je przesłać. Każda nowa prośba zachowuje poprzednią.",
+    "scope": "Obszar danych",
+    "create": "Utwórz prośbę dla tego urządzenia",
+    "request": "Prośba urządzenia",
+    "incoming": "Prośba z innego urządzenia",
+    "compare": "Odcisk potwierdzony przez inny kanał",
+    "approve": "Zatwierdź sprawdzone urządzenie",
+    "approval": "Podpisane zatwierdzenie",
+    "submit": "Zastosuj zatwierdzenie na tym urządzeniu",
+    "saved": "Dostęp urządzenia został potwierdzony.",
+    "expired": "Ta prośba wygasła. Utwórz nową; poprzednia pozostaje zapisana.",
+    "roles": {
+      "owner": "Właściciel",
+      "writer": "Edytor",
+      "commenter": "Komentator",
+      "reader": "Czytelnik"
+    }
+  },
+  "sr": {
+    "title": "Приступ уређаја",
+    "notice": "Пошаљите захтев власнику области података. Пре одобрења упоредите отисак преко другог поузданог канала. Вратите потписано одобрење уређају који је затражио приступ; само га он може послати. Сваки нови захтев чува претходни.",
+    "scope": "Област података",
+    "create": "Направи захтев за овај уређај",
+    "request": "Захтев уређаја",
+    "incoming": "Захтев са другог уређаја",
+    "compare": "Отисак потврђен преко другог канала",
+    "approve": "Одобри проверени уређај",
+    "approval": "Потписано одобрење",
+    "submit": "Примени одобрење на овом уређају",
+    "saved": "Приступ уређаја је потврђен.",
+    "expired": "Захтев је истекао. Направите нови; претходни остаје сачуван.",
+    "roles": {
+      "owner": "Власник",
+      "writer": "Уредник",
+      "commenter": "Коментатор",
+      "reader": "Читалац"
+    }
+  },
+  "uk": {
+    "title": "Доступ пристроїв",
+    "notice": "Передайте запит власнику області даних. Перед схваленням звірте відбиток через інший довірений канал. Поверніть підписане підтвердження пристрою, що надіслав запит — лише він може його подати. Новий запит зберігає попередній.",
+    "scope": "Область даних",
+    "create": "Створити запит для цього пристрою",
+    "request": "Запит пристрою",
+    "incoming": "Запит з іншого пристрою",
+    "compare": "Відбиток, звірений через інший канал",
+    "approve": "Схвалити перевірений пристрій",
+    "approval": "Підписане підтвердження",
+    "submit": "Застосувати підтвердження на цьому пристрої",
+    "saved": "Доступ пристрою підтверджено.",
+    "expired": "Строк запиту минув. Створіть новий запит; попередній залишається збереженим.",
+    "roles": {
+      "owner": "Власник",
+      "writer": "Редактор",
+      "commenter": "Коментатор",
+      "reader": "Читач"
+    }
+  },
+  "zh": {
+    "title": "设备访问权限",
+    "notice": "将请求发送给数据范围的所有者。批准前，通过另一个可信渠道核对指纹。将签名批准返回给发起请求的设备，只有该设备可以提交。每个新请求都会保留之前的请求。",
+    "scope": "数据范围",
+    "create": "为此设备创建请求",
+    "request": "设备请求",
+    "incoming": "从另一台设备收到的请求",
+    "compare": "通过其他渠道核对的指纹",
+    "approve": "批准已核对的设备",
+    "approval": "签名批准",
+    "submit": "在此设备上应用批准",
+    "saved": "已确认设备访问权限。",
+    "expired": "此请求已过期。请创建新请求，之前的请求将保留。",
+    "roles": {
+      "owner": "所有者",
+      "writer": "编辑者",
+      "commenter": "评论者",
+      "reader": "阅读者"
+    }
+  },
+  "tr": {
+    "title": "Cihaz erişimi",
+    "notice": "İsteği veri kapsamının sahibine gönderin. Onaylamadan önce parmak izini başka bir güvenilir kanaldan karşılaştırın. İmzalı onayı istekte bulunan cihaza geri gönderin; yalnızca o cihaz gönderebilir. Her yeni istek öncekini korur.",
+    "scope": "Veri kapsamı",
+    "create": "Bu cihaz için istek oluştur",
+    "request": "Cihaz isteği",
+    "incoming": "Başka cihazdan gelen istek",
+    "compare": "Başka kanaldan doğrulanan parmak izi",
+    "approve": "Doğrulanan cihazı onayla",
+    "approval": "İmzalı onay",
+    "submit": "Onayı bu cihazda uygula",
+    "saved": "Cihaz erişimi doğrulandı.",
+    "expired": "Bu isteğin süresi doldu. Yeni bir istek oluşturun; önceki istek kayıtlı kalır.",
+    "roles": {
+      "owner": "Sahip",
+      "writer": "Düzenleyici",
+      "commenter": "Yorumcu",
+      "reader": "Okuyucu"
+    }
+  },
+  "ja": {
+    "title": "デバイスのアクセス",
+    "notice": "データ範囲の所有者にリクエストを送信してください。承認前に、別の信頼できる経路で指紋を照合してください。署名済みの承認を要求元のデバイスに返してください。提出できるのはそのデバイスだけです。新しいリクエストを作成しても以前のものは保持されます。",
+    "scope": "データ範囲",
+    "create": "このデバイスのリクエストを作成する",
+    "request": "デバイスのリクエスト",
+    "incoming": "別のデバイスから受け取ったリクエスト",
+    "compare": "別の経路で照合した指紋",
+    "approve": "照合したデバイスを承認する",
+    "approval": "署名済みの承認",
+    "submit": "このデバイスで承認を適用する",
+    "saved": "デバイスのアクセスが確認されました。",
+    "expired": "このリクエストは期限切れです。新しく作成してください。以前のリクエストは保持されます。",
+    "roles": {
+      "owner": "所有者",
+      "writer": "編集者",
+      "commenter": "コメント権限",
+      "reader": "閲覧者"
+    }
+  },
+  "he": {
+    "title": "גישה למכשיר",
+    "notice": "שלח את הבקשה לבעל הטווח. השווה את טביעת האצבע שלו דרך ערוץ אמין אחר לפני אישור. החזיר את האישור החתום למכשיר המבקש; רק המכשיר הזה שולח אותו. כל בקשה חדשה שומרת על זו הקודמת.",
+    "scope": "טווח נתונים",
+    "create": "יצור בקשה עבור המכשיר הזה",
+    "request": "בקשה למכשיר",
+    "incoming": "התקבלה בקשה ממכשיר אחר",
+    "compare": "טביעת האצבע אושרה דרך ערוץ אחר.",
+    "approve": "אישר את התקן השווה",
+    "approval": "אישור חתום",
+    "submit": "הפעל אישור על המכשיר הזה",
+    "saved": "גישה למכשיר מאושרת.",
+    "expired": "הבקשה הזו עברה את זמנה. בקש ליצור בקשה חדשה; הבקשה הקודמת נשארת נשמר.",
+    "roles": {
+      "owner": "בעלים",
+      "writer": "כותב",
+      "commenter": "הערה",
+      "reader": "קורא"
+    }
+  },
+  "ar": {
+    "title": "الوصول إلى الأجهزة",
+    "notice": "إرسال الطلب إلى مالك النطاق. مقارنة بصماتها من خلال قناة أخرى موثوقة قبل الموافقة. إعادة الموافقة الموقعة إلى الجهاز الطالب؛ ذلك الجهاز فقط يقدمها. كل طلب جديد يحتفظ بالسابق.",
+    "scope": "نطاق البيانات",
+    "create": "إنشاء طلب لهذا الجهاز",
+    "request": "طلب جهاز",
+    "incoming": "طلب وارد من جهاز آخر",
+    "compare": "تأكدت بصمات الأصابع من خلال قناة أخرى",
+    "approve": "الموافقة على الجهاز المقارن",
+    "approval": "الموافقة الموقعة",
+    "submit": "تطبيق الموافقة على هذا الجهاز",
+    "saved": "تم تأكيد وصول الجهاز.",
+    "expired": "هذا الطلب انتهى أجله. أنشئ طلباً جديداً؛ يظل الطلب السابق محفوظاً.",
+    "roles": {
+      "owner": "المالك",
+      "writer": "كاتب",
+      "commenter": "التعليق",
+      "reader": "قارئ"
+    }
+  },
+  "ko": {
+    "title": "장치 액세스",
+    "notice": "범위 소유자에게 요청을 보냅니다. 승인하기 전에 다른 신뢰할 수 있는 채널을 통해 지문을 비교합니다. 서명된 승인을 요청하는 장치로 반환하고 해당 장치만 제출합니다. 새로운 요청은 이전 요청을 유지합니다.",
+    "scope": "데이터 범위",
+    "create": "이 장치에 대한 요청 만들기",
+    "request": "장치 요청",
+    "incoming": "다른 장치에서 받은 요청",
+    "compare": "다른 채널을 통해 지문 확인",
+    "approve": "비교 장치 승인",
+    "approval": "서명된 승인",
+    "submit": "이 장치에 승인 적용하기",
+    "saved": "장치 액세스가 확인됩니다.",
+    "expired": "이 요청이 만료되었습니다. 새 요청을 만들어 주십시오. 이전 요청은 저장되어 있습니다.",
+    "roles": {
+      "owner": "소유자",
+      "writer": "라이터",
+      "commenter": "댓글",
+      "reader": "리더"
+    }
+  },
+  "nl": {
+    "title": "Toegang tot apparaat",
+    "notice": "Stuur het verzoek naar de scope-eigenaar. Vergelijk zijn vingerafdruk via een ander vertrouwd kanaal voordat u goedkeuring geeft. Retourneer de ondertekende goedkeuring naar het aanvragende apparaat; alleen dat apparaat verzendt deze. Elk nieuw verzoek behoudt het vorige.",
+    "scope": "Gegevensbereik",
+    "create": "Maak een aanvraag voor dit apparaat",
+    "request": "Aanvraag van apparaat",
+    "incoming": "Verzoek ontvangen van een ander apparaat",
+    "compare": "Vingerafdruk bevestigd via een ander kanaal",
+    "approve": "Het vergeleken apparaat goedkeuren",
+    "approval": "Ondertekende goedkeuring",
+    "submit": "Goedkeuring toepassen op dit apparaat",
+    "saved": "Apparaattoegang wordt bevestigd.",
+    "expired": "Deze aanvraag is verlopen. Maak een nieuwe aanvraag; de vorige blijft opgeslagen.",
+    "roles": {
+      "owner": "Eigenaar",
+      "writer": "Schrijver",
+      "commenter": "Commentaar geven",
+      "reader": "Lezer"
+    }
+  }
 }

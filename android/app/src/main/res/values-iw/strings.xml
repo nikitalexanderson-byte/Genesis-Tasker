@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="native_stage">השלב הראשון ביישום המקורי</string>
+    <string name="native_title">Genesis Tasker</string>
+    <string name="native_status">מסך הבסיס פועל באמצעות Kotlin ו־Jetpack Compose.</string>
+    <string name="browser_error_message">לא ניתן היה לפתוח את GENESIS. יש לעדכן או להפעיל דפדפן ולנסות שוב.</string>
+    <string name="browser_retry">פתיחת האתר</string>
+</resources>

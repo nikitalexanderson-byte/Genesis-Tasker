@@ -1,11 +1,12 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {effectiveDarkPalette} from "../app/dark-palettes.ts";
 import {validDreamDay,validateDiaryNote,newDiaryNote} from "../app/diary-model.ts";
 const read=name=>JSON.parse(readFileSync(new URL(`../app/${name}.json`,import.meta.url),"utf8"));
-const languages=["ru","en","el","de","fr","es","it","pt","pl","sr","uk","zh","tr","ja"];
-test("3.1.8 copy is complete in all 14 locales with matching placeholders and exact identities",()=>{
+const languages=[...REGION_LANGUAGES];
+test("3.1.8 copy is complete in all supported locales with matching placeholders and exact identities",()=>{
  for(const name of ["dream-journal-copy","dark-palette-copy","release-318-legal-copy","messenger-copy","billing-feature-copy"]){
   const copy=read(name),keys=Object.keys(copy.ru).sort();assert.deepEqual(Object.keys(copy).sort(),[...languages].sort());
   for(const lang of languages){assert.deepEqual(Object.keys(copy[lang]).sort(),keys,`${name}: ${lang}`);

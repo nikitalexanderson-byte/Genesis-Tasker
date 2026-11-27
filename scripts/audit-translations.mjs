@@ -81,7 +81,7 @@ const translations = {
   ...facePullEnglish,
   ...JSON.parse(await readFile(path.join(APP_DIR, "backup-copy.en.json"), "utf8")),
   ...trialPrivacy,
-  // Web-only Physis ships RU/EN; this catalog is not exported to the native client.
+  // English source for the web Physis dictionary.
   ...JSON.parse(await readFile(path.join(APP_DIR, "physis/copy.en.json"), "utf8")),
   ...JSON.parse(await readFile(path.join(APP_DIR, "solar-calendar-copy.en.json"), "utf8")),
   ...JSON.parse(catalogText),
@@ -128,6 +128,9 @@ for (const file of await sourceFiles(APP_DIR)) {
   const sourceText = await readFile(file, "utf8");
   const source = ts.createSourceFile(file, sourceText, ts.ScriptTarget.Latest, true, file.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
   const record = (value, node) => {
+    // Endonyms are printed in their own language on every language selector.
+    if (file === path.join(APP_DIR, "region-language.ts") && ts.isPropertyAssignment(node.parent)
+      && node.parent.name.getText(source) === "name") return;
     const normalized = normalize(value);
     if (!normalized || !CYRILLIC.test(normalized) || isCovered(normalized)) return;
     const { line } = source.getLineAndCharacterOfPosition(node.getStart(source));

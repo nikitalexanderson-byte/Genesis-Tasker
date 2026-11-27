@@ -1,9 +1,10 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 const read = (path) => JSON.parse(readFileSync(new URL(`../${path}`, import.meta.url), "utf8"));
-const languages = ["en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja"];
+const languages = REGION_LANGUAGES.filter(code => code !== "ru");
 const letters = read("app/stoicheion.en.json");
 const artwork = read("android/app/src/main/assets/stoicheion-art.json");
 const theokyklos = read("android/app/src/main/assets/catalogs/theokyklos.json");

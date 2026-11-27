@@ -547,5 +547,10 @@
   "Выбрать шаблон": "Scegli un modello",
   "Ранее сохранённые задачи": "Attività salvate in precedenza",
   "Доска для «{title}»": "Bacheca per «{title}»",
-  "Перетащите сюда задачи и подпроекты, чтобы оставить их вне досок.": "Trascina qui attività e sottoprogetti per tenerli fuori dalle bacheche."
+  "Перетащите сюда задачи и подпроекты, чтобы оставить их вне досок.": "Trascina qui attività e sottoprogetti per tenerli fuori dalle bacheche.",
+  "Задача «{item}» возвращена в хаос-бокс.": "L’attività «{item}» è tornata nella scatola del caos.",
+  "Список «{item}» возвращён в хаос-бокс.": "L’elenco «{item}» è tornato nella scatola del caos.",
+  "Задача «{item}» перемещена в проект «{project}».": "L’attività «{item}» è stata spostata nel progetto «{project}».",
+  "Список «{item}» перемещён в проект «{project}».": "L’elenco «{item}» è stato spostato nel progetto «{project}».",
+  "Задача «{item}» перемещена в список «{list}».": "L’attività «{item}» è stata spostata nell’elenco «{list}»."
 }

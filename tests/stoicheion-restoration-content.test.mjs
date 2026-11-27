@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -10,7 +11,7 @@ const readJson = (path) => JSON.parse(readSource(path));
 const content = readJson("app/stoicheion-restoration-content.json");
 const ui = readJson("app/stoicheion-restoration-ui.json");
 const modes = ["deficit", "excess", "conflict"];
-const languages = ["ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja"];
+const languages = [...REGION_LANGUAGES];
 
 // Inspect only literal catalogue constants. In particular, loading the React
 // view to obtain SPREAD_POSITIONS would execute unrelated UI dependencies.
@@ -185,7 +186,7 @@ test("new personal practices avoid forced breathing, painful poses, and medical 
   }
 });
 
-test("restoration UI has complete matching messages in each of the fourteen supported languages", () => {
+test("restoration UI has complete matching messages in each of the eighteen supported languages", () => {
   assert.deepEqual(sorted(Object.keys(ui)), sorted(languages));
   const keys = Object.keys(ui.ru);
   assert.equal(keys.length, 67);

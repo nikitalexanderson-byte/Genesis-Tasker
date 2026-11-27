@@ -1,9 +1,10 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {calendarModule} from './helpers/calendar-modules.mjs';
 const json=path=>JSON.parse(readFileSync(new URL('../'+path,import.meta.url),'utf8'));
-const languages=['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'];
+const languages=[...REGION_LANGUAGES];
 const source={...json('app/aurora/texts.ru.json'),...json('app/aurora/forecast-test-copy.ru.json'),...json('app/aurora/adaptive-copy.ru.json')};
 const {transliterateGreek}=calendarModule('app/aurora/transliteration.ts');
 const {LEXICON}=calendarModule('app/aurora/catalog/lexicon.ts');
@@ -30,7 +31,7 @@ test('Generated conditions translate a catalog question and a short answer toget
  }
 });
 
-test('All fourteen method and backup packs preserve fields, separators and placeholders',()=>{
+test('All eighteen method and backup packs preserve fields, separators and placeholders',()=>{
  const backup=json('app/backup-copy.en.json');
  for(const language of languages){
   const pack=language==='ru'?source:{...json(`app/aurora/locales/${language}.a.json`),...json(`app/aurora/locales/${language}.b.json`)};

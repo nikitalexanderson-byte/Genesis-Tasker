@@ -1,3 +1,4 @@
+import {REGION_LANGUAGES} from '../../app/region-language.ts';
 import {execFileSync} from 'node:child_process';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {join,resolve} from 'node:path';
@@ -6,7 +7,7 @@ import {_android as android} from 'playwright';
 const option=(name,fallback)=>process.argv.find(value=>value.startsWith(`--${name}=`))?.slice(name.length+3)??fallback;
 const serial=option('serial',''),language=option('language','ru'),dark=option('dark','false')==='true';
 if(!serial||!/^[-\w]+$/.test(serial))throw Error('Pass an explicit authorized --serial');
-if(!['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'].includes(language))throw Error('Unknown language');
+if(!REGION_LANGUAGES.includes(language))throw Error('Unknown language');
 const output=resolve(option('output',`output/qa/android334-modeling-${serial}-${language}-${dark}`));
 if(!output.startsWith(resolve('output/qa')+'/')&&!output.startsWith(resolve('output/qa')+'\\'))throw Error('QA output boundary');
 mkdirSync(output,{recursive:true});

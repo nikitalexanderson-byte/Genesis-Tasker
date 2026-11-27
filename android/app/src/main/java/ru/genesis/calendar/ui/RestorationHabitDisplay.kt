@@ -10,7 +10,7 @@ import ru.genesis.calendar.domain.*
 import ru.genesis.calendar.domain.habits.Habit
 import java.util.concurrent.ConcurrentHashMap
 
-private val restorationLanguages = listOf("ru", "en", "de", "el", "es", "fr", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja")
+private val restorationLanguages = listOf("ru", "en", "de", "el", "es", "fr", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja", "he", "ar", "ko", "nl")
 private data class DisplayRestorationCatalog(val content: StoicheionRestorationCatalog,
     val practices: TheokyklosCatalog, val letterNames: Map<String, String>)
 private val displayRestorationCatalogs = ConcurrentHashMap<String, DisplayRestorationCatalog>()

@@ -1,3 +1,4 @@
+import {REGION_LANGUAGES} from "../app/region-language.ts";
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {readFileSync} from 'node:fs';
@@ -13,6 +14,6 @@ test('Unknown or mismatched failures remain retryable without showing server det
 });
 test('All 14 referral catalogs contain the access explanations used by web and Android',()=>{
   const copy=JSON.parse(readFileSync(new URL('../app/referral-copy.json',import.meta.url),'utf8'));
-  assert.equal(Object.keys(copy).length,14);
+  assert.equal(Object.keys(copy).length, REGION_LANGUAGES.length);
   for(const row of Object.values(copy))for(const key of ['primaryRequired','standardRequired','privateProgram'])assert.ok(typeof row[key]==='string'&&row[key].length>15,key);
 });

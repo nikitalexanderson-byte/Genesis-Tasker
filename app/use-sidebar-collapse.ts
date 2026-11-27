@@ -84,6 +84,7 @@ export function useSidebarCollapse(savedWidth: number, autoHideSetting: number, 
       sidebar.removeEventListener('keydown', onEscape);
     };
   }, [resizing, autoHide]);
+  const inlineSign = () => document.documentElement.dir === "rtl" ? -1 : 1;
   const resizeProps = {
     onPointerDown: (event: PointerEvent<HTMLDivElement>) => {
       if (event.button !== 0) return;
@@ -92,16 +93,16 @@ export function useSidebarCollapse(savedWidth: number, autoHideSetting: number, 
       setDrag({ x: event.clientX, initial: width, width });
     },
     onPointerMove: (event: PointerEvent<HTMLDivElement>) => {
-      if (drag) setDrag({ ...drag, width: clamp(drag.initial + event.clientX - drag.x) });
+      if (drag) setDrag({ ...drag, width: clamp(drag.initial + (event.clientX - drag.x) * inlineSign()) });
     },
     onPointerUp: (event: PointerEvent<HTMLDivElement>) => {
       if (!drag) return;
-      saveWidth(clamp(drag.initial + event.clientX - drag.x)); setDrag(null);
+      saveWidth(clamp(drag.initial + (event.clientX - drag.x) * inlineSign())); setDrag(null);
     },
     onPointerCancel: () => setDrag(null),
     onLostPointerCapture: () => setDrag(null),
     onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => {
-      const next = event.key === "ArrowLeft" ? width - 16 : event.key === "ArrowRight" ? width + 16
+      const next = event.key === "ArrowLeft" ? width - 16 * inlineSign() : event.key === "ArrowRight" ? width + 16 * inlineSign()
         : event.key === "Home" ? 56 : event.key === "End" ? 240 : null;
       if (next !== null) { event.preventDefault(); saveWidth(clamp(next)); }
     },

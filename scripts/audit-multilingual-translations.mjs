@@ -1,6 +1,7 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import { readFile } from "node:fs/promises";
 
-const languages = ["el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja"];
+const languages = REGION_LANGUAGES.filter(code => code !== "en" && code !== "ru");
 const english = { ...JSON.parse(await readFile(new URL("../app/ui-translations/en.json", import.meta.url), "utf8")), ...JSON.parse(await readFile(new URL("../app/translations.en.json", import.meta.url), "utf8")),
   ...JSON.parse(await readFile(new URL("../app/curated-translations.en.json", import.meta.url), "utf8")) };
 const refinementCopy = JSON.parse(await readFile(new URL("../app/ui-refinement-copy.json", import.meta.url), "utf8"));
@@ -228,5 +229,5 @@ if (missing.length) {
   for (const issue of missing) console.error(issue);
   process.exitCode = 1;
 } else {
-  console.log("Twelve additional locale catalogs passed coverage and script checks.");
+  console.log(`${languages.length} additional locale catalogs passed coverage and script checks.`);
 }

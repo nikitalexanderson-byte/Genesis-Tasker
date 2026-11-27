@@ -30,6 +30,18 @@ internal data class GoogleServiceAccess(val calendar: Boolean, val tasks: Boolea
 }
 
 internal object AuthDiagnostics {
+    enum class SyncPhase { DOWNLOAD, IMPORT, UPLOAD }
+
+    inline fun <T> measure(phase: SyncPhase, operation: () -> T): T {
+        val start = android.os.SystemClock.elapsedRealtime()
+        Log.d("GenesisSyncTiming", "${phase.name} start")
+        try {
+            return operation()
+        } finally {
+            Log.d("GenesisSyncTiming", "${phase.name} end ms=${android.os.SystemClock.elapsedRealtime() - start}")
+        }
+    }
+
     private val allowed = setOf(
         "GOOGLE_AUTH_STARTED", "GOOGLE_AUTH_SUCCESS", "GOOGLE_ID_TOKEN_RECEIVED",
         "BACKEND_AUTH_SUCCESS", "GENESIS_USER_RESOLVED", "GOOGLE_LINK_FOUND", "GOOGLE_LINK_CREATED",

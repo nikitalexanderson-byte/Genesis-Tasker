@@ -4,6 +4,10 @@ type TaskState = { done: boolean };
 const DAY_COUNT_LABELS: Record<Language, { completed: string; pending: string; showFor: string }> = {
   ru: { completed: "Выполнено", pending: "Не выполнено", showFor: "Показать задачи на" },
   en: { completed: "Completed", pending: "Incomplete", showFor: "Show tasks for" },
+  he: { completed: "הושלמו", pending: "טרם הושלמו", showFor: "הצגת המשימות לתאריך" },
+  ar: { completed: "مكتملة", pending: "غير مكتملة", showFor: "عرض مهام يوم" },
+  ko: { completed: "완료", pending: "미완료", showFor: "작업을 표시할 날짜:" },
+  nl: { completed: "Voltooid", pending: "Onvoltooid", showFor: "Taken weergeven voor" },
   el: { completed: "Ολοκληρωμένες", pending: "Εκκρεμείς", showFor: "Εμφάνιση εργασιών για" },
   de: { completed: "Erledigt", pending: "Offen", showFor: "Aufgaben anzeigen für" },
   fr: { completed: "Terminées", pending: "En cours", showFor: "Afficher les tâches du" },

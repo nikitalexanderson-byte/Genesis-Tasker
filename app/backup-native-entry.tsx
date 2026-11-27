@@ -1,3 +1,4 @@
+import { languageDirection } from "./region-language";
 import {createRoot} from 'react-dom/client';
 import {BackupPanel,type BackupPanelRuntime} from './BackupPanel';
 import {BACKUP_NOTICE_VERSION,materializeServerBackup,type FrozenDevice} from './backup-device';
@@ -37,7 +38,7 @@ let initialized=false;const responseChunks=new Map<string,string>();
 window.GenesisBackupRuntime={
  init(value){if(initialized)return;initialized=true;const boot=decode(value) as Boot;
   operations=nativeBackupOperations({begin:operationId=>rpc('operationBegin',{operationId}),end:operationId=>rpc('operationEnd',{operationId}),restart:()=>rpc('restart')});
-  document.documentElement.lang=boot.language;document.documentElement.dataset.genesisTheme=boot.dark?'standart-dark':'standart';document.documentElement.dataset.genesisPalette=boot.palette;
+  document.documentElement.lang=boot.language; document.documentElement.dir=languageDirection(boot.language);document.documentElement.dataset.genesisTheme=boot.dark?'standart-dark':'standart';document.documentElement.dataset.genesisPalette=boot.palette;
   for(const [name,color] of Object.entries(boot.colors))if(/^--[a-z-]+$/.test(name)&&/^#[a-f0-9]{6,8}$/i.test(color))document.documentElement.style.setProperty(name,color);
   // The history preference contains only timestamps. Native form retention
   // separately encrypts accepted input in private no-backup frames.

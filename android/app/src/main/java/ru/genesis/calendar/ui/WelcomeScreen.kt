@@ -207,14 +207,16 @@ fun LanguageChips(language: String, dark: Boolean = false, flagsOnly: Boolean = 
             Triple("it", "🇮🇹", "Italiano"), Triple("pt", "🇵🇹", "Português"),
             Triple("pl", "🇵🇱", "Polski"), Triple("sr", "🇷🇸", "Српски"),
             Triple("uk", "🇺🇦", "Українська"), Triple("zh", "🇨🇳", "简体中文"),
-            Triple("tr", "🇹🇷", "Türkçe"), Triple("ja", "🇯🇵", "日本語"))
+            Triple("tr", "🇹🇷", "Türkçe"), Triple("ja", "🇯🇵", "日本語"),
+            Triple("he", "🇮🇱", "עברית"), Triple("ar", "🇸🇦", "العربية"),
+            Triple("ko", "🇰🇷", "한국어"), Triple("nl", "🇳🇱", "Nederlands"))
     if (flagsOnly) {
         val night = dark || LocalEveningTheme.current
         val selection = genesisSelectionColors(if (night) eveningPalette(LocalDarkPalette.current) else MaterialTheme.colorScheme,night)
         BoxWithConstraints(Modifier.fillMaxWidth().testTag("welcome-language-grid")) {
             // Keep complete rows as languages are added; compact cells still have a 48 dp height.
             val columns = balancedLanguageColumns(languages.size,
-                ((maxWidth.value + 2f) / 46f).toInt())
+                ((maxWidth.value + 2f) / 50f).toInt())
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 languages.chunked(columns).forEach { row ->
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {

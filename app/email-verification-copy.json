@@ -180,5 +180,57 @@
     "error": "状況の確認またはメールのリクエストに失敗しました。接続を確認して再試行してください。",
     "dismiss": "明日まで閉じる",
     "deadline": "新しいアカウントを保持するには{date}までにメールを確認してください。未確認の新規アカウントは5日後に削除されます。"
+  },
+  "he": {
+    "title": "אישר את הדואר האלקטרוני שלך",
+    "description": "אישר {email} כדי להשלים את ההרשמה. פתחו את הדואר האלקטרוני GENESIS ועקבו אחרי הקישור.",
+    "hint": "אם אינך יכול למצוא את הדואר האלקטרוני, בדוק את תיקיית הדואר הזבל שלך או בקש אותו שוב.",
+    "send": "לשלוח דואר אלקטרוני",
+    "resend": "לשלוח שוב",
+    "check": "בדוק אישור",
+    "wait": "נסה שוב ב {seconds} שניות",
+    "sent": "דואר אלקטרוני מבוקש. בדוק את תיבת הדואר שלך ואת תיקיית הדואר זבל.",
+    "error": "לא ניתן לבדוק את מעמד הדואר האלקטרוני שלך או לבקש הודעה. בדוק את החיבור ונסי שוב.",
+    "dismiss": "סגור עד מחר.",
+    "deadline": "אישר את דואר האלקטרוני שלך עד {date} כדי לשמור על החשבון החדש שלך. חשבונות חדשים לא מאושרים נמחקים לאחר 5 ימים."
+  },
+  "ar": {
+    "title": "تأكيد بريدك الإلكتروني",
+    "description": "تأكيد {email} لاستكمال التسجيل، وفتح البريد الإلكتروني GENESIS واتبع الرابط.",
+    "hint": "وإذا لم تتمكن من العثور على البريد الإلكتروني، يرجى التحقق من مجلد الرسائل غير المرغوب فيها أو طلبه مرة أخرى.",
+    "send": "إرسال البريد الإلكتروني",
+    "resend": "إرسال مرة أخرى",
+    "check": "تأكيد المراجعة",
+    "wait": "حاول مرة أخرى في {seconds} (س)",
+    "sent": "طلب بريد إلكتروني، تحقق من صندوقك الوارد و مجلد الرسائل غير المرغوب فيها.",
+    "error": "لا يمكن التحقق من حالة بريدك الإلكتروني أو طلب رسالة. تحقق من وصلتك وحاول مرة أخرى.",
+    "dismiss": "أغلق حتى الغد",
+    "deadline": "تأكّد من بريدك الإلكتروني بحلول {date} للاحتفاظ بحسابك الجديد. تُحذف الحسابات الجديدة غير المؤكّدة بعد 5 أيام."
+  },
+  "ko": {
+    "title": "귀하의 이메일 확인",
+    "description": "{email}를 확인하여 등록을 완료하십시오. GENESIS 이메일을 열고 링크를 따르십시오.",
+    "hint": "이메일을 찾을 수 없으면 스팸 폴더를 확인하거나 다시 요청하십시오.",
+    "send": "이메일 보내기",
+    "resend": "다시 보내기",
+    "check": "확인 확인",
+    "wait": "{seconds}초 후에 다시 시도하십시오.",
+    "sent": "이메일 요청 받은 편지함과 스팸 폴더를 확인하십시오.",
+    "error": "이메일 상태를 확인하거나 메시지를 요청할 수 없습니다. 연결 상태를 확인하고 다시 시도해 주십시오.",
+    "dismiss": "내일까지 닫기",
+    "deadline": "새 계정을 유지하려면 {date}까지 이메일을 확인하세요. 신규 확인되지 않은 계정은 5일 후에 삭제됩니다."
+  },
+  "nl": {
+    "title": "Bevestig je e-mailadres",
+    "description": "Bevestig {email} om de registratie te voltooien. Open de GENESIS e-mail en volg de link.",
+    "hint": "Als u de e-mail niet kunt vinden, controleer dan uw spammap of vraag deze opnieuw aan.",
+    "send": "Stuur een e-mail",
+    "resend": "Opnieuw verzenden",
+    "check": "Controleer de bevestiging",
+    "wait": "Probeer het opnieuw in {seconds} s",
+    "sent": "Controleer uw inbox en spam folder om te zien of er een bericht is verzonden.",
+    "error": "U kunt uw e-mailstatus niet controleren of een bericht aanvragen, controleer uw verbinding en probeer het opnieuw.",
+    "dismiss": "Sluiten tot morgen",
+    "deadline": "Bevestig je e-mailadres voor {date} om je nieuwe account te behouden. Nieuwe onbevestigde accounts worden na 5 dagen verwijderd."
   }
 }

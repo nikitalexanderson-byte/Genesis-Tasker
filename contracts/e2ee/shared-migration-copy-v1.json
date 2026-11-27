@@ -12,5 +12,29 @@
  "uk":{"title":"Зашифрувати спільні дані","intro":"Перенесіть цей проєкт або простір зі збереженим комплектом відновлення. Початкові дані й ненадіслані зміни зберігаються. Іншим учасникам потрібні схвалені пристрої та перевірений доступ.","done":"Спільні дані перенесено. Підготовка зашифрованого вмісту…","transfer":"Зашифрувати або продовжити перенесення"},
  "zh":{"title":"加密共享数据","intro":"使用已保存的恢复套件迁移此项目或空间。原始数据和未发送的更改将予以保留。其他成员需要已批准的设备和经过验证的访问权限。","done":"共享数据已迁移。正在准备加密内容…","transfer":"加密或继续迁移"},
  "tr":{"title":"Paylaşılan verileri şifrele","intro":"Bu projeyi veya alanı mevcut kurtarma kitinizle aktarın. Özgün veriler ve gönderilmemiş değişiklikler korunur. Diğer üyelerin onaylı cihazlara ve doğrulanmış erişime ihtiyacı vardır.","done":"Paylaşılan veriler aktarıldı. Şifrelenmiş içerik hazırlanıyor…","transfer":"Şifrele veya aktarımı sürdür"},
- "ja":{"title":"共有データを暗号化","intro":"保存済みの復旧キットを使用して、このプロジェクトまたはスペースを移行します。元のデータと未送信の変更は保持されます。他のメンバーには承認済みデバイスと確認済みのアクセス権が必要です。","done":"共有データを移行しました。暗号化されたコンテンツを準備中…","transfer":"暗号化または移行を再開"}
+ "ja":{"title":"共有データを暗号化","intro":"保存済みの復旧キットを使用して、このプロジェクトまたはスペースを移行します。元のデータと未送信の変更は保持されます。他のメンバーには承認済みデバイスと確認済みのアクセス権が必要です。","done":"共有データを移行しました。暗号化されたコンテンツを準備中…","transfer":"暗号化または移行を再開"},
+  "he": {
+    "title": "הצפנת נתונים משותפים",
+    "intro": "העביר את הפרוייקט או החלל הזה בעזרת ערכת השיקום הקיימת שלך. נתונים מקוריים ושינויים שלא נשלחו נשמרים. חברים אחרים צריכים מכשירים מאושרים וגישה מאושרת.",
+    "done": "נתונים משותפים הועברו. מכינים תוכן מוצפן...",
+    "transfer": "הצפנה או המשך של נתונים משותפים"
+  },
+  "ar": {
+    "title": "تشفير البيانات المشتركة",
+    "intro": "نقل هذا المشروع أو المساحة باستخدام مجموعة الاستعادة الموجودة لديك. البيانات الأصلية والتغييرات غير المرسلة محفوظة. الأعضاء الآخرون يحتاجون إلى أجهزة معتمدة وإمكانية وصول مؤكدة.",
+    "done": "نقلت البيانات المشتركة، إعداد المحتوى المشفر...",
+    "transfer": "تشفير أو استئناف البيانات المشتركة"
+  },
+  "ko": {
+    "title": "공유 데이터 암호화",
+    "intro": "기존 복구 키트를 사용하여 이 프로젝트 또는 공간을 전송합니다. 원본 데이터와 보내지 않은 변경 사항이 보존됩니다. 다른 구성원은 승인된 장치 및 인증된 액세스가 필요합니다.",
+    "done": "공유 데이터 전송됨. 암호화된 내용 준비 중...",
+    "transfer": "공유 데이터 암호화 또는 재개"
+  },
+  "nl": {
+    "title": "Gedeelde gegevens versleutelen",
+    "intro": "Zet dit project of deze ruimte over met je bestaande herstelkit. Oorspronkelijke gegevens en niet-verzonden wijzigingen blijven behouden, maar andere leden hebben goedgekeurde apparaten en geverifieerde toegang nodig.",
+    "done": "Gedeelde gegevens overgedragen. Versleutelde inhoud wordt voorbereid…",
+    "transfer": "Gedeelde gegevens versleutelen of hervatten"
+  }
 }

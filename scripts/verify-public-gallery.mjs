@@ -9,8 +9,8 @@ const copy=JSON.parse(readFileSync(path.join(root,'app/public-gallery-copy.json'
 const manifest=JSON.parse(readFileSync(path.join(root,'public/product-preview/free/manifest.json'),'utf8'));
 assert.equal(manifest.plan,'free');
 assert.equal(manifest.syntheticData,true);
-assert.equal(Object.keys(copy).length,14);
-assert.equal(manifest.images.length,280);
+assert.equal(Object.keys(copy).length,18);
+assert.equal(manifest.images.length,Object.keys(copy).length * 20);
 const hashes=new Set(),paths=new Set();
 function dimensions(data){
   assert.equal(data.readUInt16BE(0),0xffd8,'JPEG signature');
@@ -47,4 +47,4 @@ for(const language of Object.keys(copy)){
     assert.equal(item.images,true,relative);
   }
 }
-console.log('Public gallery: 280 distinct JPEG screenshots, 20 per language, 1440×1000 capture viewport, pixel sizes, hashes and provenance verified.');
+console.log('Public gallery: '+manifest.images.length+' distinct JPEG screenshots, 20 per language, 1440×1000 capture viewport, pixel sizes, hashes and provenance verified.');

@@ -12,5 +12,41 @@
   "uk":{"title":"Статус оплати","order":"Номер замовлення","loadError":"Не вдалося перевірити замовлення. Перевірте підключення й повторіть спробу.","refreshError":"Не вдалося оновити доступ облікового запису. Повторіть перевірку.","support":"Якщо статус довго не змінюється, зверніться до підтримки з номером замовлення.","check":"Перевірити статус","paused":"Автоматичну перевірку завершено. Статус можна перевірити знову."},
   "zh":{"title":"付款状态","order":"订单编号","loadError":"无法查询订单。请检查网络连接并重试。","refreshError":"无法刷新账户权限。请重新查询。","support":"如果状态长时间没有变化，请提供订单编号并联系支持。","check":"查询状态","paused":"自动查询已结束。您可以再次查询状态。"},
   "tr":{"title":"Ödeme durumu","order":"Sipariş numarası","loadError":"Sipariş kontrol edilemedi. Bağlantınızı kontrol edip yeniden deneyin.","refreshError":"Hesap erişimi yenilenemedi. Yeniden kontrol edin.","support":"Durum değişmiyorsa sipariş numarasıyla destek ekibine başvurun.","check":"Durumu kontrol et","paused":"Otomatik kontrol tamamlandı. Durumu yeniden kontrol edebilirsiniz."},
-  "ja":{"title":"支払い状況","order":"注文番号","loadError":"注文を確認できませんでした。接続を確認して、もう一度お試しください。","refreshError":"アカウントのアクセス権を更新できませんでした。再度確認してください。","support":"状況が変わらない場合は、注文番号を添えてサポートにお問い合わせください。","check":"状況を確認","paused":"自動確認が終了しました。もう一度状況を確認できます。"}
+  "ja":{"title":"支払い状況","order":"注文番号","loadError":"注文を確認できませんでした。接続を確認して、もう一度お試しください。","refreshError":"アカウントのアクセス権を更新できませんでした。再度確認してください。","support":"状況が変わらない場合は、注文番号を添えてサポートにお問い合わせください。","check":"状況を確認","paused":"自動確認が終了しました。もう一度状況を確認できます。"},
+  "he": {
+    "title": "מצב התשלום",
+    "order": "מספר סדרה",
+    "loadError": "לא ניתן לבדוק את ההזמנה. בדוק את החיבור שלך ונסי שוב.",
+    "refreshError": "לא ניתן לשחזר גישה לחשבון. בדוק שוב.",
+    "support": "אם המצב לא משתנה, צור קשר עם תמיכה עם מספר ההזמנה.",
+    "check": "בדוק את המצב",
+    "paused": "הבדיקה האוטומטית הסתיימה. אתה יכול לבדוק את המצב שוב."
+  },
+  "ar": {
+    "title": "حالة المدفوعات",
+    "order": "رقم الترتيب",
+    "loadError": "لم يتسن التحقق من الترتيب، تحقق من اتصالك وحاول مرة أخرى.",
+    "refreshError": "لم يكن من الممكن تجديد الوصول إلى الحساب. تحقق مرة أخرى.",
+    "support": "إذا لم تتغير الحالة، اتصل بالدعم مع رقم الطلب.",
+    "check": "التحقق من الحالة",
+    "paused": "انتهى التحقق التلقائي. يمكنك التحقق من الحالة مرة أخرى."
+  },
+  "ko": {
+    "title": "결제 상태",
+    "order": "주문 번호",
+    "loadError": "주문을 확인할 수 없습니다. 연결 상태를 확인하고 다시 시도하십시오.",
+    "refreshError": "계정 접근을 새로 고칠 수 없습니다. 다시 확인하십시오.",
+    "support": "상태가 변경되지 않으면 주문 번호로 지원에 문의하십시오.",
+    "check": "상태 확인",
+    "paused": "자동 검사가 끝났습니다. 상태를 다시 확인할 수 있습니다."
+  },
+  "nl": {
+    "title": "De status van de betaling",
+    "order": "Het bestelnummer",
+    "loadError": "De bestelling kon niet worden gecontroleerd. Controleer uw verbinding en probeer het opnieuw.",
+    "refreshError": "De accounttoegang kon niet worden vernieuwd. Controleer opnieuw.",
+    "support": "Als de status niet verandert, neem dan contact op met support met het bestelnummer.",
+    "check": "Controleer de status",
+    "paused": "De automatische controle is voltooid. U kunt de status opnieuw controleren."
+  }
 }

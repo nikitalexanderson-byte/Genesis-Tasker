@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {readFileSync} from 'node:fs';
@@ -58,9 +59,9 @@ test('real Today slots render in DOM order with the hero first and retain all ei
   }finally{await rm(file);}
 });
 
-test('all fourteen editor locales name every block and keyboard/touch action',()=>{
+test('all eighteen editor locales name every block and keyboard/touch action',()=>{
   const copy=JSON.parse(readFileSync(new URL('../app/today-block-order-copy.json',import.meta.url),'utf8'));
-  assert.deepEqual(Object.keys(copy).sort(),['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'].sort());
+  assert.deepEqual(Object.keys(copy).sort(),[...REGION_LANGUAGES].sort());
   const fields=Object.keys(copy.ru).sort();
   for(const [language,messages]of Object.entries(copy)){
     assert.deepEqual(Object.keys(messages).sort(),fields,language);

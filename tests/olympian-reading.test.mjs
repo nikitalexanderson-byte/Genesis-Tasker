@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {readFileSync} from 'node:fs';
@@ -56,7 +57,7 @@ test('every printed name calculation contains the actual letters and values',()=
 test('reader copy keeps the agreed voice and explains the sacred meaning of every root in all languages',()=>{
   const ru=read('app/olympian-knowledge-copy/ru.json');
   assert.equal(ru.mathematicalReading,'Это математическое прочтение Ордена Авроры пифагорейским методом.');
-  for(const lang of ['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja']){
+  for(const lang of [...REGION_LANGUAGES]){
     const copy=read(`app/olympian-knowledge-copy/${lang}.json`);
     for(let i=1;i<=9;i++)assert.ok(copy[`rootName.${i}`]&&copy[`rootMeaning.${i}`],`${lang}/${i}`);
     for(const deity of Object.values(data.deities))for(const word of deity.rootWords)assert.ok(copy[word.meaning]&&copy[word.note]);

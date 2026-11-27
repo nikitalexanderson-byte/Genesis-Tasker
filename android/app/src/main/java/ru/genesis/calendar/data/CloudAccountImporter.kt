@@ -5,6 +5,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.json.JSONException
 import java.time.DateTimeException
+import java.security.MessageDigest
+import java.util.Base64
 import ru.genesis.calendar.auth.CloudAccountSnapshot
 import ru.genesis.calendar.reminders.ReminderScheduler
 
@@ -12,7 +14,40 @@ import ru.genesis.calendar.reminders.ReminderScheduler
 internal class CloudAccountImporter(private val db: GenesisDatabase, private val scheduler: ReminderScheduler? = null) {
     enum class Result { IMPORTED, IMPORTED_WITH_GOOGLE_WARNING, IMPORTED_WITH_TASK_WARNING, PENDING_LOCAL_CHANGES }
 
-    private data class ImportedTask(val record: TaskRecord, val reminders: List<Pair<String, Long>>)
+    private data class ImportedTask(val record: TaskRecord, val json: String, val reminders: List<Pair<String, Long>>)
+
+    // Remember only fingerprints in RAM. A local edit, a restored database or a different
+    // remote body invalidates the proof even when Google reuses the task's timestamp.
+    private val verifiedBodies = android.util.LruCache<String, String>(2048)
+    private fun fingerprint(encrypted: String, json: String): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        digest.update(encrypted.toByteArray(Charsets.US_ASCII))
+        digest.update(0.toByte())
+        return Base64.getEncoder().encodeToString(digest.digest(json.toByteArray(Charsets.UTF_8)))
+    }
+
+    private fun matchesBody(encrypted: String, json: String, cipher: LocalCipher, context: String): Boolean {
+        val proof = fingerprint(encrypted, json)
+        if (verifiedBodies.get(context) == proof) return true
+        val decoded = try { cipher.decrypt(encrypted, context) }
+            catch (_: IllegalArgumentException) { return false }
+            catch (_: javax.crypto.AEADBadTagException) { return false }
+        if (decoded != json) return false
+        verifiedBodies.put(context, proof)
+        return true
+    }
+
+    private suspend fun cacheDocument(scope: String, kind: String, json: String, revision: Long, cipher: LocalCipher) {
+        val context = "$scope/$kind"
+        val existing = db.dao().document(scope, kind)
+        if (existing != null && matchesBody(existing.encrypted, json, cipher, context)) {
+            if (existing.revision != revision) db.dao().putDocument(existing.copy(revision = revision))
+            return
+        }
+        val encrypted = cipher.encrypt(json, context)
+        db.dao().putDocument(DocumentRecord(scope, kind, encrypted, revision))
+        verifiedBodies.put(context, fingerprint(encrypted, json))
+    }
 
     companion object {
         fun structureDocument(document: JSONObject): String = JSONObject()
@@ -66,25 +101,21 @@ internal class CloudAccountImporter(private val db: GenesisDatabase, private val
         var unreadable = snapshot.unreadableTaskCount
         val seenIds = mutableSetOf<String>()
         val tasks = snapshot.tasks.mapNotNull { source ->
-            val decoded = try {
+            try {
                 val value = CloudAccountSnapshot.nativeTaskJson(source)
                 val id = value.getString("id")
                 require(seenIds.add(id))
                 val revision = value.optLong("updatedAt", 1).coerceAtLeast(1)
                 val json = value.toString()
                 val record = TaskRecord(scope, id, "", revision, value.optBoolean("done"))
-                Triple(record, json, TaskReminderPlan.times(LocalTask.from(record, json)))
+                ImportedTask(record, json, TaskReminderPlan.times(LocalTask.from(record, json)))
             } catch (_: JSONException) { unreadable++; null }
               catch (_: IllegalArgumentException) { unreadable++; null }
               catch (_: DateTimeException) { unreadable++; null }
-            decoded?.let { (record, json, reminders) ->
-                // Storage/Keystore failures still abort the transaction. They are
-                // not malformed remote rows and must never be silently ignored.
-                ImportedTask(record.copy(encrypted = cipher.encrypt(json, "$scope/${record.id}")), reminders)
-            }
         }
         val dao = db.dao()
         val previousReminders = dao.reminders(scope)
+        val existingReminderIds = previousReminders.mapTo(hashSetOf()) { it.id }
         val changedTaskIds = mutableSetOf<String>()
         val update: suspend () -> Result = { db.withTransaction {
             mutation.check();assertCurrent()
@@ -93,46 +124,58 @@ internal class CloudAccountImporter(private val db: GenesisDatabase, private val
             val staleWorkspace = cached != null && cached.revision > snapshot.version
             if (!snapshot.tasksDeferred) {
                 val remoteIds = tasks.map { it.record.id }.toSet()
-                if (!snapshot.googleSyncWarning && unreadable == 0) dao.accountTasks(scope).filter {
-                    it.id !in remoteIds && it.id !in pending
-                }.forEach {
+                val fullList = !snapshot.googleSyncWarning && unreadable == 0
+                val existingTasks = if (fullList) dao.backupTasks(scope).associateBy { it.id } else null
+                existingTasks?.values?.filter {
+                    !it.deleted && it.id !in remoteIds && it.id !in pending
+                }?.forEach {
                     dao.deleteCachedTask(scope, it.id)
                     dao.deleteTaskReminders(scope, it.id)
                     changedTaskIds += it.id
                 }
-                tasks.forEach { (record, reminders) ->
+                tasks.forEach { (record, json, reminders) ->
                     // A partial response can add confirmed rows, but cannot erase or
                     // replace a cached task. Local edits and deletion tombstones win.
-                    val cachedTask = dao.task(scope, record.id)
+                    val cachedTask = if (existingTasks != null) existingTasks[record.id] else dao.task(scope, record.id)
                     if (record.id !in pending && cachedTask?.deleted != true &&
                         (!snapshot.googleSyncWarning || cachedTask == null)) {
-                        dao.putTask(record)
-                        dao.deleteTaskReminders(scope, record.id)
-                        changedTaskIds += record.id
+                        val context = "$scope/${record.id}"
+                        val unchanged = cachedTask != null && cachedTask.revision == record.revision &&
+                            cachedTask.done == record.done && matchesBody(cachedTask.encrypted, json, cipher, context)
+                        if (!unchanged) {
+                            val encrypted = cipher.encrypt(json, context)
+                            dao.putTask(record.copy(encrypted = encrypted))
+                            verifiedBodies.put(context, fingerprint(encrypted, json))
+                            dao.deleteTaskReminders(scope, record.id)
+                            changedTaskIds += record.id
+                        }
                         reminders.forEach { (occurrence, at) ->
-                            dao.putReminder(ReminderRecord(scope, record.id + ":" + occurrence, record.id,
-                                occurrence.substringBefore(':'), record.revision, at))
+                            val reminderId = record.id + ":" + occurrence
+                            if (!unchanged || reminderId !in existingReminderIds) {
+                                dao.putReminder(ReminderRecord(scope, reminderId, record.id,
+                                    occurrence.substringBefore(':'), record.revision, at))
+                            }
                         }
                     }
                 }
             }
             if (!staleWorkspace) {
                 if ("workspace-structure" !in pending)
-                    dao.putDocument(DocumentRecord(scope, "structure", cipher.encrypt(structure, "$scope/structure"), snapshot.version))
+                    cacheDocument(scope, "structure", structure, snapshot.version, cipher)
                 if (document != null) {
                     if (snapshot.authProvider != "google" && document.optJSONArray("taskLists") != null && "workspace-structure" !in pending) {
                         val listRows = document.getJSONArray("taskLists")
                         val validLists = (0 until listRows.length()).map { GoogleTaskList.from(listRows.getJSONObject(it)) }
                         val listDocument = JSONArray().apply { validLists.forEach { put(it.json()) } }.toString()
-                        dao.putDocument(DocumentRecord(scope, "task-lists", cipher.encrypt(listDocument, "$scope/task-lists"), snapshot.version))
+                        cacheDocument(scope, "task-lists", listDocument, snapshot.version, cipher)
                     }
                     // Keep the original three-way-merge base while a document has local edits.
                     if (pending.none { it in setOf("workspace-structure", "habits", "trackers") })
-                        dao.putDocument(DocumentRecord(scope, "cloud-base", cipher.encrypt(document.toString(), "$scope/cloud-base"), snapshot.version))
+                        cacheDocument(scope, "cloud-base", document.toString(), snapshot.version, cipher)
                     if ("habits" !in pending)
-                        dao.putDocument(DocumentRecord(scope, "habits", cipher.encrypt(requireNotNull(habits), "$scope/habits"), snapshot.version))
+                        cacheDocument(scope, "habits", requireNotNull(habits), snapshot.version, cipher)
                     if ("trackers" !in pending)
-                        dao.putDocument(DocumentRecord(scope, "trackers", cipher.encrypt(requireNotNull(trackers), "$scope/trackers"), snapshot.version))
+                        cacheDocument(scope, "trackers", requireNotNull(trackers), snapshot.version, cipher)
                 }
             }
             assertCurrent()

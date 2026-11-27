@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {calendarModule} from './helpers/calendar-modules.mjs';
@@ -44,9 +45,9 @@ test('matching writer heads need no choice, and malformed journals remain blocke
   const f=fixture();mutate(f);await assert.rejects(backupJournalConflicts(f.payload),/INVALID/);
  }
 });
-test('all fourteen catalogs include the six recovery controls and preserve their number placeholder',()=>{
+test('all eighteen catalogs include the six recovery controls and preserve their number placeholder',()=>{
  const source=['Выберите сохранённый вариант','В архиве есть разные черновики. Сравните их и выберите вариант для восстановления. Остальные варианты останутся в исходном зашифрованном файле.','Вариант {number}','Последний черновик','Ранний снимок','Посмотреть данные варианта'];
- for(const language of ['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja']){
+ for(const language of [...REGION_LANGUAGES]){
   const pack=JSON.parse(readFileSync(`app/backup-locales/${language}.json`,'utf8'));for(const key of source)assert.ok(typeof pack[key]==='string'&&pack[key].trim(),`${language}: ${key}`);
   assert.deepEqual(pack[source[2]].match(/\{[^}]+\}/g),['{number}']);
  }

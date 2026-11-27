@@ -180,5 +180,57 @@
     "unavailable": "地域を確認できませんでした。USD または RUB を手動で選択してください。",
     "usdPending": "USD の価格は固定です。USD での支払いはまだ利用できません。現在、YooKassa は RUB での支払いに対応しています。",
     "privacy": "位置情報は許可をいただいた場合のみ使用します。座標は端末内で処理され、サーバーには送信されません。"
+  },
+  "he": {
+    "currency": "מטבע להצגת המחירים",
+    "auto": "אוטומטי",
+    "locate": "השתמש במיקום המכשיר",
+    "locating": "בדקתי את האזור...",
+    "manual": "בחרתם את המטבע.",
+    "location": "מטבע נבחר באמצעות מיקום המכשיר שלך.",
+    "ip": "מטבע שנבחר על פי אזור ה- IP שלך. אתה יכול לשנות אותו כאשר אתה משתמש ב- VPN או כשאתה נוסע.",
+    "browser": "המטבע נבחר בעזרת ההגדרות האזוריות של הדפדפן שלך. שינוי אם דרוש.",
+    "unavailable": "לא ניתן לקבוע את האזור שלך. בחר USD או RUB ידנית.",
+    "usdPending": "USD מחירים קבועים. USD תשלומים עדיין לא זמינים; YooKassa מקבל כיום RUB.",
+    "privacy": "המיקום משמש רק באישורך. הקואורדינטות מעובדות במכשיר ואינן נשלחות לשרת."
+  },
+  "ar": {
+    "currency": "عملة عرض الأسعار",
+    "auto": "تلقائي",
+    "locate": "استخدام موقع الجهاز",
+    "locating": "تحقق من المنطقة...",
+    "manual": "لقد اخترت العملة.",
+    "location": "العملة المختارة باستخدام موقع جهازك.",
+    "ip": "العملة المختارة باستخدام منطقة IP الخاصة بك. يمكنك تغييرها عند استخدام VPN أو السفر.",
+    "browser": "العملة المختارة باستخدام الإعدادات الإقليمية لمتصفحك. غيرها إذا لزم الأمر.",
+    "unavailable": "لا يمكن تحديد منطقتك. اختار USD أو RUB يدوياً.",
+    "usdPending": "USD الأسعار ثابتة. USD المدفوعات غير متاحة بعد؛ YooKassa يقبل حاليا RUB.",
+    "privacy": "لا يُستخدم موقعك إلا بإذنك. تُعالَج الإحداثيات على جهازك ولا تُرسل إلى الخادم."
+  },
+  "ko": {
+    "currency": "가격 표시 통화",
+    "auto": "자동",
+    "locate": "장치 위치 사용",
+    "locating": "지역 확인 중...",
+    "manual": "통화를 선택하셨습니다.",
+    "location": "장치 위치를 사용하여 선택한 통화.",
+    "ip": "IP 지역을 사용하여 선택한 통화입니다. VPN을 사용하거나 여행할 때 변경할 수 있습니다.",
+    "browser": "브라우저의 지역 설정을 사용하여 선택한 통화. 필요한 경우 변경하십시오.",
+    "unavailable": "지역을 확인할 수 없습니다. USD 또는 RUB을 수동으로 선택하십시오.",
+    "usdPending": "USD 가격은 고정되어 있습니다. USD 지불은 아직 사용할 수 없습니다; YooKassa는 현재 RUB를 수락합니다.",
+    "privacy": "위치 정보는 사용자가 허용한 경우에만 사용합니다. 좌표는 기기에서 처리되며 서버로 전송되지 않습니다."
+  },
+  "nl": {
+    "currency": "Valuta voor prijzen",
+    "auto": "Automatisch",
+    "locate": "Apparaatlocatie gebruiken",
+    "locating": "Controleren van regio…",
+    "manual": "U heeft de valuta geselecteerd.",
+    "location": "Valuta geselecteerd op basis van de locatie van uw apparaat.",
+    "ip": "Valuta geselecteerd op basis van uw IP-regio.U kunt deze wijzigen wanneer u een VPN gebruikt of reist.",
+    "browser": "Valuta geselecteerd met behulp van de regionale instellingen van uw browser. Wijzig deze indien nodig.",
+    "unavailable": "Kan uw regio niet bepalen. Selecteer handmatig USD of RUB.",
+    "usdPending": "USD prijzen zijn vast. USD betalingen zijn nog niet beschikbaar; YooKassa accepteert momenteel RUB.",
+    "privacy": "Uw locatie wordt alleen met uw toestemming gebruikt. De coördinaten worden op uw apparaat verwerkt en niet naar de server gestuurd."
   }
 }

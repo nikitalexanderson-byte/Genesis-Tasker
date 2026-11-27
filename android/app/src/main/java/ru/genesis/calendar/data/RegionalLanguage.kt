@@ -25,6 +25,8 @@ internal fun regionalLanguage(zoneId: String, country: String): String {
         "America/Argentina/Buenos_Aires" to "es",
         "Asia/Shanghai" to "zh", "Asia/Chongqing" to "zh", "Asia/Singapore" to "zh",
         "Europe/Istanbul" to "tr", "Asia/Istanbul" to "tr", "Asia/Tokyo" to "ja",
+        "Asia/Jerusalem" to "he", "Asia/Riyadh" to "ar",
+        "Asia/Seoul" to "ko", "Europe/Amsterdam" to "nl",
     )
     val byCountry = mapOf(
         "RU" to "ru", "BY" to "ru", "KZ" to "ru", "UA" to "uk", "PL" to "pl",
@@ -33,6 +35,10 @@ internal fun regionalLanguage(zoneId: String, country: String): String {
         "ES" to "es", "MX" to "es", "AR" to "es", "CL" to "es",
         "CO" to "es", "PE" to "es", "IT" to "it", "PT" to "pt", "BR" to "pt",
         "CN" to "zh", "SG" to "zh", "TR" to "tr", "JP" to "ja",
+        "IL" to "he", "KR" to "ko", "NL" to "nl",
+        "SA" to "ar", "AE" to "ar", "EG" to "ar", "JO" to "ar", "LB" to "ar",
+        "IQ" to "ar", "KW" to "ar", "QA" to "ar", "BH" to "ar", "OM" to "ar",
+        "MA" to "ar", "DZ" to "ar", "TN" to "ar", "PS" to "ar", "YE" to "ar", "LY" to "ar",
     )
     return byZone[zoneId] ?: byCountry[country.uppercase(Locale.ROOT)] ?: "en"
 }

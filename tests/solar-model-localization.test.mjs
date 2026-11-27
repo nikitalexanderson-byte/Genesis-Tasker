@@ -11,7 +11,7 @@ labels.push(...[...svg.matchAll(/class="curved-label"[^>]*aria-label="([^"]+)"/g
 const text = [...new Set(labels)].filter(value => value.length > 1 && /[А-Яа-яЁё]/u.test(value));
 
 test("all labels inside the original calendar vector have translations in every non-Cyrillic locale", () => {
-  for (const language of ["en", "de", "el", "fr", "es", "it", "pt", "pl", "zh", "tr", "ja"]) {
+  for (const language of ["en", "de", "el", "fr", "es", "it", "pt", "pl", "zh", "tr", "ja", "he", "ar", "ko", "nl"]) {
     const translate = solarModelTranslator(language);
     const missing = text.filter(source => /[А-Яа-яЁё]/u.test(translate(source)));
     assert.deepEqual(missing, [], `${language}: untranslated vector labels`);
@@ -57,7 +57,7 @@ test("calendar controls and proposed sleep titles resolve the selected locale, w
     for (const source of ["Весь круг", "Выберите месяц", "Выберите пяту", "Выберите день", "Открыть день в календаре", "Сон и пробуждение"])
       assert.equal(translateText(source, language), refinementCopy[language][source], `${language}/${source}`);
   }
-  for (const language of ["en", "de", "fr", "es", "it", "pt", "pl", "zh", "tr", "ja"])
+  for (const language of ["en", "de", "fr", "es", "it", "pt", "pl", "zh", "tr", "ja", "he", "ar", "ko", "nl"])
     assert.equal(translateText("ТРИГЕ", language), "TRYGE", `${language}: a proper name must not become the verb 'try'`);
   assert.equal(translateText("АРЕЙОС", "ja"), "AREIOS");
   assert.equal(translateText("КАРПОС", "zh"), "KARPOS");

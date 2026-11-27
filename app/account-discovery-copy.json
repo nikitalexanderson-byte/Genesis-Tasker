@@ -194,5 +194,61 @@
     "tryLunar": "月の暦を試す",
     "close": "ヒントを閉じる",
     "sharedRetry": "共有の予定を開けませんでした。もう一度お試しください。"
+  },
+  "he": {
+    "sharedBefore": "יחסים משותפים זמינים. ",
+    "account": "פתיחת יחסים משותפים",
+    "sharedAfter": "",
+    "guideStatus": "האייקון של הגדרות החשבון מובחן.",
+    "introTitle": "נסה לוחות שנה אחרים",
+    "introCurrent": "התחלת עם הלוח הגרגוריאני: חודשים מוכרים ושבוע של שבעה ימים.",
+    "sacredBody": "לוח השנה הקדוש מחבר תאריך עם קצב עונתי, מחזורי חמישה ימים ודמויות סימבוליות.",
+    "lunarBody": "לוח השנה הירחני עוקב אחרי שלבי הירח וימים ירחיים, חודשיו מתחילים בירח חדש.",
+    "trySacred": "נסה קדוש",
+    "tryLunar": "נסה ירח.",
+    "close": "סגירת טיפ",
+    "sharedRetry": "לא ניתן לפתוח יחסים משותפים. נסה שוב."
+  },
+  "ar": {
+    "sharedBefore": "الشؤون المشتركة متاحة. ",
+    "account": "الشؤون المشتركة المفتوحة",
+    "sharedAfter": "",
+    "guideStatus": "ويتم تسليط الضوء على أيقونة إعدادات الحساب.",
+    "introTitle": "جرّب تقويمات أخرى",
+    "introCurrent": "لقد بدأتم بالتقويم الغريغوري: أشهر مألوفة وأسبوع من سبعة أيام.",
+    "sacredBody": "ويربط التقويم المقدس التواريخ بالإيقاعات الموسمية، ودورات الأيام الخمسة والتصورات الرمزية.",
+    "lunarBody": "ويتبع التقويم القمري مراحل القمر وأيام القمر، وتبدأ أشهره عند حلول القمر الجديد.",
+    "trySacred": "حاول المقدس",
+    "tryLunar": "حاول القمر",
+    "close": "إغلاق النقطة",
+    "sharedRetry": "تعذر فتح الشؤون المشتركة، حاول مرة أخرى."
+  },
+  "ko": {
+    "sharedBefore": "공유 업무가 제공됩니다. ",
+    "account": "공유 관계 열기",
+    "sharedAfter": "",
+    "guideStatus": "계정 설정 아이콘이 강조 표시됩니다.",
+    "introTitle": "다른 캘린더 시도하기",
+    "introCurrent": "당신은 그레고리력으로 시작했습니다: 친숙한 달과 7일 주.",
+    "sacredBody": "신성한 달력은 계절 리듬, 5일 주기 및 상징적인 이미지와 날짜를 연결합니다.",
+    "lunarBody": "음력은 달의 위상과 달의 일을 따르며, 월은 초승달에서 시작한다.",
+    "trySacred": "성스러운 것을 시도해 보세요",
+    "tryLunar": "달력을 사용해 보기",
+    "close": "팁 닫기",
+    "sharedRetry": "공유 관계를 열 수 없습니다. 다시 시도하십시오."
+  },
+  "nl": {
+    "sharedBefore": "Gedeelde zaken zijn beschikbaar. ",
+    "account": "Open gedeelde zaken",
+    "sharedAfter": "",
+    "guideStatus": "Het pictogram voor accountinstellingen is gemarkeerd.",
+    "introTitle": "Probeer andere agenda's",
+    "introCurrent": "Je bent begonnen met de gregoriaanse kalender: vertrouwde maanden en een zevendaagse week.",
+    "sacredBody": "De heilige kalender verbindt data met seizoensritmes, vijfdaagse cycli en symbolische beelden.",
+    "lunarBody": "De maankalender volgt maanfasen en maandagen, de maanden beginnen bij nieuwe maan.",
+    "trySacred": "Probeer het heilige",
+    "tryLunar": "Probeer lunar",
+    "close": "Sluit de tip",
+    "sharedRetry": "Gedeelde zaken kunnen niet worden geopend. Probeer het opnieuw."
   }
 }

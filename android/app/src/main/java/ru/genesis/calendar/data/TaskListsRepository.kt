@@ -82,7 +82,7 @@ class TaskListsRepository(private val app: GenesisApplication, private val accou
                 val cached = db.dao().document(scope, kind)
                 val previous = cached?.let { decode(LocalCipher().decrypt(it.encrypted, "$scope/$kind")) }.orEmpty()
                 val next = if(partial) previous.filterNot { old -> incoming.any { it.id == old.id && it.accountId == old.accountId } } + incoming else incoming
-                store(db, scope, next, (cached?.revision ?: 0) + 1)
+                if (cached == null || next != previous) store(db, scope, next, (cached?.revision ?: 0) + 1)
             }
         }
     }

@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {mkdir, writeFile, rm} from "node:fs/promises";
@@ -11,11 +12,11 @@ import test from "node:test";
 import {calendarModule} from "./helpers/calendar-modules.mjs";
 import {assertPublicDocumentReferences} from "../scripts/public-document-references.mjs";
 
-const languages = ["ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja"];
+const languages = [...REGION_LANGUAGES];
 const copy = JSON.parse(readFileSync(new URL("../app/dictation-copy.json", import.meta.url), "utf8"));
 const policy = calendarModule("app/dictation-legal.ts");
 
-test("all fourteen spelling disclosures are authored and retain the direct text/IP and HTTPS facts", () => {
+test("all eighteen spelling disclosures are authored and retain the direct text/IP and HTTPS facts", () => {
   assert.deepEqual(Object.keys(copy).sort(), [...languages].sort());
   for (const language of languages) {
     for (const field of ["legalTitle", "legalBody"]) {

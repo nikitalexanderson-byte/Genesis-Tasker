@@ -22,7 +22,7 @@ if ($action === 'appearance') {
     $patch=[];
     if(isset($options['language'])) {
         $language=(string)$options['language'];
-        if(!in_array($language,['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'],true))throw new RuntimeException('Invalid fixture language');
+        if(!in_array($language,['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja','he','ar','ko','nl'],true))throw new RuntimeException('Invalid fixture language');
         $patch['language']=$language;
     }
     if(isset($options['theme'])) {$patch['theme']=(string)$options['theme'];$patch['expectedThemeRevision']=(int)(genesisFindUser($id)['theme_revision']??0);}

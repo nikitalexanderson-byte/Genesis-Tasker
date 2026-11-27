@@ -110,5 +110,37 @@
     "duration": "時間を進捗に加算",
     "timeOnly": "時間の記録のみ",
     "hint": "作業時間は時間目標にのみ加算されます。Pomodoro の休憩時間は含まれません。"
+  },
+  "he": {
+    "title": "זמן",
+    "enabled": "תאוצה למנהג הזה",
+    "modes": "זמינים",
+    "duration": "ספור את הזמן לכיוון התקדמות",
+    "timeOnly": "רק זמן הקלטת",
+    "hint": "זמן העבודה מוסיף רק למטרה של משך זמן. הפסקות פומדורו לא נחשבות."
+  },
+  "ar": {
+    "title": "توقيت",
+    "enabled": "توقيت لهذه العادات",
+    "modes": "أجهزة توقيت متاحة",
+    "duration": "العد الزمني للتقدم المحرز",
+    "timeOnly": "في وقت قياسي فقط",
+    "hint": "لا يضاف وقت العمل إلا إلى هدف المدة، ولا تحسب فترات الراحة المتقطعة."
+  },
+  "ko": {
+    "title": "타이머",
+    "enabled": "이 습관에 대한 타이머",
+    "modes": "사용 가능한 타이머",
+    "duration": "진행을 위한 시간 계산",
+    "timeOnly": "기록 시간만",
+    "hint": "작업 시간은 기간 목표에만 추가됩니다. 포모도로 휴식은 계산되지 않습니다."
+  },
+  "nl": {
+    "title": "Timer",
+    "enabled": "Timer voor deze gewoonte",
+    "modes": "Beschikbare timers",
+    "duration": "Tijd tellen naar vooruitgang",
+    "timeOnly": "Record tijd alleen",
+    "hint": "Werktijd wordt alleen toegevoegd aan een duurdoel. Pomodoro-pauzes tellen niet mee."
   }
 }

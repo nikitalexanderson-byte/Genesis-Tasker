@@ -1,0 +1,92 @@
+{
+  "ru": [
+    "Теперь сайт и приложение можно использовать на иврите, арабском, корейском и нидерландском. Ищите флажки на экране входа и в настройках языка.",
+    "Индикатор синхронизации показывает, когда изменения сохранены на устройстве и ждут отправки, а когда сервер уже их подтвердил.",
+    "При сворачивании приложение остаётся в списке недавних. Исправлено зависание синхронизации при одновременной отправке и загрузке. При повторной загрузке неизменившиеся задачи сохраняют свои напоминания."
+  ],
+  "en": [
+    "The website and app are now available in Hebrew, Arabic, Korean and Dutch. Look for the flags on the sign-in screen and in language settings.",
+    "The sync indicator shows when changes are saved on your device and waiting to be sent, and when the server has confirmed them.",
+    "The app stays in Recents when you leave it. Fixed a sync hang when uploads and downloads overlapped. Syncing unchanged tasks again now preserves their reminders."
+  ],
+  "el": [
+    "Ο ιστότοπος και η εφαρμογή υποστηρίζουν πλέον εβραϊκά, αραβικά, κορεατικά και ολλανδικά. Αλλάξτε γλώσσα από τις σημαίες στην οθόνη σύνδεσης ή στις ρυθμίσεις.",
+    "Η ένδειξη συγχρονισμού ξεχωρίζει τις τοπικές αλλαγές που περιμένουν αποστολή από όσες έχει επιβεβαιώσει ο διακομιστής.",
+    "Η εφαρμογή παραμένει στις πρόσφατες εφαρμογές. Διορθώθηκε το κόλλημα κατά την ταυτόχρονη αποστολή και λήψη. Οι υπενθυμίσεις διατηρούνται όταν συγχρονίζονται ξανά εργασίες που δεν άλλαξαν."
+  ],
+  "de": [
+    "Website und App gibt es jetzt auf Hebräisch, Arabisch, Koreanisch und Niederländisch. Die Flaggen zur Sprachwahl stehen bei der Anmeldung und in den Einstellungen.",
+    "Die Sync-Anzeige zeigt, ob lokale Änderungen noch auf den Versand warten oder bereits vom Server bestätigt wurden.",
+    "Die App bleibt in der Übersicht der zuletzt verwendeten Apps. Der Sync hängt beim gleichzeitigen Senden und Empfangen nicht mehr. Unveränderte Aufgaben behalten ihre Erinnerungen."
+  ],
+  "fr": [
+    "Le site et l’appli existent aussi en hébreu, arabe, coréen et néerlandais. Choisissez un drapeau à la connexion ou dans les réglages.",
+    "L’indicateur distingue les changements locaux en attente d’envoi de ceux que le serveur a confirmés.",
+    "L’application reste dans la liste des applications récentes lorsque vous revenez à l’accueil. Un blocage lors de l’envoi et de la réception simultanés a été corrigé. Les tâches inchangées conservent leurs rappels à chaque synchronisation."
+  ],
+  "es": [
+    "El sitio y la aplicación ya están en hebreo, árabe, coreano y neerlandés. Elige una bandera al iniciar sesión o en los ajustes.",
+    "El indicador distingue los cambios locales pendientes de envío de los confirmados por el servidor.",
+    "La aplicación permanece en la lista de aplicaciones recientes al volver a la pantalla de inicio. Se ha corregido un bloqueo al enviar y recibir datos a la vez. Las tareas que no han cambiado conservan sus recordatorios al sincronizarse de nuevo."
+  ],
+  "it": [
+    "Sito e app sono disponibili anche in ebraico, arabo, coreano e neerlandese. Scegli la lingua con le bandiere all’accesso o nelle impostazioni.",
+    "L’indicatore distingue le modifiche locali in attesa di invio da quelle confermate dal server.",
+    "L’app rimane tra le app recenti quando torni alla schermata Home. Risolto un blocco della sincronizzazione durante l’invio e la ricezione simultanei. Le attività invariate mantengono i promemoria a ogni sincronizzazione."
+  ],
+  "pt": [
+    "O site e a aplicação já estão disponíveis em hebraico, árabe, coreano e neerlandês. Escolha a bandeira ao iniciar sessão ou nas definições.",
+    "O indicador distingue as alterações locais por enviar das já confirmadas pelo servidor.",
+    "A aplicação permanece na lista de aplicações recentes ao voltar ao ecrã inicial. Foi corrigido um bloqueio ao enviar e receber dados em simultâneo. As tarefas inalteradas mantêm os lembretes nas sincronizações seguintes."
+  ],
+  "pl": [
+    "Serwis i aplikacja są teraz dostępne po hebrajsku, arabsku, koreańsku i niderlandzku. Wybierz flagę na ekranie logowania lub w ustawieniach.",
+    "Wskaźnik odróżnia zmiany lokalne czekające na wysłanie od potwierdzonych przez serwer.",
+    "Po powrocie do ekranu głównego aplikacja pozostaje na liście ostatnio używanych. Usunięto zawieszanie się synchronizacji przy jednoczesnym wysyłaniu i pobieraniu danych. Przy ponownej synchronizacji niezmienione zadania zachowują przypomnienia."
+  ],
+  "sr": [
+    "Сајт и апликација су сада доступни и на хебрејском, арапском, корејском и холандском. Заставице се налазе на екрану за пријаву и у подешавањима језика.",
+    "Показатељ синхронизације приказује да ли су измене сачуване на уређају и чекају на слање или их је сервер већ потврдио.",
+    "Апликација остаје на листи недавних апликација када се вратите на почетни екран. Отклоњен је застој при истовременом слању и преузимању података. Непромењени задаци задржавају подсетнике при поновној синхронизацији."
+  ],
+  "uk": [
+    "Сайт і застосунок тепер доступні івритом, арабською, корейською та нідерландською. Прапорці є на екрані входу й у налаштуваннях мови.",
+    "Індикатор синхронізації показує, коли зміни збережено на пристрої й вони очікують на надсилання, а коли сервер уже їх підтвердив.",
+    "Після згортання застосунок залишається в списку нещодавніх програм. Усунено зависання синхронізації під час одночасного надсилання й завантаження. Після повторної синхронізації незмінені завдання зберігають свої нагадування."
+  ],
+  "zh": [
+    "网站和应用现已支持希伯来语、阿拉伯语、韩语和荷兰语。您可以在登录界面和语言设置中通过旗帜切换语言。",
+    "同步状态会显示更改是已保存在设备上、正在等待发送，还是已经得到服务器确认。",
+    "返回主屏幕后，应用会保留在最近使用的应用列表中。修复了同时上传和下载时同步卡住的问题。再次同步未更改的任务时，会保留原有提醒。"
+  ],
+  "tr": [
+    "Site ve uygulama artık İbranice, Arapça, Korece ve Felemenkçe de kullanılabilir. Giriş ekranındaki veya ayarlardaki bayraklardan dil seçebilirsiniz.",
+    "Eşitleme göstergesi, gönderilmeyi bekleyen yerel değişiklikleri ve sunucunun onayladığı değişiklikleri gösterir.",
+    "Ana ekrana dönünce uygulama son kullanılanlar listesinde kalır. Eşzamanlı gönderme ve alma sırasında eşitlemenin takılmasına yol açan sorun giderildi. Değişmeyen görevler yeniden eşitlendiğinde hatırlatıcıları korunur."
+  ],
+  "ja": [
+    "ウェブサイトとアプリがヘブライ語、アラビア語、韓国語、オランダ語に対応しました。ログイン画面と設定画面で、国旗を目印に言語を選べます。",
+    "同期インジケーターで、変更が端末に保存されて送信を待っているのか、サーバーで確認済みなのかが分かります。",
+    "ホーム画面に戻っても、アプリは最近使ったアプリの一覧に残ります。送信と受信が重なると同期が止まる不具合を修正しました。変更のないタスクを再同期しても、リマインダーの状態が保持されます。"
+  ],
+  "he": [
+    "האתר והאפליקציה זמינים כעת גם בעברית, בערבית, בקוריאנית ובהולנדית. אפשר לבחור שפה בעזרת הדגלים במסך הכניסה ובהגדרות השפה.",
+    "מחוון הסנכרון מציג מתי השינויים נשמרו במכשיר וממתינים לשליחה, ומתי השרת כבר אישר את קבלתם.",
+    "בחזרה למסך הבית, האפליקציה נשארת ברשימת האפליקציות האחרונות. תוקנה תקלה שגרמה לסנכרון להיתקע כשנתונים נשלחו והתקבלו בו־זמנית. בסנכרון חוזר של משימות שלא השתנו נשמר מצב התזכורות שלהן."
+  ],
+  "ar": [
+    "يتوفر الموقع والتطبيق الآن بالعبرية والعربية والكورية والهولندية. يمكنك اختيار اللغة من خلال الأعلام في شاشة تسجيل الدخول أو في إعدادات اللغة.",
+    "يوضّح مؤشّر المزامنة ما إذا كانت التغييرات محفوظة على جهازك وبانتظار الإرسال، أو أنّ الخادم أكّد استلامها بالفعل.",
+    "يبقى التطبيق في قائمة التطبيقات الأخيرة عند العودة إلى الشاشة الرئيسية. أُصلح خلل كان يوقف المزامنة عند إرسال البيانات وتلقّيها في الوقت نفسه. تحتفظ المهام التي لم تتغيّر بحالة تذكيراتها عند مزامنتها مجددًا."
+  ],
+  "ko": [
+    "이제 웹사이트와 앱에서 히브리어, 아랍어, 한국어, 네덜란드어를 사용할 수 있습니다. 로그인 화면이나 언어 설정에서 국기를 보고 언어를 선택하세요.",
+    "동기화 표시를 보면 변경 사항이 기기에 저장되어 전송을 기다리는 중인지, 서버에서 이미 수신을 확인했는지 알 수 있습니다.",
+    "홈 화면으로 돌아가도 앱이 최근 앱 목록에 남습니다. 데이터를 동시에 보내고 받을 때 동기화가 멈추던 문제를 수정했습니다. 변경되지 않은 작업을 다시 동기화해도 알림 상태가 유지됩니다."
+  ],
+  "nl": [
+    "Site en app zijn nu ook beschikbaar in het Hebreeuws, Arabisch, Koreaans en Nederlands. Kies een vlag bij het inloggen of in de taalinstellingen.",
+    "De syncstatus laat zien welke lokale wijzigingen nog moeten worden verstuurd en welke door de server zijn bevestigd.",
+    "De app blijft in de lijst met recente apps. Gelijktijdig verzenden en ontvangen laat de synchronisatie niet meer vastlopen. Ongewijzigde taken behouden bij het synchroniseren de status van hun herinneringen."
+  ]
+}

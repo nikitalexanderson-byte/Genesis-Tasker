@@ -1,3 +1,4 @@
+import {REGION_LANGUAGES} from "../app/region-language.ts";
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {readFileSync} from 'node:fs';
@@ -54,9 +55,9 @@ test('dialogs, active controls and visible inline drafts block automatic guidanc
   assert.equal(guidanceWorkspaceQuiet(quiet([ownDialog,child],child),ownDialog),true);
   assert.equal(guidanceWorkspaceQuiet(quiet([ownDialog,element()],child),ownDialog),false);
 });
-test('the shared introduction copy has the same complete 13-key contract in all 14 languages',()=>{
+test('the shared introduction copy has the same complete 13-key contract in all 18 languages',()=>{
   const copy=JSON.parse(readFileSync(new URL('../app/plan-guidance-copy.json',import.meta.url),'utf8'));
-  assert.equal(Object.keys(copy).length,14);
+  assert.equal(Object.keys(copy).length, REGION_LANGUAGES.length);
   const keys=Object.keys(copy.ru).sort();assert.equal(keys.length,13);
   for(const [language,text]of Object.entries(copy)){
     assert.deepEqual(Object.keys(text).sort(),keys,language);

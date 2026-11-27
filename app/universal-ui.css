@@ -1,6 +1,8 @@
 /* GENESIS Universal UI: shared structure, theme-owned color and artwork. */
 /* Ordinary surfaces match the advice card even before theme hydration; Oracle's top blocks keep their shapes. */
 :root { --ui-surface-radius: 10px; }
+/* Korean words are space-delimited. Keep them together on narrow screens in both themes. */
+:lang(ko) { word-break: keep-all !important; }
 html[data-genesis-theme] {
   --ui-radius: 12px;
   --ui-control-height: 44px;

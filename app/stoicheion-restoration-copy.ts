@@ -15,6 +15,10 @@ import uk from "./stoicheion-restoration-locales/uk.json";
 import zh from "./stoicheion-restoration-locales/zh.json";
 import tr from "./stoicheion-restoration-locales/tr.json";
 import ja from "./stoicheion-restoration-locales/ja.json";
+import he from "./stoicheion-restoration-locales/he.json";
+import ar from "./stoicheion-restoration-locales/ar.json";
+import ko from "./stoicheion-restoration-locales/ko.json";
+import nl from "./stoicheion-restoration-locales/nl.json";
 
 type Pair = { ru: string; en: string };
 const sources = new Map<string, number>();
@@ -29,7 +33,7 @@ for (const auxiliary of content.auxiliaries) {
   const practice = SACRED_PRACTICES.find(item => item.id === auxiliary.practiceId)!;
   collect(practice.title); collect(practice.description);
 }
-const locales = { el, de, fr, es, it, pt, pl, sr, uk, zh, tr, ja };
+const locales = { el, de, fr, es, it, pt, pl, sr, uk, zh, tr, ja, he, ar, ko, nl };
 
 /** Authored translations are bundled; recommendations never call a translation service. */
 export function restorationLocal(text: Pair, language: Language): string {

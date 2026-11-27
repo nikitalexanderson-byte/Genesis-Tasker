@@ -138,5 +138,45 @@
     "note": "Gönüllü destek ücretli özelliklerin kilidini açmaz. Ödeme, seçilen hizmetin sitesinde yapılır.",
     "error": "Ödeme sayfası açılamadı. Lütfen tekrar deneyin.",
     "privacy": "Boosty seçildiğinde kendi sitesi açılır. GENESIS, hesap verilerinizi Boosty’ye göndermez ve kart bilgilerinizi almaz. Boosty, ödemeyi ve verileri kendi gizlilik politikasına göre işler."
+  },
+  "he": {
+    "title": "תמיכה ב- GENESIS",
+    "choose": "בחר שיטה",
+    "domestic": "CloudTips · כרטיסי בנק מרוסיה",
+    "international": "Boosty · כרטיסי בנק ממדינות אחרות",
+    "pending": "אפשרות לתרומות בינלאומיות דרך Boosty נמצאת בהכנה.",
+    "note": "תמיכה מתנדבת לא פותחת תכונות בתשלום. התשלום מתבצע באתר האינטרנט של השירות הנבחר.",
+    "error": "לא ניתן לפתוח את דף התשלום. בבקשה נסה שוב.",
+    "privacy": "בחירת Boosty תוביל אותך לאתר האינטרנט של Boosty. GENESIS לא שולח את נתוני החשבון שלך ל- Boosty או מקבל את פרטים על הכרטיס שלך. Boosty מעבד את התשלום והנתונים בצד שלו לפי מדיניות הפרטיות שלו."
+  },
+  "ar": {
+    "title": "دعم نظام GENESIS",
+    "choose": "اختار طريقة",
+    "domestic": "CloudTips · بطاقات البنوك الروسية",
+    "international": "Boosty · بطاقات مصرفية من دول أخرى",
+    "pending": "يجري إعداد خدمة التبرّعات الدولية عبر Boosty.",
+    "note": "ولا يفتح الدعم الطوعي إمكانية الوصول إلى الخصائص المدفوعة الأجر، ويجري الدفع على الموقع الشبكي للخدمة المختارة.",
+    "error": "لا يمكن فتح صفحة الدفع، يرجى محاولة مرة أخرى.",
+    "privacy": "GENESIS لا ترسل بيانات حسابك إلى بوستي أو تتلقى تفاصيل بطاقة الائتمان الخاصة بك. ويقوم بوستي بمعالجة المدفوعات والبيانات من جانبه وفقا لسياسة الخصوصية الخاصة به."
+  },
+  "ko": {
+    "title": "지원 GENESIS",
+    "choose": "방법 선택",
+    "domestic": "CloudTips · 러시아 은행 카드",
+    "international": "Boosty · 다른 국가에서 발급한 카드",
+    "pending": "Boosty를 통한 해외 후원 기능을 준비 중입니다.",
+    "note": "자발적 지원은 유료 기능을 잠금 해제하지 않습니다. 결제는 선택한 서비스의 웹 사이트에서 이루어집니다.",
+    "error": "결제 페이지를 열 수 없습니다. 다시 시도하십시오.",
+    "privacy": "Boosty를 선택하면 Boosty 웹사이트로 이동합니다. GENESIS는 회원님의 계정 정보를 Boosty에 전송하거나 카드 정보를 수신하지 않습니다. Boosty는 자체 개인정보 보호정책에 따라 결제 및 데이터를 처리합니다."
+  },
+  "nl": {
+    "title": "Ondersteuning GENESIS",
+    "choose": "Kies een methode",
+    "domestic": "CloudTips · Russische bankkaarten",
+    "international": "Boosty · bankkaarten uit andere landen",
+    "pending": "Internationale donaties via Boosty worden voorbereid.",
+    "note": "Vrijwillige ondersteuning ontgrendelt geen betaalde functies, betaling vindt plaats op de website van de geselecteerde service.",
+    "error": "De betalingspagina kon niet worden geopend, probeer het opnieuw.",
+    "privacy": "Door te kiezen voor Boosty ga je naar de website van Boosty. GENESIS stuurt jouw accountgegevens niet naar Boosty en ontvangt ook geen kaartgegevens, Boosty verwerkt de betaling en gegevens aan haar zijde onder eigen privacybeleid."
   }
 }

@@ -91,7 +91,7 @@ function genesisSaveAd(array $payload, ?string $id = null): array
     if ($imageData === '' && $imageUrl === '') throw new InvalidArgumentException('Advertisement image is required.');
     $linkUrl = genesisAdHttpsUrl($payload['linkUrl'] ?? '', true);
     $languages = genesisAdAudienceList($payload['languages'] ?? [],
-        ['ru', 'en', 'el', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'sr', 'uk', 'zh', 'tr', 'ja'], 'languages');
+        ['ru', 'en', 'el', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'sr', 'uk', 'zh', 'tr', 'ja', 'he', 'ar', 'ko', 'nl'], 'languages');
     $countries = genesisAdAudienceList($payload['countries'] ?? [],
         array_map(static fn($number): string => chr(65 + intdiv($number, 26)) . chr(65 + $number % 26), range(0, 675)), 'countries');
     $platforms = genesisAdAudienceList($payload['platforms'] ?? [], ['web', 'android'], 'platforms');
@@ -200,6 +200,10 @@ function genesisAndroidUpdateNotice(string $language, string $installedVersion, 
     $copy = [
         'ru' => ['Доступна новая версия', 'Скачайте обновление: улучшенный интерфейс и исправления. Установите поверх приложения, чтобы сохранить данные.'],
         'en' => ['A new version is available', 'Download the update for interface improvements and fixes. Install over the existing app to keep your data.'],
+        'he' => ['גרסה חדשה זמינה', 'העדכון כולל שיפורים בממשק ותיקונים. כדי לשמור על הנתונים, יש להתקין אותו מעל האפליקציה הקיימת.'],
+        'ar' => ['يتوفر إصدار جديد', 'نزّل التحديث للحصول على تحسينات الواجهة والإصلاحات. ثبّته فوق التطبيق الحالي للاحتفاظ ببياناتك.'],
+        'ko' => ['새 버전이 있습니다', '인터페이스 개선 및 오류 수정이 포함된 업데이트를 다운로드하세요. 데이터를 유지하려면 기존 앱 위에 설치하세요.'],
+        'nl' => ['Er is een nieuwe versie beschikbaar', 'Download de update met verbeteringen aan de interface en oplossingen voor fouten. Installeer de update over de bestaande app om je gegevens te behouden.'],
         'el' => ['Διατίθεται νέα έκδοση', 'Κατεβάστε την ενημέρωση με βελτιώσεις και διορθώσεις. Εγκαταστήστε την πάνω από την υπάρχουσα εφαρμογή για να διατηρήσετε τα δεδομένα σας.'],
         'de' => ['Eine neue Version ist verfügbar', 'Laden Sie das Update mit Verbesserungen und Fehlerbehebungen herunter. Installieren Sie es über die bestehende App, um Ihre Daten zu behalten.'],
         'fr' => ['Une nouvelle version est disponible', 'Téléchargez la mise à jour avec ses améliorations et correctifs. Installez-la sur l’application existante pour conserver vos données.'],

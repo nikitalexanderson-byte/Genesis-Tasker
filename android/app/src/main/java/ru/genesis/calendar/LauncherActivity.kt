@@ -24,7 +24,8 @@ class LauncherActivity : Activity() {
         val destination = Intent(intent).setClass(this, MainActivity::class.java)
         destination.flags = (destination.flags and
             (Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK or
-                Intent.FLAG_ACTIVITY_NEW_DOCUMENT).inv()) or Intent.FLAG_ACTIVITY_NEW_TASK
+                Intent.FLAG_ACTIVITY_NEW_DOCUMENT or Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS or
+                Intent.FLAG_ACTIVITY_NO_HISTORY).inv()) or Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(destination)
         finish()
     }

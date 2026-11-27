@@ -1,6 +1,7 @@
 package ru.genesis.calendar
 
 import androidx.compose.ui.test.*
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
 import java.time.ZoneId
@@ -19,20 +20,31 @@ import ru.genesis.calendar.ui.resolveSeasonZoneByIp
 class LanguageAndIpTest {
     @get:Rule val compose = createAndroidComposeRule<TestWorkspaceActivity>()
 
-    @Test fun polishAndJapaneseTranslateProjectHeader() {
+    @Test fun accountLanguageChangesWorkspaceNavigationAndLayoutDirection() {
         val app = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as GenesisApplication
         val prefs = LocalPreferences(app, app.workspaceScope)
         val original = runBlocking { prefs.values.first().language }
         try {
-            compose.onNodeWithTag("navigation-Проекты").performClick()
-            runBlocking { prefs.set("language", "pl") }
-            compose.waitUntil(10_000) {
-                compose.onAllNodesWithText("Projekty").fetchSemanticsNodes().isNotEmpty()
+            val menu = compose.onNodeWithTag("workspace-menu")
+            compose.waitUntil(20_000) { menu.isDisplayed() }
+            menu.performClick()
+            val today = hasTestTag("drawer-Сегодня-root")
+            val projects = compose.onNodeWithTag("drawer-Проекты-root")
+            val titles = mapOf("pl" to "Dzisiaj", "ja" to "今日", "he" to "היום",
+                "ar" to "اليوم", "ko" to "오늘", "nl" to "Vandaag")
+            for ((code, title) in titles) {
+                runBlocking { prefs.set("language", code) }
+                val translated = today and hasContentDescription(title)
+                compose.waitUntil(20_000) {
+                    compose.onAllNodes(translated).fetchSemanticsNodes().isNotEmpty()
+                }
+                val direction = if (code == "he" || code == "ar") LayoutDirection.Rtl else LayoutDirection.Ltr
+                assertEquals(code, direction, compose.onNode(translated).fetchSemanticsNode().layoutInfo.layoutDirection)
+                assertEquals(code, direction, projects.fetchSemanticsNode().layoutInfo.layoutDirection)
+                assertEquals(code, runBlocking { LocalPreferences(app, app.workspaceScope).selectedLanguage.first().selected })
             }
-            runBlocking { prefs.set("language", "ja") }
-            compose.waitUntil(10_000) {
-                compose.onAllNodesWithText("プロジェクト").fetchSemanticsNodes().isNotEmpty()
-            }
+            projects.performScrollTo().performClick()
+            compose.onNodeWithTag("app-header").assertIsDisplayed()
         } finally { runBlocking { prefs.set("language", original) } }
     }
 

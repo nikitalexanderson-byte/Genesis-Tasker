@@ -96,5 +96,33 @@
     "retry": "指紋を認識できませんでした。再試行するか、端末の画面ロックを使用してください。",
     "pin": "端末の画面ロックを使用",
     "cancel": "キャンセル"
+  },
+  "he": {
+    "unlock": "טביעת אצבע או PIN של התקן",
+    "hint": "נגעו בחיישן טביעת האצבע, או השתמשו בקוד PIN של הטלפון שלכם, דפוס או סיסמה.",
+    "retry": "טביעת האצבע לא זוהתה. נסה שוב או השתמש בנעילת המסך של הטלפון שלך.",
+    "pin": "השתמש בנעילה של מסך המכשיר",
+    "cancel": "ביטול"
+  },
+  "ar": {
+    "unlock": "بصمة الإصبع أو رقم التعريف الشخصي للجهاز",
+    "hint": "لمس جهاز استشعار بصمة الإصبع، أو استخدام رقم الهوية الشخصية لهاتفك، النمط أو كلمة المرور.",
+    "retry": "لم يتم التعرف على بصمة الإصبع. حاول مرة أخرى أو استخدم قفل شاشة هاتفك.",
+    "pin": "استخدام قفل شاشة الجهاز",
+    "cancel": "إلغاء"
+  },
+  "ko": {
+    "unlock": "지문 또는 장치 PIN",
+    "hint": "지문 센서를 터치하거나 휴대폰의 PIN, 패턴 또는 암호를 사용합니다.",
+    "retry": "지문이 인식되지 않습니다. 다시 시도하거나 휴대폰의 화면 잠금을 사용합니다.",
+    "pin": "장치 화면 잠금 사용하기",
+    "cancel": "취소"
+  },
+  "nl": {
+    "unlock": "Vingerafdruk of apparaatpincode",
+    "hint": "Raak de vingerafdruksensor aan of gebruik de pincode, het patroon of het wachtwoord van uw telefoon.",
+    "retry": "Vingerafdruk niet herkend. Probeer het opnieuw of gebruik de schermvergrendeling van uw telefoon.",
+    "pin": "Apparaatschermvergrendeling gebruiken",
+    "cancel": "Annuleren"
   }
 }

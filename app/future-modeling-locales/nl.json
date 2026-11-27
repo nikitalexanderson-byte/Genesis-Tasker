@@ -1,0 +1,147 @@
+{
+  "title": "Methode voor het modelleren van de toekomst",
+  "subtitle": "Van een symbolische diagnose naar intentie en actie",
+  "intro": "ARCHE-GRAMMA / GNO-METER-BASILIA is een symbolische methode van de Orde van Aurora. In dit formaat van de Theokyklos nemen goden de plaats in van de Stoicheia (στοιχεῖον): ze vertegenwoordigen elementen van de kosmos en wiskundige knooppunten, terwijl Physis (φύσις) een stroom van waarschijnlijke gebeurtenissen is. De methode helpt bij het formuleren van een intentie en het kiezen van een actie; de toekomst blijft een waarschijnlijke uitkomst, geen beloofd resultaat.",
+  "sections": [
+    {
+      "title": "1. Diagnose: negen sectoren",
+      "paragraphs": [
+        "Gebruik een vierkant van 3 × 3 als kaart van de situatie. In de gebruikelijke Theokyklos-spreiding worden de negen sectoren gelezen door de letter-Stoicheia getekend. In het formaat van de Orde van Aurora zijn dezelfde negen richtingen gekoppeld aan goden en de nummers van hun namen: de symbolische diagnose wordt een basis voor het kiezen van een beschermheer, het samenstellen van een organon en het nemen van weloverwogen actie.",
+        "Een rechtopstaande positie betekent Pneuma (πνεῦμα), geest, adem en een beschikbare instroom van kracht; een omgekeerde positie wijst op Hysterema (ὑστέρημα), een gebrek, stagnatie of een gebied dat aandacht nodig heeft. Relateer de symbolen aan concrete omstandigheden, onderscheid waarneembare feiten van jouw interpretatie.",
+        "Let op waar steun al aanwezig is, waar actie moeilijk is en welke sector het meest aansluit bij jouw vraag: dit is het uitgangspunt voor het kiezen van een doel."
+      ]
+    },
+    {
+      "title": "2. Kies een doel en een sponsor",
+      "paragraphs": [
+        "Stel één duidelijk doel vast: wat je wilt veranderen, welke actie je kunt ondernemen en welke tekenen vooruitgang zouden aantonen. Kies vervolgens een van de dertien patronen op basis van de betekenis van het doel, in plaats van alleen de aantrekkingskracht van een nummer.",
+        "De naam van de patroon geeft een symbolisch thema, en het isoseptische getal wordt de maatstaf van het woord-gereedschap. Voor verschillende doelen, maak aparte formuleringen om elke intentie duidelijk te houden."
+      ]
+    },
+    {
+      "title": "3. Organon: het woordgereedschap",
+      "paragraphs": [
+        "Een organon (ὄργανον) is een woordgereedschap dat je samenstelt. Kies een klank die past bij de intentie: ρ brengt beweging over, τ fixatie en λ zachtheid. Binnen deze methode zijn dit symbolische fonetische gidsen.",
+        "Controleer de isopsephy: de som van de Griekse letters in het organon moet precies gelijk zijn aan het gekozen patroonnummer. Bijvoorbeeld, ΑΚΜΗ: α + κ + μ + η = 1 + 20 + 40 + 8 = 69, hetzelfde getal als Athena. Gebruik Griekse letters zonder te mengen in op elkaar lijkende Latijnse of Cyrillische tekens.",
+        "Een palindroom of een cirkelvormige opstelling in de vorm van een ouroboros (οὐροβόρος) sluit symbolisch de compositie af. Herbereken de som na het herschikken of toevoegen van letters: de compositievorm neemt niet de eis voor numerieke correspondentie weg."
+      ]
+    },
+    {
+      "title": "4. Activering: vorm en stem",
+      "paragraphs": [
+        "Sphragis (σφραγίς), of zegel, is de lichamelijke vorm van de sleutelletter. Zoek een comfortabel gebaar dat de intentie in herinnering brengt; Y kan bijvoorbeeld de keuze van een pad symboliseren. Een kalme, beheersbare beweging zonder inspanning is voldoende.",
+        "Ekphonesis (ἐκφώνησις) is het vocale stadium: klink de zeven Griekse klinkers α, ε, η, ι, ο, υ, ω in één comfortabele uitademing, stem dan de organon. Dit is een symbolisch ritueel van focus dat woord, beeld en actie verbindt.",
+        "Voltooi de activering met een concrete stap in het gekozen gebied: een gesprek, beslissing, iets maken, een ruimte verzorgen of een andere actie die je kunt uitvoeren en beoordelen."
+      ]
+    },
+    {
+      "title": "5. Observeren en beoordelen",
+      "paragraphs": [
+        "Noteer het doel, de gekozen patroon, organon en volgende actie, stel een observatieperiode in en één of twee tekenen van vooruitgang.",
+        "Keer op het gekozen tijdstip terug naar het verslag, maak onderscheid tussen je acties, externe omstandigheden en symbolische interpretatie. Als er geen vooruitgang is, verfijn dan het doel of de actie met behulp van de feiten; de spreiding zelf garandeert niet een gewenste loop van gebeurtenissen."
+      ]
+    }
+  ],
+  "close": "Sluiten",
+  "sectors": [
+    {
+      "id": "northwest",
+      "title": "Noordwest",
+      "meaning": "Ruimte, grenzen en bescherming."
+    },
+    {
+      "id": "north",
+      "title": "Noord",
+      "meaning": "De onderbewuste en diepe emotionele stromingen."
+    },
+    {
+      "id": "northeast",
+      "title": "Noordoost",
+      "meaning": "Wet, maat en de algemene orde."
+    },
+    {
+      "id": "west",
+      "title": "West",
+      "meaning": "Toespraak, uitwisseling, informatie en logo's."
+    },
+    {
+      "id": "center",
+      "title": "Centrum",
+      "meaning": "De spirituele as en een stabiel innerlijk centrum."
+    },
+    {
+      "id": "east",
+      "title": "Oost",
+      "meaning": "Helderheid, strategie en het begin van beweging."
+    },
+    {
+      "id": "southwest",
+      "title": "Zuidwest",
+      "meaning": "Materiële cycli, voeding en vormtransformatie door werk."
+    },
+    {
+      "id": "south",
+      "title": "Zuid",
+      "meaning": "Strijd, wilskracht, discipline en actie."
+    },
+    {
+      "id": "southeast",
+      "title": "Zuidoost",
+      "meaning": "Aantrekkingskracht, harmonie, creativiteit en transformatie."
+    }
+  ],
+  "goals": [
+    {
+      "deityId": "zeus",
+      "goal": "Stel wet, autoriteit en orde vast; definieer duidelijke regels en verantwoordelijkheden."
+    },
+    {
+      "deityId": "hera",
+      "goal": "Creëer een ondersteunende ruimte en sfeer; organiseer de omgeving en de relaties daarbinnen."
+    },
+    {
+      "deityId": "poseidon",
+      "goal": "Herken verborgen stromingen en emoties; vind een stabiele manier om met sterke gevoelens te werken."
+    },
+    {
+      "deityId": "demeter",
+      "goal": "Ondersteun groei, voeding en vruchtbare cycli; stem de inspanningen af op het stadium van ontwikkeling."
+    },
+    {
+      "deityId": "athena",
+      "goal": "Bereik akme (ἀκμή), helder inzicht en een precieze strategie; kies een gegronde volgende stap."
+    },
+    {
+      "deityId": "apollo",
+      "goal": "Breng zuivering en helderheid; onderscheid wat belangrijk is en bouw een coherent beeld op."
+    },
+    {
+      "deityId": "artemis",
+      "goal": "Behoud en bescherm wat belangrijk is; stel grenzen en zorg voor wat kwetsbaar is."
+    },
+    {
+      "deityId": "ares",
+      "goal": "Richt impuls in discipline en actie; overwin een concreet obstakel."
+    },
+    {
+      "deityId": "aphrodite",
+      "goal": "Ontwikkel relaties, aantrekkingskracht en harmonie; vind een vorm van onderlinge verbinding."
+    },
+    {
+      "deityId": "hephaestus",
+      "goal": "Bouw vakmanschap en creëer vorm; zet een idee om in iets dat werkt door inspanning en vaardigheid."
+    },
+    {
+      "deityId": "hermes",
+      "goal": "Onderhandelen, informatie delen en uitwisseling mogelijk maken; een begrijpelijke boodschap formuleren."
+    },
+    {
+      "deityId": "hestia",
+      "goal": "Versterk het centrum, huis en stabiliteit; stel een ondersteunend dagelijks ritme in."
+    },
+    {
+      "deityId": "dionysus",
+      "goal": "Open een creatieve doorbraak en transformatie; zet een innerlijke impuls in een voltooid werk."
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import {REGION_LANGUAGES} from '../../app/region-language.ts';
 import assert from 'node:assert/strict';
 import {existsSync,mkdirSync,readFileSync,writeFileSync} from 'node:fs';
 import {chromium} from 'playwright';
@@ -14,7 +15,7 @@ const browser=await chromium.launch({headless:true});
 try{
   const publicContext=await browser.newContext({locale:'en-US'}), page=await publicContext.newPage();
   await page.goto(origin.href);
-  const languages=['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'];
+  const languages=REGION_LANGUAGES;
   for(const [index,language]of languages.entries()){
     await page.locator('.welcome-language-flags [role=radio]').nth(index).click();
     await page.waitForFunction(text=>document.querySelector('#pricing h2')?.textContent===text,copy[language].pricing);

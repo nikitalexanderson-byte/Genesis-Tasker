@@ -68,5 +68,25 @@
     "action": "取消转移",
     "confirm": "我要取消此次转移。必须保留原始数据、加密快照和未发送的更改。已启用的范围无法恢复到以前的方式。",
     "done": "转移已取消。原始数据和已保存的副本均已保留。"
+  },
+  "he": {
+    "action": "בטל העברה",
+    "confirm": "אני רוצה לבטל את ההעברה הזו. הנתונים המקוריים, התמונות המוצפןות ושינויים שלא נשלחו חייבים להישאר. לא ניתן להחזיר טווח שכבר הופעל.",
+    "done": "ההעברה בוטלה. הנתונים המקוריים והעותקים שנשמרו נשמרים."
+  },
+  "ar": {
+    "action": "إلغاء النقل",
+    "confirm": "أريد إلغاء هذا النقل. يجب الاحتفاظ بالبيانات الأصلية، والصور السريعة المشفرة، والتغييرات غير المرسلة. لا يمكن إرجاع نطاق تم تنشيطه بالفعل.",
+    "done": "تم إلغاء عملية النقل وتم الاحتفاظ بالبيانات الأصلية والنسخ المحفوظة."
+  },
+  "ko": {
+    "action": "전송 취소",
+    "confirm": "이 전송을 취소하고 싶습니다. 원본 데이터, 암호화된 스냅샷 및 보내지 않은 변경 사항은 유지되어야 합니다. 이미 활성화된 범위는 되돌릴 수 없습니다.",
+    "done": "전송이 취소되었습니다. 원본 데이터와 저장된 복사본은 보존됩니다."
+  },
+  "nl": {
+    "action": "Overdracht annuleren",
+    "confirm": "Ik wil deze overdracht annuleren. Oorspronkelijke gegevens, versleutelde snapshots en niet-verzonden wijzigingen moeten worden bewaard. Een reeds geactiveerde scope kan niet worden teruggedraaid.",
+    "done": "De overdracht is geannuleerd. Originele gegevens en opgeslagen kopieën blijven behouden."
   }
 }

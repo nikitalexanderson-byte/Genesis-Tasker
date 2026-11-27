@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import test from "node:test";
@@ -164,9 +165,9 @@ test("aborting during response streaming cancels its reader and preserves the or
   assert.equal(streamCancelled, true);
 });
 
-test("all fourteen locales disclose the optional phrase-only service, free limits and fallback", () => {
+test("all supported locales disclose the optional phrase-only service, free limits and fallback", () => {
   const copy = JSON.parse(readFileSync(new URL("../app/dictation-copy.json", import.meta.url), "utf8"));
-  assert.deepEqual(Object.keys(copy).sort(), ["ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja"].sort());
+  assert.deepEqual(Object.keys(copy).sort(), [...REGION_LANGUAGES].sort());
   for (const [locale, messages] of Object.entries(copy)) {
     assert.deepEqual(Object.keys(messages).sort(), ["spellcheck", "privacy", "credit", "unavailable", "legalTitle", "legalBody"].sort(), locale);
     for (const value of Object.values(messages)) assert.ok(typeof value === "string" && value.trim().length > 0, locale);

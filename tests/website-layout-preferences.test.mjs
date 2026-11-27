@@ -1,3 +1,4 @@
+import {REGION_LANGUAGES} from "../app/region-language.ts";
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import test from 'node:test';
@@ -31,10 +32,10 @@ test('display priority moves all three identities without rewriting enabled cale
   assert.deepEqual(state.enabledCalendars,['profane','sacred']); assert.deepEqual(visibleCalendarModes(state),['profane']); assert.deepEqual(state.displayCalendarOrder,reordered);
   assert.deepEqual(moveDisplayCalendar(reordered,'sacred','lunar'),['sacred','lunar','profane']);
 });
-test('calendar dragging and desktop widths provide complete copy in the fourteen supported languages', () => {
+test('calendar dragging and desktop widths provide complete copy in the eighteen supported languages', () => {
   const calendar=JSON.parse(readFileSync(new URL('../app/display-calendar-order-copy.json',import.meta.url),'utf8'));
   const blocks=JSON.parse(readFileSync(new URL('../app/today-block-order-copy.json',import.meta.url),'utf8'));
-  assert.equal(Object.keys(calendar).length,14);
+  assert.equal(Object.keys(calendar).length, REGION_LANGUAGES.length);
   for(const [language,c] of Object.entries(calendar)) {
     for(const key of ['profane','sacred','lunar','help','first','changed']) assert(c[key]?.trim(),`${language}.${key}`);
     assert.equal((c.first.match(/\{calendar\}/g)||[]).length,1);

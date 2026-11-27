@@ -12,5 +12,9 @@
   "uk": "Щоб користуватися цим екраном, оновіть Android System WebView або Chrome через магазин застосунків, а потім відкрийте його знову. Збережені дані залишаються на цьому пристрої.",
   "zh": "要使用此页面，请通过应用商店更新 Android System WebView 或 Chrome，然后重新打开页面。已保存的数据仍保留在此设备上。",
   "tr": "Bu ekranı kullanmak için uygulama mağazanızdan Android System WebView veya Chrome’u güncelleyin ve ekranı yeniden açın. Kayıtlı verileriniz bu cihazda kalır.",
-  "ja": "この画面を使用するには、アプリストアで Android System WebView または Chrome を更新し、画面を開き直してください。保存済みのデータはこの端末に保持されます。"
+  "ja": "この画面を使用するには、アプリストアで Android System WebView または Chrome を更新し、画面を開き直してください。保存済みのデータはこの端末に保持されます。",
+  "he": "כדי להשתמש במסך הזה, יש לעדכן את Android System WebView או את Chrome דרך חנות האפליקציות ולפתוח שוב את המסך. הנתונים שנשמרו יישארו במכשיר הזה.",
+  "ar": "لاستخدام هذه الشاشة، حدّث Android System WebView أو Chrome من متجر التطبيقات، ثم افتح الشاشة من جديد. تبقى بياناتك المحفوظة على هذا الجهاز.",
+  "ko": "이 화면을 사용하려면 앱 스토어에서 Android System WebView 또는 Chrome을 업데이트한 뒤 화면을 다시 여세요. 저장한 데이터는 이 기기에 그대로 남습니다.",
+  "nl": "Werk Android System WebView of Chrome bij via de appwinkel en open dit scherm opnieuw. Je opgeslagen gegevens blijven op dit apparaat."
 }

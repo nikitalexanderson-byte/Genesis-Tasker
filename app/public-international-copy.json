@@ -68,5 +68,25 @@
     "aiProvider": "выбранный внешний поставщик ИИ",
     "paymentProvider": "внешний платёжный поставщик",
     "supportBody": "Напишите на demiurge.soft@gmail.com. Укажите модель устройства, версию браузера или Android и сообщение об ошибке. Не отправляйте пароли, коды входа, токены OAuth и конфиденциальное содержимое задач."
+  },
+  "he": {
+    "aiProvider": "ספק הבינה המלאכותית החיצוני שנבחר",
+    "paymentProvider": "ספק התשלומים החיצוני",
+    "supportBody": "שלח בדואר אלקטרוני demiurge.soft@gmail.com עם דגם המכשיר שלך, הדפדפן או גרסה של Android, והודעת השגיאות. אל תשלח סיסמאות, קוד ההרשמה, סימני OAuth או תוכן משימה סודי."
+  },
+  "ar": {
+    "aiProvider": "مقدم خدمات الذكاء الاصطناعي الخارجي المختار",
+    "paymentProvider": "مقدم خدمات الدفع الخارجي",
+    "supportBody": "يرجى إرسال البريد الإلكتروني إلى demiurge.soft@gmail.com مع نموذج جهازك أو متصفحك أو نسخة Android، ورسالة الخطأ. لا ترسل كلمات السر أو رموز الدخول أو رموز OAuth أو محتويات المهام السرية."
+  },
+  "ko": {
+    "aiProvider": "선택한 외부 AI 공급자",
+    "paymentProvider": "외부 결제 서비스 제공업체",
+    "supportBody": "전자 우편 demiurge.soft@gmail.com 장치 모델, 브라우저 또는 Android 암호, 로그인 코드, OAuth 토큰 또는 기밀 작업 내용을 보내지 마십시오."
+  },
+  "nl": {
+    "aiProvider": "De geselecteerde externe AI-provider",
+    "paymentProvider": "De externe betalingsprovider",
+    "supportBody": "Stuur een e-mail naar demiurge.soft@gmail.com met uw apparaatmodel, browser of Android-versie en het foutbericht. Stuur geen wachtwoorden, aanmeldingscodes, OAuth-tokens of vertrouwelijke taakinhoud."
   }
 }

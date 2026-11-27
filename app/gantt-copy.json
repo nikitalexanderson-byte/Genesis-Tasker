@@ -166,5 +166,53 @@
     "return": "タイムラインから戻す",
     "edit": "タスクの編集",
     "editHint": "タスク名をクリックすると詳細が開きます。ドラッグせずに日付と時刻を変更できます。"
+  },
+  "he": {
+    "time": "זמן",
+    "pyatas": "מחזורי Quinta",
+    "help": "עזרה",
+    "helpTitle": "איך להשתמש בגאנט",
+    "actions": "פעולות על קו הזמן",
+    "create": "יצירת משימה",
+    "schedule": "תאריך וזמן",
+    "return": "חזרה מקווי הזמן",
+    "edit": "עריכת משימה",
+    "editHint": "לחץ על כותרת משימה כדי לפתוח את הפרטים שלה. אתה יכול לשנות את התאריכים והשעונים שם ללא משיכה."
+  },
+  "ar": {
+    "time": "الوقت",
+    "pyatas": "فترات Quinta",
+    "help": "المساعدة",
+    "helpTitle": "كيفية استخدام غانت",
+    "actions": "إجراءات الجدول الزمني",
+    "create": "إنشاء مهمة",
+    "schedule": "التواريخ والمدة",
+    "return": "العودة من الخط الزمني",
+    "edit": "تحرير مهمة",
+    "editHint": "انقر على عنوان المهمة لفتح تفاصيلها. يمكنك تغيير التواريخ والأوقات هناك دون السحب."
+  },
+  "ko": {
+    "time": "시간",
+    "pyatas": "Quinta",
+    "help": "도움말",
+    "helpTitle": "Gantt를 사용하는 방법",
+    "actions": "타임라인 작업",
+    "create": "작업 만들기",
+    "schedule": "날짜 및 기간",
+    "return": "타임라인에서 돌아가기",
+    "edit": "작업 편집",
+    "editHint": "작업 제목을 클릭하여 세부 정보를 열 수 있습니다. 드래그하지 않고 날짜와 시간을 변경할 수 있습니다."
+  },
+  "nl": {
+    "time": "Tijd",
+    "pyatas": "Quinta’s",
+    "help": "Hulp",
+    "helpTitle": "Hoe Gantt te gebruiken",
+    "actions": "Acties op de tijdlijn",
+    "create": "Een taak maken",
+    "schedule": "Data en duur",
+    "return": "Terugkeren van de tijdlijn",
+    "edit": "Een taak bewerken",
+    "editHint": "Klik op een taaktitel om de details ervan te openen, waar u datums en tijden kunt wijzigen zonder te slepen."
   }
 }

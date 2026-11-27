@@ -16,9 +16,10 @@ if (genesisAndroidSupportNotice('en', '2.6.9', null) !== null
 echo "Android support notice tests passed.\n";
 
 $update = ['versionName' => '3.0.5', 'versionCode' => 112, 'minimumSupportedVersionName' => '2.7.0'];
-foreach (['ru', 'en', 'el', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'sr', 'uk', 'zh', 'tr', 'ja'] as $language) {
+foreach (['ru', 'en', 'el', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'sr', 'uk', 'zh', 'tr', 'ja', 'he', 'ar', 'ko', 'nl'] as $language) {
     $notice = genesisAndroidUpdateNotice($language, '3.0.4', $update);
     if ($notice === null || $notice['kind'] !== 'android-update' || $notice['targetVersionCode'] !== 112
+        || ($language !== 'en' && $notice['description'] === genesisAndroidUpdateNotice('en', '3.0.4', $update)['description'])
         || !str_contains($notice['title'], '3.0.5') || $notice['description'] === '')
         throw new RuntimeException('Every supported language must announce the published update.');
 }

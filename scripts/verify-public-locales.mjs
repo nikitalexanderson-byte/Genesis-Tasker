@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { LANGUAGE_CHOICES, REGION_LANGUAGES, languageDirection } from '../app/region-language.ts';
 import {readFile} from 'node:fs/promises';
 import {assertPublicDocumentReferences} from './public-document-references.mjs';
 
@@ -13,12 +14,19 @@ const route=(language,page)=>(page==='home'?'/':'/'+page)+(language==='en'?'':'?
  * complete authored disclosures and working local navigation remain required. */
 export async function verifyPublicLocales(output) {
   let verified=0;
+  assert.deepEqual(Object.keys(copy).sort(), [...REGION_LANGUAGES].sort());
   for(const [language,baseCopy]of Object.entries(copy))for(const page of pages) {
     const c={...baseCopy,...domestic[language]};
     const directory=language==='en'?'':'_public-locales/'+language+'/';
     const html=await readFile(new URL(directory+(page==='home'?'index':page)+'.html',output),'utf8');
     const label=language+'/'+page,body=html.split('<body>')[1]?.split('</body>')[0];assert.ok(body,label);
-    assert.ok(html.includes('<html lang="'+language+'"'),label+': document language');
+    assert.ok(html.includes('<html lang="'+language+'" dir="'+languageDirection(language)+'"'),label+': document language and direction');
+    for (const code of REGION_LANGUAGES) {
+      const target = (page === 'home' ? '/' : '/' + page) + '?lang=' + code;
+      const {country,name} = LANGUAGE_CHOICES[code];
+      assert.ok(body.includes('href="'+target+'" lang="'+code+'" hreflang="'+code+'" title="'+name+'"'),label+' language link '+code);
+      assert.ok(body.includes('src="/language-flags/'+country+'.svg"'),label+' flag '+code);
+    }
     assert.ok(html.includes('rel="canonical" href="https://genesiscalendar.com'+route(language,page)+'"'),label+': canonical');
     for(const alternate of Object.keys(copy))assert.ok(html.includes('hreflang="'+alternate+'" href="https://genesiscalendar.com'+route(alternate,page)+'"'),label+': alternate '+alternate);
     assert.ok(html.includes('hreflang="x-default"'),label+': default locale');
@@ -54,5 +62,5 @@ export async function verifyPublicLocales(output) {
   }
   const sitemap=await readFile(new URL('sitemap.xml',output),'utf8');
   for(const language of Object.keys(copy))for(const page of pages.filter(page=>page!=='login'))assert.ok(sitemap.includes('<loc>https://genesiscalendar.com'+route(language,page)+'</loc>'),'sitemap '+language+'/'+page);
-  console.log('Public locales: '+verified+' HTML variants, 14 languages on one website, pricing, canonical/alternate/sitemap and complete privacy disclosures PASS.');
+  console.log('Public locales: '+verified+' HTML variants, ' + Object.keys(copy).length + ' languages on one website, pricing, canonical/alternate/sitemap and complete privacy disclosures PASS.');
 }

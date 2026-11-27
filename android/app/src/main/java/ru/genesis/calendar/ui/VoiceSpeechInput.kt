@@ -59,7 +59,7 @@ internal fun dictationLanguage(language: String, device: Locale = Locale.getDefa
     if (device.language == language && device.country.isNotBlank()) return device.toLanguageTag()
     val region = mapOf("ru" to "RU", "en" to "US", "el" to "GR", "de" to "DE", "fr" to "FR",
         "es" to "ES", "it" to "IT", "pt" to "PT", "pl" to "PL", "sr" to "RS", "uk" to "UA",
-        "zh" to "CN", "tr" to "TR", "ja" to "JP")[language]
+        "zh" to "CN", "tr" to "TR", "ja" to "JP", "he" to "IL", "ar" to "SA", "ko" to "KR", "nl" to "NL")[language]
     return Locale.forLanguageTag(if (region == null) language else "$language-$region").toLanguageTag()
 }
 

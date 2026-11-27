@@ -139,5 +139,49 @@
     "rerollCard": "引き直す",
     "perCardRule": "各カードは初めて開いてから3分以内に1回だけ引き直せます。カードを開くと、すぐに次のカードを開けるようになります。",
     "changed": "別のタブまたは端末で展開が変更されました。最新の状態に更新しました。もう一度お試しください。"
+  },
+  "he": {
+    "openCard": "חשוף קלף",
+    "motion": "הזז כדי לחשוף קלף",
+    "waiting": "חשוף קודם את הקלף הקודם",
+    "motionHint": "תזיז את העכבר סביב המסך או תזיז אותו מספר פעמים. הקלף שנבחר יופיע; לאחר מכן בחר את הבא.",
+    "weeklyRule": "משחקי תשעה קלפים ושלושה קלפים זמינים פעם בשבוע, מיום שני עד יום ראשון.",
+    "testingRule": "גישה לבדיקת הבעלים: מגבלות התפשטות ושיטת תשלום מוגבלות.",
+    "rerollCard": "ציור מחדש",
+    "perCardRule": "כל קלף ניתן לטעון מחדש פעם אחת בתוך שלוש דקות מהגילוי הראשון שלו. גילוי קלף משחרר מיד את הבא.",
+    "changed": "השטח הזה השתנה בלשונית אחרת או במכשיר אחר. המצב האחרון הועלה; בבקשה נסה שוב."
+  },
+  "ar": {
+    "openCard": "بطاقة الكشف",
+    "motion": "تحرك لكشف بطاقة",
+    "waiting": "كشف الورقة السابقة أولاً",
+    "motionHint": "حرك الفأرة حول الشاشة أو اسحبها عدة مرات. ستظهر البطاقة المختارة، ثم اختر البطاقة التالية.",
+    "weeklyRule": "وتتاح لعبة تسع بطاقات وثلاث بطاقات مرة في الأسبوع، من يوم الاثنين إلى يوم الأحد.",
+    "testingRule": "الوصول إلى اختبار المالك: حدود التداول وطريقة الدفع معطلة.",
+    "rerollCard": "إعادة الرسم",
+    "perCardRule": "يمكن إعادة سحب كل بطاقة مرة واحدة في غضون ثلاث دقائق من كشفها الأول. ويكشف الكشف عن البطاقة فورا عن التالية.",
+    "changed": "تغير هذا العرض في علامة أخرى أو على جهاز آخر. تم تحميل الحالة الأخيرة، حاول مرة أخرى."
+  },
+  "ko": {
+    "openCard": "카드 보이기",
+    "motion": "카드를 보여주기 위해 이동",
+    "waiting": "이전 카드를 먼저 보여줍니다",
+    "motionHint": "화면에서 마우스를 움직이거나 여러 번 쓸어넘기면 선택한 카드가 나타나고 다음 카드를 선택합니다.",
+    "weeklyRule": "9카드 및 3카드 스프레드는 일주일에 한 번, 월요일부터 일요일까지 사용할 수 있습니다.",
+    "testingRule": "소유자 테스트 액세스: 스프레드 제한 및 방법 지불이 비활성화됩니다.",
+    "rerollCard": "다시 그리기",
+    "perCardRule": "각 카드는 처음으로 공개된 후 3분 이내에 한 번만 다시 드로우할 수 있습니다.",
+    "changed": "이 스프레드는 다른 탭이나 기기에서 변경되었습니다. 최신 상태가 불러왔습니다. 다시 시도하십시오."
+  },
+  "nl": {
+    "openCard": "Ontdek de kaart",
+    "motion": "Verplaatsen om een kaart te onthullen",
+    "waiting": "Ontdek eerst de vorige kaart",
+    "motionHint": "Beweeg de muis over het scherm of swipe meerdere malen, de geselecteerde kaart wordt onthuld en kies vervolgens de volgende.",
+    "weeklyRule": "Spreads van negen en drie kaarten zijn eenmaal per week beschikbaar, van maandag tot en met zondag.",
+    "testingRule": "Testtoegang voor eigenaren: spreadlimieten en betalingsmethoden zijn uitgeschakeld.",
+    "rerollCard": "Opnieuw tekenen",
+    "perCardRule": "Elke kaart kan binnen drie minuten na de eerste onthulling eenmaal opnieuw worden getrokken, waardoor de volgende kaart direct wordt ontgrendeld.",
+    "changed": "Deze spread is gewijzigd in een ander tabblad of op een ander apparaat. De laatste status is geladen. Probeer het opnieuw."
   }
 }

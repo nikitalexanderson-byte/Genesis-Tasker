@@ -55,6 +55,55 @@ class CloudAccountImporterTest {
             .put("syncWarning", if (warning) "Google unavailable" else JSONObject.NULL)
     }
 
+    @Test fun repeatedPullKeepsUnchangedCiphertextAndDeliveredReminders() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val db = Room.inMemoryDatabaseBuilder(context, GenesisDatabase::class.java).build()
+        try {
+            val payload = response("Fixture", "Project")
+            val tasks = JSONArray()
+            repeat(80) { index ->
+                tasks.put(JSONObject().put("id", "fixture-$index").put("title", "Task $index")
+                    .put("updatedAt", 5L).put("dueDate", "2031-01-01").put("reminderAt", 1924992000000L))
+            }
+            payload.put("tasks", tasks)
+            val importer = CloudAccountImporter(db)
+            val snapshot = CloudAccountSnapshot.fromBootstrap(payload)
+            importer.import(snapshot)
+            val dao = db.dao()
+            val before = dao.accountTasks(snapshot.scope).associateBy { it.id }
+            assertEquals(80, before.size)
+            val documents = listOf("structure", "habits", "trackers", "cloud-base").map { kind ->
+                requireNotNull(dao.document(snapshot.scope, kind))
+            }
+            val reminder = dao.reminders(snapshot.scope).first().copy(state = "delivered", deliveredAt = 123L)
+            dao.putReminder(reminder)
+            val start = android.os.SystemClock.elapsedRealtime()
+            importer.import(snapshot)
+            val elapsed = android.os.SystemClock.elapsedRealtime() - start
+            val after = dao.accountTasks(snapshot.scope)
+            val rewritten = after.count { it.encrypted != before.getValue(it.id).encrypted }
+            val retained = dao.reminder(snapshot.scope, reminder.id) == reminder
+            val changedDocuments = documents.count { dao.document(snapshot.scope, it.kind) != it }
+            android.util.Log.i("GenesisSyncQA", "unchanged=80 rewritten=$rewritten documentsRewritten=$changedDocuments deliveredRetained=$retained elapsedMs=$elapsed")
+            assertEquals(0, rewritten)
+            assertEquals(0, changedDocuments)
+            assertTrue(retained)
+            // A fresh importer must still recognize the same data without its in-memory fingerprints.
+            val reopened = CloudAccountImporter(db)
+            payload.getJSONObject("workspace").getJSONObject("envelope").put("version", snapshot.version + 1)
+            reopened.import(CloudAccountSnapshot.fromBootstrap(payload))
+            for (row in documents) assertEquals(row.copy(revision = snapshot.version + 1), dao.document(snapshot.scope, row.kind))
+            assertEquals(before, dao.accountTasks(snapshot.scope).associateBy { it.id })
+            assertEquals(reminder, dao.reminder(snapshot.scope, reminder.id))
+            // A provider can change content while reusing a timestamp.
+            tasks.getJSONObject(0).put("title", "Edited with the same revision").put("providerField", "changed")
+            importer.import(CloudAccountSnapshot.fromBootstrap(payload))
+            val changed = requireNotNull(dao.task(snapshot.scope, "fixture-0"))
+            assertNotEquals(before.getValue(changed.id).encrypted, changed.encrypted)
+            assertEquals("changed", JSONObject(LocalCipher().decrypt(changed.encrypted, "${snapshot.scope}/${changed.id}")).getString("providerField"))
+        } finally { db.close() }
+    }
+
     @Test fun importsOnlyAccountScopeAndRetainsPendingLocalChanges() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val db = Room.inMemoryDatabaseBuilder(context, GenesisDatabase::class.java).build()

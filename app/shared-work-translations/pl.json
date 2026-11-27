@@ -547,5 +547,10 @@
   "Выбрать шаблон": "Wybierz szablon",
   "Ранее сохранённые задачи": "Wcześniej zapisane zadania",
   "Доска для «{title}»": "Tablica dla „{title}”",
-  "Перетащите сюда задачи и подпроекты, чтобы оставить их вне досок.": "Przeciągnij tutaj zadania i podprojekty, aby pozostawić je poza tablicami."
+  "Перетащите сюда задачи и подпроекты, чтобы оставить их вне досок.": "Przeciągnij tutaj zadania i podprojekty, aby pozostawić je poza tablicami.",
+  "Задача «{item}» возвращена в хаос-бокс.": "Zadanie „{item}” wróciło do skrzynki chaosu.",
+  "Список «{item}» возвращён в хаос-бокс.": "Lista „{item}” wróciła do skrzynki chaosu.",
+  "Задача «{item}» перемещена в проект «{project}».": "Zadanie „{item}” przeniesiono do projektu „{project}”.",
+  "Список «{item}» перемещён в проект «{project}».": "Listę „{item}” przeniesiono do projektu „{project}”.",
+  "Задача «{item}» перемещена в список «{list}».": "Zadanie „{item}” przeniesiono do listy „{list}”."
 }

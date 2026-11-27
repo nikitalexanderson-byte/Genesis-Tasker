@@ -1,3 +1,4 @@
+import {REGION_LANGUAGES} from "../app/region-language.ts";
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {partnerMinor,partnerDecimal} from '../app/partner-money.ts';
@@ -12,10 +13,10 @@ test('integer amount editing round trips without changing a financial correction
   for(const value of [0,1,-1,46500,-1500,1000000000000,-1000000000000])assert.equal(partnerMinor(partnerDecimal(value),true),value);
   assert.equal(partnerDecimal(null),'');
 });
-test('all fourteen partner locales contain complete financial, privacy and access copy',()=>{
-  assert.equal(new Set(PARTNER_LANGUAGES).size,14);
+test('all partner locales contain complete financial, privacy and access copy',()=>{
+  assert.equal(new Set(PARTNER_LANGUAGES).size, REGION_LANGUAGES.length);
   for(const [key,values] of Object.entries(partnerCopyRows)){
-    assert.equal(values.length,14,key);
+    assert.equal(values.length, REGION_LANGUAGES.length,key);
     for(const [index,language] of PARTNER_LANGUAGES.entries()){
       assert.equal(typeof values[index],'string',key+':'+language);assert.ok(values[index].trim(),key+':'+language);
       assert.equal(partnerText(key,language),values[index]);

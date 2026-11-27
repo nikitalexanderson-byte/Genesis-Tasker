@@ -1,3 +1,4 @@
+import {REGION_LANGUAGES} from "../app/region-language.ts";
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import test from 'node:test';
@@ -15,9 +16,9 @@ test('patron changes at decade boundaries and never truncates a hollow month',()
   }
   assert.ok(seen29&&seen30);
 });
-test('all fourteen languages explain the source limits and have three individually packaged artworks',()=>{
+test('all eighteen languages explain the source limits and have three individually packaged artworks',()=>{
   const copy=JSON.parse(readFileSync(new URL('../app/lunar-triad-copy.json',import.meta.url),'utf8'));
-  assert.equal(Object.keys(copy).length,14);
+  assert.equal(Object.keys(copy).length, REGION_LANGUAGES.length);
   for(const row of Object.values(copy)){
     for(const key of ['title','more','note'])assert.ok(row[key].length>3);
     for(const id of triad.LUNAR_PATRONS)assert.ok(row[id].name.length>1&&row[id].meaning.length>40);

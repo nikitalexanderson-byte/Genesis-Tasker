@@ -547,5 +547,10 @@
   "Выбрать шаблон": "Choose a template",
   "Ранее сохранённые задачи": "Previously saved tasks",
   "Доска для «{title}»": "Board for “{title}”",
-  "Перетащите сюда задачи и подпроекты, чтобы оставить их вне досок.": "Drag tasks and subprojects here to keep them outside the boards."
+  "Перетащите сюда задачи и подпроекты, чтобы оставить их вне досок.": "Drag tasks and subprojects here to keep them outside the boards.",
+  "Задача «{item}» возвращена в хаос-бокс.": "Task “{item}” is back in the Chaos Box.",
+  "Список «{item}» возвращён в хаос-бокс.": "List “{item}” is back in the Chaos Box.",
+  "Задача «{item}» перемещена в проект «{project}».": "Task “{item}” was moved to project “{project}”.",
+  "Список «{item}» перемещён в проект «{project}».": "List “{item}” was moved to project “{project}”.",
+  "Задача «{item}» перемещена в список «{list}».": "Task “{item}” was moved to list “{list}”."
 }

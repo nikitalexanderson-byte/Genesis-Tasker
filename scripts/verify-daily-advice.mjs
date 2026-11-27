@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const adviceLanguages = ["ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja"];
+export const adviceLanguages = ["ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja", "he", "ar", "ko", "nl"];
 const root = fileURLToPath(new URL("../", import.meta.url));
 
 /** Bind each reviewed translation to its ID, language, body, category and artwork. */

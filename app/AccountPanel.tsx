@@ -57,6 +57,10 @@ import todayOrderCopy from "./today-block-order-copy.json";
 const COLOR_MODE_NAMES: Record<Language, { light: string; dark: string; group: string }> = {
   ru: { light: "Светлая", dark: "Тёмная", group: "Цветовая схема сайта" },
   en: { light: "Light", dark: "Dark", group: "Website color scheme" },
+  he: { light: "בהיר", dark: "כהה", group: "ערכת הצבעים של האתר" },
+  ar: { light: "فاتح", dark: "داكن", group: "نظام ألوان الموقع" },
+  ko: { light: "라이트", dark: "다크", group: "웹사이트 색상 모드" },
+  nl: { light: "Licht", dark: "Donker", group: "Kleurenschema van de website" },
   el: { light: "Φωτεινή", dark: "Σκοτεινή", group: "Χρωματικό θέμα ιστότοπου" },
   de: { light: "Hell", dark: "Dunkel", group: "Farbschema der Website" },
   fr: { light: "Clair", dark: "Sombre", group: "Thème de couleurs du site" },
@@ -71,10 +75,6 @@ const COLOR_MODE_NAMES: Record<Language, { light: string; dark: string; group: s
   ja: { light: "ライト", dark: "ダーク", group: "サイトの配色" },
 };
 const APP_BASE = (process.env.NEXT_PUBLIC_GENESIS_BASE_PATH?.trim() || "").replace(/\/$/, "");
-const FLAG_COUNTRIES: Record<Language, string> = {
-  ru: "ru", en: "gb", el: "gr", de: "de", fr: "fr", es: "es", it: "it", pt: "pt",
-  pl: "pl", sr: "rs", uk: "ua", zh: "cn", tr: "tr", ja: "jp",
-};
 const MENU_SETTINGS = [
   ["projects", "Дела", "Affairs"],
   ["calendar", "Календарь", "Calendar"], ["habits", "Привычки", "Habits"],
@@ -349,7 +349,7 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
       const result = await updateAccountPreferences({ language });
       onUserChange(result.user);
       onLanguageChange(language);
-      setMessage(language === "ru" ? "Язык переключён на русский." : `Language changed to ${LANGUAGE_LABELS[language].name}.`);
+      setMessage(`${translateText("Язык интерфейса", language)} · ${LANGUAGE_LABELS[language].name}`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Не удалось переключить язык.");
     } finally {
@@ -731,16 +731,16 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
             <h3 id="language-title">Интерфейс и справочные тексты</h3>
             <p>Выбор сохраняется в аккаунте и применяется на всех ваших устройствах.</p>
           </div>
-          <div className="language-choice" role="radiogroup" aria-label="Язык интерфейса">
+          <div className="language-choice" role="radiogroup" aria-label={translateText("Язык интерфейса", user.language)}>
             {LANGUAGES.map((code) => (
               <button key={code} type="button" role="radio" aria-checked={user.language === code}
-                aria-label={LANGUAGE_LABELS[code].name}
+                lang={code} title={LANGUAGE_LABELS[code].name} aria-label={LANGUAGE_LABELS[code].name}
                 className={user.language === code ? "active" : ""} disabled={preferenceBusy}
                 onClick={() => void changeLanguage(code)} data-no-translate>
                 <span className="language-flag" aria-hidden="true">
-                  <img src={`${APP_BASE}/language-flags/${FLAG_COUNTRIES[code]}.svg`} alt="" />
+                  <img src={`${APP_BASE}/language-flags/${LANGUAGE_LABELS[code].country}.svg`} alt="" />
                 </span>
-                <strong>{LANGUAGE_LABELS[code].name}</strong>
+                <strong><bdi>{LANGUAGE_LABELS[code].name}</bdi></strong>
               </button>
             ))}
           </div>

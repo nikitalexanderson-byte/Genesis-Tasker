@@ -547,5 +547,10 @@
   "Выбрать шаблон": "Elegir plantilla",
   "Ранее сохранённые задачи": "Tareas guardadas anteriormente",
   "Доска для «{title}»": "Tablero para «{title}»",
-  "Перетащите сюда задачи и подпроекты, чтобы оставить их вне досок.": "Arrastra tareas y subproyectos aquí para mantenerlos fuera de los tableros."
+  "Перетащите сюда задачи и подпроекты, чтобы оставить их вне досок.": "Arrastra tareas y subproyectos aquí para mantenerlos fuera de los tableros.",
+  "Задача «{item}» возвращена в хаос-бокс.": "La tarea «{item}» ha vuelto a la caja del caos.",
+  "Список «{item}» возвращён в хаос-бокс.": "La lista «{item}» ha vuelto a la caja del caos.",
+  "Задача «{item}» перемещена в проект «{project}».": "La tarea «{item}» se ha movido al proyecto «{project}».",
+  "Список «{item}» перемещён в проект «{project}».": "La lista «{item}» se ha movido al proyecto «{project}».",
+  "Задача «{item}» перемещена в список «{list}».": "La tarea «{item}» se ha movido a la lista «{list}»."
 }

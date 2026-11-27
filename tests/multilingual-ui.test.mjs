@@ -1,10 +1,11 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile, mkdir, writeFile, rm } from "node:fs/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { build } from "vite";
 
-const languages = ["en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja"];
+const languages = REGION_LANGUAGES.filter(code => code !== "ru");
 const habitReportCopy = JSON.parse(await readFile(new URL("../app/habit-report-translations.json", import.meta.url), "utf8"));
 const dailyAdviceCopy = JSON.parse(await readFile(new URL("../app/daily-advice-copy.json", import.meta.url), "utf8"));
 const affairsRaw = JSON.parse(await readFile(new URL("../app/native-affairs-translations.json", import.meta.url), "utf8"));

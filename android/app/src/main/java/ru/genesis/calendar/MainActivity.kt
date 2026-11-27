@@ -49,6 +49,7 @@ class MainActivity : ComponentActivity() {
     }
     override fun onResume() {
         super.onResume()
+        restoreRecentsCard()
         if (ru.genesis.calendar.security.UpdateGate.blocked.value) return
         NativeActivityVisit.onResume()
         AuthController.get(applicationContext).onTrialForeground()
@@ -62,6 +63,20 @@ class MainActivity : ComponentActivity() {
             runCatching { ru.genesis.calendar.reminders.AdviceReminderScheduler.restore(app) }
         }
     }
+    /** An upgrade can reuse a task whose root intent inherited the icon trampoline's exclusion. */
+    @Suppress("DEPRECATION")
+    private fun restoreRecentsCard() {
+        val manager = getSystemService(android.app.ActivityManager::class.java)
+        for (task in manager.appTasks) {
+            val info = task.taskInfo ?: continue
+            val id = if (android.os.Build.VERSION.SDK_INT >= 29) info.taskId else info.id
+            if (id == taskId && info.baseIntent.flags and Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS != 0) {
+                task.setExcludeFromRecents(false)
+                return
+            }
+        }
+    }
+
     private fun acceptIntent(intent: Intent) {
         val app = application as GenesisApplication
         if (intent.getStringExtra("scope") == app.workspaceScope) {

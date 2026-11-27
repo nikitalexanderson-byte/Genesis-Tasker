@@ -34,5 +34,13 @@ export function publicPageAlternates(page:PublicPage,base='',edition:PublicEditi
     {language:'x-default',path:publicPagePath('en',page,base,edition)}];
 }
 
+export function publicLanguagePath(language: RegionLanguage, page: PublicPage, base = "", edition = currentPublicEdition(base),
+  location?: Pick<URL, "search" | "hash">) {
+  const path = publicPagePath(language, page, base, edition).split("?")[0];
+  const query = new URLSearchParams(location?.search);
+  query.set("lang", language);
+  return `${path}?${query}${location?.hash ?? ""}`;
+}
+
 /** Compatibility export: country signals no longer select a website edition. */
 export function publicDomesticDestination(_input:string,_base=''):string|null {void _input;void _base;return null;}

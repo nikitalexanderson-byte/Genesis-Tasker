@@ -116,10 +116,17 @@ function notificationVariant(seed: string): HabitNotificationCandidate["variant"
 function dailyGoalCopy(input: HabitNotificationPlanInput, remaining: number, perfectRemaining: number, variant: HabitNotificationCandidate["variant"]) {
   const count = remaining || perfectRemaining;
   const body = habitNotificationMessage(input.settings.tone, "goal", `${input.date}:goal`, input.language, "", count);
-  const context = variant === "context" && input.dailyGoal.currentStreak > 0 &&
-    (input.language === "ru" || input.language === "en")
-    ? input.language === "en" ? ` Your current streak is ${input.dailyGoal.currentStreak} days.` : ` Текущая серия: ${input.dailyGoal.currentStreak} дн.` : "";
-  return { title: "GENESIS", body: body + context };
+  const days = input.dailyGoal.currentStreak;
+  const extra: Partial<Record<Language, string>> = {
+    ru: `Текущая серия: ${days} дн.`,
+    en: `Your current streak is ${days} ${days === 1 ? "day" : "days"}.`,
+    he: `מספר הימים ברצף הנוכחי שלך: ${days}.`,
+    ar: `عدد الأيام المتتالية حتى الآن: ${days}.`,
+    ko: `현재 ${days}일 연속 실천 중이에요.`,
+    nl: `Je huidige reeks duurt ${days} ${days === 1 ? "dag" : "dagen"}.`,
+  };
+  const context = variant === "context" && days > 0 ? extra[input.language] : undefined;
+  return { title: "GENESIS", body: context ? `${body} ${context}` : body };
 }
 
 export function buildHabitNotificationPlan(input: HabitNotificationPlanInput): HabitNotificationCandidate[] {

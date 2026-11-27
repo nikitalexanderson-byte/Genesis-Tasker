@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import ru.genesis.calendar.data.withAccountSync
 import ru.genesis.calendar.data.withTransaction
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
@@ -218,6 +219,16 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
     private var syncJob: Job? = null
     private var pullJob: Job? = null
     private val dataSyncMutex = Mutex()
+    private val accountImporter by lazy { CloudAccountImporter(app.database, app.scheduler) }
+
+    private suspend fun <T> withAccountDataSync(generation: Long, uid: String, block: suspend () -> T): T {
+        val epoch = app.workspaceEpoch
+        return dataSyncMutex.withAccountSync(app.database, CloudAccountSnapshot.scopeFor(uid), {
+            ru.genesis.calendar.security.UpdateGate.requireOpen()
+            if (!client.isCurrent(generation) || mutableState.value.user?.uid != uid ||
+                mutableState.value.requiresSignIn || app.workspaceEpoch != epoch) throw CancellationException()
+        }, block)
+    }
     private val advicePreferencesMutex = Mutex()
     private val locallyDismissedAdvice = linkedSetOf<String>() // Protected by adviceNotificationGuard.
     private var pendingServicesUserId: String? = null
@@ -1029,7 +1040,8 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             // devices still require the explicit protected reset in backup settings.
             epochs.acceptAfterProtectedReset(snapshot.scope,generation)
         }
-        current();return CloudAccountImporter(app.database,app.scheduler).import(snapshot,::current)
+        current()
+        return AuthDiagnostics.measure(AuthDiagnostics.SyncPhase.IMPORT) { accountImporter.import(snapshot, ::current) }
     }
     internal fun auroraGateway(uid: String): ru.genesis.calendar.data.AuroraGateway = object : ru.genesis.calendar.data.AuroraGateway {
         private val capturedGeneration=client.currentGeneration()
@@ -2640,14 +2652,16 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             checkedAt = System.currentTimeMillis(), message = "Открываем зашифрованное пространство…"))
         try {
             AuthDiagnostics.event("SYNC_STARTED")
-            val payload = withContext(Dispatchers.IO) { client.accountBootstrap(generation, session) }
+            val payload = withContext(Dispatchers.IO) {
+                AuthDiagnostics.measure(AuthDiagnostics.SyncPhase.DOWNLOAD) { client.accountBootstrap(generation, session) }
+            }
             val confirmed = AuthProtocol.identity(payload) ?: throw AuthFailure(AuthFailure.Kind.UNAUTHORIZED)
             if (confirmed.uid != identity.uid) throw AuthFailure(AuthFailure.Kind.PROTOCOL)
             stage = "WORKSPACE_DECRYPT"
             val preview = withContext(Dispatchers.Default) { CloudWorkspacePreview.inspect(payload) }
             val snapshot = withContext(Dispatchers.Default) { CloudAccountSnapshot.fromBootstrap(payload) }
             stage = "ACCOUNT_IMPORT"
-            val imported = dataSyncMutex.withLock {
+            val imported = withAccountDataSync(generation, identity.uid) {
                 withContext(Dispatchers.IO) { importBackupSafe(snapshot,generation) }
             }
             val stoicheionPayload = try {
@@ -2656,7 +2670,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             catch (_: Exception) { null }
             var resolvedSettings = liveAccountSettings(payload) ?: settings
             var languageWarning = false
-            if (preferredLanguage in setOf("ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja") && resolvedSettings.language != preferredLanguage) {
+            if (preferredLanguage in ru.genesis.calendar.data.publicLanguages && resolvedSettings.language != preferredLanguage) {
                 try {
                     val updated = withContext(Dispatchers.IO) {
                         client.updatePreferences(generation, JSONObject().put("language", preferredLanguage))
@@ -2750,7 +2764,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             "time" -> { require(value in setOf("12h", "24h")); changes.put("timeFormat", value) }
             "weekStart" -> { require(value in setOf("sunday", "monday")); changes.put("weekStart", value) }
             "gregorianYearStart" -> { require(value in setOf("january", "march")); changes.put("gregorianYearStart", value) }
-            "language" -> { require(value in setOf("ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja")); changes.put("language", value) }
+            "language" -> { require(value in ru.genesis.calendar.data.publicLanguages); changes.put("language", value) }
             "darkPalette" -> { require(value in setOf("green", "burgundy", "blue", "violet") &&
                 (value == "green" || previous.accountSettings.featureAccess.allows("dark-palettes"))); changes.put(name, value) }
             "theme" -> { require(value in setOf("standart", "standart-dark")); changes.put("theme", value) }
@@ -2892,8 +2906,10 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         pullJob = scope.launch(NativeActivityVisit.requestContext()) {
             try {
                 syncJob?.join()
-                dataSyncMutex.withLock {
-                    val payload = withContext(Dispatchers.IO) { client.bootstrap(generation) }
+                withAccountDataSync(generation, identity.uid) {
+                    val payload = withContext(Dispatchers.IO) {
+                        AuthDiagnostics.measure(AuthDiagnostics.SyncPhase.DOWNLOAD) { client.bootstrap(generation) }
+                    }
                     if (AuthProtocol.identity(payload)?.uid != identity.uid) throw AuthFailure(AuthFailure.Kind.PROTOCOL)
                     val snapshot = withContext(Dispatchers.Default) { CloudAccountSnapshot.fromBootstrap(payload) }
                     val preview = withContext(Dispatchers.Default) { CloudWorkspacePreview.inspect(payload) }
@@ -2901,12 +2917,12 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                         importBackupSafe(snapshot,generation)
                     }
                     withContext(Dispatchers.IO) { ru.genesis.calendar.data.TaskListsRepository.cacheBootstrap(app.database, accountScope, payload) }
-                    val available = withContext(Dispatchers.IO) { app.database.dao().accountTasks(accountScope).size }
+                    val available = withContext(Dispatchers.IO) { app.database.dao().accountTaskCount(accountScope) }
                     val uploadPending = withContext(Dispatchers.IO) {
-                        app.database.dao().outbox(accountScope).isNotEmpty() ||
+                        app.database.dao().hasPendingOutbox(accountScope) ||
                             LocalPreferences(app, accountScope).pending.first().isNotEmpty()
                     }
-                    if (!client.isCurrent(generation)) return@withLock
+                    if (!client.isCurrent(generation)) return@withAccountDataSync
                     val issue = when {
                         imported == CloudAccountImporter.Result.IMPORTED_WITH_TASK_WARNING ->
                             "Часть записей не удалось прочитать. Остальные задачи загружены; сохранённые записи не удалены."
@@ -2974,7 +2990,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         require(app.workspaceScope == accountScope)
         val generation = client.currentGeneration()
         try {
-            return dataSyncMutex.withLock {
+            return withAccountDataSync(generation, uid) {
                 val response = withContext(Dispatchers.IO) { client.createTaskList(generation, title, accountId) }
                 if(!client.isCurrent(generation) || app.workspaceScope != accountScope) throw CancellationException()
                 val list = ru.genesis.calendar.data.GoogleTaskList.from(response.getJSONObject("taskList"))
@@ -2998,7 +3014,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
             require(!list.isDefault) { "Основной список Google Tasks нельзя изменять в GENESIS." }
             val accountId = requireNotNull(list.accountId)
             val generation = client.currentGeneration()
-            dataSyncMutex.withLock {
+            withAccountDataSync(generation, uid) {
                 val response = withContext(Dispatchers.IO) { client.updateTaskList(generation,list.id,title,accountId) }
                 require(client.isCurrent(generation) && app.workspaceScope == accountScope)
                 ru.genesis.calendar.data.GoogleTaskList.from(response.getJSONObject("taskList"))
@@ -3021,7 +3037,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         if (value.accountSettings?.authProvider == "google") {
             val accountId = requireNotNull(list.accountId)
             val generation = client.currentGeneration()
-            dataSyncMutex.withLock {
+            withAccountDataSync(generation, uid) {
                 withContext(Dispatchers.IO) { client.deleteTaskList(generation,list.id,accountId) }
                 require(client.isCurrent(generation) && app.workspaceScope == accountScope)
             }
@@ -3112,8 +3128,8 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                 ||app.workspaceScope!=accountScope||app.workspaceEpoch!=workspaceEpoch)throw CancellationException("E2EE_ACCOUNT_CHANGED")
         }
         syncJob = scope.launch(NativeActivityVisit.requestContext(inBackground)) {
-          try { ru.genesis.calendar.data.NativeLegacyOperationPermit.run(app.database,accountScope,::currentSyncOwner) {
-          dataSyncMutex.withLock {
+          try { dataSyncMutex.withAccountSync(app.database, accountScope, ::currentSyncOwner) {
+            AuthDiagnostics.measure(AuthDiagnostics.SyncPhase.UPLOAD) {
             currentSyncOwner()
             AuthDiagnostics.event("SYNC_STARTED")
             var sentTasks = 0
@@ -3174,7 +3190,7 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                 if (sentTasks + sentWorkspace > 0) "Синхронизировано: $sentTasks задач, $sentWorkspace изменений пространства."
                 else mutableState.value.message)
             AuthDiagnostics.event(if (failure == null) "SYNC_SUCCESS" else "SYNC_FAILED")
-          }
+            }
           }}catch(error:AuthApiError) {
             if(error.code.startsWith("E2EE_"))throw CancellationException(error.code).apply{initCause(error)}
             throw error
@@ -3223,6 +3239,8 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
         operation?.cancel()
         syncJob?.cancel()
         pullJob?.cancel()
+        // The superseded pull can no longer publish through its generation, including in finally.
+        if (mutableTaskSync.value.loading) mutableTaskSync.value = mutableTaskSync.value.copy(loading = false)
         val previous = mutableState.value
         // A transient refresh/provider failure must not throw an authenticated user back to Welcome.
         // Server credentials and the device's encrypted workspace have independent lifetimes.
@@ -3346,16 +3364,19 @@ class AuthController private constructor(context: Context) : SharedWorkspaceGate
                 if (value.ready && !value.busy && value.accountSettings?.featureAccess?.source == "trial" &&
                     value.accountSettings.featureAccess.trialPhase() == "verification-required") refreshTrialAccess()
                 if (value.ready && value.user != null && value.accountSettings != null) scope.launch(NativeActivityVisit.requestContext()) {
-                    dataSyncMutex.withLock {
-                        if (client.isCurrent(generation) && mutableState.value === value && app.workspaceScope == CloudAccountSnapshot.scopeFor(value.user.uid)) {
-                            try {
-                                withContext(Dispatchers.IO) { CachedAccountEntry(app).save(value.user, value.accountSettings) }
-                                ru.genesis.calendar.reminders.AdviceReminderScheduler.restore(app)
-                            }
-                            catch (error: CancellationException) { throw error }
-                            catch (_: Exception) { /* Cached entry from the last successful import remains intact. */ }
+                    fun current() = client.isCurrent(generation) && mutableState.value === value &&
+                        app.workspaceScope == CloudAccountSnapshot.scopeFor(value.user.uid)
+                    try {
+                        val saved = dataSyncMutex.withLock {
+                            if (!current()) return@withLock false
+                            withContext(Dispatchers.IO) { CachedAccountEntry(app).save(value.user, value.accountSettings) }
+                            true
                         }
+                        // Reminder restoration can acquire the account permit. Release the cache lock first.
+                        if (saved && current()) ru.genesis.calendar.reminders.AdviceReminderScheduler.restore(app)
                     }
+                    catch (error: CancellationException) { throw error }
+                    catch (_: Exception) { /* Cached entry from the last successful import remains intact. */ }
                 }
             }
         }

@@ -2,12 +2,13 @@ package ru.genesis.calendar.ui
 
 import org.junit.Assert.*
 import org.junit.Test
+import ru.genesis.calendar.data.publicLanguages
 
 class AppUpdateCopyTest {
     @Test fun updatePromptsUseUpdateAndLaterWithoutAmbiguousGenericTranslations() {
         assertEquals("Update",appUpdateCopy("en").action)
         assertEquals("Later",appUpdateCopy("en").later)
-        for(language in listOf("ru","en","el","de","fr","es","it","pt","pl","sr","uk","zh","tr","ja")) {
+        for(language in publicLanguages) {
             val copy=appUpdateCopy(language)
             assertTrue(copy.title.isNotBlank());assertTrue(copy.action.isNotBlank());assertTrue(copy.later.isNotBlank())
         }

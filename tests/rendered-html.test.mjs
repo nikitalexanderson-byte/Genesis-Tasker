@@ -1531,12 +1531,16 @@ test("habit notifications preserve personal times, respect quiet hours and keep 
 });
 
 test("notification styles vary without labels and personal timing can cross midnight", () => {
-  for (const language of ["ru", "en"]) {
+  for (const language of ["ru", "en", "he", "ar", "ko", "nl"]) {
     for (const tone of ["calm", "heroic", "ironic"]) {
-      const samples = Array.from({ length: 100 }, (_, index) =>
-        habitNotificationMessage(tone, "habit", `2026-09-${index}:reading`, language, "«Reading»"));
-      assert.ok(new Set(samples).size >= 8);
-      assert.ok(samples.every((message) => message.includes("Reading")));
+      const samples = Array.from({ length: 200 }, (_, index) =>
+        habitNotificationMessage(tone, "habit", `day-${index}`, language, "Reading {count} $&"));
+      const goals = Array.from({ length: 200 }, (_, index) =>
+        habitNotificationMessage(tone, "goal", `day-${index}`, language, "", 7));
+      assert.equal(new Set(samples).size, 12);
+      assert.equal(new Set(goals).size, 8);
+      assert.ok(goals.every(message => message.includes("7")));
+      assert.ok(samples.every(message => message.includes("Reading {count} $&")));
       assert.ok(samples.every((message) => !/^(Спокойное напоминание|Героический зов|Calm reminder|Heroic call):/i.test(message)));
     }
   }
@@ -2780,9 +2784,10 @@ test("keeps the requested calendar and privacy features wired", async () => {
   assert.doesNotMatch(accountPanel, /user\.multiAccountEnabled \? \(/);
   assert.match(accountPanel, /language-preference/);
   assert.match(accountPanel, /LANGUAGES\.map/);
-  assert.match(i18n, /🇷🇺/);
-  assert.match(i18n, /🇬🇷/);
-  assert.match(i18n, /🇵🇹/);
+  const languageChoices = await readFile(new URL("../app/region-language.ts", import.meta.url), "utf8");
+  assert.match(languageChoices, /🇷🇺/);
+  assert.match(languageChoices, /🇬🇷/);
+  assert.match(languageChoices, /🇵🇹/);
   assert.match(accountPanel, /time-format-preference/);
   assert.match(accountPanel, /user\.timeFormat \?\? "24h"/);
   assert.match(cloudSync, /timeFormat: TimeFormat/);
@@ -3072,7 +3077,7 @@ test("keeps the requested calendar and privacy features wired", async () => {
   assert.match(await readFile(new URL("../app/InboxToolbar.tsx", import.meta.url), "utf8"), /workspace-inbox-header/);
   assert.match(calendar, /data-project-drop-id=\{project\.id\}/);
   assert.match(calendar, /data-project-drop-id=\{TASK_INBOX_PROJECT_ID\}/);
-  assert.match(calendar, /Задача «\$\{item\.title\}» возвращена в хаос-бокс/);
+  assert.match(calendar, /formatTranslatedText\(moveToInbox\s*\?\s*"Задача «\{item\}» возвращена в хаос-бокс\."/);
   assert.match(calendar, /projectDragProps/);
   assert.match(calendar, /beginProjectTouchDrag/);
   assert.match(calendar, /Math\.hypot\([\s\S]*> 8\)[\s\S]*projectTouchDragRef\.current = null;[\s\S]*return;/);

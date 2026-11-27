@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {readFile} from 'node:fs/promises';
@@ -129,6 +130,6 @@ test('localized money retains cents and fixed catalogs never show a stale FX not
   assert.equal(billingForeignRate({foreignPricing:{rate}}),rate);
 });
 test('location and payment copy covers every supported locale',()=>{
-  assert.deepEqual(Object.keys(locationCopy).sort(),['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'].sort());
+  assert.deepEqual(Object.keys(locationCopy).sort(),[...REGION_LANGUAGES].sort());
   for(const [language,copy]of Object.entries(locationCopy)){assert.deepEqual(Object.keys(copy).sort(),Object.keys(locationCopy.en).sort(),language);for(const value of Object.values(copy))assert.ok(typeof value==='string'&&value.trim());}
 });

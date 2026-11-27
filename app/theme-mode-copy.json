@@ -12,5 +12,21 @@
   "uk": {"light":"Увімкнути світлу тему","dark":"Увімкнути темну тему"},
   "zh": {"light":"切换至浅色主题","dark":"切换至深色主题"},
   "tr": {"light":"Açık temaya geç","dark":"Koyu temaya geç"},
-  "ja": {"light":"ライトテーマに切り替え","dark":"ダークテーマに切り替え"}
+  "ja": {"light":"ライトテーマに切り替え","dark":"ダークテーマに切り替え"},
+  "he": {
+    "light": "העבר לנושא קל",
+    "dark": "העבר לנושא כהה"
+  },
+  "ar": {
+    "light": "التحول إلى موضوع خفيف",
+    "dark": "التحول إلى الموضوع الداكن"
+  },
+  "ko": {
+    "light": "가벼운 테마로 전환",
+    "dark": "어두운 테마로 전환"
+  },
+  "nl": {
+    "light": "Overschakelen naar licht thema",
+    "dark": "Overschakelen naar donker thema"
+  }
 }

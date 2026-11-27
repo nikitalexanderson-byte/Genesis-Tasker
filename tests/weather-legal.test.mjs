@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {mkdir, writeFile, rm} from "node:fs/promises";
@@ -10,7 +11,7 @@ import react from "@vitejs/plugin-react";
 import test from "node:test";
 import {calendarModule} from "./helpers/calendar-modules.mjs";
 
-const languages = ["ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja"];
+const languages = [...REGION_LANGUAGES];
 const sections = [
   ["solarTitle", "solarBody", "weatherSolarLegalSection"],
   ["androidSolarTitle", "androidSolarBody", "weatherAndroidSolarLegalSection"],
@@ -19,7 +20,7 @@ const sections = [
 const copy = JSON.parse(readFileSync(new URL("../app/weather-legal-copy.json", import.meta.url), "utf8"));
 const policy = calendarModule("app/weather-legal.ts");
 
-test("all fourteen locales contain the complete solar and weather disclosures", () => {
+test("all supported locales contain the complete solar and weather disclosures", () => {
   assert.deepEqual(Object.keys(copy).sort(), [...languages].sort());
   for (const language of languages) {
     assert.deepEqual(Object.keys(copy[language]).sort(), sections.flatMap(([title, body]) => [title, body]).sort());

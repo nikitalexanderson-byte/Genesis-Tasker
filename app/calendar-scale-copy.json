@@ -82,5 +82,29 @@
     "full": "通常サイズ · 100%",
     "half": "半分のサイズ · 50%",
     "quarter": "3か月の一覧 · 25%"
+  },
+  "he": {
+    "group": "גודל לוח שנה",
+    "full": "גודל נורמלי 100%",
+    "half": "חצי גודל · 50%",
+    "quarter": "סקירה שלושה חודשים · 25%"
+  },
+  "ar": {
+    "group": "حجم الجدول الزمني",
+    "full": "الحجم الطبيعي 100%",
+    "half": "نصف الحجم 50%",
+    "quarter": "لمحة عامة عن الأشهر الثلاثة 25%"
+  },
+  "ko": {
+    "group": "달력 크기",
+    "full": "정상 크기 · 100%",
+    "half": "반 사이즈 · 50%",
+    "quarter": "3개월 개요 · 25%"
+  },
+  "nl": {
+    "group": "De grootte van de kalender",
+    "full": "Normaal formaat · 100%",
+    "half": "Halve maat · 50%",
+    "quarter": "Driemaandoverzicht · 25%"
   }
 }

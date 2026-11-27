@@ -54,5 +54,21 @@
   "ja": {
     "context":"これはアウロラ団の象徴体系であり、単一の古代ギリシャ暦を復元したものではありません。古代ギリシャには多くの暦がありました。歴史上の暦は閏月を設けて月と季節を合わせていましたが、年の始まりはそれぞれ異なっていました。私たちの太陰暦は、春分後の最初の新月から始まります。",
     "more":"太陰暦について詳しく見る"
+  },
+  "he": {
+    "context": "זוהי מערכת הסמלים של מסדר השחר, במקום שיפוץ של לוח שנה יווני עתיק יחיד. היו הרבה לוחות שנה יוונים עתיקים. הם שמרו על חודשים מותאמים לעונות על ידי הוספת חודש חלופי, אבל השנים שלהם התחילו בזמנים שונים. לוח השנה הירח שלנו מתחיל עם הירח החדש הראשון אחרי שוויון האביב.",
+    "more": "עוד על לוח השנה הירחני"
+  },
+  "ar": {
+    "context": "هذا هو النظام الرمزي لنظام الشفق، وليس إعادة بناء تقويم إغريقي قديم واحد. كان هناك العديد من التقويمات الإغريقية القديمة. وحافظوا على الأشهر متسقة مع الفصول بإضافة شهر كسور، ولكن سنواتهم بدأت في أوقات مختلفة. ويبدأ تقويمنا القمري مع أول قمر جديد بعد تعادل الربيع.",
+    "more": "المزيد عن التقويم القمري"
+  },
+  "ko": {
+    "context": "이것은 오로라의 명령의 상징적인 시스템입니다, 하나의 고대 그리스 달력을 재구성하는 것보다는. 고대 그리스에는 많은 달력이 있었다. 그들은 연월을 추가하여 계절에 맞게 달을 유지하지만, 그들의 년도는 다른 시간에 시작됩니다. 우리의 달력은 봄 분점 후 첫 번째 새달로 시작합니다.",
+    "more": "달력에 대한 자세한 내용"
+  },
+  "nl": {
+    "context": "Dit is het symbolische systeem van de Orde van Aurora, in plaats van een reconstructie van een enkele oude Griekse kalender. Er waren veel oude Griekse kalenders. Ze hielden maanden uitgelijnd met de seizoenen door het toevoegen van een schrikkelmaand, maar hun jaren begonnen op verschillende tijden. Onze maankalender begint met de eerste nieuwe maan na de lente equinox.",
+    "more": "Meer over de maankalender"
   }
 }

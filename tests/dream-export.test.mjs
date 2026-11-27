@@ -64,9 +64,9 @@ test('the export includes long untruncated dream text and device-only status', (
   assert.ok(html.includes('Избранные · Осознанный'));
 });
 
-test('dream export labels and documents exist in all fourteen supported languages', () => {
+test('dream export labels and documents exist in all eighteen supported languages', () => {
   const copy = JSON.parse(readFileSync(new URL('../app/dream-export-copy.json', import.meta.url), 'utf8'));
-  assert.equal(Object.keys(copy).length, 14);
+  assert.equal(Object.keys(copy).length, 18);
   for (const [language, text] of Object.entries(copy)) {
     assert.deepEqual(Object.keys(text), Object.keys(copy.ru));
     for (const value of Object.values(text)) {

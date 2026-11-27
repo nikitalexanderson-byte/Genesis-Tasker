@@ -317,7 +317,7 @@ function genesisRetentionNoticeSnapshot(PDO $db,array $user,int $now): array
 function genesisRetentionEmailCopy(string $json): array
 {
     $catalog=json_decode($json,true,512,JSON_THROW_ON_ERROR);
-    $languages=['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'];
+    $languages=['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja','he','ar','ko','nl'];
     $fields=['subject','deadline','actionsInactive','actionsYear','data','footer','action'];
     $rules=['free-unreturned','free-inactive','former-paid-inactive','complimentary-elite-inactive','complimentary-elite-year'];
     if(!is_array($catalog)||count($catalog)!==count($languages))throw new DomainException('RETENTION_EMAIL_COPY_INVALID');
@@ -340,7 +340,8 @@ function genesisRetentionEmailMessage(array $notice,array $snapshot,int $now): a
     static $catalog;
     $catalog??=genesisRetentionEmailCopy((string)file_get_contents(__DIR__.'/../resources/account-retention-email-copy.json'));
     $language=$snapshot['user']['language']??'en';
-    $copy=is_string($language)&&isset($catalog[$language])?$catalog[$language]:$catalog['en'];
+    $language=is_string($language)&&isset($catalog[$language])?$language:'en';
+    $copy=$catalog[$language];
     $rule=$notice['rule']??null;
     if(!is_string($rule)||!isset($copy['reasons'][$rule]))throw new DomainException('RETENTION_RULE_UNKNOWN');
     $date=genesisRetentionStamp(max($snapshot['deadline'],genesisRetentionTime($notice['promised_delete_at']),genesisRetentionAddMonths($now,1)));
@@ -348,7 +349,7 @@ function genesisRetentionEmailMessage(array $notice,array $snapshot,int $now): a
         ."\n\n".$copy[$rule==='complimentary-elite-year'?'actionsYear':'actionsInactive']."\n\n".$copy['data'];
     $origin=rtrim((string)genesisConfig()['app_url'],'/');$url=$origin.'/';
     return ['to'=>$snapshot['recipientEmail'],'subject'=>$copy['subject'],'text'=>$text."\n\n".$url."\n\n".$copy['footer'],
-        'html'=>genesisEmailHtml($copy['subject'],$text,$url,$copy['action'],$copy['footer']),'promisedDeleteAt'=>$date];
+        'html'=>genesisEmailHtml($copy['subject'],$text,$url,$copy['action'],$copy['footer'],$language),'promisedDeleteAt'=>$date];
 }
 
 /** SMTP runs outside the SQLite writer. Only an accepted response followed by a

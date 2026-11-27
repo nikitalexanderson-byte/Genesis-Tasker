@@ -124,5 +124,41 @@
     "updatedAt": "更新日時",
     "localOnly": "この端末に保存済み",
     "error": "ファイルを作成できませんでした。もう一度お試しください。"
+  },
+  "he": {
+    "download": "הורדת היסטוריה של חלום",
+    "savedAt": "העתק נשמר ב",
+    "timeZone": "אזור זמן",
+    "createdAt": "נוצר",
+    "updatedAt": "עדכן",
+    "localOnly": "נשמר במכשיר",
+    "error": "לא ניתן ליצור את הקובץ. בבקשה נסה שוב."
+  },
+  "ar": {
+    "download": "تاريخ الأحلام",
+    "savedAt": "نسخة محفوظة في",
+    "timeZone": "المنطقة الزمنية",
+    "createdAt": "المنشأة",
+    "updatedAt": "مستكملة",
+    "localOnly": "تم الحفظ على الجهاز",
+    "error": "لم يكن بالإمكان إنشاء الملف، حاول مرة أخرى."
+  },
+  "ko": {
+    "download": "꿈 역사 다운로드",
+    "savedAt": "복사본 저장일",
+    "timeZone": "시간대",
+    "createdAt": "생성됨",
+    "updatedAt": "업데이트",
+    "localOnly": "기기에 저장됨",
+    "error": "파일을 만들 수 없습니다. 다시 시도하십시오."
+  },
+  "nl": {
+    "download": "Download droomgeschiedenis",
+    "savedAt": "Kopie opgeslagen op",
+    "timeZone": "Tijdzone",
+    "createdAt": "Aangemaakt",
+    "updatedAt": "Bijgewerkt",
+    "localOnly": "Opgeslagen op het apparaat",
+    "error": "Het bestand kon niet worden aangemaakt, probeer het opnieuw."
   }
 }

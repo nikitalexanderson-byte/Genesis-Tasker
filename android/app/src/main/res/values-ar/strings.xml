@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="native_stage">المرحلة الأولى من التطبيق الأصلي</string>
+    <string name="native_title">Genesis Tasker</string>
+    <string name="native_status">تعمل هذه الشاشة الأساسية باستخدام Kotlin وJetpack Compose.</string>
+    <string name="browser_error_message">تعذّر فتح GENESIS. حدّث متصفحًا أو فعّله، ثم حاول مجددًا.</string>
+    <string name="browser_retry">فتح الموقع</string>
+</resources>

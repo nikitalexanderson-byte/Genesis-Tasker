@@ -16,7 +16,7 @@ import java.security.MessageDigest
 import javax.net.ssl.HttpsURLConnection
 
 private const val PUBLIC_ADVICE_MAXIMUM=8*1024*1024
-private val publicAdviceLanguages=setOf("ru","en","el","de","fr","es","it","pt","pl","sr","uk","zh","tr","ja")
+private val publicAdviceLanguages=ru.genesis.calendar.data.publicLanguages
 
 /** The only public-network capability exposed to the isolated Advice source.
  * Paths come from the signed APK's edition pins, never an owner/id or arbitrary
@@ -48,7 +48,7 @@ internal class NativeAdvicePublicCatalogues(private val manifestBytes:()->ByteAr
     suspend fun read(path:String,assertCurrent:()->Unit):ByteArray=withContext(Dispatchers.IO){
         val job=currentCoroutineContext()[Job];fun current(){job?.ensureActive();assertCurrent()};current()
         val pinned=editions;current()
-        if(path=="advice-catalogues/v1/manifest.json")return@withContext pinned.raw.copyOf()
+        if(path=="advice-catalogues/v2/manifest.json")return@withContext pinned.raw.copyOf()
         val pin=pinned.paths[path]?:metadataPinBytes?.invoke()?.let{raw->
             val value=JSONObject(Charsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(raw)).toString());E2eeKeys.exact(value,setOf("protocol","sha256","bytes","path"))
             check(value.getInt("protocol")==1&&value.getString("sha256").matches(Regex("[a-f0-9]{64}"))&&value.getString("path")=="advice-catalogues/v1/metadata.${value.getString("sha256")}.json"

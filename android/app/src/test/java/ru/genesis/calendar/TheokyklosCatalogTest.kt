@@ -3,6 +3,7 @@ package ru.genesis.calendar
 import java.io.File
 import org.junit.Assert.*
 import org.junit.Test
+import ru.genesis.calendar.data.publicLanguages
 import org.json.JSONObject
 import ru.genesis.calendar.domain.CalendarMode
 import ru.genesis.calendar.domain.GenesisCalendar
@@ -104,7 +105,7 @@ class TheokyklosCatalogTest {
         val raw = File("src/main/assets/catalogs/theokyklos.json").readText(Charsets.UTF_8)
         val original = catalog.practices.single { it.id == "persephone-new-seed" }
         assertEquals(14, original.previousTitles.size)
-        for (language in listOf("ru", "en", "el", "de", "fr", "es", "it", "pt", "pl", "sr", "uk", "zh", "tr", "ja")) {
+        for (language in publicLanguages) {
             val translations = if (language in listOf("ru", "en")) null else JSONObject(
                 File("../../app/catalog-translations/$language.json").readText(Charsets.UTF_8)).getJSONObject("theokyklos")
             val practice = TheokyklosCatalogSource.parse(raw, translations, null)

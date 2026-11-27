@@ -20,9 +20,9 @@ test('notification links bind advice, civil day and collection, without acceptin
   }
   assert.equal(adviceTargetFromUrl('https://genesiscalendar.com/#today'),null);
 });
-test('advice notification controls and saved-entry states are translated in all fourteen app languages',()=>{
+test('advice notification controls and saved-entry states are translated in all eighteen app languages',()=>{
   const copy=JSON.parse(fs.readFileSync(new URL('../app/advice-notification-copy.json',import.meta.url),'utf8'));
-  assert.equal(Object.keys(copy).length,14);
+  assert.equal(Object.keys(copy).length,18);
   for(const language of Object.values(copy)){
     assert.deepEqual(Object.keys(language).sort(),Object.keys(copy.ru).sort());
     assert.ok(Object.values(language).every(text=>typeof text==='string'&&text.trim()));

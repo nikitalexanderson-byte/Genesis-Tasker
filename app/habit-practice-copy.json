@@ -194,5 +194,61 @@
     "completedFilter": "已完成",
     "missedFilter": "未完成",
     "openWindow": "今天没有必须完成的项目。单次练习可在期限前完成；中间未执行的日期不会中断连续记录。"
+  },
+  "he": {
+    "warning": "ברירת המחדל: סיים פעם אחת היום או מחר. לאחר מכן התרגיל נסגר. אם תפספס את המועד הסופי, תקבל 10 דלי פעם אחת; XP ודירוג נשמרים. אתה יכול לשנות את המועד הסופי ואת הזמן לפני שהוא נסגר.",
+    "completed": "אימון הסתיים.",
+    "missed": "לא הושלם · -10 לורלס",
+    "progress": "בוצע",
+    "deadline": "הושלם עד סוף היום",
+    "target": "השלמות נדרשות",
+    "deleteNotice": "ההיסטוריה נשמרת. 50חוק יום; הפסדים של תאריך היעד שלה 10 לורלס פעם.",
+    "divinationExpired": "הנבואה הזו נכשלה: התחילו להתאמן ביום הנבואה או ביום הבא.",
+    "retention": "50 ימים לשמור Laurels כאשר מחיקת",
+    "completedFilter": "הושלם",
+    "missedFilter": "פספסת.",
+    "openWindow": "אין צורך להשלים היום. אתה יכול להשלים את האימון החד פעמי עכשיו או לפני תאריך הסיום שלו; יום בינוני לא פוגע ברצף שלך."
+  },
+  "ar": {
+    "warning": "الافتراضي: إكمال مرة واحدة اليوم أو غداً. ثم يغلق التدريب بعد ذلك. تأخير الموعد النهائي المحدد يخصم 10 Laurels مرة واحدة؛ يتم الاحتفاظ بالخبرة والرتبة. يمكنك تغيير الموعد النهائي والوقت قبل إغلاقه.",
+    "completed": "الممارسة المنجزة",
+    "missed": "لم تكتمل - 10 لوريس",
+    "progress": "مكتمل",
+    "deadline": "اكتمل بحلول نهاية اليوم",
+    "target": "الاستكمالات المطلوبة",
+    "deleteNotice": "هذه الممارسة ليس لها قاعدة 50-يوم؛ التخلف عن الموعد النهائي يكلف 10 Laurels مرة واحدة.",
+    "divinationExpired": "هذا التنبؤ قد انتهى أجله: ابدأ ممارسة في يوم التنبؤ أو اليوم التالي.",
+    "retention": "50 أيام للاحتفاظ بـLaurels عند الحذف",
+    "completedFilter": "مكتمل",
+    "missedFilter": "المفقودة",
+    "openWindow": "لا توجد حاجة إلى إكمال اليوم. يمكنك إكمال الممارسة مرة واحدة الآن أو قبل الموعد النهائي؛ واليوم المتوسط لا يقطع سلسلة الممارسات."
+  },
+  "ko": {
+    "warning": "기본값: 오늘 또는 내일 한 번 완료하면 연습이 종료됩니다. 설정된 마감일을 놓치면 10 Laurels를 한 번 잃게 되며, 경험치와 순위는 유지됩니다. 마감일과 종료 시간은 변경할 수 있습니다.",
+    "completed": "연습 완료",
+    "missed": "완성되지 않음 · −10 Laurels",
+    "progress": "완료",
+    "deadline": "하루 종료까지 완료",
+    "target": "필요한 완성",
+    "deleteNotice": "이 연습에는 50일 규칙이 없으며, 마감일을 놓치면 10 Laurels를 한 번 지불해야 합니다.",
+    "divinationExpired": "이 점성술은 만료되었습니다: 점성술 일 또는 다음 날 연습을 시작합니다.",
+    "retention": "50 일 삭제할 때 Laurels를 유지하기 위해",
+    "completedFilter": "완료됨",
+    "missedFilter": "누락됨",
+    "openWindow": "오늘은 완료가 필요하지 않습니다. 당신은 지금 또는 마감일 전에 일회성 연습을 완료할 수 있습니다; 중간의 하루는 당신의 연속을 깨뜨리지 않습니다."
+  },
+  "nl": {
+    "warning": "Standaard: vandaag of morgen één keer voltooien. De oefening sluit dan af. Het missen van de geconfigureerde deadline leidt eenmaal tot 10 Laurels; XP en rang blijven behouden.",
+    "completed": "De praktijk voltooid",
+    "missed": "Niet voltooid · −10 Laurels",
+    "progress": "Gedaan",
+    "deadline": "Voltooi voor het einde van de dag",
+    "target": "Vereiste voltooiingen",
+    "deleteNotice": "Deze praktijk heeft geen 50-dag regel; het missen van de deadline kost 10 Laurels één keer.",
+    "divinationExpired": "Deze waarzeggerij is verlopen: start een praktijk op de waarzeggerijdag of de volgende dag.",
+    "retention": "50 dagen om Laurels te bewaren bij het verwijderen",
+    "completedFilter": "Voltooid",
+    "missedFilter": "Gemist",
+    "openWindow": "Je kunt de eenmalige oefening nu of vóór de deadline voltooien; een tussentijdse dag breekt je streep niet, maar het is belangrijk dat je de oefening op de juiste manier uitvoert."
   }
 }

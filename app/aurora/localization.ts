@@ -2,12 +2,11 @@ import baseRU from './texts.ru.json';
 import testRU from './forecast-test-copy.ru.json';
 import adaptiveRU from './adaptive-copy.ru.json';
 const RU={...baseRU,...testRU,...adaptiveRU};
-import { translateText, type Language } from '../i18n';
+import { isLanguage, translateText, type Language } from '../i18n';
 import {RESTORATION_LETTER_FOCI} from '../stoicheion-restoration-data';
 import {restorationLocal} from '../stoicheion-restoration-copy';
 
-const languages=new Set(['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja']);
-export const auroraLanguage=(value:string):Language=>languages.has(value)?value as Language:'en';
+export const auroraLanguage=(value:string):Language=>isLanguage(value)?value:'en';
 const normalize=(value:string)=>value.replace(/\s+/gu,' ').trim();
 const packs=new Map<Language,Promise<Record<string,string>>>();
 export function loadAuroraLocale(language:Language):Promise<Record<string,string>> {

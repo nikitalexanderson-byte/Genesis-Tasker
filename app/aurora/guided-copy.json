@@ -12,5 +12,53 @@
   "uk":{"event":"Спочатку відділимо те, що сталося, від очікуваного результату.","sequence":"Уточнімо порядок подій і справді відомий строк.","repetition":"Порівняймо подібні випадки й винятки: повторення не доводить причину.","grounds":"Перевірмо, на чому ґрунтується висновок і як його підтвердити.","meaning":"Уточнімо ваше бажання та прийнятну ціну змін.","capability":"Оберімо посильний крок із доступним часом і ресурсами.","dependency":"Відділимо ваші рішення від того, що потребує чужої участі та згоди.","limits":"Визначмо межі й умову зупинки перед дією.","choose":"Оберіть найближчу відповідь і натисніть «Далі».","processing":"Готуємо наступний етап…"},
   "zh":{"event":"先区分已经发生的事情与您期待的结果。","sequence":"明确事件顺序和确实已知的期限。","repetition":"比较类似情况和例外：重复本身并不能证明原因。","grounds":"检查结论的依据以及可以如何验证。","meaning":"明确您的愿望和可以接受的改变代价。","capability":"根据现有时间和资源选择力所能及的一步。","dependency":"区分自己的决定与需要他人参与及同意的事情。","limits":"行动前确定边界和停止条件。","choose":"选择最接近的答案，然后点击“下一步”。","processing":"正在准备下一阶段…"},
   "tr":{"event":"Önce olanları beklediğiniz sonuçtan ayıralım.","sequence":"Olayların sırasını ve gerçekten bilinen süreyi netleştirelim.","repetition":"Benzer durumları ve istisnaları karşılaştıralım: tekrar, nedeni kanıtlamaz.","grounds":"Sonucun neye dayandığını ve nasıl doğrulanacağını inceleyelim.","meaning":"İsteğinizi ve değişimin kabul edilebilir bedelini netleştirelim.","capability":"Mevcut zaman ve kaynaklarla yapılabilir bir adım seçelim.","dependency":"Kendi kararlarınızı başkasının katılım ve onayını gerektirenlerden ayıralım.","limits":"Harekete geçmeden önce sınırları ve durma koşulunu belirleyelim.","choose":"En yakın yanıtı seçin, ardından İleri’ye basın.","processing":"Sonraki aşama hazırlanıyor…"},
-  "ja":{"event":"まず、起きたことと望む結果を分けて考えます。","sequence":"出来事の順序と、実際に分かっている期限を確認します。","repetition":"似た事例と例外を比べます。繰り返しだけでは原因を証明できません。","grounds":"結論の根拠と、その確かめ方を確認します。","meaning":"望んでいることと、受け入れられる変化の負担を明確にします。","capability":"使える時間と資源で無理なくできる一歩を選びます。","dependency":"自分で決められることと、他者の参加や同意が必要なことを分けます。","limits":"行動する前に境界と中止条件を決めます。","choose":"最も近い回答を選び、「次へ」を押してください。","processing":"次の段階を準備しています…"}
+  "ja":{"event":"まず、起きたことと望む結果を分けて考えます。","sequence":"出来事の順序と、実際に分かっている期限を確認します。","repetition":"似た事例と例外を比べます。繰り返しだけでは原因を証明できません。","grounds":"結論の根拠と、その確かめ方を確認します。","meaning":"望んでいることと、受け入れられる変化の負担を明確にします。","capability":"使える時間と資源で無理なくできる一歩を選びます。","dependency":"自分で決められることと、他者の参加や同意が必要なことを分けます。","limits":"行動する前に境界と中止条件を決めます。","choose":"最も近い回答を選び、「次へ」を押してください。","processing":"次の段階を準備しています…"},
+  "he": {
+    "event": "ראשית, הפרד את מה שקרה מהתוצאה שאתה מקווה.",
+    "sequence": "הבהיר את סדר האירועים ואת כל המועד האחרון שאתה באמת יודע.",
+    "repetition": "השוו בין מקרים דומים ויוצאי דופן: חוזר על עצמו לבדו לא קובע סיבה.",
+    "grounds": "בדוק מה תומך במסקנה ואיך ניתן לאמת אותה.",
+    "meaning": "הבהירו מה אתם רוצים ומה העלות של שינוי זה מקובל.",
+    "capability": "בחר צעד ניתן לניהול באמצעות הזמן והמשאבים הקיימים.",
+    "dependency": "הפרד את ההחלטות שלך ממה שצריך השתתפות והסכמה של אדם אחר.",
+    "limits": "להגדיר גבולות ותנאי עצירה לפני הפעולה.",
+    "choose": "בחר את התשובה הקרובה ביותר, ואז בחר הבא.",
+    "processing": "מכינים את השלב הבא..."
+  },
+  "ar": {
+    "event": "أولا فصل ما حدث من النتيجة التي تأمل في.",
+    "sequence": "أوضح ترتيب الأحداث وأي موعد نهائي تعرفه بالفعل.",
+    "repetition": "مقارنة الحالات والاستثناءات المماثلة: التكرار وحده لا يثبت سبباً.",
+    "grounds": "فحص ما يدعم الاستنتاج وكيف يمكن التحقق منه.",
+    "meaning": "توضيح ما تريد وما هي تكلفة التغيير المقبولة.",
+    "capability": "اختار خطوة قابلة للإدارة باستخدام الوقت والموارد المتاحة.",
+    "dependency": "فصل قراراتك عن ما يحتاج إلى شخص آخر المشاركة والموافقة.",
+    "limits": "حدد الحدود وشرط الوقف قبل التصرف.",
+    "choose": "اختر أقرب إجابة، ثم انقر على التالي.",
+    "processing": "التحضير للمرحلة التالية"
+  },
+  "ko": {
+    "event": "먼저 당신이 희망하는 결과로부터 일어난 일을 분리하십시오.",
+    "sequence": "이벤트의 순서와 실제로 알고있는 마감일을 명확히하십시오.",
+    "repetition": "비슷한 사례와 예외를 비교하라: 반복만으로는 원인을 확립할 수 없다.",
+    "grounds": "결론을 지원하는 것과 어떻게 검증될 수 있는지 확인하십시오.",
+    "meaning": "당신이 원하는 것을 명확히 하 고 어떤 변경 비용을 수락할 수 있습니다.",
+    "capability": "사용 가능한 시간과 자원을 사용하여 관리 가능한 단계를 선택하십시오.",
+    "dependency": "다른 사람의 참여와 동의를 필요로 하는 것과 당신의 결정을 분리하십시오.",
+    "limits": "행동하기 전에 경계와 정지 조건을 정의합니다.",
+    "choose": "가장 가까운 답을 선택한 다음 다음을 선택합니다.",
+    "processing": "다음 단계 준비 중..."
+  },
+  "nl": {
+    "event": "Scheid eerst wat er is gebeurd van de uitkomst waar je op hoopt.",
+    "sequence": "Verduidelijk de volgorde van gebeurtenissen en eventuele deadlines die je daadwerkelijk kent.",
+    "repetition": "Vergelijk vergelijkbare gevallen en uitzonderingen: herhaling alleen stelt geen oorzaak vast.",
+    "grounds": "Controleer wat de conclusie ondersteunt en hoe deze kan worden geverifieerd.",
+    "meaning": "Maak duidelijk wat je wilt en welke veranderkosten aanvaardbaar zijn.",
+    "capability": "Kies een beheersbare stap met behulp van de beschikbare tijd en middelen.",
+    "dependency": "Scheid je beslissingen van wat de deelname en toestemming van een andere persoon nodig heeft.",
+    "limits": "Definieer grenzen en een stopconditie voordat u handelt.",
+    "choose": "Kies het dichtstbijzijnde antwoord en selecteer Volgende.",
+    "processing": "De volgende etappe voorbereiden…"
+  }
 }

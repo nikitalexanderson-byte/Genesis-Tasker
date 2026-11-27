@@ -138,5 +138,45 @@
     "ready": "2,602の格言 · 12人の著者",
     "common": "共通設定",
     "dailyCount": "1日あたりの箴言数"
+  },
+  "he": {
+    "title": "אוספים",
+    "aurora": "עצה ממסדר אורורה.",
+    "philosophers": "אמרות הפילוסופים",
+    "pending": "האוסף נמצא בהכנה. אפוריסמים יופיעו כאשר הטקסטים יתווספו.",
+    "hint": "בחר 1–3 אפוריזמים ליום; ברירת המחדל היא 1. הם נוספים לייעוץ של מסדר אורורה (עד 6 ליום). החלפת אוספים לא מאפסת תצוגות בשימוש; האתר והתוכנה חולקים את ההגדרות והספירות שלך.",
+    "ready": "2,602 אפוריזמים · 12 סופרים",
+    "common": "הגדרות כלליות",
+    "dailyCount": "אפוריזמים ליום"
+  },
+  "ar": {
+    "title": "المقتنيات",
+    "aurora": "نصيحة من منظمة أورورا",
+    "philosophers": "حِكَم الفلاسفة",
+    "pending": "ويجري حاليا إعداد هذه المجموعة، وستظهر فيها اﻷمثال بمجرد إضافة النصوص.",
+    "hint": "اختار 1-3 عبارات يوميا؛ الافتراض هو 1. وهي إضافية إلى نصيحة نظام أورورا (حتى 6 يوميا). لا يعيد تغيير المجموعات الرؤى المستخدمة؛ يتقاسم الموقع والتطبيق إعداداتك وعددا.",
+    "ready": "2,602 أمثال · 12 مؤلفون",
+    "common": "الإعدادات العامة",
+    "dailyCount": "اﻷمثال في اليوم"
+  },
+  "ko": {
+    "title": "모음집",
+    "aurora": "오로라 기사단의 조언",
+    "philosophers": "철학자들의 잠언",
+    "pending": "컬렉션이 준비되고 있습니다. 텍스트가 추가되면 어구가 나타납니다.",
+    "hint": "하루에 1–3의 어구를 선택하세요. 기본값은 1입니다. 이들은 오로라 명령의 조언(하루 최대 6)에 추가됩니다. 컬렉션을 전환하면 사용된 보기가 재설정되지 않습니다. 웹사이트와 앱은 설정과 계수를 공유합니다.",
+    "ready": "2,602 어포리즘 · 12 저자",
+    "common": "일반 설정",
+    "dailyCount": "하루 당 표현"
+  },
+  "nl": {
+    "title": "Verzamelingen",
+    "aurora": "Advies van de Orde van Aurora",
+    "philosophers": "Aforismen van filosofen",
+    "pending": "De verzameling wordt momenteel voorbereid en de aforismes zullen verschijnen zodra er teksten zijn toegevoegd.",
+    "hint": "Kies 1–3 aforismes per dag; de standaard is 1. Ze zijn een aanvulling op het advies van de Orde van Aurora (tot 6 per dag). Het wisselen van collecties reset niet gebruikte weergaven; de website en app delen uw instellingen en tellingen.",
+    "ready": "2,602 aforismen · 12 auteurs",
+    "common": "Algemene instellingen",
+    "dailyCount": "Aforismen per dag"
   }
 }

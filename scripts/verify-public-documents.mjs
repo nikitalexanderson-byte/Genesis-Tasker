@@ -77,7 +77,8 @@ assert.deepEqual(Object.keys(refundCopy).sort(),Object.keys(publicCopy).sort());
 for(const language of Object.keys(refundCopy)){
   const html=await readFile(new URL(language==='en'?'refund.html':`_public-locales/${language}/refund.html`,output),'utf8');
   const contact=html.match(/<div data-refund-contacts>(.*?)<\/div>/s)?.[1];
-  assert.ok(contact?.includes(refundCopy[language]),`${language}: localized refund instructions are required`);
+  const encodedContact = refundCopy[language].replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
+  assert.ok(contact?.includes(encodedContact),`${language}: localized refund instructions are required`);
   for(const address of ['nikitalexanderson@gmail.com','demiurge.soft@gmail.com'])
     assert.ok(contact.includes(`href="mailto:${address}"`),`${language}: refund contact ${address} is required`);
 }

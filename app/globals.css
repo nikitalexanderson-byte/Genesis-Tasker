@@ -5166,7 +5166,8 @@ html.project-drag-active {
 @media (min-width: 1061px) {
   .app-sidebar {
     position: fixed;
-    inset: 0 auto 0 0;
+    inset-block: 0;
+    inset-inline: 0 auto;
     width: 210px;
     height: 100vh;
     height: 100dvh;
@@ -5644,6 +5645,20 @@ html[data-language="en"] .inbox-card.drop-target::after {
 }
 
 .google-login-primary img { display: block; width: 180px; height: 40px; }
+.google-login-primary[data-localized="true"] {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 44px;
+  height: auto;
+  gap: 10px;
+  padding: 2px 14px;
+  border: 1px solid #747775;
+  border-radius: 24px;
+  background: #fff;
+  color: #1f1f1f;
+  font: 500 14px/20px Roboto, Arial, sans-serif;
+}
+.google-login-primary[data-localized="true"] img { width: 32px; height: 32px; flex: none; }
 .google-login-primary:disabled { cursor: wait; opacity: .58; }
 .yandex-login-primary {
   display: flex;
@@ -8256,7 +8271,8 @@ button.project-drag-handle:active { cursor: grabbing; }
 @media (min-width: 1061px) {
   .app-sidebar {
     position: fixed;
-    inset: 0 auto 0 0;
+    inset-block: 0;
+    inset-inline: 0 auto;
     width: 210px;
     height: 100vh;
     height: 100dvh;

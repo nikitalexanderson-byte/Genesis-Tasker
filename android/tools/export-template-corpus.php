@@ -3,13 +3,14 @@ declare(strict_types=1);
 
 // Pure server normalization only: this exporter opens no database or user session.
 if (PHP_SAPI !== 'cli') throw new RuntimeException('CLI only.');
+define('GENESIS_STATELESS_REQUEST', true);
 $server = dirname(__DIR__, 2) . '/server';
 foreach (['bootstrap', 'repository', 'google', 'shared-projects', 'shared-google', 'template-manifest', 'template-starters'] as $module) {
     require_once $server . '/src/' . $module . '.php';
 }
 $directory = dirname(__DIR__) . '/app/src/test/resources/templates';
 if (!is_dir($directory) && !mkdir($directory, 0755, true)) throw new RuntimeException('Corpus directory unavailable.');
-$languages = ['ru', 'en', 'el', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'sr', 'uk', 'zh', 'tr', 'ja'];
+$languages = ['ru', 'en', 'el', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'sr', 'uk', 'zh', 'tr', 'ja', 'he', 'ar', 'ko', 'nl'];
 $starters = [];
 foreach ($languages as $language) $starters[$language] = genesisSharedStarterTemplates($language);
 file_put_contents($directory . '/starters.json', json_encode($starters, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . "\n");
@@ -42,4 +43,4 @@ $rich = genesisTemplateManifest([
     ],
 ]);
 file_put_contents($directory . '/rich-manifest.json', json_encode($rich, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR) . "\n");
-echo "Generated 56 real PHP starter sources in 14 languages and one normalized synthetic graph; no database access.\n";
+printf("Generated %d PHP starter records in %d languages and one normalized synthetic graph.\n", array_sum(array_map('count', $starters)), count($languages));

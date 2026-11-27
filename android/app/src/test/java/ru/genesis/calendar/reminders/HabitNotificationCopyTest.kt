@@ -25,11 +25,13 @@ class HabitNotificationCopyTest {
 
     @Test fun eachToneVariesAcrossDaysWithoutTonePrefixes() {
         listOf("calm", "heroic", "ironic").forEach { tone ->
-            listOf(false, true).forEach { english ->
-                val messages = (1..100).map { habitNotificationBody(tone, "habit", 1, english, "day-$it", "Reading") }
-                assertTrue(messages.distinct().size >= 8)
+            listOf("ru", "en", "he", "ar", "ko", "nl").forEach { language ->
+                val messages = (1..200).map { habitNotificationBody(tone, "habit", 1, language, "day-$it", "Reading {count}") }
+                val goals = (1..200).map { habitNotificationBody(tone, "goal", 7, language, "day-$it") }
+                assertTrue(messages.distinct().size == 12)
+                assertTrue(goals.distinct().size == 8 && goals.all { it.contains("7") })
                 assertTrue(messages.all { !it.contains("Героический зов:") && !it.contains("Спокойное напоминание:") && !it.contains("Heroic call:") })
-                assertTrue(messages.all { it.contains("Reading") })
+                assertTrue(messages.all { it.contains("Reading {count}") })
             }
         }
     }

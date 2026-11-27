@@ -9,6 +9,8 @@ class WholeWordTextTest {
         assertTrue(isInsideWord("пользоваться", 11))
         assertTrue(isInsideWord("Gregorian", 5))
         assertTrue(isInsideWord("Ελληνικά", 4))
+        assertTrue(isInsideWord("동기화됩니다", 2))
+        assertFalse(isInsideWord("간에 동기화됩니다", 3))
         assertFalse(isInsideWord("Как пользоваться", 3))
         assertFalse(isInsideWord("Как пользоваться", 4))
         assertFalse(isInsideWord("Сон · настроение", 4))

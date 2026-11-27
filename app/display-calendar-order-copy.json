@@ -110,5 +110,37 @@
     "help": "クリックで切り替えます。長押ししてドラッグすると並べ替えられます。キーボード：Alt + 左右の矢印キー。Escape で移動を取り消します。",
     "first": "先頭の暦：{calendar}。",
     "changed": "別のウィンドウで順序が変更されました。もう一度ドラッグしてください。"
+  },
+  "he": {
+    "profane": "גרגוריאני",
+    "sacred": "מקודש",
+    "lunar": "ירחי",
+    "help": "לחץ כדי להחליף. החזיק והעביר כדי לשנות את הסדר. עם מקלדת, השתמש ב Alt + חץ שמאלה או חץ ימינה. Escape מבטל את המעבר.",
+    "first": "לוח השנה הראשון: {calendar}.",
+    "changed": "הסדר השתנה בחלון אחר. בבקשה גרר שוב."
+  },
+  "ar": {
+    "profane": "ميلادي",
+    "sacred": "مقدّس",
+    "lunar": "قمري",
+    "help": "انقر للتبديل. امسك وسحب لإعادة الترتيب. على لوحة المفاتيح، استخدم Alt + سهم إلى اليسار أو اليمين. ESC لإلغاء السحب",
+    "first": "الجدول الزمني الأول: {calendar}.",
+    "changed": "تغير الترتيب في نافذة أخرى. رجاءً اسحب مرة أخرى."
+  },
+  "ko": {
+    "profane": "그레고리력",
+    "sacred": "신성력",
+    "lunar": "음력",
+    "help": "클릭하여 전환하십시오. 드래그하여 재정렬하십시오. 키보드에서는 Alt + 왼쪽 또는 오른쪽 화살표를 사용하십시오. Escape를 눌러 드래그를 취소합니다.",
+    "first": "첫 번째 달력: {calendar}.",
+    "changed": "다른 창에서 순서가 바뀌었습니다. 다시 드래그하십시오."
+  },
+  "nl": {
+    "profane": "Gregoriaans",
+    "sacred": "Sacraal",
+    "lunar": "Maan",
+    "help": "Klik om te schakelen. Houd ingedrukt en sleep om de volgorde te wijzigen. Gebruik op een toetsenbord Alt + pijl-links of pijl-rechts.",
+    "first": "Eerste kalender: {calendar}.",
+    "changed": "De volgorde is gewijzigd in een ander venster, sleep opnieuw."
   }
 }

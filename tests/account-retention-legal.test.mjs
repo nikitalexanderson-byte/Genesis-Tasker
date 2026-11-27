@@ -1,3 +1,4 @@
+import { REGION_LANGUAGES } from "../app/region-language.ts";
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {readFileSync} from 'node:fs';
@@ -10,7 +11,7 @@ import {build} from 'vite';
 import react from '@vitejs/plugin-react';
 import {calendarModule} from './helpers/calendar-modules.mjs';
 
-const languages=['ru','en','el','de','fr','es','it','pt','pl','sr','uk','zh','tr','ja'];
+const languages=[...REGION_LANGUAGES];
 const copy=JSON.parse(readFileSync(new URL('../app/account-retention-legal-copy.json',import.meta.url),'utf8'));
 const policy=calendarModule('app/account-retention-legal.ts');
 const fields=Object.keys(copy.ru).sort();
@@ -18,7 +19,7 @@ const numbers=value=>value.match(/\d+/gu)??[];
 const deadlines=value=>[...new Set(numbers(value))].sort();
 const placeholders=value=>[...value.matchAll(/\{([A-Za-z]\w*)\}/gu)].map(match=>match[1]).sort();
 
-test('all fourteen public retention policies preserve complete sections, deadlines and placeholders',()=>{
+test('all eighteen public retention policies preserve complete sections, deadlines and placeholders',()=>{
   assert.deepEqual(Object.keys(copy).sort(),[...languages].sort());
   assert.equal(fields.length,14);
   for(const language of languages){

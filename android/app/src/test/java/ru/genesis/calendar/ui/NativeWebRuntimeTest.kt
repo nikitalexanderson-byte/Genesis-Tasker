@@ -3,6 +3,7 @@ package ru.genesis.calendar.ui
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
+import ru.genesis.calendar.data.publicLanguages
 import java.io.File
 
 class NativeWebRuntimeTest {
@@ -18,7 +19,7 @@ class NativeWebRuntimeTest {
     }
     @Test fun everyAccountLanguageHasAnAuthoredOfflineRuntimeMessage(){
         val copy=JSONObject(File(root,"app/native-web-runtime-copy.json").readText())
-        assertEquals(setOf("ru","en","de","fr","es","it","pt","pl","el","sr","uk","zh","tr","ja"),copy.keys().asSequence().toSet())
+        assertEquals(publicLanguages,copy.keys().asSequence().toSet())
         for(language in copy.keys())assertTrue(language,copy.getString(language).contains("Android System WebView") && copy.getString(language).contains("Chrome"))
     }
 }
