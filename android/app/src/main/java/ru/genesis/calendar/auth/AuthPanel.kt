@@ -31,6 +31,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.genesis.calendar.GenesisApplication
 import ru.genesis.calendar.BuildConfig
+import ru.genesis.calendar.data.PublicPage
+import ru.genesis.calendar.data.publicPagePath
+import ru.genesis.calendar.ui.LocalGenesisLanguage
 import ru.genesis.calendar.ui.Text
 import ru.genesis.calendar.ui.Button
 import ru.genesis.calendar.ui.OutlinedButton
@@ -136,7 +139,8 @@ fun AuthPanel(app: GenesisApplication, localLanguage: String) {
                     modifier = Modifier.fillMaxWidth().testTag("auth-logout")) { Text("Выйти") }
             }
             TextButton(onClick = {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("${AUTH_ORIGIN}/privacy"))
+                val path = publicPagePath(localLanguage, PublicPage.PRIVACY, explicitLanguage = true)
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(AUTH_ORIGIN + path))
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 runCatching { app.startActivity(intent) }.onFailure {
                     Toast.makeText(app, privacyOpenError, Toast.LENGTH_SHORT).show()
@@ -272,6 +276,7 @@ fun AccountTaskSyncNotice(state: AccountTaskSyncState, modifier: Modifier = Modi
 @Composable
 fun GenesisLinksPanel() {
     val context = LocalContext.current
+    val website = AUTH_ORIGIN + publicPagePath(LocalGenesisLanguage.current, explicitLanguage = true)
     val copy = release319Copy()
     val controller = remember(context) { AuthController.get(context) }
     val donation = rememberDonationAction(controller)
@@ -285,7 +290,7 @@ fun GenesisLinksPanel() {
         }
         listOf(
             Triple("GENESIS · Telegram", "https://t.me/genesiscalendar", "account-link-telegram"),
-            Triple("Веб-версия GENESIS", "${AUTH_ORIGIN}/", "account-link-web"),
+            Triple("Веб-версия GENESIS", website, "account-link-web"),
         ).forEach { (label, url, tag) ->
             val open: () -> Unit = {
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
