@@ -395,6 +395,23 @@ try {
         });
       }
       if (tier === 'premium4life') {
+        await check('android-link-language-after-sign-in', async () => {
+          const linked = await context.newPage();
+          try {
+            const profileLanguage = async () => (await (await context.request.get('/api/session')).json()).user.language;
+            const saved = await profileLanguage();
+            assert.notEqual(saved, 'he');
+            await linked.goto('/?lang=he&account_link=1#settings');
+            await linked.locator('main.genesis-app[aria-busy=false]').waitFor();
+            await linked.locator('.account-panel').waitFor();
+            assert.equal(await linked.locator('html').getAttribute('lang'), 'he');
+            assert.equal(await linked.locator('html').getAttribute('dir'), 'rtl');
+            assert.equal(new URL(linked.url()).searchParams.has('account_link'), false);
+            assert.equal(await profileLanguage(), saved);
+          } finally {
+            await linked.close();
+          }
+        });
         await check('calendar-during-session-refresh', async () => {
           await verifyCalendarDuringSessionRefresh(page);
           await snapshot('calendar-during-session-refresh');

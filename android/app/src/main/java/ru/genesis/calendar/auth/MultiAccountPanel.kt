@@ -2,6 +2,9 @@ package ru.genesis.calendar.auth
 
 import ru.genesis.calendar.ui.AlertDialog
 import ru.genesis.calendar.ui.AffairsLayout
+import ru.genesis.calendar.data.publicPagePath
+import ru.genesis.calendar.ui.LocalGenesisLanguage
+import ru.genesis.calendar.ui.genesisTranslate
 
 import android.content.Intent
 import android.graphics.Color as AndroidColor
@@ -25,6 +28,7 @@ import ru.genesis.calendar.ui.FilterChip
 internal fun MultiAccountPanel(state: AuthPanelState, controller: AuthController, showHeading: Boolean = true) {
     val settings = state.accountSettings ?: return
     val context = LocalContext.current
+    val website = AUTH_ORIGIN + publicPagePath(LocalGenesisLanguage.current, explicitLanguage = true)
     val local = settings.authProvider != "google"
     var draft by remember { mutableStateOf(settings.routing) }
     var removeCandidate by remember { mutableStateOf<LinkedGoogleAccount?>(null) }
@@ -38,15 +42,13 @@ internal fun MultiAccountPanel(state: AuthPanelState, controller: AuthController
     settings.accounts.forEach { account ->
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(account.displayName.ifBlank { account.email }, style = MaterialTheme.typography.titleSmall)
-                Text(account.email, style = MaterialTheme.typography.bodySmall)
-                Text(buildString {
-                    append(if (account.isPrimary) "Основной" else "Дополнительный")
-                    append(" · ")
-                    append(if (local) account.provider.uppercase() else "Google")
-                    append(" · Calendar: ")
-                    append(if (account.calendarConnected) "подключён" else "не подключён")
-                }, style = MaterialTheme.typography.labelSmall)
+                Text(account.displayName.ifBlank { account.email }, style = MaterialTheme.typography.titleSmall, translate = false)
+                Text(account.email, style = MaterialTheme.typography.bodySmall, translate = false)
+                val role = genesisTranslate(if (account.isPrimary) "Основной" else "Дополнительный")
+                val provider = if (local) account.provider.uppercase() else "Google"
+                val calendar = genesisTranslate("Календарь")
+                val connection = genesisTranslate(if (account.calendarConnected) "подключён" else "не подключён")
+                Text("$role · $provider · $calendar: $connection", style = MaterialTheme.typography.labelSmall, translate = false)
                 if (!local && !account.isPrimary) TextButton(onClick = { removeCandidate = account }, enabled = !state.busy,
                     modifier = Modifier.testTag("linked-account-remove")) { Text("Отключить") }
             }
@@ -56,7 +58,8 @@ internal fun MultiAccountPanel(state: AuthPanelState, controller: AuthController
         else "Дополнительные Google-аккаунты подключаются через защищённый веб-поток. В браузере войдите в тот же кабинет GENESIS, затем вернитесь в приложение.",
         style = MaterialTheme.typography.bodySmall)
     OutlinedButton(onClick = {
-        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("${AUTH_ORIGIN}/?account_link=1#settings")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        val destination = Uri.parse(website).buildUpon().appendQueryParameter("account_link", "1").fragment("settings").build()
+        context.startActivity(Intent(Intent.ACTION_VIEW, destination).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("linked-account-open-site"),
         shape = AffairsLayout.controlShape) { Text("Открыть подключение на сайте") }
     OutlinedButton(onClick = controller::checkSession, enabled = !state.busy,

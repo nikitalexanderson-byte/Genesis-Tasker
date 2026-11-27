@@ -1054,12 +1054,18 @@ export function isLanguage(value: unknown): value is Language {
   return typeof value === "string" && (LANGUAGES as readonly string[]).includes(value);
 }
 
+export function linkedPageLanguage(): Language | null {
+  if (typeof window === "undefined") return null;
+  const requested = new URLSearchParams(window.location.search).get("lang");
+  return isLanguage(requested) ? requested : null;
+}
+
 export function browserLanguage(): Language {
   if (typeof window === "undefined") return "ru";
   const publicRoute=publicRouteForPath(window.location.pathname,APP_BASE,window.location.search);
   if(publicRoute?.explicitLanguage)return publicRoute.language;
-  const requested = new URLSearchParams(window.location.search).get("lang");
-  if (requested && (LANGUAGES as readonly string[]).includes(requested)) return requested as Language;
+  const requested = linkedPageLanguage();
+  if (requested) return requested;
   if(publicRoute&&publicRoute.page!=='home'&&publicRoute.page!=='login')return publicRoute.language;
   const stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
   if (stored && (LANGUAGES as readonly string[]).includes(stored)) return stored as Language;

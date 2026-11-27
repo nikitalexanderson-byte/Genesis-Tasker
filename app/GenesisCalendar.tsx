@@ -266,6 +266,7 @@ import {
   formatTranslatedText,
   getRuntimeLanguage,
   isLanguage,
+  linkedPageLanguage,
   lunarYearStartText,
   localizeCategoryName,
   normalizeLanguage,
@@ -1233,7 +1234,9 @@ export function GenesisCalendar() {
   const [habitHeaderTarget, setHabitHeaderTarget] = useState<HTMLDivElement | null>(null);
   const webHabitHeader = typeof document !== "undefined" && document.documentElement.dataset.genesisWeb === "true";
   const initial = useMemo(() => getSacredDate(new Date()), []);
-  const [language, setLanguage] = useState<Language>(browserLanguage);
+  const [preferredLanguage, setLanguage] = useState<Language>(browserLanguage);
+  const [linkLanguage, setLinkLanguage] = useState(linkedPageLanguage);
+  const language = linkLanguage ?? preferredLanguage;
   const [today, setToday] = useState(() => new Date());
   const [view, setView] = useState<ViewName>("today");
   const [requestedTheokyklosSector, setRequestedTheokyklosSector] = useState<SacredPracticeSectorId | null>(null);
@@ -1266,7 +1269,9 @@ export function GenesisCalendar() {
   const [habitNotificationPermissionState, setHabitNotificationPermissionState] = useState<HabitNotificationPermission>("unsupported");
   const [hydrated, setHydrated] = useState(false);
   const [authResolved, setAuthResolved] = useState(!isGoogleSyncConfigured);
-  const [cloudUser, setCloudUser] = useState<GenesisUser | null>(null);
+  const [accountUser, setCloudUser] = useState<GenesisUser | null>(null);
+  const cloudUser = useMemo(() => accountUser && linkLanguage && accountUser.language !== linkLanguage
+    ? { ...accountUser, language: linkLanguage } : accountUser, [accountUser, linkLanguage]);
   const voiceLanguageEnabled = hydrated && featureAllowed(cloudUser?.featureAccess,'assistant') && (language === "ru" || language === "en");
   const physisAccess = usePhysisAccess(cloudUser?.uid ?? "");
   const physisAvailable = physisAccess.available && cloudUser?.featureAccess?.lifetimePremium === true;
@@ -1325,13 +1330,17 @@ export function GenesisCalendar() {
     } catch { /* Labels stay visible when browser storage is unavailable. */ }
   }, []);
   useEffect(() => {
+    if (!cloudUser?.uid) return;
     const url = new URL(window.location.href);
     if (url.searchParams.get("account_link") !== "1") return;
-    const frame = window.requestAnimationFrame(() => setAccountOpen(true));
-    url.searchParams.delete("account_link");
-    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+    const frame = window.requestAnimationFrame(() => {
+      setAccountOpen(true);
+      const current = new URL(window.location.href);
+      current.searchParams.delete("account_link");
+      window.history.replaceState(window.history.state, "", current.pathname + current.search + current.hash);
+    });
     return () => window.cancelAnimationFrame(frame);
-  }, []);
+  }, [cloudUser?.uid]);
   const [accountIdentityExpanded, setAccountIdentityExpanded] = useState(false);
   const [yandexConnectPromptUserId, setYandexConnectPromptUserId] = useState<string | null>(null);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -1537,8 +1546,8 @@ export function GenesisCalendar() {
   useDocumentLanguage(legalPage ? browserLanguage() : language);
 
   useEffect(() => {
-    cloudUserRef.current = cloudUser;
-  }, [cloudUser]);
+    cloudUserRef.current = accountUser;
+  }, [accountUser]);
 
   useEffect(() => {
     const closePrivateWorkspace = () => {
@@ -2179,6 +2188,7 @@ export function GenesisCalendar() {
       cleanGenesisAppUrl(initialUrl),
     );
     const handlePopState = () => {
+      setLinkLanguage(linkedPageLanguage());
       setAccountMenuOpen(false);
       setAccountOpen(false);
       setView(viewFromHash());
@@ -2665,8 +2675,12 @@ export function GenesisCalendar() {
     setAuthError("");
     setSyncError("");
     setSyncStatus("syncing");
-    storeLanguage(language);
-    localStorage.setItem(LANGUAGE_LOGIN_PENDING_KEY, language);
+    if (linkLanguage) {
+      localStorage.removeItem(LANGUAGE_LOGIN_PENDING_KEY);
+    } else {
+      storeLanguage(language);
+      localStorage.setItem(LANGUAGE_LOGIN_PENDING_KEY, language);
+    }
     try {
       await signInWithGoogle();
     } catch (error) {
@@ -2676,9 +2690,16 @@ export function GenesisCalendar() {
   };
 
   const selectLanguage = (nextLanguage: Language) => {
+    setLinkLanguage(null);
     setLanguage(nextLanguage);
     storeLanguage(nextLanguage);
-    if (!cloudUser) {
+    if (cloudUser) {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("lang")) {
+        url.searchParams.delete("lang");
+        window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+      }
+    } else {
       const route = publicRouteForPath(window.location.pathname,APP_BASE,window.location.search);
       if (route) {
         window.history.replaceState(window.history.state, '', publicLanguagePath(nextLanguage, route.page, APP_BASE, route.edition, window.location));
@@ -7969,6 +7990,7 @@ export function GenesisCalendar() {
           <AccountPanel
             key={cloudUser.uid}
             user={cloudUser}
+            savedLanguage={accountUser?.language ?? cloudUser.language}
             onOpenPhysis={physisAccess.showEntry ? () => { setAccountOpen(false); setPhysisSettingsRequest(value => value + 1); navigateTo("physis"); } : undefined}
             onOpenPartners={cloudUser.partnerAccess?.panelEnabled ? () => { setAccountOpen(false); navigateTo('partners'); } : undefined}
             guideSharedProjects={accountGuideUserId === cloudUser.uid}

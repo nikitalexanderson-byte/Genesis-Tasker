@@ -3,6 +3,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {calendarModule} from './helpers/calendar-modules.mjs';
+import {localizedModule} from './helpers/localized-modules.mjs';
+import {createElement} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
 const json=path=>JSON.parse(readFileSync(new URL('../'+path,import.meta.url),'utf8'));
 const languages=[...REGION_LANGUAGES];
 const source={...json('app/aurora/texts.ru.json'),...json('app/aurora/forecast-test-copy.ru.json'),...json('app/aurora/adaptive-copy.ru.json')};
@@ -51,6 +54,22 @@ test('All eighteen method and backup packs preserve fields, separators and place
    assert.ok(value.trim(),`${language}:${key}`);
    assert.deepEqual((value.match(/\{[A-Za-z]\w*\}/gu)??[]).sort(),(key.match(/\{[A-Za-z]\w*\}/gu)??[]).sort(),`${language}:${key}`);
   }
+ }
+});
+
+test('backup loading and retry states are localized before the optional dictionary arrives', () => {
+ const {useBackupCopy}=localizedModule('app/use-backup-copy.ts');
+ const {translateText}=localizedModule('app/i18n.ts');
+ const loading='Загрузка…', failure='Перевод не загружен. Повторите попытку.', retry='Повторить';
+ function Status({language}) {
+  const {c,ready}=useBackupCopy(language);
+  assert.equal(ready,language==='ru');
+  return [c(loading,'Loading…'),c(failure,'Translation could not load. Try again.'),c(retry,'Retry')].join(' | ');
+ }
+ for(const language of languages) {
+  const pack=json(`app/backup-locales/${language}.json`);
+  const expected=[translateText(loading,language),pack[failure],translateText(retry,language)].join(' | ');
+  assert.equal(renderToStaticMarkup(createElement(Status,{language})),renderToStaticMarkup(expected),language);
  }
 });
 

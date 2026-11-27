@@ -5,6 +5,14 @@ import org.junit.Test
 import ru.genesis.calendar.ui.BackupWebOrigin
 
 class PublicLanguageTest {
+    @Test fun `account links explicitly select the app language even when the browser has a different preference`() {
+        for (language in publicLanguages) {
+            assertEquals("/?lang=$language", publicPagePath(language, explicitLanguage = true))
+            assertEquals("/privacy?lang=$language", publicPagePath(language, PublicPage.PRIVACY, explicitLanguage = true))
+        }
+        assertEquals("/?lang=en", publicPagePath("unknown", explicitLanguage = true))
+    }
+
     @Test fun `backup documents open in the language selected in the app`() {
         for (language in publicLanguages) for (page in listOf(PublicPage.PRIVACY, PublicPage.TERMS)) {
             val expected = "https://genesiscalendar.com" + publicPagePath(language, page)

@@ -96,6 +96,7 @@ type AccountPanelProps = {
   onOpenPartners?: () => void;
   onOpenPhysis?: () => void;
   user: GenesisUser;
+  savedLanguage: Language;
   guideSharedProjects?: boolean;
   guideSolarPlace?: boolean;
   onClose: () => void;
@@ -159,7 +160,7 @@ function createHabitResetChallenge(): HabitResetChallenge {
   };
 }
 
-export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedProjects = false, guideSolarPlace = false, onClose, onSignOut, onReconnectGoogle, onConnectAdditionalGoogle, onLanguageChange, onUserChange, themeState, onThemeChange, habitTrackingEnabled, onHabitTrackingChange, habitNotificationSettings, notificationPermission, onHabitNotificationSettingsChange, habitFeedbackSettings, onHabitFeedbackSettingsChange, onRequestHabitNotifications, hiddenHabitTemplateCount, onRestoreHabitTemplates, onResetHabitTracking, onExportCalendar, calendarExportAvailable, categories }: AccountPanelProps) {
+export function AccountPanel({ user, savedLanguage, onOpenPartners, onOpenPhysis, guideSharedProjects = false, guideSolarPlace = false, onClose, onSignOut, onReconnectGoogle, onConnectAdditionalGoogle, onLanguageChange, onUserChange, themeState, onThemeChange, habitTrackingEnabled, onHabitTrackingChange, habitNotificationSettings, notificationPermission, onHabitNotificationSettingsChange, habitFeedbackSettings, onHabitFeedbackSettingsChange, onRequestHabitNotifications, hiddenHabitTemplateCount, onRestoreHabitTemplates, onResetHabitTracking, onExportCalendar, calendarExportAvailable, categories }: AccountPanelProps) {
   const [sharedNotificationSettingsOpen,setSharedNotificationSettingsOpen]=useState(false);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -343,7 +344,10 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
   };
 
   const changeLanguage = async (language: Language) => {
-    if (user.language === language) return;
+    if (savedLanguage === language) {
+      onLanguageChange(language);
+      return;
+    }
     setPreferenceBusy(true);
     setMessage("");
     try {
@@ -734,9 +738,9 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
           </div>
           <div className="language-choice" role="radiogroup" aria-label={translateText("Язык интерфейса", user.language)}>
             {LANGUAGES.map((code) => (
-              <button key={code} type="button" role="radio" aria-checked={user.language === code}
+              <button key={code} type="button" role="radio" aria-checked={savedLanguage === code}
                 lang={code} title={LANGUAGE_LABELS[code].name} aria-label={LANGUAGE_LABELS[code].name}
-                className={user.language === code ? "active" : ""} disabled={preferenceBusy}
+                className={savedLanguage === code ? "active" : ""} disabled={preferenceBusy}
                 onClick={() => void changeLanguage(code)} data-no-translate>
                 <span className="language-flag" aria-hidden="true">
                   <img src={`${APP_BASE}/language-flags/${LANGUAGE_LABELS[code].country}.svg`} alt="" />
