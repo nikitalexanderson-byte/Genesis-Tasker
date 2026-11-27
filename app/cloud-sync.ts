@@ -3938,7 +3938,11 @@ async function privateDeviceAccessSession(){
   if(binding.kind==='personal')return account.personal().client;const opened=await trust.open(binding.scopeId);current();const directory=opened.directory;
   if(directory.ownerId!==binding.ownerId||directory.kind!==binding.kind||directory.resourceId!==binding.resourceId||directory.recoveryKit.authority.signingKey!==binding.authority.signingKey||directory.recoveryKit.authority.receivingKey!==binding.authority.receivingKey)throw new Error('E2EE_AUTHORITY_CHANGED');return opened.client;
  };
- const ports:import('./e2ee/device-access').DeviceAccessPorts={target,client,directory:async scopeId=>{current();const result=await e2eeRequest<{events:import('./e2ee/commands').SignedE2eeCommand[]}>('/directory',{scopeId});current();return result;},
+ const {retryE2eeRead}=await import('./e2ee/read-rate-retry');
+ const ports:import('./e2ee/device-access').DeviceAccessPorts={target,client,
+  directory:scopeId=>retryE2eeRead(
+   ()=>e2eeRequest<{events:import('./e2ee/commands').SignedE2eeCommand[]}>('/directory',{scopeId}),
+   current),
   challenge:async(binding,deviceId,keys,requestId)=>{current();const result=await e2eeRequest('/challenge',{scopeId:binding.scopeId,deviceId,keys,requestId});current();return result;},
   command:async packet=>{current();const result=await e2eeRequest('/command',packet);current();return result;},open:async binding=>{await client(binding);current();if(binding.kind==='personal')await account.personal().client.refresh();current();window.dispatchEvent(new Event('genesis:shared-updates'));}
  };return{access:new E2eeDeviceAccess(account,ports,current),current,account,ports};
