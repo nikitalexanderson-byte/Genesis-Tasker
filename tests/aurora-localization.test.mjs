@@ -43,6 +43,9 @@ test('All eighteen method and backup packs preserve fields, separators and place
    if(!['ru','uk','sr'].includes(language))assert.ok(!/[А-Яа-яЁё]/u.test(translated),`${language}:${id} has untranslated source text`);
   }
   const translatedBackup=json(`app/backup-locales/${language}.json`);
+  const availability = ['доступно', 'частично', 'недоступно'].map(key =>
+   translatedBackup[key].trim().toLocaleLowerCase(language));
+  assert.equal(new Set(availability).size, 3, `${language}: backup availability labels must be distinct`);
   assert.deepEqual(Object.keys(translatedBackup).sort(),Object.keys(backup).sort(),language);
   for(const [key,value]of Object.entries(translatedBackup)){
    assert.ok(value.trim(),`${language}:${key}`);

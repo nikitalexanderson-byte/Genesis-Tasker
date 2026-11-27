@@ -74,8 +74,12 @@ internal class CloudAccountSnapshot private constructor(
 
         /** Keep unknown Google/web fields; native-only defaults are never written to the cloud snapshot. */
         fun nativeTaskJson(source: JSONObject): JSONObject {
+            CloudTaskIdentity.requireImportedId(source.getString("id"))
+            return taskWithNativeDefaults(source)
+        }
+
+        fun taskWithNativeDefaults(source: JSONObject): JSONObject {
             val row = JSONObject(source.toString())
-            CloudTaskIdentity.requireImportedId(row.getString("id"))
             // Calendar events can legitimately have an empty/missing summary.
             val title = if (row.isNull("title")) "" else row.optString("title")
             row.put("title", title.takeIf { it.isNotBlank() } ?: "Без названия")

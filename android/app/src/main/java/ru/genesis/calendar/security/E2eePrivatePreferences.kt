@@ -62,7 +62,12 @@ internal class E2eePrivatePreferences(context:Context,private val account:E2eePr
         patch.optJSONObject("syncRouting")?.let{prior.put("syncRouting",it)};document.write(validate(prior));val saved=document.flush();check(saved.isNull("conflict")){"E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED"}
         current=validate(saved.getJSONObject("document"));return snapshot()
     }
-    @Synchronized fun flush(){document.flush();load()}
+    @Synchronized fun flush(refresh: Boolean = false) {
+        val saved = document.flush()
+        check(saved.isNull("conflict")) { "E2EE_PRODUCT_CONFLICT_REVIEW_REQUIRED" }
+        current = validate(saved.getJSONObject("document"))
+        if (refresh) load()
+    }
     fun apply(profile:JSONObject):JSONObject{check(profile.getString("uid")==account.ownerId){"E2EE_SCOPE_BINDING_MISMATCH"};val value=snapshot();return JSONObject(profile.toString())
         .put("advicePreferences",value.get("advicePreferences")).put("uiVisibility",value.get("uiVisibility")).put("syncRouting",value.get("syncRouting"))}
     fun project(settings:AccountSettings):AccountSettings{val value=snapshot();val route=value.getJSONObject("syncRouting");val valid=settings.accounts.map{it.id}.toSet()

@@ -23,7 +23,7 @@ export function publicRouteForPath(pathname:string,base='',search=''):PublicRout
 export function currentPublicEdition(_base=process.env.NEXT_PUBLIC_GENESIS_BASE_PATH?.trim()||''):PublicEdition {
   void _base;return 'domestic';
 }
-export function publicPagePath(language:RegionLanguage,page:PublicPage='home',base='',_edition:PublicEdition=currentPublicEdition(base)) {
+export function publicPagePath(language:RegionLanguage,page:PublicPage='home',base=process.env.NEXT_PUBLIC_GENESIS_BASE_PATH?.trim()||'',_edition:PublicEdition=currentPublicEdition(base)) {
   void _edition;const prefix=base.replace(/\/$/,'');
   const path=`${prefix}${page==='home'?'/':`/${page}`}`;
   return language==='en'?path:`${path}?lang=${language}`;

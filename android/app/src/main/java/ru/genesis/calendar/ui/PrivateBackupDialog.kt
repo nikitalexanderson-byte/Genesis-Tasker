@@ -24,6 +24,8 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import ru.genesis.calendar.GenesisApplication
 import ru.genesis.calendar.data.GenesisBackupContainer
+import ru.genesis.calendar.data.PublicPage
+import ru.genesis.calendar.data.publicDocumentUrl
 import ru.genesis.calendar.security.*
 
 /** Mounted above the vault gate: opening SAF is allowed to lock the vault.
@@ -104,8 +106,8 @@ import ru.genesis.calendar.security.*
                 Row{Checkbox(checked=consent,onCheckedChange={consent=it},enabled=!busy&&!unfinished);Text(c("Я ознакомился с составом копии, шифрованием и условиями восстановления в")+" "+c("политике")+" "+c("и")+" "+c("соглашении"))}
                 val uriHandler=androidx.compose.ui.platform.LocalUriHandler.current
                 Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
-                    TextButton(onClick={uriHandler.openUri("https://genesiscalendar.com/privacy")},modifier=Modifier.heightIn(min=48.dp)){Text(c("политике"))}
-                    TextButton(onClick={uriHandler.openUri("https://genesiscalendar.com/terms")},modifier=Modifier.heightIn(min=48.dp)){Text(c("соглашении"))}
+                    TextButton(onClick={uriHandler.openUri(publicDocumentUrl(language, PublicPage.PRIVACY))},modifier=Modifier.heightIn(min=48.dp)){Text(c("политике"))}
+                    TextButton(onClick={uriHandler.openUri(publicDocumentUrl(language, PublicPage.TERMS))},modifier=Modifier.heightIn(min=48.dp)){Text(c("соглашении"))}
                 }
                 Button(onClick={val supplied=recovery;val fromServer=remote;recovery="";keySaved=false;run({val payload=if(fromServer)archive.captureRemote()else archive.capture();current();PrivateBackupHandoff.prepareExport(context,account,payload,supplied,::current)})},enabled=!busy&&!unfinished&&keySaved&&consent&&recovery.isNotBlank(),modifier=Modifier.fillMaxWidth().heightIn(min=48.dp)){Text(text.getString(if(remote)"serverSnapshot"else"deviceSnapshot"))}
                 HorizontalDivider()

@@ -25,6 +25,9 @@ internal enum class PublicPage(val path: String) {
     HOME("/"), TERMS("/terms"), PRIVACY("/privacy"), REFUND("/refund"), SUPPORT("/support"), LOGIN("/login"), DELETE_ACCOUNT("/delete-account")
 }
 
+internal fun publicDocumentUrl(language: String, page: PublicPage): String =
+    "https://genesiscalendar.com" + publicPagePath(language, page)
+
 /** Mirrors the public web contract without moving authentication or private data. */
 internal fun publicPagePath(language: String, page: PublicPage = PublicPage.HOME): String {
     val locale = language.takeIf { it in publicLanguages } ?: "en"

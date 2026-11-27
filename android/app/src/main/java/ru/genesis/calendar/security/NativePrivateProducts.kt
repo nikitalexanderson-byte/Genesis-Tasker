@@ -64,10 +64,22 @@ internal object NativePrivateProducts{
         return E2eeMigrationProductHistory.read(account.device,account.directory,requireNotNull(inventory){"E2EE_INVALID_COVERAGE_REGISTRY"},domain,id)}
     fun snapshot(scope:String):JSONObject=entry(scope).product.snapshot()
     fun contentRevision(scope:String):Long=entry(scope).product.contentRevision()
+    fun hasPendingPersonalChanges(scope: String): Boolean = entry(scope).product.hasPendingChanges()
     fun snapshots(scope:String)=revision.map{if(isProtected(scope))snapshot(scope)else null}
     suspend fun <T> mutate(scope:String,change:suspend(JSONObject)->Pair<JSONObject,T>):T=withContext(Dispatchers.IO){val value=entry(scope)
         value.mutex.withLock{value.account.requireOpen();val before=value.product.snapshot();val original=before.toString();val (next,result)=change(before);value.account.requireOpen();
             if(next.toString()!=original){value.product.stageSnapshot(next);value.account.requireOpen();revision.value++};result}}
-    suspend fun flush(scope:String)=withContext(Dispatchers.IO){val value=entry(scope);value.mutex.withLock{value.account.requireOpen();val before=value.product.contentRevision();value.product.flush();value.preferences?.flush();value.account.requireOpen();if(value.product.contentRevision()!=before)revision.value++}}
+    suspend fun flush(scope: String, refreshPersonal: Boolean = false) = withContext(Dispatchers.IO) {
+        val value = entry(scope)
+        value.mutex.withLock {
+            value.account.requireOpen()
+            val hadPending = value.product.hasPendingChanges()
+            value.product.flush()
+            if (hadPending && !value.product.hasPendingChanges()) changed(scope)
+            if (refreshPersonal && value.product.refreshConfirmed()) changed(scope)
+            value.preferences?.flush(refresh = refreshPersonal)
+            value.account.requireOpen()
+        }
+    }
     override fun toString()="NativePrivateProducts([redacted])"
 }

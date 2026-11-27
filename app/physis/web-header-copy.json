@@ -210,63 +210,63 @@
     ]
   },
   "he": {
-    "title": "פיזיקה",
+    "title": "Physis",
     "tabs": [
-      "אימון",
+      "אימונים",
       "תזונה",
-      "תוספי מזון ותרופות",
-      "מעקב"
+      "תוספי תזונה ותרופות",
+      "מעקב בריאותי"
     ],
     "descriptions": [
-      "תכנן אימוני כושר, עקוב אחר השלמתם וחקור את התרגילים.",
-      "לשמור יומן מזון ולנהל את רשימת המזון שלך.",
-      "תנהל לוחות זמנים של קבלת תרופות וקטלוג התרופות שלך.",
-      "תקליטו מדידות בריאותיות ותעקבו אחר ההיסטוריה שלהם."
+      "כאן אפשר לתכנן אימונים, לסמן מה בוצע ולעיין בתרגילים.",
+      "כאן אפשר לנהל יומן תזונה ואת רשימת המזונות.",
+      "כאן אפשר לנהל לוחות זמנים לנטילה ואת רשימת התכשירים.",
+      "כאן אפשר לתעד מדדי בריאות ולעקוב אחר השינויים לאורך זמן."
     ]
   },
   "ar": {
-    "title": "الفيزياء",
+    "title": "Physis",
     "tabs": [
-      "دال - التدريب",
+      "التمارين",
       "التغذية",
-      "المكملات والأدوية",
-      "جيم - الرصد"
+      "المكملات الغذائية والأدوية",
+      "المتابعة الصحية"
     ],
     "descriptions": [
-      "تخطيط التدريب، وتتبع الإنجاز واستكشاف التمارين.",
-      "احتفظ بمذكرة غذائية وإدارة قائمة الطعام الخاصة بك.",
-      "إدارة الجداول الزمنية للقبول و فهرس الأدوية.",
-      "تسجيل القياسات الصحية وتتبع تاريخها."
+      "خطّط لحصص التمرين وسجّل ما أكملته واستكشف التمارين.",
+      "دوّن وجباتك في سجل التغذية وأدِر قائمة الأطعمة.",
+      "أدِر مواعيد تناول الأدوية والمكملات ودليل المستحضرات.",
+      "سجّل القياسات الصحية وتابع تغيّرها بمرور الوقت."
     ]
   },
   "ko": {
-    "title": "물리학",
+    "title": "Physis",
     "tabs": [
-      "훈련",
+      "운동",
       "영양",
       "보충제 및 의약품",
-      "모니터"
+      "건강 지표"
     ],
     "descriptions": [
-      "운동 계획, 완료 추적 및 운동을 탐색.",
-      "음식 일기를 유지하고 음식 목록을 관리합니다.",
-      "섭취 일정 및 의약품 카탈로그를 관리합니다.",
-      "건강 측정을 기록하고 역사를 따르십시오."
+      "운동 일정을 계획하고 완료 여부를 기록하며 운동 종목을 살펴보세요.",
+      "식사 일기를 작성하고 식품 목록을 관리하세요.",
+      "복용 일정과 의약품 목록을 관리하세요.",
+      "건강 지표를 기록하고 변화를 확인하세요."
     ]
   },
   "nl": {
-    "title": "Fysiek",
+    "title": "Physis",
     "tabs": [
-      "Opleiding",
+      "Trainingen",
       "Voeding",
-      "Supplementen en medicijnen",
-      "Toezicht"
+      "Supplementen en geneesmiddelen",
+      "Gezondheidsmetingen"
     ],
     "descriptions": [
-      "Plan trainingen, volg de voltooiing en verken oefeningen.",
-      "Houd een voedseldagboek bij en beheer je voedsellijst.",
-      "Beheer inname schema's en uw geneeskunde catalogus.",
-      "Registreer gezondheidsmetingen en volg hun geschiedenis."
+      "Plan je trainingen, vink af wat je hebt gedaan en bekijk de oefeningen.",
+      "Houd een voedingsdagboek bij en beheer je lijst met voedingsmiddelen.",
+      "Beheer je innameschema’s en je overzicht van geneesmiddelen en supplementen.",
+      "Leg je gezondheidsmetingen vast en bekijk het verloop ervan."
     ]
   }
 }

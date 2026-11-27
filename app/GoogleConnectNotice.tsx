@@ -1,10 +1,11 @@
+import {publicPagePath} from './public-route';
 import { MobileDisclosure } from "./MobileDisclosure";
 import { useState } from "react";
 import { IconActionButton } from "./IconActionButton";
-import { translateText } from "./i18n";
+import { translateText, type Language } from "./i18n";
 
-export default function GoogleConnectNotice({ compact, busy, onConnect }: {
-  compact: boolean; busy: boolean; onConnect: () => void;
+export default function GoogleConnectNotice({ compact, busy, onConnect, language }: {
+  language: Language; compact: boolean; busy: boolean; onConnect: () => void;
 }) {
   const [dismissed, setDismissed] = useState(false);
   if (dismissed) return null;
@@ -16,7 +17,7 @@ export default function GoogleConnectNotice({ compact, busy, onConnect }: {
         <h2 id="google-connect-title">Подключите Google Calendar и Google Tasks</h2>
         <p>Вход уже выполнен. Разрешения на календарь и списки задач запрашиваются отдельно и только после вашего нажатия.
           GENESIS создаёт собственный календарь, а доступ к Google Tasks нужен для показа и двустороннего изменения выбранных вами списков и задач.</p>
-        <p><a href="/privacy">Как GENESIS использует и защищает данные Google</a></p>
+        <p><a href={publicPagePath(language,'privacy')}>Как GENESIS использует и защищает данные Google</a></p>
       </div>
       <button type="button" className="primary-button" onClick={onConnect} disabled={busy}>
         {busy ? "Подключаем…" : "Подключить синхронизацию"}

@@ -1,4 +1,5 @@
 "use client";
+import {publicPagePath} from './public-route';
 import { GENESIS_TELEGRAM, genesisTelegramLabel } from './site-links';
 import { partnerText } from './partner-copy';
 import {ReferralsPanel} from './ReferralsPanel';
@@ -1121,9 +1122,9 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
         <section className="account-preferences settings-links-panel" data-settings-group="links">
           <DonationLink className="settings-donation-link" language={user.language}>{release319Copy[user.language].donation}</DonationLink>
           <a href={GENESIS_TELEGRAM} target="_blank" rel="noreferrer" data-no-translate>{genesisTelegramLabel(user.language)}</a>
-          <a href="/support">{user.language === "en" ? "Support" : "Поддержка"}</a>
-          <a href="/privacy">{user.language === "en" ? "Privacy policy" : "Политика конфиденциальности"}</a>
-          <a href="/terms">{user.language === "en" ? "Terms of service" : "Пользовательское соглашение"}</a>
+          <a href={publicPagePath(user.language,'support')}>{user.language === "en" ? "Support" : "Поддержка"}</a>
+          <a href={publicPagePath(user.language,'privacy')}>{user.language === "en" ? "Privacy policy" : "Политика конфиденциальности"}</a>
+          <a href={publicPagePath(user.language,'terms')}>{user.language === "en" ? "Terms of service" : "Пользовательское соглашение"}</a>
           <AdvicePrivacyNotice language={user.language} />
         </section>
 
@@ -1227,7 +1228,7 @@ export function AccountPanel({ user, onOpenPartners, onOpenPhysis, guideSharedPr
           <h3>Безопасный вход</h3>
           <>
             <p>Авторизация выполняется только через официальный OAuth Google. GENESIS не получает, не запрашивает и не хранит пароль. Токены доступа шифруются на сервере, а при удалении аккаунта разрешение отзывается у Google.</p>
-            <p><a href="/privacy">Подробнее об использовании данных Google</a></p>
+            <p><a href={publicPagePath(user.language,'privacy')}>Подробнее об использовании данных Google</a></p>
             <button type="button" className="text-button" onClick={onReconnectGoogle}>Обновить разрешения Calendar и Tasks</button>
             {user.calendarConnected || user.googleTasksImportReady ? (
               <button type="button" className="text-button" onClick={() => void disconnectServices()} disabled={busy}>Отключить Calendar и Tasks</button>
