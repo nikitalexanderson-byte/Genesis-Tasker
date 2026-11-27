@@ -70,8 +70,15 @@ class AppLockEntryTest {
         assertTrue("Home key", device.pressHome())
         device.waitForIdle()
         assertTrue("Overview key", device.pressRecentApps())
+        // The launcher also exposes partially visible adjacent cards. Immediately after
+        // Home, the foreground app is the centered card. Selecting the first match can
+        // open a neighboring activity from an earlier instrumentation run.
+        val center = device.displayWidth / 2
         val thumbnail = listOf("snapshot", "thumbnail", "task_view").firstNotNullOfOrNull { id ->
-            device.wait(Until.findObject(By.res(home, id)), 4_000)
+            device.wait(Until.findObjects(By.res(home, id)), 4_000)?.firstOrNull {
+                val bounds = it.visibleBounds
+                center in bounds.left until bounds.right
+            }
         }
         requireNotNull(thumbnail) { "GENESIS task card unavailable in overview" }.click()
     }

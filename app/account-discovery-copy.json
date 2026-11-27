@@ -196,8 +196,8 @@
     "sharedRetry": "共有の予定を開けませんでした。もう一度お試しください。"
   },
   "he": {
-    "sharedBefore": "יחסים משותפים זמינים. ",
-    "account": "פתיחת יחסים משותפים",
+    "sharedBefore": "יש לך גישה למשימות ולפרויקטים משותפים. ",
+    "account": "פתיחת מדור המשימות והפרויקטים המשותפים",
     "sharedAfter": "",
     "guideStatus": "האייקון של הגדרות החשבון מובחן.",
     "introTitle": "נסה לוחות שנה אחרים",
@@ -207,11 +207,11 @@
     "trySacred": "נסה קדוש",
     "tryLunar": "נסה ירח.",
     "close": "סגירת טיפ",
-    "sharedRetry": "לא ניתן לפתוח יחסים משותפים. נסה שוב."
+    "sharedRetry": "לא ניתן לפתוח את מדור המשימות והפרויקטים המשותפים. יש לנסות שוב."
   },
   "ar": {
-    "sharedBefore": "الشؤون المشتركة متاحة. ",
-    "account": "الشؤون المشتركة المفتوحة",
+    "sharedBefore": "يمكنك الوصول إلى المهام والمشاريع المشتركة. ",
+    "account": "فتح قسم المهام والمشاريع المشتركة",
     "sharedAfter": "",
     "guideStatus": "ويتم تسليط الضوء على أيقونة إعدادات الحساب.",
     "introTitle": "جرّب تقويمات أخرى",
@@ -221,11 +221,11 @@
     "trySacred": "حاول المقدس",
     "tryLunar": "حاول القمر",
     "close": "إغلاق النقطة",
-    "sharedRetry": "تعذر فتح الشؤون المشتركة، حاول مرة أخرى."
+    "sharedRetry": "تعذّر فتح قسم المهام والمشاريع المشتركة. حاول مرة أخرى."
   },
   "ko": {
-    "sharedBefore": "공유 업무가 제공됩니다. ",
-    "account": "공유 관계 열기",
+    "sharedBefore": "공유 작업 및 프로젝트를 이용할 수 있습니다. ",
+    "account": "공유 할 일 열기",
     "sharedAfter": "",
     "guideStatus": "계정 설정 아이콘이 강조 표시됩니다.",
     "introTitle": "다른 캘린더 시도하기",
@@ -235,11 +235,11 @@
     "trySacred": "성스러운 것을 시도해 보세요",
     "tryLunar": "달력을 사용해 보기",
     "close": "팁 닫기",
-    "sharedRetry": "공유 관계를 열 수 없습니다. 다시 시도하십시오."
+    "sharedRetry": "공유 할 일을 열 수 없습니다. 다시 시도하세요."
   },
   "nl": {
-    "sharedBefore": "Gedeelde zaken zijn beschikbaar. ",
-    "account": "Open gedeelde zaken",
+    "sharedBefore": "Je hebt toegang tot gedeelde taken en projecten. ",
+    "account": "Gedeelde taken en projecten openen",
     "sharedAfter": "",
     "guideStatus": "Het pictogram voor accountinstellingen is gemarkeerd.",
     "introTitle": "Probeer andere agenda's",
@@ -249,6 +249,6 @@
     "trySacred": "Probeer het heilige",
     "tryLunar": "Probeer lunar",
     "close": "Sluit de tip",
-    "sharedRetry": "Gedeelde zaken kunnen niet worden geopend. Probeer het opnieuw."
+    "sharedRetry": "De gedeelde taken en projecten konden niet worden geopend. Probeer het opnieuw."
   }
 }

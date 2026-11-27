@@ -514,6 +514,8 @@ const PENDING_KEY = "genesis-pending-mutations-v2";
 const LAST_USER_CACHE = "genesis-last-user-v2";
 let sessionGeneration = 0;
 let confirmedTransportOwnerId:string|null=null;
+// All /e2ee/v1 routes consume one server budget for the authenticated account.
+let e2eeRetryWindow: { owner: string; until: number } | null = null;
 const serverProtectedTransportOwners=new Set<string>();
 let privateIdentityCache:GenesisUser|null=null;
 let personalTransportGate:WebLegacyTransportGate|null=null;
@@ -792,6 +794,7 @@ function endLocalSession() {
   retirePrivateWorkspaceStorage();
   privateIdentityCache=null;
   confirmedTransportOwnerId=null;
+  e2eeRetryWindow=null;
   cancelWorkspaceConflict?.();
   dismissedWorkspaceConflict = "";
   localSessionEnded = true;
@@ -1082,6 +1085,7 @@ async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: Ap
   if ((localSessionEnded || privateDeviceAccessBlocked()) && !["/session", "/auth/providers", "/partners/invitation", "/referrals/invitation"].includes(path) && !/^\/account-recovery\/(?:status|request|complete)$/.test(path)) throw new GenesisApiError(401, null, "AUTH_REQUIRED");
   const generation = sessionGeneration;
   if (!API_BASE) throw new Error("Сервер GENESIS ещё не подключён");
+  const e2eeOwner = path.startsWith('/e2ee/v1/') ? confirmedTransportOwnerId : null;
   const { signal: callerSignal, ...requestInit } = init;
   const requestController = new AbortController();
   accountRequests.add(requestController);
@@ -1095,6 +1099,11 @@ async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: Ap
   }, path.startsWith('/private-drive/v1/')?120_000:API_TIMEOUT_MS);
   let response: Response;
   try {
+    if (requestController.signal.aborted) throw requestController.signal.reason;
+    if (e2eeOwner && e2eeRetryWindow?.owner === e2eeOwner) {
+      const remaining = Math.ceil((e2eeRetryWindow.until - performance.now()) / 1000);
+      if (remaining > 0) throw new GenesisApiError(429, null, 'E2EE_HTTP_ERROR', remaining);
+    }
     if(feedback.e2eeObservation){
       if(!isE2eeResponsePath(path)||requestInit.body!=null&&typeof requestInit.body!=='string')throw new Error('E2EE_OBSERVATION_REQUEST_INVALID');
       await feedback.e2eeObservation.prepare(Object.freeze({path,method:requestInit.method??'GET',body:typeof requestInit.body==='string'?requestInit.body:null}));
@@ -1132,6 +1141,11 @@ async function apiOverHttp<T>(path: string, init: RequestInit = {}, feedback: Ap
       if(isE2eeResponsePath(path)){
         const code=e2eeHttpErrorCode(response.status,payload);
         const retry=response.headers.get('Retry-After'),seconds=retry!==null&&/^\d{1,3}$/.test(retry)?Number(retry):null;
+        if (response.status === 429 && seconds !== null && seconds > 0 && seconds <= 600 &&
+            e2eeOwner && confirmedTransportOwnerId === e2eeOwner) {
+          const previous = e2eeRetryWindow?.owner === e2eeOwner ? e2eeRetryWindow.until : 0;
+          e2eeRetryWindow = { owner: e2eeOwner, until: Math.max(previous, performance.now() + seconds * 1000) };
+        }
         throw new GenesisApiError(response.status,code?{error:code}:null,code??'E2EE_HTTP_ERROR',seconds!==null&&seconds<=600?seconds:null);
       }
       const message = isTemporaryApiStatus(response.status) ? apiUnavailableMessage()

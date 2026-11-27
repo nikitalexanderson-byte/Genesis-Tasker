@@ -132,11 +132,34 @@ test('invalid E2EE route methods refuse before fetch',async()=>{
  const f=await cloudSyncClient();for(const[route,body]of [['/read',undefined],['/status',{}],['/unknown',{}]])await assert.rejects(f.client.e2eeRequest(route,body),/E2EE_ROUTE_FORBIDDEN/);
  assert.equal(f.requests.length,0);
 });
-test('read-only scope discovery exposes an actual bounded rate reply without retrying mutations',async()=>{
- const f=await cloudSyncClient();f.respond(()=>Response.json({error:'API_RATE_LIMIT'},{status:429,headers:{'Retry-After':'3'}}));
+test('private reads and queued writes share the server retry window without replaying mutations',async()=>{
+ let now=1000;
+ const f=await cloudSyncClient({timers:{setTimeout,clearTimeout,performance:{now:()=>now}}});
+ f.respond(()=>Response.json({error:'API_RATE_LIMIT'},{status:429,headers:{'Retry-After':'3'}}));
  for(const [route,body]of [['/status',undefined],['/directory',{scopeId:'personal:fixture'}],['/read',{}],['/membership-graph',{}],['/membership-state',{}]])
   await assert.rejects(f.client.e2eeRequest(route,body),error=>error.message==='E2EE_HTTP_ERROR'&&error.seconds===3);
  for(const route of ['/command','/membership-atomic-commit'])
   await assert.rejects(f.client.e2eeRequest(route,{}),error=>error.seconds===undefined);
- assert.equal(f.requests.length,7);
+ assert.equal(f.requests.length,1);
+ now+=2400;
+ await assert.rejects(f.client.e2eeRequest('/read',{}),error=>error.seconds===1);
+ const cancelled=AbortSignal.abort();
+ await assert.rejects(f.client.e2eeRequest('/command',{},cancelled),error=>error.name==='AbortError');
+ assert.equal(f.requests.length,1);
+ now+=600;
+ f.respond(()=>Response.json({ack:'fixture'}));
+ assert.equal((await f.client.e2eeRequest('/command',{})).ack,'fixture');
+ assert.equal(f.requests.length,2);
+});
+
+test('a limited private session can refresh identity and a different owner can read immediately',async()=>{
+ const f=await cloudSyncClient();
+ f.respond(()=>Response.json({error:'API_RATE_LIMIT'},{status:429,headers:{'Retry-After':'300'}}));
+ await assert.rejects(f.client.e2eeRequest('/command',{}),error=>error.status===429);
+ f.respond(url=>new URL(url).pathname==='/api/session'
+   ?Response.json({user:{uid:'new-owner'},csrf:'new-csrf',loginId:'new-login'})
+   :Response.json({scopes:[]}));
+ assert.equal((await f.client.loadGenesisSession()).uid,'new-owner');
+ assert.equal((await f.client.e2eeRequest('/status')).scopes.length,0);
+ assert.equal(f.requests.length,3);
 });
