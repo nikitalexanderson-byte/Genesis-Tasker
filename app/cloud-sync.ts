@@ -1957,21 +1957,27 @@ async function loadGenesisWorkspaceSnapshot(): Promise<GenesisWorkspace> {
   };
 }
 
+// The UI only needs to order reads and confirmed writes within this client.
+let calendarPreferenceOrder = 0;
+export function nextCalendarPreferenceOrder() {
+  return ++calendarPreferenceOrder;
+}
+
 export function observeGenesisUser(
-  listener: (user: GenesisUser | null, readStartedAt: number) => void,
+  listener: (user: GenesisUser | null, readOrder: number) => void,
   onError?: (error: Error) => void,
 ) {
   if (!API_BASE) {
-    listener(null, performance.now());
+    listener(null, nextCalendarPreferenceOrder());
     return () => undefined;
   }
   let active = true;
   const controller = new AbortController();
   const poll = async () => {
     try {
-      const {user, startedAt} = await loadGenesisSessionSnapshot(controller.signal);
+      const {user, readOrder} = await loadGenesisSessionSnapshot(controller.signal);
       if(user&&serverProtectedTransportOwners.has(user.uid))await waitForPrivateAccount(user.uid,user.language,controller.signal);
-      if (active) listener(user, startedAt);
+      if (active) listener(user, readOrder);
     } catch (error) {
       if (controller.signal.aborted || error instanceof DOMException && error.name === "AbortError") return;
       if (active) onError?.(error instanceof Error ? error : new Error("Сервер недоступен"));
@@ -1992,7 +1998,7 @@ export function observeGenesisUser(
 }
 
 const readGenesisSession = sessionReader(async () => {
-  const startedAt = performance.now();
+  const readOrder = nextCalendarPreferenceOrder();
   const generation=sessionGeneration;
   try {
     const result=sessionEnvelope<GenesisUser>(await api<unknown>("/session", { cache: "no-store" }));
@@ -2020,7 +2026,7 @@ const readGenesisSession = sessionReader(async () => {
     activeAuthProvider=user?.authProvider==='yandex'?'yandex':'google';
     // Coalesced observers share the post-transition receipt. They must not
     // mistake this reader's own deliberate retirement for a stale response.
-    return {user,generation:sessionGeneration,startedAt};
+    return {user,generation:sessionGeneration,readOrder};
   }
   catch(error) {
     if(error instanceof GenesisApiError || error instanceof DOMException && error.name==="AbortError" ||

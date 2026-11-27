@@ -149,6 +149,7 @@ import {
   listSharedCalendarTasks, sharedCalendarProjection,
   mergeLocalWorkspace,
   metricsFor,
+  nextCalendarPreferenceOrder,
   observeCloudTasks,
   observeCloudWorkspace,
   observeEncryptedWorkspaceUpdates,
@@ -1478,10 +1479,10 @@ export function GenesisCalendar() {
   }, [cloudUser?.uid]);
   const cloudUserRef = useRef<GenesisUser | null>(null);
   const displayCalendarSaveRef = useRef<Promise<void>>(Promise.resolve());
-  const latestCalendarWrite = useRef<{ uid: string; mode: CalendarMode; settledAt: number } | null>(null);
-  const calendarForRead = useCallback((user: GenesisUser, readStartedAt: number) => {
+  const latestCalendarWrite = useRef<{ uid: string; mode: CalendarMode; settledOrder: number } | null>(null);
+  const calendarForRead = useCallback((user: GenesisUser, readOrder: number) => {
     const choice = latestCalendarWrite.current;
-    return choice?.uid === user.uid && readStartedAt <= choice.settledAt ? choice.mode : user.calendarMode;
+    return choice?.uid === user.uid && readOrder <= choice.settledOrder ? choice.mode : user.calendarMode;
   }, []);
   const themeControllerRef = useRef<GenesisThemeController | null>(null);
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
@@ -2384,7 +2385,7 @@ export function GenesisCalendar() {
         },
       );
     };
-    const stopUser = observeGenesisUser((user, readStartedAt) => {
+    const stopUser = observeGenesisUser((user, readOrder) => {
       if (privateDeviceAccessBlocked()) user = null;
       setAuthResolved(true);
       setSyncError("");
@@ -2410,7 +2411,7 @@ export function GenesisCalendar() {
       const effectiveLanguage = pendingLanguage ?? serverLanguage;
       // A coalesced background session read can finish after a newer calendar write.
       const effectiveUser = { ...user, language: effectiveLanguage,
-        calendarMode: calendarForRead(user, readStartedAt) };
+        calendarMode: calendarForRead(user, readOrder) };
       setLanguage(effectiveLanguage);
       storeLanguage(effectiveLanguage);
       setCloudUser(effectiveUser);
@@ -2488,7 +2489,7 @@ export function GenesisCalendar() {
       })
         .then(async () => {
           if (!active || loadedUserId !== user.uid) return;
-          const workspaceReadStartedAt = performance.now();
+          const workspaceReadOrder = nextCalendarPreferenceOrder();
           const workspace = await loadGenesisWorkspace();
           if (!active || loadedUserId !== user.uid) return;
           const nextProjects = workspace.hasRemoteStructure ? workspace.projects : local.projects;
@@ -2525,7 +2526,7 @@ export function GenesisCalendar() {
           setWorkspaceReadyOwner(user.uid);
           setCloudUser({
             ...workspace.user, language: effectiveLanguage,
-            calendarMode: calendarForRead(workspace.user, workspaceReadStartedAt),
+            calendarMode: calendarForRead(workspace.user, workspaceReadOrder),
           });
           setAuthResolved(true);
           setSyncError(workspace.syncWarning ?? "");
@@ -5316,7 +5317,7 @@ export function GenesisCalendar() {
   const changeDisplayCalendar = async (mode: CalendarMode) => {
     const user = cloudUserRef.current;
     if (!user || !visibility.enabledCalendars.includes(mode)) return;
-    const choice = { uid: user.uid, mode, settledAt: Infinity };
+    const choice = { uid: user.uid, mode, settledOrder: Infinity };
     latestCalendarWrite.current = choice;
     const updatedUser = { ...user, calendarMode: mode };
     cloudUserRef.current = updatedUser;
@@ -5332,7 +5333,7 @@ export function GenesisCalendar() {
           setSyncError(error instanceof Error ? error.message : "Не удалось сохранить выбранный календарь. Выбор применён на этом устройстве.");
         }
       } finally {
-        choice.settledAt = performance.now();
+        choice.settledOrder = nextCalendarPreferenceOrder();
       }
     };
     displayCalendarSaveRef.current = displayCalendarSaveRef.current.then(save, save);
