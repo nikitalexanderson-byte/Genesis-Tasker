@@ -43,8 +43,8 @@ internal data class SettingsSectionDestination(
 internal val settingsSections = listOf(
     SettingsSectionDestination("appearance", "Оформление", "Appearance", GenesisPageIcon.SETTINGS_APPEARANCE,
         "Темы, меню, язык, календари и время", "Themes, menus, language, calendars and time"),
-    SettingsSectionDestination("security", "Безопасность", "Security", GenesisPageIcon.SETTINGS_SECURITY,
-        "Блокировка приложения", "App lock"),
+    SettingsSectionDestination("security", appLockCopy("ru").section, appLockCopy("en").section,
+        GenesisPageIcon.SETTINGS_SECURITY, appLockCopy("ru").title, appLockCopy("en").title),
     SettingsSectionDestination("habits", "Привычки", "Habits", GenesisPageIcon.SETTINGS_HABITS,
         "Трекинг, уведомления и отклик на выполнение", "Tracking, notifications and completion feedback"),
     SettingsSectionDestination("reminders", "Напоминания", "Reminders", GenesisPageIcon.SETTINGS_REMINDERS,

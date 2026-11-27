@@ -26,6 +26,7 @@ const SKIPPED_FILES = new Set([
   path.join(SOURCE_ROOT, "ui/AppUpdateCopy.kt"),
   // Dedicated complete locale table, structurally checked below.
   path.join(SOURCE_ROOT, "ui/SecurityUpdateCopy.kt"),
+  path.join(SOURCE_ROOT, "ui/AppLockCopy.kt"),
   // Advertisement labels are defined for every shipped locale in this component.
   path.join(SOURCE_ROOT, "ui/TodayAdPanel.kt"),
   // Generated RU/EN pairs; export-notification-copy.mjs --check verifies both platforms.
@@ -117,6 +118,20 @@ const securityRows = [...securityCopy.matchAll(/^\s*"([a-z]{2})" to SecurityUpda
 if (securityRows.length !== REGION_LANGUAGES.length || REGION_LANGUAGES.some(locale => securityRows.filter(row => row[1] === locale).length !== 1) ||
     securityRows.some(row => kotlinStrings(row[2]).length !== 9 || kotlinStrings(row[2]).some(item => !item.value.trim()))) {
   throw new Error("Security update copy must contain all nine fields in every supported locale");
+}
+
+const appLockCopy = await readFile(path.join(SOURCE_ROOT, "ui/AppLockCopy.kt"), "utf8");
+const lockRows = [...appLockCopy.matchAll(/^\s*"([a-z]{2})" to AppLockCopy\(([\s\S]*?)^\s*\),/gm)];
+if (lockRows.length !== REGION_LANGUAGES.length ||
+    REGION_LANGUAGES.some(locale => lockRows.filter(([, code]) => code === locale).length !== 1)) {
+  throw new Error("App lock must have exactly one row per supported language");
+}
+for (const [, language, row] of lockRows) {
+  const fields = kotlinStrings(row);
+  if (fields.length !== 10 || fields.some(({value}) => !value.trim() ||
+      (!["ru", "uk", "sr"].includes(language) && CYRILLIC.test(value)))) {
+    throw new Error(`Incomplete or untranslated app lock copy for ${language}`);
+  }
 }
 
 async function sourceFiles(directory) {
