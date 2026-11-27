@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
@@ -56,7 +57,10 @@ internal class AppLockHost(private val activity: ComponentActivity, saved: Bundl
     private fun protectWindow() {
         if (enabled) activity.window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         else activity.window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        activity.setVisible(!enabled || unlocked)
+        // Android requires a visible activity window for onResume to complete. Conceal its
+        // content while the opaque authentication activity is above it, retaining editor state.
+        activity.findViewById<View>(android.R.id.content)?.visibility =
+            if (enabled && !unlocked) View.INVISIBLE else View.VISIBLE
     }
 
     fun onResume() {
