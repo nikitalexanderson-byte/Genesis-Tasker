@@ -1558,6 +1558,17 @@ export function GenesisCalendar() {
     return () => window.removeEventListener(LOCAL_SESSION_ENDED_EVENT, closePrivateWorkspace);
   }, []);
 
+  const applySavedPreferences = useCallback((uid: string, fields: Partial<Pick<GenesisUser,
+    "theme" | "themeRevision" | "uiVisibility" | "language" | "calendarMode">>) => {
+    const current = cloudUserRef.current;
+    if (current?.uid !== uid) return;
+    const updated = { ...current, ...fields };
+    cloudUserRef.current = updated;
+    setCloudUser(previous => previous?.uid === uid ? { ...previous, ...fields } : previous);
+    try { cacheLastUser(updated); }
+    catch { /* Persisted preferences are still available from the server. */ }
+  }, []);
+
   useEffect(() => {
     const controller = createGenesisThemeController({
       root: document.documentElement,
@@ -1567,10 +1578,8 @@ export function GenesisCalendar() {
           if (signal.aborted) throw new DOMException("Theme read aborted", "AbortError");
           const user = fresh ? await loadGenesisSession(signal) : cloudUserRef.current;
           if (!user || user.uid !== accountId) throw new Error("Theme account session changed");
-          if (fresh) {
-            setCloudUser(user);
-            cacheLastUser(user);
-          }
+          if (signal.aborted) throw new DOMException("Theme read aborted", "AbortError");
+          if (fresh) applySavedPreferences(accountId, { theme: user.theme, themeRevision: user.themeRevision });
           return {
             theme: normalizeWebTheme(user.theme),
             revision: Math.max(0, Number(user.themeRevision ?? 0)),
@@ -1582,10 +1591,8 @@ export function GenesisCalendar() {
             expectedThemeRevision: Math.max(0, Number(expectedRevision ?? 0)),
           }, signal);
           if (signal.aborted) throw new DOMException("Theme write aborted", "AbortError");
-          if (cloudUserRef.current?.uid === accountId) {
-            setCloudUser(result.user);
-            cacheLastUser(result.user);
-          }
+          if (result.user.uid !== accountId) throw new Error("Theme account session changed");
+          applySavedPreferences(accountId, { theme: result.user.theme, themeRevision: result.user.themeRevision });
           return {
             theme: normalizeWebTheme(result.user.theme),
             revision: Math.max(0, Number(result.user.themeRevision ?? 0)),
@@ -1600,7 +1607,7 @@ export function GenesisCalendar() {
       controller.destroy();
       themeControllerRef.current = null;
     };
-  }, []);
+  }, [applySavedPreferences]);
 
   useEffect(() => {
     const controller = themeControllerRef.current;
@@ -1795,12 +1802,8 @@ export function GenesisCalendar() {
   const taskFormCalendarMode = visibleCalendarMode(taskFormCalendar ?? activeTaskCalendarMode, storedVisibility);
   const editTaskCalendarMode = editingTask?.calendarMode ?? activeTaskCalendarMode;
   const applyLayoutUser = useCallback((user: GenesisUser) => {
-    setCloudUser(current => current?.uid === user.uid ? user : current);
-    try {
-      const cached = JSON.parse(localStorage.getItem(LAST_USER_KEY) || "null") as GenesisUser | null;
-      if (cached?.uid === user.uid) cacheLastUser(user);
-    } catch { /* Server preferences remain saved when device storage is unavailable. */ }
-  }, []);
+    applySavedPreferences(user.uid, { uiVisibility: user.uiVisibility });
+  }, [applySavedPreferences]);
   const { layout: accountLayout, save: saveLayout, error: layoutError } = useAccountLayout(cloudUser, applyLayoutUser);
   const todayOrderOwner = cloudUser?.uid ?? 'guest';
   const [todayOrderEditor, setTodayOrderEditor] = useState({owner: todayOrderOwner, view, open: false});
@@ -2411,8 +2414,7 @@ export function GenesisCalendar() {
           void updateAccountPreferences({ language: pendingLanguage })
             .then((result) => {
               if (!active || !workspaceReady || loadedUserId !== user.uid) return;
-              setCloudUser(result.user);
-              cacheLastUser(result.user);
+              applySavedPreferences(user.uid, { language: result.user.language });
             })
             .catch((error: Error) => {
               if (!active) return;
@@ -2469,6 +2471,7 @@ export function GenesisCalendar() {
       setNewProjectCategory(local.categories[0]?.id ?? "");
 
       setSyncStatus("syncing");
+      const initialCalendarRevision = displayCalendarRevisionRef.current;
       void mergeLocalWorkspace(user.uid, {
         tasks: local.tasks,
         projects: local.projects,
@@ -2513,7 +2516,11 @@ export function GenesisCalendar() {
           setNewProjectCategory(nextCategories[0]?.id ?? "");
           workspaceReady = true;
           setWorkspaceReadyOwner(user.uid);
-          setCloudUser({ ...workspace.user, language: effectiveLanguage });
+          setCloudUser(current => ({
+            ...workspace.user, language: effectiveLanguage,
+            calendarMode: current?.uid === user.uid && initialCalendarRevision !== displayCalendarRevisionRef.current
+              ? current.calendarMode : workspace.user.calendarMode,
+          }));
           setAuthResolved(true);
           setSyncError(workspace.syncWarning ?? "");
           setSyncStatus(workspace.user.calendarConnected||encryptedAccount ? (workspace.syncWarning ? "offline" : "synced") : "local");
@@ -2586,7 +2593,7 @@ export function GenesisCalendar() {
       stopWorkspace?.();
       stopUser();
     };
-  }, [hydrated]);
+  }, [hydrated, applySavedPreferences]);
 
   useEffect(() => {
     if (!cloudUser) return undefined;
@@ -4587,7 +4594,7 @@ export function GenesisCalendar() {
         if (!cloudUser) throw new Error(language === "en" ? "Sign in to change calendar settings." : "Войдите, чтобы изменить календарь.");
         if (cloudUser.calendarMode === mode) return;
         const result = await updateAccountPreferences({ calendarMode: mode });
-        setCloudUser(result.user);
+        applySavedPreferences(result.user.uid, { calendarMode: result.user.calendarMode });
       },
       stepCalendar: (unit, step) => {
         if (activeCalendarMode === "sacred") {
