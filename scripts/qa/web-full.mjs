@@ -106,7 +106,18 @@ try {
       });
       await check('task-local-reload', async () => {
         // The documented no-Google-connection mode stores personal tasks only on this device.
-        await page.reload();
+        let startupReads = 0;
+        const collectBootstrap = request => {
+          if (new URL(request.url()).pathname === '/api/bootstrap') startupReads += 1;
+        };
+        page.on('request', collectBootstrap);
+        try {
+          await page.reload();
+          await page.locator('main[data-exp-layout="app-shell"][aria-busy="false"]').waitFor();
+        } finally {
+          page.off('request', collectBootstrap);
+        }
+        assert.equal(startupReads, 1, 'A reload without outgoing changes should read bootstrap once');
         await page.getByRole('button', { name: `Завершить задачу «${taskTitle}»`, exact: true }).waitFor();
         assert.equal(await page.getByRole('button', { name: `Завершить задачу «${taskTitle}»`, exact: true }).count(), 1);
         await snapshot('task-local-reload');

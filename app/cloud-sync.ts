@@ -3333,8 +3333,10 @@ export async function mergeLocalWorkspace(
   const remote = await loadGenesisWorkspace();
   check();
   if(remote.user.uid!==_uid)throw new Error('E2EE_ACCOUNT_CHANGED');
+  let wroteWorkspace = false;
   if (readPending().some(isWorkspaceMutation)) {
     await flushPendingMutations();
+    wroteWorkspace = true;
   } else if (shouldSeedRemoteWorkspace(remote.hasRemoteStructure,
     local.projects.length + local.categories.length + local.taskListLinks.length
       + (remote.user.authProvider !== "google" ? local.taskLists.length : 0) + (local.habits?.length ?? 0))) {
@@ -3346,12 +3348,14 @@ export async function mergeLocalWorkspace(
       normalizeHabitWorkspace(local),
       remote.user.authProvider !== "google" ? local.taskLists : undefined,
     );
+    wroteWorkspace = true;
   } else if (remote.user.authProvider !== "google" && remote.taskLists.length === 0 && local.taskLists.length > 0) {
     await saveWorkspaceStructure(remote.projects, remote.categories, remote.taskListLinks,
       metricsFor(remote.tasks, remote.projects, remote.habits.length),
       normalizeHabitWorkspace(remote), local.taskLists);
+    wroteWorkspace = true;
   }
-  if (!remote.user.calendarConnected) return;
+  if (!remote.user.calendarConnected) return wroteWorkspace ? undefined : remote;
   const remoteById = new Map(remote.tasks.map((task) => [task.id, task]));
   const tasksToUpload = local.tasks.filter((task) => {
     if (task.restoredFrom) return false;
@@ -3362,6 +3366,8 @@ export async function mergeLocalWorkspace(
   for (let index = 0; index < tasksToUpload.length; index += batchSize) {
     await Promise.all(tasksToUpload.slice(index, index + batchSize).map((task) => saveCloudTask(_uid, task)));
   }
+  // Only a reconciliation that may have changed the server needs a new snapshot.
+  return wroteWorkspace || tasksToUpload.length > 0 ? undefined : remote;
 }
 
 export async function saveCloudTask(_uid: string, task: GenesisTask) {

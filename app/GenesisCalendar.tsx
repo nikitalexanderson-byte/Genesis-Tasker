@@ -2489,6 +2489,7 @@ export function GenesisCalendar() {
       setNewProjectCategory(local.categories[0]?.id ?? "");
 
       setSyncStatus("syncing");
+      let workspaceReadOrder = nextCalendarPreferenceOrder();
       void mergeLocalWorkspace(user.uid, {
         tasks: local.tasks,
         projects: local.projects,
@@ -2497,10 +2498,10 @@ export function GenesisCalendar() {
         taskLists: local.taskLists,
         ...normalizeHabitWorkspace(local, user.taskCalendarMode ?? "sacred"),
       })
-        .then(async () => {
+        .then(async (initialWorkspace) => {
           if (!active || loadedUserId !== user.uid) return;
-          const workspaceReadOrder = nextCalendarPreferenceOrder();
-          const workspace = await loadGenesisWorkspace();
+          if (!initialWorkspace) workspaceReadOrder = nextCalendarPreferenceOrder();
+          const workspace = initialWorkspace ?? await loadGenesisWorkspace();
           if (!active || loadedUserId !== user.uid) return;
           const nextProjects = workspace.hasRemoteStructure ? workspace.projects : local.projects;
           const nextCategories = workspace.hasRemoteStructure ? workspace.categories : local.categories;
